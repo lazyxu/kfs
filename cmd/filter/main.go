@@ -7,5 +7,6 @@ import (
 
 func main() {
 	logrus.SetLevel(logrus.InfoLevel)
-	ignorewalker.Walk("../../..")
+	ignorewalker.Walk("../../../..")
+	logrus.Info("done!!!")
 }

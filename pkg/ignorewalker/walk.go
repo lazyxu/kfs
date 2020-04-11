@@ -23,9 +23,6 @@ func walkFn(p string, ignore *dirignore.DirGitIgnore, info os.FileInfo, err erro
 	if info == nil || err != nil || ignore == nil {
 		return nil
 	}
-	if info.IsDir() {
-		return nil
-	}
 	size := uint64(info.Size())
 	total++
 	totalSize += size
@@ -57,11 +54,17 @@ func walkFn(p string, ignore *dirignore.DirGitIgnore, info os.FileInfo, err erro
 				"notIgnored":     notIgnored,
 				"notIgnoredSize": humanize.Bytes(notIgnoredSize),
 			}).Trace(p)
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
 			return nil
 		}
 		i = i.Parent
 	}
 exit:
+	if info.IsDir() {
+		return nil
+	}
 	notIgnored++
 	notIgnoredSize += size
 	logrus.WithFields(logrus.Fields{
