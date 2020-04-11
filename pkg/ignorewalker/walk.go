@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/lazyxu/kfs/pkg/ignorewalker/dirignore"
 )
 
@@ -22,6 +24,10 @@ func Walk(root string) (*dirignore.DirGitIgnore, error) {
 	if err != nil {
 		return nil, err
 	}
+	logrus.WithFields(logrus.Fields{
+		"dir": root,
+		"abs": dir,
+	}).Info("walk")
 	ignore := dirignore.New(dir)
 	return ignore, iWalk(dir, ignore, walkFn)
 }
