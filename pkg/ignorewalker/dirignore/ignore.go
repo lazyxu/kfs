@@ -2,6 +2,7 @@ package dirignore
 
 import (
 	"path"
+	"runtime"
 
 	ignore "github.com/sabhiram/go-gitignore"
 	"github.com/sirupsen/logrus"
@@ -19,24 +20,53 @@ type DirGitIgnore struct {
 	Children []*DirGitIgnore
 	Root     *DirGitIgnore
 	Files    []*File
+	DirSize  map[string]uint64
 	Size     uint64
 }
 
+var defaultIgnore = []string{
+	".git",
+	".npm",
+	".node-gyp",
+	".vscode",
+	".nvm",
+	"go/pkg",
+	"go/bin",
+	".Trash",
+	".gradle",
+	".dropbox",
+}
+
+var defaultIgnoreMac = append(defaultIgnore, "Library",
+	"Applications",
+	".DS_Store",
+	"*.app",
+)
+
 func New(dir string) *DirGitIgnore {
-	gitIgnore, err := ignore.CompileIgnoreLines(".git")
+	var ignores []string
+	switch runtime.GOOS {
+	case "darwin":
+		ignores = defaultIgnoreMac
+	default:
+		ignores = defaultIgnore
+		return nil
+	}
+	gitIgnore, err := ignore.CompileIgnoreLines(ignores...)
 	if err != nil {
 		logrus.WithError(err).Error("compileIgnore")
 	}
-	root := &DirGitIgnore{
-		Path:     dir,
-		Ignore:   gitIgnore,
-		Children: []*DirGitIgnore{},
-		Files:    []*File{},
+	osRoot := &DirGitIgnore{
+		Path:   dir,
+		Ignore: gitIgnore,
 	}
-	return root.Enter(dir)
+	root := osRoot.Enter(dir)
+	root.Root = root
+	return root
 }
 
 func (i *DirGitIgnore) Enter(dir string) *DirGitIgnore {
+	// TODO: do not ignore files?
 	gitIgnore, err := ignore.CompileIgnoreFile(path.Join(dir, ".gitignore"))
 	if err != nil {
 		//return &DirGitIgnore{
@@ -68,4 +98,20 @@ func (i *DirGitIgnore) Exit(dir string) *DirGitIgnore {
 		return i.Parent
 	}
 	return i
+}
+
+func (i *DirGitIgnore) CalcDirSize() {
+	// TODO: recursive?
+	i.DirSize = make(map[string]uint64)
+	if len(i.Files) == 0 {
+		return
+	}
+	for _, file := range i.Files {
+		dirName := path.Dir(file.Path)
+		if _, ok := i.DirSize[dirName]; ok {
+			i.DirSize[dirName] += file.Size
+		} else {
+			i.DirSize[dirName] = file.Size
+		}
+	}
 }

@@ -18,14 +18,16 @@ func main() {
 	fmt.Printf("files: %d\n", len(dirIgnore.Files))
 	fmt.Printf("filesSize: %s\n", humanize.Bytes(dirIgnore.Size))
 	for _, file := range dirIgnore.Files {
-		if file.Size > 1000*1000 {
+		if file.Size > 10*1000*1000 {
 			fmt.Printf("%s: %s\n", humanize.Bytes(file.Size), file.Path)
 		}
 	}
-	fmt.Printf("dirs: %d\n", len(dirIgnore.Children))
-	for _, dir := range dirIgnore.Children {
-		if dir.Size > 1000*1000 {
-			fmt.Printf("%s: %s\n", humanize.Bytes(dir.Size), dir.Path)
+	fmt.Printf("repos: %d\n", len(dirIgnore.Children))
+	dirIgnore.CalcDirSize()
+	fmt.Printf("dirs: %d\n", len(dirIgnore.DirSize))
+	for p, size := range dirIgnore.DirSize {
+		if size > 100*1000*1000 {
+			fmt.Printf("%s: %s\n", humanize.Bytes(size), p)
 		}
 	}
 	logrus.Info("done!!!")
