@@ -5,9 +5,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/dustin/go-humanize"
 	"github.com/lazyxu/kfs/pkg/ignorewalker/dirignore"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -19,70 +17,13 @@ var (
 
 type WalkFunc func(path string, ignore *dirignore.DirGitIgnore, info os.FileInfo, err error) error
 
-func walkFn(p string, ignore *dirignore.DirGitIgnore, info os.FileInfo, err error) error {
-	if info == nil || err != nil || ignore == nil {
-		return nil
-	}
-	size := uint64(info.Size())
-	total++
-	totalSize += size
-	i := ignore
-	for {
-		for {
-			if i == nil {
-				goto exit
-			}
-			if i.Ignore != nil {
-				break
-			}
-			i = i.Parent
-		}
-		rel, err := filepath.Rel(i.Path, p)
-		if err != nil {
-			logrus.WithError(err).Error("rel")
-			return err
-		}
-		match := i.Ignore.MatchesPath(rel)
-		logrus.WithFields(logrus.Fields{
-			"path":   i.Path,
-			"ignore": match,
-		}).Trace("ignore")
-		if match {
-			logrus.WithFields(logrus.Fields{
-				"total":          total,
-				"totalSize":      humanize.Bytes(totalSize),
-				"notIgnored":     notIgnored,
-				"notIgnoredSize": humanize.Bytes(notIgnoredSize),
-			}).Trace(p)
-			if info.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		i = i.Parent
-	}
-exit:
-	if info.IsDir() {
-		return nil
-	}
-	notIgnored++
-	notIgnoredSize += size
-	logrus.WithFields(logrus.Fields{
-		"total":          total,
-		"totalSize":      humanize.Bytes(totalSize),
-		"notIgnored":     notIgnored,
-		"notIgnoredSize": humanize.Bytes(notIgnoredSize),
-	}).Info(p)
-	return nil
-}
-
-func Walk(root string) error {
+func Walk(root string) (*dirignore.DirGitIgnore, error) {
 	dir, err := filepath.Abs(root)
 	if err != nil {
-		logrus.WithError(err).Error("abs")
+		return nil, err
 	}
 	ignore := dirignore.New(dir)
-	return iWalk(dir, ignore, walkFn)
+	return ignore, iWalk(dir, ignore, walkFn)
 }
 
 // Walk walks the file tree rooted at root, calling walkFn for each file or

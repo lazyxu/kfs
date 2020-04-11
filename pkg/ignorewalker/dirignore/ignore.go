@@ -7,10 +7,19 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type File struct {
+	Path string
+	Size uint64
+}
+
 type DirGitIgnore struct {
-	Path   string
-	Ignore *ignore.GitIgnore
-	Parent *DirGitIgnore
+	Path     string
+	Ignore   *ignore.GitIgnore
+	Parent   *DirGitIgnore
+	Children []*DirGitIgnore
+	Root     *DirGitIgnore
+	Files    []*File
+	Size     uint64
 }
 
 func New(dir string) *DirGitIgnore {
@@ -19,8 +28,10 @@ func New(dir string) *DirGitIgnore {
 		logrus.WithError(err).Error("compileIgnore")
 	}
 	root := &DirGitIgnore{
-		Path:   dir,
-		Ignore: gitIgnore,
+		Path:     dir,
+		Ignore:   gitIgnore,
+		Children: []*DirGitIgnore{},
+		Files:    []*File{},
 	}
 	return root.Enter(dir)
 }
@@ -39,11 +50,16 @@ func (i *DirGitIgnore) Enter(dir string) *DirGitIgnore {
 		"path":      path.Join(dir, ".gitignore"),
 		"gitIgnore": gitIgnore,
 	}).Debug("enter")
-	return &DirGitIgnore{
-		Path:   dir,
-		Ignore: gitIgnore,
-		Parent: i,
+	newDir := &DirGitIgnore{
+		Path:     dir,
+		Ignore:   gitIgnore,
+		Children: []*DirGitIgnore{},
+		Files:    []*File{},
+		Parent:   i,
+		Root:     i.Root,
 	}
+	i.Children = append(i.Children, newDir)
+	return newDir
 }
 
 func (i *DirGitIgnore) Exit(dir string) *DirGitIgnore {
