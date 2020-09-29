@@ -4,7 +4,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/lazyxu/kfs/node"
+	"github.com/lazyxu/kfs/object"
 
 	"github.com/lazyxu/kfs/kfs/e"
 )
@@ -22,7 +22,7 @@ func (kfs *KFS) Remove(filePath string) error {
 const accessModeMask = os.O_RDONLY | os.O_WRONLY | os.O_RDWR
 
 // OpenFile a file according to the flags and perm provided
-func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (node node.Node, err error) {
+func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (node Item, err error) {
 	// http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html
 	// The result of using O_TRUNC with O_RDONLY is undefined.
 	// Linux seems to truncate the file, but we prefer to return EINVAL
@@ -51,7 +51,7 @@ func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (node node.No
 // Open opens the named file for reading. If successful, methods on
 // the returned file can be used for reading; the associated file
 // descriptor has mode O_RDONLY.
-func (kfs *KFS) Open(name string) (node.Node, error) {
+func (kfs *KFS) Open(name string) (Item, error) {
 	return kfs.OpenFile(name, os.O_RDONLY, 0)
 }
 
@@ -60,7 +60,7 @@ func (kfs *KFS) Read(path string, buff []byte, off int64) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	file, ok := n.(*File)
+	file, ok := n.(*ItemFile)
 	if !ok {
 		return 0, err
 	}
@@ -84,19 +84,19 @@ func (kfs *KFS) Write(path string, buff []byte, offset int64) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	file, ok := n.(*File)
+	file, ok := n.(*ItemFile)
 	if !ok {
 		return 0, e.ErrNotExist
 	}
 	return file.SetContent(buff, offset)
 }
 
-func (kfs *KFS) Readdir(path string) ([]node.Node, error) {
+func (kfs *KFS) Readdir(path string) ([]object.Object, error) {
 	n, err := kfs.GetNode(path)
 	if err != nil {
 		return nil, err
 	}
-	dir, ok := n.(*Dir)
+	dir, ok := n.(*ItemDir)
 	if !ok {
 		return nil, e.ENotDir
 	}
@@ -104,14 +104,10 @@ func (kfs *KFS) Readdir(path string) ([]node.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	nodes := make([]node.Node, len(itemMap))
+	nodes := make([]object.Object, len(itemMap))
 	i := 0
 	for _, item := range itemMap {
-		n, err := item.Node()
-		if err != nil {
-			return nodes, err
-		}
-		nodes[i] = n
+		nodes[i] = item
 		i++
 	}
 	return nodes, nil

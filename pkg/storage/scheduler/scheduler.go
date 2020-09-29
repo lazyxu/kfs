@@ -17,31 +17,45 @@ func New(storages ...storage.Storage) *Scheduler {
 }
 
 func (s *Scheduler) GetFileObjectByHash(hash string) (*object.File, error) {
-	if hash == EmptyFileHash {
-		return EmptyFile, nil
+	if hash == object.EmptyFileHash {
+		return object.EmptyFile, nil
 	}
 	obj, err := s.storages[0].Get(hash)
 	if err != nil {
 		return nil, err
 	}
-	if file, ok := obj.(*object.File); ok {
-		return file, nil
+	if o, ok := obj.(*object.File); ok {
+		return o, nil
+	}
+	return nil, e.ENotFile
+}
+
+func (s *Scheduler) GetDirObjectByHash(hash string) (*object.Dir, error) {
+	if hash == object.EmptyDirHash {
+		return object.EmptyDir, nil
+	}
+	obj, err := s.storages[0].Get(hash)
+	if err != nil {
+		return nil, err
+	}
+	if o, ok := obj.(*object.Dir); ok {
+		return o, nil
 	}
 	return nil, e.ENotFile
 }
 
 func (s *Scheduler) GetObjectByHash(hash string) (object.Object, error) {
-	if hash == EmptyFileHash {
-		return EmptyFile, nil
+	if hash == object.EmptyFileHash {
+		return object.EmptyFile, nil
 	}
 	return s.storages[0].Get(hash)
 }
 
-func (s *Scheduler) SetObjectByHash(object object.Object) error {
-	if object == EmptyFile {
+func (s *Scheduler) SetObjectByHash(o object.Object) error {
+	if o == object.EmptyFile {
 		return nil
 	}
-	return s.storages[0].Add(object)
+	return s.storages[0].Add(o)
 }
 
 func (s *Scheduler) checkpoint() error {

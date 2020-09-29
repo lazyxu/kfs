@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/lazyxu/kfs/object"
+
 	"github.com/lazyxu/kfs/kfs/e"
 
 	"github.com/sirupsen/logrus"
@@ -12,7 +14,6 @@ import (
 
 	"github.com/billziss-gh/cgofuse/fuse"
 	"github.com/lazyxu/kfs/kfs"
-	"github.com/lazyxu/kfs/node"
 )
 
 const (
@@ -59,26 +60,26 @@ func (fs *FS) Statfs(path string, stat *fuse.Statfs_t) int {
 	return 0
 }
 
-func (fs *FS) Unlink(filepath string) (errCodeode int) {
+func (fs *FS) Unlink(filepath string) (errCode int) {
 	defer e.Trace(logrus.Fields{
 		"path": filepath,
 	})(func() logrus.Fields {
 		return logrus.Fields{
-			"errCodeode": errCodeode,
+			"errCode": errCode,
 		}
 	})
 	err := fs.kfs.Remove(filepath)
 	return translateError(err)
 }
 
-func (fs *FS) Open(path string, flags int) (errCodeode int, fh uint64) {
+func (fs *FS) Open(path string, flags int) (errCode int, fh uint64) {
 	defer e.Trace(logrus.Fields{
 		"path":  path,
 		"flags": flags,
 	})(func() logrus.Fields {
 		return logrus.Fields{
-			"errCodeode": errCodeode,
-			"fh":         fh,
+			"errCode": errCode,
+			"fh":      fh,
 		}
 	})
 	_, err := fs.kfs.OpenFile(path, flags, fs.kfs.Opt.FilePerms)
@@ -93,18 +94,18 @@ func (fs *FS) Access(path string, mask uint32) int {
 	return -fuse.ENOSYS
 }
 
-func (fs *FS) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errCodeode int) {
+func (fs *FS) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errCode int) {
 	defer e.Trace(logrus.Fields{"path": path, "fh": fh})(func() logrus.Fields {
 		return logrus.Fields{
-			"stat":       fmt.Sprintf("%+v", stat),
-			"errCodeode": errCodeode,
+			"stat":    fmt.Sprintf("%+v", stat),
+			"errCode": errCode,
 		}
 	})
 	n, err := fs.kfs.GetNode(path)
 	if err != nil {
 		return translateError(err)
 	}
-	fs.stat(n, stat)
+	fs.stat(n.Item(), stat)
 	return
 }
 
@@ -121,21 +122,21 @@ func (fs *FS) Read(path string, buff []byte, off int64, fh uint64) (num int) {
 	return int(n)
 }
 
-func (fs *FS) Create(filepath string, flags int, mode uint32) (errCodeode int, fh uint64) {
+func (fs *FS) Create(filepath string, flags int, mode uint32) (errCode int, fh uint64) {
 	defer e.Trace(logrus.Fields{"path": filepath})(func() logrus.Fields {
 		return logrus.Fields{
-			"errCodeode": errCodeode,
+			"errCode": errCode,
 		}
 	})
 	_, err := fs.kfs.OpenFile(filepath, flags, os.FileMode(mode))
-	errCodeode = translateError(err)
+	errCode = translateError(err)
 	return
 }
 
-func (fs *FS) Write(path string, buff []byte, offset int64, fh uint64) (errCodeode int) {
+func (fs *FS) Write(path string, buff []byte, offset int64, fh uint64) (errCode int) {
 	defer e.Trace(logrus.Fields{"path": path})(func() logrus.Fields {
 		return logrus.Fields{
-			"errCodeode": errCodeode,
+			"errCode": errCode,
 		}
 	})
 	n, err := fs.kfs.Write(path, buff, offset)
@@ -147,10 +148,10 @@ func (fs *FS) Write(path string, buff []byte, offset int64, fh uint64) (errCodeo
 
 func (fs *FS) Readdir(path string,
 	fill func(name string, stat *fuse.Stat_t, offset int64) bool,
-	offset int64, fh uint64) (errCodeode int) {
+	offset int64, fh uint64) (errCode int) {
 	defer e.Trace(logrus.Fields{"path": path})(func() logrus.Fields {
 		return logrus.Fields{
-			"errCodeode": errCodeode,
+			"errCode": errCode,
 		}
 	})
 	fill(".", nil, 0)
@@ -171,11 +172,8 @@ func (fs *FS) Readdir(path string,
 }
 
 // stat fills up the stat block for Node
-func (fs *FS) stat(node node.Node, stat *fuse.Stat_t) {
-	size, err := node.Size()
-	if err != nil {
-		logrus.WithError(err).Error("node.Size()")
-	}
+func (fs *FS) stat(node object.Object, stat *fuse.Stat_t) {
+	size := node.Size()
 	blocks := (size + 511) / 512
 	// stat.Dev // Device ID of device containing file. [IGNORED]
 	// stat.Ino // File serial number. [IGNORED unless the use_ino mount option is given.]
@@ -185,12 +183,12 @@ func (fs *FS) stat(node node.Node, stat *fuse.Stat_t) {
 	stat.Gid = fs.kfs.Opt.GID
 	// stat.Rdev // Device ID (if file is character or block special).
 	stat.Size = size
-	stat.Atim = fuse.NewTimespec(node.AccessTime())
-	stat.Mtim = fuse.NewTimespec(node.AccessTime())
-	stat.Ctim = fuse.NewTimespec(node.AccessTime())
+	stat.Atim = fuse.NewTimespec(node.ModTime())
+	stat.Mtim = fuse.NewTimespec(node.ModTime())
+	stat.Ctim = fuse.NewTimespec(node.ChangeTime())
 	stat.Blksize = 512
-	stat.Blocks = int64(blocks)
-	stat.Birthtim = fuse.NewTimespec(node.AccessTime())
+	stat.Blocks = blocks
+	stat.Birthtim = fuse.NewTimespec(node.BirthTime())
 	// stat.Flags
 }
 
@@ -201,7 +199,7 @@ func (fs *FS) Truncate(path string, size int64, fh uint64) (errCode int) {
 			"errCode": errCode,
 		}
 	})
-	n, err := fs.kfs.GetNode(path)
+	n, err := fs.kfs.GetFile(path)
 	if err != nil {
 		return translateError(err)
 	}
