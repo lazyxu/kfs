@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
-	"github.com/lazyxu/kfs/object"
+	"github.com/lazyxu/kfs/storage/obj"
 
 	"github.com/lazyxu/kfs/kfs/e"
 
@@ -105,7 +106,7 @@ func (fs *FS) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errCode int) {
 	if err != nil {
 		return translateError(err)
 	}
-	fs.stat(n.Item(), stat)
+	fs.stat(n.GetMetadata(), stat)
 	return
 }
 
@@ -162,33 +163,33 @@ func (fs *FS) Readdir(path string,
 	}
 	for _, n := range nodes {
 		logrus.WithFields(logrus.Fields{
-			"name": n.Name(),
+			"name": n.Name,
 		}).Debug("node")
 		var stat fuse.Stat_t
 		fs.stat(n, &stat)
-		fill(n.Name(), &stat, 0)
+		fill(n.Name, &stat, 0)
 	}
 	return 0
 }
 
 // stat fills up the stat block for Node
-func (fs *FS) stat(node object.Object, stat *fuse.Stat_t) {
-	size := node.Size()
+func (fs *FS) stat(metadata obj.Metadata, stat *fuse.Stat_t) {
+	size := metadata.Size
 	blocks := (size + 511) / 512
 	// stat.Dev // Device ID of device containing file. [IGNORED]
 	// stat.Ino // File serial number. [IGNORED unless the use_ino mount option is given.]
-	stat.Mode = uint32(node.Mode())
+	stat.Mode = uint32(metadata.Mode)
 	stat.Nlink = 1
 	stat.Uid = fs.kfs.Opt.UID
 	stat.Gid = fs.kfs.Opt.GID
 	// stat.Rdev // Device ID (if file is character or block special).
 	stat.Size = size
-	stat.Atim = fuse.NewTimespec(node.ModTime())
-	stat.Mtim = fuse.NewTimespec(node.ModTime())
-	stat.Ctim = fuse.NewTimespec(node.ChangeTime())
+	stat.Atim = fuse.NewTimespec(time.Unix(0, metadata.ModifyTime))
+	stat.Mtim = fuse.NewTimespec(time.Unix(0, metadata.ModifyTime))
+	stat.Ctim = fuse.NewTimespec(time.Unix(0, metadata.ChangeTime))
 	stat.Blksize = 512
 	stat.Blocks = blocks
-	stat.Birthtim = fuse.NewTimespec(node.BirthTime())
+	stat.Birthtim = fuse.NewTimespec(time.Unix(0, metadata.BirthTime))
 	// stat.Flags
 }
 
@@ -203,7 +204,7 @@ func (fs *FS) Truncate(path string, size int64, fh uint64) (errCode int) {
 	if err != nil {
 		return translateError(err)
 	}
-	err = n.Truncate(uint64(size))
+	err = n.Truncate(size)
 	if err != nil {
 		return translateError(err)
 	}

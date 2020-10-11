@@ -1,9 +1,10 @@
 package kfs
 
 import (
-	"fmt"
 	"path"
 	"strings"
+
+	"github.com/lazyxu/kfs/storage/obj"
 
 	"github.com/lazyxu/kfs/storage/scheduler"
 
@@ -17,7 +18,7 @@ import (
 )
 
 type KFS struct {
-	itemRoot  *ItemDir
+	root      *Dir
 	scheduler *scheduler.Scheduler
 	Opt       *kfscommon.Options
 }
@@ -27,16 +28,12 @@ func New(opt *kfscommon.Options) *KFS {
 		Opt:       opt,
 		scheduler: scheduler.New(memory.New()),
 	}
-	kfs.itemRoot = newDir(kfs, "")
-	kfs.itemRoot.Add(newDir(kfs, "demo"))
-	hello := newFile(kfs, "hello")
-	fmt.Println("Hello done")
-	hello.SetContent([]byte("hello world"), 0)
-	fmt.Println("Hello done")
-	kfs.itemRoot.Add(hello)
-	index := newFile(kfs, "index.js")
-	index.SetContent([]byte("index"), 0)
-	kfs.itemRoot.Add(index)
+	obj.EmptyDir.Write(kfs.scheduler)
+	obj.EmptyFile.Write(kfs.scheduler)
+	kfs.root = NewDir(kfs, "")
+	kfs.root.Add(obj.NewDirMetadata("demo"), obj.EmptyDir)
+	kfs.root.Add(obj.NewFileMetadata("hello"), &obj.File{Reader: strings.NewReader("hello world")})
+	kfs.root.Add(obj.NewFileMetadata("index.js"), &obj.File{Reader: strings.NewReader("index")})
 	return kfs
 }
 
@@ -44,7 +41,7 @@ func New(opt *kfscommon.Options) *KFS {
 //
 // It is the equivalent of os.Stat - Node contains the os.FileInfo
 // interface.
-func (kfs *KFS) GetNode(path string) (node Item, err error) {
+func (kfs *KFS) GetNode(path string) (node Node, err error) {
 	defer e.Trace(logrus.Fields{
 		"path": path,
 	})(func() logrus.Fields {
@@ -55,33 +52,33 @@ func (kfs *KFS) GetNode(path string) (node Item, err error) {
 	return kfs.getNode(path)
 }
 
-func (kfs *KFS) getNodeDir(path string) (dir *ItemDir, err error) {
+func (kfs *KFS) getNodeDir(path string) (dir *Dir, err error) {
 	n, err := kfs.getNode(path)
 	if err != nil {
 		return nil, err
 	}
-	dir, ok := n.(*ItemDir)
+	dir, ok := n.(*Dir)
 	if !ok {
 		return nil, e.ENotDir
 	}
 	return dir, nil
 }
 
-func (kfs *KFS) GetFile(path string) (file *ItemFile, err error) {
+func (kfs *KFS) GetFile(path string) (*File, error) {
 	n, err := kfs.getNode(path)
 	if err != nil {
 		return nil, err
 	}
-	file, ok := n.(*ItemFile)
+	file, ok := n.(*File)
 	if !ok {
 		return nil, e.ENotFile
 	}
 	return file, nil
 }
 
-func (kfs *KFS) getNode(path string) (node Item, err error) {
+func (kfs *KFS) getNode(path string) (node Node, err error) {
 	path = strings.Trim(path, "/")
-	node = kfs.itemRoot
+	node = kfs.root
 	for path != "" {
 		i := strings.IndexRune(path, '/')
 		var name string
@@ -93,20 +90,49 @@ func (kfs *KFS) getNode(path string) (node Item, err error) {
 		if name == "" {
 			continue
 		}
-		dir, ok := node.(*ItemDir)
+		dir, ok := node.(*Dir)
 		if !ok {
 			// We need to look in a directory, but found a file
 			return nil, e.ErrNotExist
 		}
-		node, err = dir.GetNode(name)
+		node, ok = dir.items[name]
+		if ok {
+			continue
+		}
+
+		d, err := obj.ReadDir(kfs.scheduler, dir.Metadata.Hash)
 		if err != nil {
 			return nil, err
+		}
+		metadata, err := d.GetNode(name)
+		if err != nil {
+			return nil, err
+		}
+		if metadata.IsDir() {
+			node = &Dir{
+				ItemBase: ItemBase{
+					kfs:      kfs,
+					parent:   dir,
+					Metadata: *metadata,
+				},
+				items: make(map[string]Node),
+			}
+			dir.items[name] = node
+		} else {
+			node = &File{
+				ItemBase: ItemBase{
+					kfs:      kfs,
+					parent:   dir,
+					Metadata: *metadata,
+				},
+			}
+			dir.items[name] = node
 		}
 	}
 	return
 }
 
-func (kfs *KFS) getDir(name string) (*ItemDir, string, error) {
+func (kfs *KFS) getDir(name string) (*Dir, string, error) {
 	name = strings.Trim(name, "/")
 	parent, leaf := path.Split(name)
 	dir, err := kfs.getNodeDir(parent)

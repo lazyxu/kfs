@@ -1,10 +1,12 @@
 package kfs
 
 import (
+	"io"
+	"io/ioutil"
 	"os"
 	"path"
 
-	"github.com/lazyxu/kfs/object"
+	"github.com/lazyxu/kfs/storage/obj"
 
 	"github.com/lazyxu/kfs/kfs/e"
 )
@@ -22,7 +24,7 @@ func (kfs *KFS) Remove(filePath string) error {
 const accessModeMask = os.O_RDONLY | os.O_WRONLY | os.O_RDWR
 
 // OpenFile a file according to the flags and perm provided
-func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (node Item, err error) {
+func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (node Node, err error) {
 	// http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html
 	// The result of using O_TRUNC with O_RDONLY is undefined.
 	// Linux seems to truncate the file, but we prefer to return EINVAL
@@ -51,7 +53,7 @@ func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (node Item, e
 // Open opens the named file for reading. If successful, methods on
 // the returned file can be used for reading; the associated file
 // descriptor has mode O_RDONLY.
-func (kfs *KFS) Open(name string) (Item, error) {
+func (kfs *KFS) Open(name string) (Node, error) {
 	return kfs.OpenFile(name, os.O_RDONLY, 0)
 }
 
@@ -60,23 +62,28 @@ func (kfs *KFS) Read(path string, buff []byte, off int64) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	file, ok := n.(*ItemFile)
+	file, ok := n.(*File)
 	if !ok {
 		return 0, err
 	}
-	content, err := file.GetContent()
+	reader, err := file.GetContent()
 	if err != nil {
 		return 0, err
 	}
-	end := off + int64(len(buff))
-	if end > int64(len(content)) {
-		end = int64(len(content))
+	switch r := reader.(type) {
+	case io.Seeker:
+		n, err := r.Seek(off, io.SeekCurrent)
+		if err != nil {
+			return n, err
+		}
+	default:
+		n, err := io.CopyN(ioutil.Discard, r, off)
+		if err != nil {
+			return n, err
+		}
 	}
-	if end < off {
-		return 0, nil
-	}
-	size := copy(buff, content[off:end])
-	return int64(size), nil
+	num, err := reader.Read(buff)
+	return int64(num), err
 }
 
 func (kfs *KFS) Write(path string, buff []byte, offset int64) (int64, error) {
@@ -84,19 +91,19 @@ func (kfs *KFS) Write(path string, buff []byte, offset int64) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	file, ok := n.(*ItemFile)
+	file, ok := n.(*File)
 	if !ok {
 		return 0, e.ErrNotExist
 	}
 	return file.SetContent(buff, offset)
 }
 
-func (kfs *KFS) Readdir(path string) ([]object.Object, error) {
+func (kfs *KFS) Readdir(path string) ([]obj.Metadata, error) {
 	n, err := kfs.GetNode(path)
 	if err != nil {
 		return nil, err
 	}
-	dir, ok := n.(*ItemDir)
+	dir, ok := n.(*Dir)
 	if !ok {
 		return nil, e.ENotDir
 	}
@@ -104,7 +111,7 @@ func (kfs *KFS) Readdir(path string) ([]object.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	nodes := make([]object.Object, len(itemMap))
+	nodes := make([]obj.Metadata, len(itemMap))
 	i := 0
 	for _, item := range itemMap {
 		nodes[i] = item

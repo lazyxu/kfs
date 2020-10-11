@@ -1,11 +1,16 @@
 package storage
 
 import (
-	"github.com/lazyxu/kfs/object"
+	"io"
+)
+
+const (
+	TypFile = iota
+	TypDir
 )
 
 type Storage interface {
-	Get(hash string) (object.Object, error)
-	Add(obj object.Object) error
-	Remove(hash string) error
+	Read(typ int, key string) (io.Reader, error)
+	Write(typ int, reader io.Reader) (string, error)
+	Delete(typ int, key string) error
 }

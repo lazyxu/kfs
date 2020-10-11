@@ -22,6 +22,8 @@ const (
 	ENotImpl
 	ENotFile
 	ENotDir
+	EInvalidType
+	EWriteObject
 )
 
 // Errors which have exact counterparts in os
@@ -34,14 +36,16 @@ var (
 )
 
 var errorNames = []string{
-	OK:        "Success",
-	ENOTEMPTY: "Directory not empty",
-	ESPIPE:    "Illegal seek",
-	EBADF:     "Bad file descriptor",
-	EROFS:     "Read only file system",
-	ENotImpl:  "Function not implemented",
-	ENotFile:  "Not a file",
-	ENotDir:   "Not a directory",
+	OK:           "Success",
+	ENOTEMPTY:    "Directory not empty",
+	ESPIPE:       "Illegal seek",
+	EBADF:        "Bad file descriptor",
+	EROFS:        "Read only file system",
+	ENotImpl:     "Function not implemented",
+	ENotFile:     "Not a file",
+	ENotDir:      "Not a directory",
+	EInvalidType: "Invalid object type",
+	EWriteObject: "Failed to write object",
 }
 
 // Error renders the error as a string
