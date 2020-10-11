@@ -3,30 +3,21 @@ package core
 import (
 	"os"
 	"sync"
+	"time"
 
 	"github.com/lazyxu/kfs/object"
 )
 
 type Node interface {
-	Name() string
-	IsDir() bool
+	os.FileInfo
 	IsFile() bool
-	GetMetadata() object.Metadata
 }
 
 type ItemBase struct {
 	kfs    *KFS
 	parent *Dir
 	mutex  sync.RWMutex
-	object.Metadata
-}
-
-func (i *ItemBase) GetMetadata() object.Metadata {
-	return i.Metadata
-}
-
-func (i *ItemBase) Mode() os.FileMode {
-	return i.Metadata.Mode
+	*object.Metadata
 }
 
 func (i *ItemBase) Name() string {
@@ -35,6 +26,18 @@ func (i *ItemBase) Name() string {
 
 func (i *ItemBase) Size() int64 {
 	return i.Metadata.Size
+}
+
+func (i *ItemBase) Mode() os.FileMode {
+	return i.Metadata.Mode
+}
+
+func (i *ItemBase) ModTime() time.Time {
+	return time.Unix(0, i.ModifyTime)
+}
+
+func (i *ItemBase) Sys() interface{} {
+	return i.Metadata
 }
 
 func (i *ItemBase) update(o object.Object) error {

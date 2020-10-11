@@ -11,11 +11,11 @@ import (
 )
 
 type Tree struct {
-	Items []Metadata
+	Items []*Metadata
 }
 
 var EmptyDir = &Tree{
-	Items: make([]Metadata, 0),
+	Items: make([]*Metadata, 0),
 }
 var EmptyDirHash string
 
@@ -33,7 +33,7 @@ func init() {
 func (o *Tree) GetNode(name string) (*Metadata, error) {
 	for _, it := range o.Items {
 		if it.Name == name {
-			return &it, nil
+			return it, nil
 		}
 	}
 	return nil, e.ErrNotExist

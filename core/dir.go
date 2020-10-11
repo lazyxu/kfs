@@ -53,7 +53,7 @@ func getSize(r io.Reader) (int64, error) {
 	}
 }
 
-func (i *Dir) Add(metadata object.Metadata, item object.Object) error {
+func (i *Dir) Add(metadata *object.Metadata, item object.Object) error {
 	d, err := i.load()
 	if err != nil {
 		return err
@@ -114,7 +114,7 @@ func (i *Dir) Remove(name string) error {
 	return e.ErrNotExist
 }
 
-func (i *Dir) ReadDirAll() ([]object.Metadata, error) {
+func (i *Dir) ReadDirAll() ([]*object.Metadata, error) {
 	d, err := i.load()
 	if err != nil {
 		return nil, err

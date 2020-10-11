@@ -17,13 +17,7 @@ import (
 	"github.com/lazyxu/kfs/core"
 )
 
-const (
-	filename = "hello"
-	contents = "hello, world\n"
-)
-
 type FS struct {
-	fuse.FileSystemBase
 	kfs *core.KFS
 }
 
@@ -39,8 +33,15 @@ func NewFS() *FS {
 	}
 }
 
+// Init is called when the file system is created.
+func (fs *FS) Init() {
+}
+
+// Destroy is called when the file system is destroyed.
+func (fs *FS) Destroy() {
+}
+
 // Statfs gets file system statistics.
-// The FileSystemBase implementation returns -ENotImpl.
 func (fs *FS) Statfs(path string, stat *fuse.Statfs_t) int {
 	defer e.Trace(logrus.Fields{"path": path})(nil)
 	const blockSize = 4096
@@ -61,18 +62,88 @@ func (fs *FS) Statfs(path string, stat *fuse.Statfs_t) int {
 	return 0
 }
 
+// Mknod creates a file node.
+func (fs *FS) Mknod(path string, mode uint32, dev uint64) int {
+	return translateError(e.ENotImpl)
+}
+
+// Mkdir creates a directory.
+func (fs *FS) Mkdir(path string, mode uint32) int {
+	err := fs.kfs.MkdirAll(path, os.FileMode(mode))
+	return translateError(err)
+}
+
+// Unlink removes a file.
 func (fs *FS) Unlink(filepath string) (errCode int) {
-	defer e.Trace(logrus.Fields{
-		"path": filepath,
-	})(func() logrus.Fields {
-		return logrus.Fields{
-			"errCode": errCode,
-		}
-	})
 	err := fs.kfs.Remove(filepath)
 	return translateError(err)
 }
 
+// Rmdir removes a directory.
+func (fs *FS) Rmdir(path string) int {
+	err := fs.kfs.Remove(path)
+	return translateError(err)
+}
+
+// Link creates a hard link to a file.
+func (fs *FS) Link(oldpath string, newpath string) int {
+	return translateError(e.ENotImpl)
+}
+
+// Symlink creates a symbolic link.
+func (fs *FS) Symlink(target string, newpath string) int {
+	return translateError(e.ENotImpl)
+}
+
+// Readlink reads the target of a symbolic link.
+func (fs *FS) Readlink(path string) (int, string) {
+	return translateError(e.ENotImpl), ""
+}
+
+// Rename renames a file.
+func (fs *FS) Rename(oldpath string, newpath string) int {
+	return translateError(e.ENotImpl)
+}
+
+// Chmod changes the permission bits of a file.
+func (fs *FS) Chown(path string, uid uint32, gid uint32) int {
+	return translateError(e.ENotImpl)
+}
+
+// Chmod changes the permission bits of a file.
+func (fs *FS) Chmod(path string, mode uint32) int {
+	return translateError(e.ENotImpl)
+}
+
+// Utimens changes the access and modification times of a file.
+func (fs *FS) Utimens(path string, tmsp []fuse.Timespec) int {
+	return translateError(e.ENotImpl)
+}
+
+// Access checks file access permissions.
+func (fs *FS) Access(path string, mask uint32) int {
+	defer e.Trace(logrus.Fields{
+		"path": path,
+		"mask": mask,
+	})(nil)
+	return -fuse.ENOSYS
+}
+
+// Create creates and opens a file.
+// The flags are a combination of the fuse.O_* constants.
+func (fs *FS) Create(filepath string, flags int, mode uint32) (errCode int, fh uint64) {
+	defer e.Trace(logrus.Fields{"path": filepath})(func() logrus.Fields {
+		return logrus.Fields{
+			"errCode": errCode,
+		}
+	})
+	_, err := fs.kfs.OpenFile(filepath, flags, os.FileMode(mode))
+	errCode = translateError(err)
+	return
+}
+
+// Open opens a file.
+// The flags are a combination of the fuse.O_* constants.
 func (fs *FS) Open(path string, flags int) (errCode int, fh uint64) {
 	defer e.Trace(logrus.Fields{
 		"path":  path,
@@ -87,14 +158,7 @@ func (fs *FS) Open(path string, flags int) (errCode int, fh uint64) {
 	return translateError(err), defaultFileHandler
 }
 
-func (fs *FS) Access(path string, mask uint32) int {
-	defer e.Trace(logrus.Fields{
-		"path": path,
-		"mask": mask,
-	})(nil)
-	return -fuse.ENOSYS
-}
-
+// Getattr gets file attributes.
 func (fs *FS) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errCode int) {
 	defer e.Trace(logrus.Fields{"path": path, "fh": fh})(func() logrus.Fields {
 		return logrus.Fields{
@@ -102,51 +166,89 @@ func (fs *FS) Getattr(path string, stat *fuse.Stat_t, fh uint64) (errCode int) {
 			"errCode": errCode,
 		}
 	})
-	n, err := fs.kfs.GetNode(path)
+	n, err := fs.kfs.Stat(path)
 	if err != nil {
 		return translateError(err)
 	}
-	fs.stat(n.GetMetadata(), stat)
+	fs.stat(n.Sys().(*object.Metadata), stat)
 	return
 }
 
+// Truncate changes the size of a file.
+func (fs *FS) Truncate(path string, size int64, fh uint64) (errCode int) {
+	defer e.Trace(logrus.Fields{"path": path, "size": size, "fh": fh})(func() logrus.Fields {
+		return logrus.Fields{
+			"errCode": errCode,
+		}
+	})
+	n, err := fs.kfs.GetFile(path)
+	if err != nil {
+		return translateError(err)
+	}
+	err = n.Truncate(size)
+	if err != nil {
+		return translateError(err)
+	}
+	return 0
+}
+
+// Read reads data from a file.
 func (fs *FS) Read(path string, buff []byte, off int64, fh uint64) (num int) {
 	defer e.Trace(logrus.Fields{"path": path})(func() logrus.Fields {
 		return logrus.Fields{
 			"num": num,
 		}
 	})
-	n, err := fs.kfs.Read(path, buff, off)
+	n, err := fs.kfs.Open(path)
 	if err != nil {
 		return translateError(err)
 	}
-	return int(n)
+	num, err = n.ReadAt(buff, off)
+	if err != nil {
+		return translateError(err)
+	}
+	return num
 }
 
-func (fs *FS) Create(filepath string, flags int, mode uint32) (errCode int, fh uint64) {
-	defer e.Trace(logrus.Fields{"path": filepath})(func() logrus.Fields {
-		return logrus.Fields{
-			"errCode": errCode,
-		}
-	})
-	_, err := fs.kfs.OpenFile(filepath, flags, os.FileMode(mode))
-	errCode = translateError(err)
-	return
-}
-
+// Write writes data to a file.
 func (fs *FS) Write(path string, buff []byte, offset int64, fh uint64) (errCode int) {
 	defer e.Trace(logrus.Fields{"path": path})(func() logrus.Fields {
 		return logrus.Fields{
 			"errCode": errCode,
 		}
 	})
-	n, err := fs.kfs.Write(path, buff, offset)
+	n, err := fs.kfs.OpenFile(path, os.O_WRONLY, 0)
 	if err != nil {
 		return translateError(err)
 	}
-	return int(n)
+	num, err := n.WriteAt(buff, offset)
+	if err != nil {
+		return translateError(err)
+	}
+	return num
 }
 
+// Flush flushes cached file data.
+func (fs *FS) Flush(path string, fh uint64) int {
+	return translateError(e.ENotImpl)
+}
+
+// Release closes an open file.
+func (fs *FS) Release(path string, fh uint64) int {
+	return translateError(e.ENotImpl)
+}
+
+// Fsync synchronizes file contents.
+func (fs *FS) Fsync(path string, datasync bool, fh uint64) int {
+	return translateError(e.ENotImpl)
+}
+
+// Opendir opens a directory.
+func (fs *FS) Opendir(path string) (int, uint64) {
+	return translateError(e.ENotImpl), ^uint64(0)
+}
+
+// Readdir reads a directory.
 func (fs *FS) Readdir(path string,
 	fill func(name string, stat *fuse.Stat_t, offset int64) bool,
 	offset int64, fh uint64) (errCode int) {
@@ -157,7 +259,7 @@ func (fs *FS) Readdir(path string,
 	})
 	fill(".", nil, 0)
 	fill("..", nil, 0)
-	nodes, err := fs.kfs.Readdir(path)
+	nodes, err := fs.kfs.ReadDir(path)
 	if err != nil {
 		return translateError(err)
 	}
@@ -172,8 +274,38 @@ func (fs *FS) Readdir(path string,
 	return 0
 }
 
-// stat fills up the stat block for Node
-func (fs *FS) stat(metadata object.Metadata, stat *fuse.Stat_t) {
+// Releasedir closes an open directory.
+func (fs *FS) Releasedir(path string, fh uint64) int {
+	return translateError(e.ENotImpl)
+}
+
+// Fsyncdir synchronizes directory contents.
+func (fs *FS) Fsyncdir(path string, datasync bool, fh uint64) int {
+	return translateError(e.ENotImpl)
+}
+
+// Setxattr sets extended attributes.
+func (fs *FS) Setxattr(path string, name string, value []byte, flags int) int {
+	return translateError(e.ENotImpl)
+}
+
+// Getxattr gets extended attributes.
+func (fs *FS) Getxattr(path string, name string) (int, []byte) {
+	return translateError(e.ENotImpl), nil
+}
+
+// Removexattr removes extended attributes.
+func (fs *FS) Removexattr(path string, name string) int {
+	return translateError(e.ENotImpl)
+}
+
+// Listxattr lists extended attributes.
+func (fs *FS) Listxattr(path string, fill func(name string) bool) int {
+	return translateError(e.ENotImpl)
+}
+
+// stat fills up the stat block for Node.
+func (fs *FS) stat(metadata *object.Metadata, stat *fuse.Stat_t) {
 	size := metadata.Size
 	blocks := (size + 511) / 512
 	// stat.Dev // Device ID of device containing file. [IGNORED]
@@ -191,22 +323,4 @@ func (fs *FS) stat(metadata object.Metadata, stat *fuse.Stat_t) {
 	stat.Blocks = blocks
 	stat.Birthtim = fuse.NewTimespec(time.Unix(0, metadata.BirthTime))
 	// stat.Flags
-}
-
-// Truncate truncates a file to size
-func (fs *FS) Truncate(path string, size int64, fh uint64) (errCode int) {
-	defer e.Trace(logrus.Fields{"path": path, "size": size, "fh": fh})(func() logrus.Fields {
-		return logrus.Fields{
-			"errCode": errCode,
-		}
-	})
-	n, err := fs.kfs.GetFile(path)
-	if err != nil {
-		return translateError(err)
-	}
-	err = n.Truncate(size)
-	if err != nil {
-		return translateError(err)
-	}
-	return 0
 }

@@ -3,6 +3,7 @@ package core
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 
 	"github.com/lazyxu/kfs/object"
 
@@ -22,9 +23,41 @@ func NewFile(kfs *KFS, name string) *File {
 	}
 }
 
-func (i *File) GetContent() (io.Reader, error) {
+func (i *File) Read(buff []byte) (int, error) {
 	i.mutex.RLock()
 	defer i.mutex.RUnlock()
+	reader, err := i.getContent()
+	if err != nil {
+		return 0, err
+	}
+	num, err := reader.Read(buff)
+	return num, err
+}
+
+func (i *File) ReadAt(buff []byte, off int64) (int, error) {
+	i.mutex.RLock()
+	defer i.mutex.RUnlock()
+	reader, err := i.getContent()
+	if err != nil {
+		return 0, err
+	}
+	switch r := reader.(type) {
+	case io.Seeker:
+		n, err := r.Seek(off, io.SeekCurrent)
+		if err != nil {
+			return int(n), err
+		}
+	default:
+		n, err := io.CopyN(ioutil.Discard, r, off)
+		if err != nil {
+			return int(n), err
+		}
+	}
+	num, err := reader.Read(buff)
+	return num, err
+}
+
+func (i *File) getContent() (io.Reader, error) {
 	f := new(object.Blob)
 	err := f.Read(i.kfs.scheduler, i.Metadata.Hash)
 	if err != nil {
@@ -33,7 +66,7 @@ func (i *File) GetContent() (io.Reader, error) {
 	return f.Reader, nil
 }
 
-func (i *File) SetContent(content []byte, offset int64) (int64, error) {
+func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 	logrus.WithFields(logrus.Fields{
@@ -43,7 +76,7 @@ func (i *File) SetContent(content []byte, offset int64) (int64, error) {
 	}).Debug("SetContent")
 	buf := make([]byte, offset)
 	f := new(object.Blob)
-	err := f.Read(i.kfs.scheduler, i.Metadata.Hash)
+	err = f.Read(i.kfs.scheduler, i.Metadata.Hash)
 	if err != nil {
 		return 0, err
 	}
@@ -61,7 +94,7 @@ func (i *File) SetContent(content []byte, offset int64) (int64, error) {
 	}
 	i.Metadata.Hash = hash
 	i.Metadata.Size = int64(len(content))
-	return i.Metadata.Size, nil
+	return int(i.Metadata.Size), nil
 }
 
 func (i *File) Truncate(size int64) error {

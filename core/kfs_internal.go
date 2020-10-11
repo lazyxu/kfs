@@ -10,8 +10,6 @@ import (
 
 	"github.com/lazyxu/kfs/storage/memory"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/lazyxu/kfs/core/e"
 
 	"github.com/lazyxu/kfs/core/kfscommon"
@@ -37,22 +35,7 @@ func New(opt *kfscommon.Options) *KFS {
 	return kfs
 }
 
-// GetNode finds the Node by path starting from the root
-//
-// It is the equivalent of os.Stat - Node contains the os.FileInfo
-// interface.
-func (kfs *KFS) GetNode(path string) (node Node, err error) {
-	defer e.Trace(logrus.Fields{
-		"path": path,
-	})(func() logrus.Fields {
-		return logrus.Fields{
-			"err": err,
-		}
-	})
-	return kfs.getNode(path)
-}
-
-func (kfs *KFS) getNodeDir(path string) (dir *Dir, err error) {
+func (kfs *KFS) GetDir(path string) (dir *Dir, err error) {
 	n, err := kfs.getNode(path)
 	if err != nil {
 		return nil, err
@@ -76,6 +59,7 @@ func (kfs *KFS) GetFile(path string) (*File, error) {
 	return file, nil
 }
 
+// getNode finds the Node by path starting from the root
 func (kfs *KFS) getNode(path string) (node Node, err error) {
 	path = strings.Trim(path, "/")
 	node = kfs.root
@@ -113,7 +97,7 @@ func (kfs *KFS) getNode(path string) (node Node, err error) {
 				ItemBase: ItemBase{
 					kfs:      kfs,
 					parent:   dir,
-					Metadata: *metadata,
+					Metadata: metadata,
 				},
 				items: make(map[string]Node),
 			}
@@ -123,7 +107,7 @@ func (kfs *KFS) getNode(path string) (node Node, err error) {
 				ItemBase: ItemBase{
 					kfs:      kfs,
 					parent:   dir,
-					Metadata: *metadata,
+					Metadata: metadata,
 				},
 			}
 			dir.items[name] = node
@@ -132,10 +116,10 @@ func (kfs *KFS) getNode(path string) (node Node, err error) {
 	return
 }
 
-func (kfs *KFS) getDir(name string) (*Dir, string, error) {
+func (kfs *KFS) getDirAndLeaf(name string) (*Dir, string, error) {
 	name = strings.Trim(name, "/")
 	parent, leaf := path.Split(name)
-	dir, err := kfs.getNodeDir(parent)
+	dir, err := kfs.GetDir(parent)
 	if err != nil {
 		return nil, "", err
 	}
