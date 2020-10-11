@@ -1,4 +1,4 @@
-package kfs
+package core
 
 import (
 	"io"
@@ -6,9 +6,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/lazyxu/kfs/storage/obj"
+	"github.com/lazyxu/kfs/object"
 
-	"github.com/lazyxu/kfs/kfs/e"
+	"github.com/lazyxu/kfs/core/e"
 )
 
 func (kfs *KFS) Remove(filePath string) error {
@@ -98,7 +98,7 @@ func (kfs *KFS) Write(path string, buff []byte, offset int64) (int64, error) {
 	return file.SetContent(buff, offset)
 }
 
-func (kfs *KFS) Readdir(path string) ([]obj.Metadata, error) {
+func (kfs *KFS) Readdir(path string) ([]object.Metadata, error) {
 	n, err := kfs.GetNode(path)
 	if err != nil {
 		return nil, err
@@ -111,7 +111,7 @@ func (kfs *KFS) Readdir(path string) ([]obj.Metadata, error) {
 	if err != nil {
 		return nil, err
 	}
-	nodes := make([]obj.Metadata, len(itemMap))
+	nodes := make([]object.Metadata, len(itemMap))
 	i := 0
 	for _, item := range itemMap {
 		nodes[i] = item

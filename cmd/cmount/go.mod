@@ -10,4 +10,4 @@ require (
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 )
 
-replace github.com/lazyxu/kfs v0.0.0 => ../../pkg
+replace github.com/lazyxu/kfs v0.0.0 => ./../../

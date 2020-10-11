@@ -8,7 +8,7 @@ import (
 
 	"github.com/lazyxu/kfs/storage"
 
-	"github.com/lazyxu/kfs/kfs/e"
+	"github.com/lazyxu/kfs/core/e"
 )
 
 type Storage struct {

@@ -5,16 +5,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/lazyxu/kfs/storage/obj"
+	"github.com/lazyxu/kfs/object"
 
-	"github.com/lazyxu/kfs/kfs/e"
+	"github.com/lazyxu/kfs/core/e"
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/lazyxu/kfs/kfs/kfscommon"
+	"github.com/lazyxu/kfs/core/kfscommon"
 
 	"github.com/billziss-gh/cgofuse/fuse"
-	"github.com/lazyxu/kfs/kfs"
+	"github.com/lazyxu/kfs/core"
 )
 
 const (
@@ -24,13 +24,13 @@ const (
 
 type FS struct {
 	fuse.FileSystemBase
-	kfs *kfs.KFS
+	kfs *core.KFS
 }
 
 func NewFS() *FS {
 	logrus.SetLevel(logrus.TraceLevel)
 	return &FS{
-		kfs: kfs.New(&kfscommon.Options{
+		kfs: core.New(&kfscommon.Options{
 			UID:       uint32(os.Getuid()),
 			GID:       uint32(os.Getgid()),
 			DirPerms:  fuse.S_IFDIR | 0755,
@@ -173,7 +173,7 @@ func (fs *FS) Readdir(path string,
 }
 
 // stat fills up the stat block for Node
-func (fs *FS) stat(metadata obj.Metadata, stat *fuse.Stat_t) {
+func (fs *FS) stat(metadata object.Metadata, stat *fuse.Stat_t) {
 	size := metadata.Size
 	blocks := (size + 511) / 512
 	// stat.Dev // Device ID of device containing file. [IGNORED]

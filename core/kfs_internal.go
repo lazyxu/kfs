@@ -1,20 +1,20 @@
-package kfs
+package core
 
 import (
 	"path"
 	"strings"
 
-	"github.com/lazyxu/kfs/storage/obj"
+	"github.com/lazyxu/kfs/object"
 
-	"github.com/lazyxu/kfs/storage/scheduler"
+	"github.com/lazyxu/kfs/scheduler"
 
 	"github.com/lazyxu/kfs/storage/memory"
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/lazyxu/kfs/kfs/e"
+	"github.com/lazyxu/kfs/core/e"
 
-	"github.com/lazyxu/kfs/kfs/kfscommon"
+	"github.com/lazyxu/kfs/core/kfscommon"
 )
 
 type KFS struct {
@@ -28,12 +28,12 @@ func New(opt *kfscommon.Options) *KFS {
 		Opt:       opt,
 		scheduler: scheduler.New(memory.New()),
 	}
-	obj.EmptyDir.Write(kfs.scheduler)
-	obj.EmptyFile.Write(kfs.scheduler)
+	object.EmptyDir.Write(kfs.scheduler)
+	object.EmptyFile.Write(kfs.scheduler)
 	kfs.root = NewDir(kfs, "")
-	kfs.root.Add(obj.NewDirMetadata("demo"), obj.EmptyDir)
-	kfs.root.Add(obj.NewFileMetadata("hello"), &obj.File{Reader: strings.NewReader("hello world")})
-	kfs.root.Add(obj.NewFileMetadata("index.js"), &obj.File{Reader: strings.NewReader("index")})
+	kfs.root.Add(object.NewDirMetadata("demo"), object.EmptyDir)
+	kfs.root.Add(object.NewFileMetadata("hello"), &object.Blob{Reader: strings.NewReader("hello world")})
+	kfs.root.Add(object.NewFileMetadata("index.js"), &object.Blob{Reader: strings.NewReader("index")})
 	return kfs
 }
 
@@ -100,7 +100,7 @@ func (kfs *KFS) getNode(path string) (node Node, err error) {
 			continue
 		}
 
-		d, err := obj.ReadDir(kfs.scheduler, dir.Metadata.Hash)
+		d, err := object.ReadDir(kfs.scheduler, dir.Metadata.Hash)
 		if err != nil {
 			return nil, err
 		}

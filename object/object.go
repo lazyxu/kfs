@@ -1,6 +1,6 @@
-package obj
+package object
 
-import "github.com/lazyxu/kfs/storage/scheduler"
+import "github.com/lazyxu/kfs/scheduler"
 
 type Object interface {
 	IsDir() bool

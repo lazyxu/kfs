@@ -1,10 +1,10 @@
-package kfs
+package core
 
 import (
 	"bytes"
 	"io"
 
-	"github.com/lazyxu/kfs/storage/obj"
+	"github.com/lazyxu/kfs/object"
 
 	"github.com/sirupsen/logrus"
 )
@@ -17,7 +17,7 @@ func NewFile(kfs *KFS, name string) *File {
 	return &File{
 		ItemBase: ItemBase{
 			kfs:      kfs,
-			Metadata: obj.NewFileMetadata(name),
+			Metadata: object.NewFileMetadata(name),
 		},
 	}
 }
@@ -25,7 +25,7 @@ func NewFile(kfs *KFS, name string) *File {
 func (i *File) GetContent() (io.Reader, error) {
 	i.mutex.RLock()
 	defer i.mutex.RUnlock()
-	f := new(obj.File)
+	f := new(object.Blob)
 	err := f.Read(i.kfs.scheduler, i.Metadata.Hash)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (i *File) SetContent(content []byte, offset int64) (int64, error) {
 		"len":     len(content),
 	}).Debug("SetContent")
 	buf := make([]byte, offset)
-	f := new(obj.File)
+	f := new(object.Blob)
 	err := f.Read(i.kfs.scheduler, i.Metadata.Hash)
 	if err != nil {
 		return 0, err
@@ -68,7 +68,7 @@ func (i *File) Truncate(size int64) error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 	content := make([]byte, size)
-	f := new(obj.File)
+	f := new(object.Blob)
 	if size != 0 {
 		err := f.Read(i.kfs.scheduler, i.Metadata.Hash)
 		if err != nil {

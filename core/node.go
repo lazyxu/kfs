@@ -1,27 +1,27 @@
-package kfs
+package core
 
 import (
 	"os"
 	"sync"
 
-	"github.com/lazyxu/kfs/storage/obj"
+	"github.com/lazyxu/kfs/object"
 )
 
 type Node interface {
 	Name() string
 	IsDir() bool
 	IsFile() bool
-	GetMetadata() obj.Metadata
+	GetMetadata() object.Metadata
 }
 
 type ItemBase struct {
 	kfs    *KFS
 	parent *Dir
 	mutex  sync.RWMutex
-	obj.Metadata
+	object.Metadata
 }
 
-func (i *ItemBase) GetMetadata() obj.Metadata {
+func (i *ItemBase) GetMetadata() object.Metadata {
 	return i.Metadata
 }
 
@@ -37,7 +37,7 @@ func (i *ItemBase) Size() int64 {
 	return i.Metadata.Size
 }
 
-func (i *ItemBase) update(o obj.Object) error {
+func (i *ItemBase) update(o object.Object) error {
 	hash, err := o.Write(i.kfs.scheduler)
 	if err != nil {
 		return err

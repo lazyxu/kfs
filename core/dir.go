@@ -1,4 +1,4 @@
-package kfs
+package core
 
 import (
 	"bytes"
@@ -8,9 +8,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/lazyxu/kfs/storage/obj"
+	"github.com/lazyxu/kfs/object"
 
-	"github.com/lazyxu/kfs/kfs/e"
+	"github.com/lazyxu/kfs/core/e"
 )
 
 type Dir struct {
@@ -22,14 +22,14 @@ func NewDir(kfs *KFS, name string) *Dir {
 	return &Dir{
 		ItemBase: ItemBase{
 			kfs:      kfs,
-			Metadata: obj.NewDirMetadata(name),
+			Metadata: object.NewDirMetadata(name),
 		},
 		items: make(map[string]Node),
 	}
 }
 
-func (i *Dir) load() (*obj.Dir, error) {
-	d := new(obj.Dir)
+func (i *Dir) load() (*object.Tree, error) {
+	d := new(object.Tree)
 	err := d.Read(i.kfs.scheduler, i.Metadata.Hash)
 	return d, err
 }
@@ -53,7 +53,7 @@ func getSize(r io.Reader) (int64, error) {
 	}
 }
 
-func (i *Dir) Add(metadata obj.Metadata, item obj.Object) error {
+func (i *Dir) Add(metadata object.Metadata, item object.Object) error {
 	d, err := i.load()
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (i *Dir) Add(metadata obj.Metadata, item obj.Object) error {
 		}
 	}
 
-	if f, ok := item.(*obj.File); ok {
+	if f, ok := item.(*object.Blob); ok {
 		size, err := getSize(f.Reader)
 		if err != nil {
 			return err
@@ -88,10 +88,10 @@ func (i *Dir) Create(name string, flags int) (*File, error) {
 		ItemBase: ItemBase{
 			kfs:      i.kfs,
 			parent:   i,
-			Metadata: obj.NewFileMetadata(name),
+			Metadata: object.NewFileMetadata(name),
 		},
 	}
-	err := i.Add(f.Metadata, obj.EmptyFile)
+	err := i.Add(f.Metadata, object.EmptyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (i *Dir) Remove(name string) error {
 	return e.ErrNotExist
 }
 
-func (i *Dir) ReadDirAll() ([]obj.Metadata, error) {
+func (i *Dir) ReadDirAll() ([]object.Metadata, error) {
 	d, err := i.load()
 	if err != nil {
 		return nil, err

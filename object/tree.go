@@ -1,20 +1,20 @@
-package obj
+package object
 
 import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
 
-	"github.com/lazyxu/kfs/kfs/e"
+	"github.com/lazyxu/kfs/core/e"
+	"github.com/lazyxu/kfs/scheduler"
 	"github.com/lazyxu/kfs/storage"
-	"github.com/lazyxu/kfs/storage/scheduler"
 )
 
-type Dir struct {
+type Tree struct {
 	Items []Metadata
 }
 
-var EmptyDir = &Dir{
+var EmptyDir = &Tree{
 	Items: make([]Metadata, 0),
 }
 var EmptyDirHash string
@@ -30,7 +30,7 @@ func init() {
 	EmptyDirHash = string(hash.Sum(nil))
 }
 
-func (o *Dir) GetNode(name string) (*Metadata, error) {
+func (o *Tree) GetNode(name string) (*Metadata, error) {
 	for _, it := range o.Items {
 		if it.Name == name {
 			return &it, nil
@@ -39,7 +39,7 @@ func (o *Dir) GetNode(name string) (*Metadata, error) {
 	return nil, e.ErrNotExist
 }
 
-func (o *Dir) Write(s *scheduler.Scheduler) (string, error) {
+func (o *Tree) Write(s *scheduler.Scheduler) (string, error) {
 	var b bytes.Buffer
 	err := gob.NewEncoder(&b).Encode(o)
 	if err != nil {
@@ -48,7 +48,7 @@ func (o *Dir) Write(s *scheduler.Scheduler) (string, error) {
 	return s.WriteStream(storage.TypDir, &b)
 }
 
-func (o *Dir) Read(s *scheduler.Scheduler, key string) error {
+func (o *Tree) Read(s *scheduler.Scheduler, key string) error {
 	reader, err := s.ReadStream(storage.TypDir, key)
 	if err != nil {
 		return err
@@ -56,16 +56,16 @@ func (o *Dir) Read(s *scheduler.Scheduler, key string) error {
 	return gob.NewDecoder(reader).Decode(o)
 }
 
-func ReadDir(s *scheduler.Scheduler, key string) (*Dir, error) {
-	d := new(Dir)
+func ReadDir(s *scheduler.Scheduler, key string) (*Tree, error) {
+	d := new(Tree)
 	err := d.Read(s, key)
 	return d, err
 }
 
-func (o *Dir) IsDir() bool {
+func (o *Tree) IsDir() bool {
 	return true
 }
 
-func (o *Dir) IsFile() bool {
+func (o *Tree) IsFile() bool {
 	return false
 }

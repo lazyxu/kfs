@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/billziss-gh/cgofuse/fuse"
-	"github.com/lazyxu/kfs/kfs/e"
+	"github.com/lazyxu/kfs/core/e"
 	"github.com/sirupsen/logrus"
 )
 

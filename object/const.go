@@ -1,4 +1,4 @@
-package obj
+package object
 
 // File type and permission bits.
 const (
