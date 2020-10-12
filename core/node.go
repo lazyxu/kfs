@@ -11,6 +11,7 @@ import (
 type Node interface {
 	os.FileInfo
 	IsFile() bool
+	Chmod(mode os.FileMode) error
 }
 
 type ItemBase struct {
@@ -32,6 +33,12 @@ func (i *ItemBase) Mode() os.FileMode {
 	return i.Metadata.Mode
 }
 
+func (i *ItemBase) Chmod(mode os.FileMode) error {
+	metadata := *i.Metadata
+	metadata.Mode = mode
+	return i.update()
+}
+
 func (i *ItemBase) ModTime() time.Time {
 	return time.Unix(0, i.ModifyTime)
 }
@@ -40,12 +47,16 @@ func (i *ItemBase) Sys() interface{} {
 	return i.Metadata
 }
 
-func (i *ItemBase) update(o object.Object) error {
+func (i *ItemBase) updateObj(o object.Object) error {
 	hash, err := o.Write(i.kfs.scheduler)
 	if err != nil {
 		return err
 	}
 	i.Metadata.Hash = hash
+	return i.update()
+}
+
+func (i *ItemBase) update() error {
 	if i.parent == nil {
 		return nil
 	}
@@ -57,7 +68,7 @@ func (i *ItemBase) update(o object.Object) error {
 		if item.Name == i.Metadata.Name {
 			items := append(dd.Items[0:index], i.Metadata)
 			dd.Items = append(items, dd.Items[index+1:]...)
-			return i.parent.update(dd)
+			return i.parent.updateObj(dd)
 		}
 	}
 	return nil

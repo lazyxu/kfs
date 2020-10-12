@@ -113,7 +113,8 @@ func (fs *FS) Chown(path string, uid uint32, gid uint32) int {
 
 // Chmod changes the permission bits of a file.
 func (fs *FS) Chmod(path string, mode uint32) int {
-	return translateError(e.ENotImpl)
+	err := fs.kfs.Chmod(path, os.FileMode(mode))
+	return translateError(err)
 }
 
 // Utimens changes the access and modification times of a file.

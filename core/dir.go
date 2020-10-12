@@ -78,7 +78,7 @@ func (i *Dir) add(metadata *object.Metadata, item object.Object) error {
 	metadata.Hash = itemHash
 	d.Items = append(d.Items, metadata)
 
-	return i.update(d)
+	return i.updateObj(d)
 }
 
 func (i *Dir) Create(name string, flags int) (*File, error) {
@@ -125,7 +125,7 @@ func (i *Dir) remove(name string, all bool) error {
 			if all || item.IsFile() || item.Hash == object.EmptyDirHash {
 				d.Items = append(d.Items[0:index], d.Items[index+1:]...)
 				delete(i.items, name)
-				return i.update(d)
+				return i.updateObj(d)
 			}
 			if item.IsDir() {
 				return e.ENotEmpty

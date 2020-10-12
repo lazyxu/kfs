@@ -139,3 +139,12 @@ func (kfs *KFS) Remove(name string) error {
 	}
 	return dir.remove(leaf, false)
 }
+
+// Chmod changes the mode of the named file to mode.
+func (kfs *KFS) Chmod(name string, mode os.FileMode) error {
+	node, err := kfs.getNode(name)
+	if err != nil {
+		return err
+	}
+	return node.Chmod(mode)
+}
