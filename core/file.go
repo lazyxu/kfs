@@ -121,3 +121,7 @@ func (i *File) Truncate(size int64) error {
 	i.Metadata.Size = size
 	return nil
 }
+
+func (i *File) Close() error {
+	return nil
+}

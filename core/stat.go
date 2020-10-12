@@ -10,7 +10,7 @@ import (
 func (kfs *KFS) Stat(name string) (os.FileInfo, error) {
 	n, err := kfs.getNode(name)
 	if err != nil {
-		return nil, err
+		return nil, &PathError{"stat", name, err}
 	}
 	return n, nil
 }
