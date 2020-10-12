@@ -28,10 +28,10 @@ func New(opt *kfscommon.Options) *KFS {
 	}
 	object.EmptyDir.Write(kfs.scheduler)
 	object.EmptyFile.Write(kfs.scheduler)
-	kfs.root = NewDir(kfs, "")
-	kfs.root.Add(object.NewDirMetadata("demo"), object.EmptyDir)
-	kfs.root.Add(object.NewFileMetadata("hello"), &object.Blob{Reader: strings.NewReader("hello world")})
-	kfs.root.Add(object.NewFileMetadata("index.js"), &object.Blob{Reader: strings.NewReader("index")})
+	kfs.root = NewDir(kfs, "", object.DefaultDirMode)
+	kfs.root.add(object.NewDirMetadata("demo", object.DefaultDirMode), object.EmptyDir)
+	kfs.root.add(object.NewFileMetadata("hello"), &object.Blob{Reader: strings.NewReader("hello world")})
+	kfs.root.add(object.NewFileMetadata("index.js"), &object.Blob{Reader: strings.NewReader("index")})
 	return kfs
 }
 

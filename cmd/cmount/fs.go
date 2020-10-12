@@ -69,7 +69,7 @@ func (fs *FS) Mknod(path string, mode uint32, dev uint64) int {
 
 // Mkdir creates a directory.
 func (fs *FS) Mkdir(path string, mode uint32) int {
-	err := fs.kfs.MkdirAll(path, os.FileMode(mode))
+	err := fs.kfs.Mkdir(path, os.FileMode(mode))
 	return translateError(err)
 }
 
@@ -102,7 +102,8 @@ func (fs *FS) Readlink(path string) (int, string) {
 
 // Rename renames a file.
 func (fs *FS) Rename(oldpath string, newpath string) int {
-	return translateError(e.ENotImpl)
+	err := fs.kfs.Rename(oldpath, newpath)
+	return translateError(err)
 }
 
 // Chmod changes the permission bits of a file.

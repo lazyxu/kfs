@@ -18,20 +18,20 @@ type Dir struct {
 	items map[string]Node
 }
 
-func NewDir(kfs *KFS, name string) *Dir {
+func NewDir(kfs *KFS, name string, perm os.FileMode) *Dir {
 	return &Dir{
 		ItemBase: ItemBase{
 			kfs:      kfs,
-			Metadata: object.NewDirMetadata(name),
+			Metadata: object.NewDirMetadata(name, perm),
 		},
 		items: make(map[string]Node),
 	}
 }
 
 func (i *Dir) load() (*object.Tree, error) {
-	d := new(object.Tree)
-	err := d.Read(i.kfs.scheduler, i.Metadata.Hash)
-	return d, err
+	tree := new(object.Tree)
+	err := tree.Read(i.kfs.scheduler, i.Metadata.Hash)
+	return tree, err
 }
 
 func getSize(r io.Reader) (int64, error) {
@@ -53,7 +53,7 @@ func getSize(r io.Reader) (int64, error) {
 	}
 }
 
-func (i *Dir) Add(metadata *object.Metadata, item object.Object) error {
+func (i *Dir) add(metadata *object.Metadata, item object.Object) error {
 	d, err := i.load()
 	if err != nil {
 		return err
@@ -64,8 +64,8 @@ func (i *Dir) Add(metadata *object.Metadata, item object.Object) error {
 		}
 	}
 
-	if f, ok := item.(*object.Blob); ok {
-		size, err := getSize(f.Reader)
+	if blob, ok := item.(*object.Blob); ok {
+		size, err := getSize(blob.Reader)
 		if err != nil {
 			return err
 		}
@@ -91,14 +91,29 @@ func (i *Dir) Create(name string, flags int) (*File, error) {
 			Metadata: object.NewFileMetadata(name),
 		},
 	}
-	err := i.Add(f.Metadata, object.EmptyFile)
+	err := i.add(f.Metadata, object.EmptyFile)
 	if err != nil {
 		return nil, err
 	}
 	return f, nil
 }
 
-func (i *Dir) Remove(name string) error {
+func (i *Dir) get(name string) (*object.Metadata, error) {
+	i.mutex.Lock()
+	defer i.mutex.Unlock()
+	d, err := i.load()
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range d.Items {
+		if item.Name == name {
+			return item, nil
+		}
+	}
+	return nil, e.ErrNotExist
+}
+
+func (i *Dir) remove(name string, all bool) error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 	d, err := i.load()
@@ -107,9 +122,18 @@ func (i *Dir) Remove(name string) error {
 	}
 	for index, item := range d.Items {
 		if item.Name == name {
-			d.Items = append(d.Items[0:index], d.Items[index+1:]...)
-			return i.update(d)
+			if all || item.IsFile() || item.Hash == object.EmptyDirHash {
+				d.Items = append(d.Items[0:index], d.Items[index+1:]...)
+				delete(i.items, name)
+				return i.update(d)
+			}
+			if item.IsDir() {
+				return e.ENotEmpty
+			}
 		}
+	}
+	if all {
+		return nil
 	}
 	return e.ErrNotExist
 }

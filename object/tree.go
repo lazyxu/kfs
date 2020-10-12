@@ -57,9 +57,9 @@ func (o *Tree) Read(s *scheduler.Scheduler, key string) error {
 }
 
 func ReadDir(s *scheduler.Scheduler, key string) (*Tree, error) {
-	d := new(Tree)
-	err := d.Read(s, key)
-	return d, err
+	tree := new(Tree)
+	err := tree.Read(s, key)
+	return tree, err
 }
 
 func (o *Tree) IsDir() bool {

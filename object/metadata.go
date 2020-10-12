@@ -23,10 +23,10 @@ func (i *Metadata) IsDir() bool {
 	return i.Mode&S_IFDIR != 0
 }
 
-func NewDirMetadata(name string) *Metadata {
+func NewDirMetadata(name string, perm os.FileMode) *Metadata {
 	now := time.Now().UnixNano()
 	return &Metadata{
-		Mode:       DefaultDirMode,
+		Mode:       perm,
 		BirthTime:  now,
 		ModifyTime: now,
 		ChangeTime: now,

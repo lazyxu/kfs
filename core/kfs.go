@@ -4,16 +4,20 @@ import (
 	"os"
 	"path"
 
+	"github.com/lazyxu/kfs/object"
+
 	"github.com/lazyxu/kfs/core/e"
 )
 
-// MkdirAll creates a directory named path,
-// along with any necessary parents, and returns nil,
-// or else returns an error.
-// The permission bits perm (before umask) are used for all
-// directories that MkdirAll creates.
-func (kfs *KFS) MkdirAll(name string, perm os.FileMode) error {
-	return e.ENotImpl
+// Mkdir creates a new directory with the specified name and permission
+// bits (before umask).
+func (kfs *KFS) Mkdir(name string, perm os.FileMode) error {
+	parent, leaf := path.Split(name)
+	dir, err := kfs.GetDir(parent)
+	if err != nil {
+		return err
+	}
+	return dir.add(object.NewDirMetadata(leaf, perm), object.EmptyDir)
 }
 
 // Open opens the named file for reading. If successful, methods on
@@ -61,11 +65,77 @@ func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (node *File, 
 	return node, nil
 }
 
+// Rename renames (moves) oldpath to newpath.
+// If newpath already exists and is not a directory, Rename replaces it.
+// OS-specific restrictions may apply when oldpath and newpath are in different directories.
+func (kfs *KFS) Rename(oldPath, newPath string) error {
+	oldParent, oldName := path.Split(oldPath)
+	oldDir, err := kfs.GetDir(oldParent)
+	if err != nil {
+		return err
+	}
+	oldMetadata, err := oldDir.get(oldName)
+	if err != nil {
+		return err
+	}
+	newParent, newName := path.Split(newPath)
+	newDir, err := kfs.GetDir(newParent)
+	if err != nil {
+		return err
+	}
+	newMetadata, err := newDir.get(newName)
+	if err == e.ErrNotExist {
+		err := oldDir.remove(oldName, true)
+		if err != nil {
+			return err
+		}
+		metadata := *oldMetadata
+		metadata.Name = newName
+		return kfs.move(&metadata, newDir)
+	}
+	if err != nil {
+		return err
+	}
+	if oldMetadata.IsFile() && newMetadata.IsFile() {
+		err = oldDir.remove(oldName, true)
+		if err != nil {
+			return err
+		}
+		err = newDir.remove(newName, true)
+		if err != nil {
+			return err
+		}
+		metadata := *oldMetadata
+		metadata.Name = newName
+		return kfs.move(&metadata, newDir)
+	}
+	return nil
+}
+
+func (kfs *KFS) move(metadata *object.Metadata, newDir *Dir) error {
+	if metadata.IsFile() {
+		blob := new(object.Blob)
+		err := blob.Read(kfs.scheduler, metadata.Hash)
+		if err != nil {
+			return err
+		}
+		return newDir.add(metadata, blob)
+	} else {
+		tree := new(object.Tree)
+		err := tree.Read(kfs.scheduler, metadata.Hash)
+		if err != nil {
+			return err
+		}
+		return newDir.add(metadata, tree)
+	}
+}
+
+// Remove removes the named file or (empty) directory.
 func (kfs *KFS) Remove(name string) error {
 	parent, leaf := path.Split(name)
 	dir, err := kfs.GetDir(parent)
 	if err != nil {
 		return err
 	}
-	return dir.Remove(leaf)
+	return dir.remove(leaf, false)
 }

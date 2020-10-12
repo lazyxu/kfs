@@ -58,12 +58,12 @@ func (i *File) ReadAt(buff []byte, off int64) (int, error) {
 }
 
 func (i *File) getContent() (io.Reader, error) {
-	f := new(object.Blob)
-	err := f.Read(i.kfs.scheduler, i.Metadata.Hash)
+	blob := new(object.Blob)
+	err := blob.Read(i.kfs.scheduler, i.Metadata.Hash)
 	if err != nil {
 		return nil, err
 	}
-	return f.Reader, nil
+	return blob.Reader, nil
 }
 
 func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
@@ -75,20 +75,20 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 		"len":     len(content),
 	}).Debug("SetContent")
 	buf := make([]byte, offset)
-	f := new(object.Blob)
-	err = f.Read(i.kfs.scheduler, i.Metadata.Hash)
+	blob := new(object.Blob)
+	err = blob.Read(i.kfs.scheduler, i.Metadata.Hash)
 	if err != nil {
 		return 0, err
 	}
 	if offset != 0 {
-		_, err = f.Reader.Read(buf)
+		_, err = blob.Reader.Read(buf)
 		if err != nil {
 			return 0, err
 		}
 	}
 	content = append(buf, content...)
-	f.Reader = bytes.NewReader(content)
-	hash, err := f.Write(i.kfs.scheduler)
+	blob.Reader = bytes.NewReader(content)
+	hash, err := blob.Write(i.kfs.scheduler)
 	if err != nil {
 		return 0, err
 	}
@@ -101,19 +101,19 @@ func (i *File) Truncate(size int64) error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 	content := make([]byte, size)
-	f := new(object.Blob)
+	blob := new(object.Blob)
 	if size != 0 {
-		err := f.Read(i.kfs.scheduler, i.Metadata.Hash)
+		err := blob.Read(i.kfs.scheduler, i.Metadata.Hash)
 		if err != nil {
 			return err
 		}
-		_, err = f.Reader.Read(content)
+		_, err = blob.Reader.Read(content)
 		if err != nil {
 			return err
 		}
 	}
-	f.Reader = bytes.NewReader(content)
-	hash, err := f.Write(i.kfs.scheduler)
+	blob.Reader = bytes.NewReader(content)
+	hash, err := blob.Write(i.kfs.scheduler)
 	if err != nil {
 		return err
 	}

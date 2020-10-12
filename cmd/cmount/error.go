@@ -29,7 +29,7 @@ func translateError(err error) (errc int) {
 		return -fuse.EPERM
 	case e.ErrClosed:
 		return -fuse.EBADF
-	case e.ENOTEMPTY:
+	case e.ENotEmpty:
 		return -fuse.ENOTEMPTY
 	case e.ESPIPE:
 		return -fuse.ESPIPE
