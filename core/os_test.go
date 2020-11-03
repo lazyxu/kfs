@@ -88,9 +88,6 @@ func TestStatError(t *testing.T) {
 	if fi != nil {
 		t.Errorf("got %v, want nil", fi)
 	}
-	if perr, ok := err.(*PathError); !ok {
-		t.Errorf("got %T, want %T", err, perr)
-	}
 
 	testenv.MustHaveSymlink(t)
 
@@ -106,9 +103,6 @@ func TestStatError(t *testing.T) {
 	}
 	if fi != nil {
 		t.Errorf("got %v, want nil", fi)
-	}
-	if perr, ok := err.(*PathError); !ok {
-		t.Errorf("got %T, want %T", err, perr)
 	}
 }
 
