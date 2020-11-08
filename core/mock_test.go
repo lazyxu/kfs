@@ -16,16 +16,20 @@ var kfs = New(&kfscommon.Options{
 	FilePerms: object.S_IFREG | 0644,
 })
 
-func Open(name string) (*File, error) {
+func Open(name string) (Node, error) {
 	return kfs.Open(name)
 }
 
-func Create(name string) (*File, error) {
+func Create(name string) (Node, error) {
 	return kfs.Create(name)
 }
 
 func Stat(name string) (os.FileInfo, error) {
 	return kfs.Stat(name)
+}
+
+func Lstat(name string) (os.FileInfo, error) {
+	return kfs.Lstat(name)
 }
 
 // Symlink creates newname as a symbolic link to oldname.

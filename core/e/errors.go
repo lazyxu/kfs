@@ -5,6 +5,7 @@ package e
 import (
 	"fmt"
 	"os"
+	"syscall"
 )
 
 // Error describes low level errors in a cross platform way.
@@ -20,10 +21,12 @@ const (
 	EBADF
 	EROFS
 	ENotImpl
-	ENotFile
-	ENotDir
 	EInvalidType
 	EWriteObject
+	EIsFile
+	ENotFile
+	EIsDir  = syscall.EISDIR
+	ENotDir = syscall.ENOTDIR
 )
 
 // Errors which have exact counterparts in os
@@ -42,8 +45,8 @@ var errorNames = []string{
 	EBADF:        "Bad file descriptor",
 	EROFS:        "Read only file system",
 	ENotImpl:     "Function not implemented",
+	EIsFile:      "Is a file",
 	ENotFile:     "Not a file",
-	ENotDir:      "Not a directory",
 	EInvalidType: "Invalid object type",
 	EWriteObject: "Failed to write object",
 }

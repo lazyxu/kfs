@@ -12,6 +12,14 @@ type Node interface {
 	os.FileInfo
 	IsFile() bool
 	Chmod(mode os.FileMode) error
+	Stat() (os.FileInfo, error)
+	Read(buff []byte) (int, error)
+	ReadAt(buff []byte, off int64) (int, error)
+	Write(content []byte) (n int, err error)
+	WriteAt(content []byte, offset int64) (n int, err error)
+	Readdirnames(n int) (names []string, err error)
+	Readdir(n int) ([]*object.Metadata, error)
+	Close() error
 }
 
 type ItemBase struct {
@@ -72,4 +80,15 @@ func (i *ItemBase) update() error {
 		}
 	}
 	return nil
+}
+
+func (i *ItemBase) Stat() (os.FileInfo, error) {
+	return i, nil
+}
+
+func (i *ItemBase) Close() error {
+	if i == nil {
+		return os.ErrInvalid
+	}
+	return i.update()
 }

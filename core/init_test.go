@@ -1,6 +1,13 @@
 package core
 
 import (
+	"bufio"
+	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/lazyxu/kfs/object"
@@ -8,10 +15,40 @@ import (
 
 func init() {
 	kfs.Mkdir("/etc", object.DefaultDirMode)
-	kfs.Create("/etc/group")
+	group, _ := kfs.Create("/etc/group")
+	group.WriteAt([]byte(strings.Repeat("x", 1000)), 0)
+	group.Close()
 	kfs.Create("/etc/hosts")
 	kfs.Create("/etc/passwd")
 	kfs.Mkdir("/tmp", object.DefaultDirMode)
+	fmt.Println(runtime.GOROOT())
+	err := filepath.Walk(path.Join(runtime.GOROOT(), "src/os"), func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+		fmt.Println(path)
+		src, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+		err = kfs.MkdirAll(path, kfs.Opt.DirPerms)
+		if err != nil {
+			return err
+		}
+		dst, err := kfs.Create(path)
+		if err != nil {
+			return err
+		}
+		defer dst.Close()
+		srcBuf := bufio.NewReader(src)
+		dstBuf := bufio.NewWriter(dst)
+		srcBuf.WriteTo(dstBuf)
+		return nil
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 var testenv testENV

@@ -5,6 +5,8 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/lazyxu/kfs/core/e"
+
 	"github.com/lazyxu/kfs/object"
 
 	"github.com/sirupsen/logrus"
@@ -12,6 +14,9 @@ import (
 
 type File struct {
 	ItemBase
+	offset int64 // file pointer offset
+	closed bool  // set if handle has been closed
+	opened bool
 }
 
 func NewFile(kfs *KFS, name string) *File {
@@ -24,19 +29,20 @@ func NewFile(kfs *KFS, name string) *File {
 }
 
 func (i *File) Read(buff []byte) (int, error) {
-	i.mutex.RLock()
-	defer i.mutex.RUnlock()
-	reader, err := i.getContent()
+	n, err := i.ReadAt(buff, i.offset)
 	if err != nil {
 		return 0, err
 	}
-	num, err := reader.Read(buff)
-	return num, err
+	i.offset += int64(n)
+	return n, nil
 }
 
 func (i *File) ReadAt(buff []byte, off int64) (int, error) {
 	i.mutex.RLock()
 	defer i.mutex.RUnlock()
+	if len(buff) == 0 {
+		return 0, nil
+	}
 	reader, err := i.getContent()
 	if err != nil {
 		return 0, err
@@ -64,6 +70,10 @@ func (i *File) getContent() (io.Reader, error) {
 		return nil, err
 	}
 	return blob.Reader, nil
+}
+
+func (i *File) Write(content []byte) (n int, err error) {
+	return i.WriteAt(content, 0)
 }
 
 func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
@@ -122,6 +132,27 @@ func (i *File) Truncate(size int64) error {
 	return nil
 }
 
+func (i *File) Readdirnames(n int) (names []string, err error) {
+	if i == nil {
+		return nil, e.ErrInvalid
+	}
+	return nil, e.EIsFile
+}
+
+func (i *File) Readdir(n int) ([]*object.Metadata, error) {
+	if i == nil {
+		return nil, e.ErrInvalid
+	}
+	return nil, e.EIsFile
+}
+
 func (i *File) Close() error {
+	err := i.ItemBase.Close()
+	if err != nil {
+		return err
+	}
+	i.offset = 0
+	i.closed = true
+	i.opened = false
 	return nil
 }
