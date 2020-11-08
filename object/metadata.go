@@ -26,7 +26,7 @@ func (i *Metadata) IsDir() bool {
 func NewDirMetadata(name string, perm os.FileMode) *Metadata {
 	now := time.Now().UnixNano()
 	return &Metadata{
-		Mode:       perm,
+		Mode:       0040000 | perm,
 		BirthTime:  now,
 		ModifyTime: now,
 		ChangeTime: now,

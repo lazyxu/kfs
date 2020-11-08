@@ -21,12 +21,10 @@ func init() {
 	kfs.Create("/etc/hosts")
 	kfs.Create("/etc/passwd")
 	kfs.Mkdir("/tmp", object.DefaultDirMode)
-	fmt.Println(runtime.GOROOT())
 	err := filepath.Walk(path.Join(runtime.GOROOT(), "src/os"), func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
 		}
-		fmt.Println(path)
 		src, err := os.Open(path)
 		if err != nil {
 			return err

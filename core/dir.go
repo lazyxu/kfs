@@ -15,7 +15,9 @@ import (
 
 type Dir struct {
 	ItemBase
-	items map[string]Node
+	items      map[string]Node
+	offset     int
+	nameOffset int
 }
 
 func NewDir(kfs *KFS, name string, perm os.FileMode) *Dir {
@@ -174,12 +176,45 @@ func (i *Dir) WriteAt(content []byte, offset int64) (n int, err error) {
 	}
 }
 
-func (i *Dir) Readdir(n int) ([]*object.Metadata, error) {
+// Readdir reads the contents of the directory associated with file and
+// returns a slice of up to n FileInfo values, as would be returned
+// by Lstat, in directory order. Subsequent calls on the same file will yield
+// further FileInfos.
+//
+// If n > 0, Readdir returns at most n FileInfo structures. In this case, if
+// Readdir returns an empty slice, it will return a non-nil error
+// explaining why. At the end of a directory, the error is io.EOF.
+//
+// If n <= 0, Readdir returns all the FileInfo from the directory in
+// a single slice. In this case, if Readdir succeeds (reads all
+// the way to the end of the directory), it returns the slice and a
+// nil error. If it encounters an error before the end of the
+// directory, Readdir returns the FileInfo read until that point
+// and a non-nil error.
+func (i *Dir) Readdir(n int) (dirs []*object.Metadata, err error) {
 	d, err := i.load()
 	if err != nil {
 		return nil, err
 	}
-	return d.Items, nil
+	if n <= 0 {
+		if i.offset >= len(d.Items) {
+			return []*object.Metadata{}, nil
+		}
+		i.offset = len(d.Items)
+		return d.Items, nil
+	}
+	if i.offset >= len(d.Items) {
+		return []*object.Metadata{}, io.EOF
+	}
+	ii := i.offset
+	for ; ii < len(d.Items); ii++ {
+		if ii >= i.offset+n {
+			break
+		}
+		dirs = append(dirs, d.Items[ii])
+	}
+	i.offset = ii
+	return dirs, nil
 }
 
 // Readdirnames reads the contents of the directory associated with file
@@ -202,10 +237,37 @@ func (i *Dir) Readdirnames(n int) (names []string, err error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO: n
-	names = make([]string, len(d.Items))
-	for ii, item := range d.Items {
-		names[ii] = item.Name
+	if n <= 0 {
+		if i.nameOffset >= len(d.Items) {
+			return []string{}, nil
+		}
+		names = make([]string, len(d.Items))
+		for ii, item := range d.Items {
+			names[ii] = item.Name
+		}
+		i.nameOffset = len(d.Items)
+		return names, nil
 	}
+	if i.nameOffset >= len(d.Items) {
+		return []string{}, io.EOF
+	}
+	ii := i.nameOffset
+	for ; ii < len(d.Items); ii++ {
+		if ii >= i.nameOffset+n {
+			break
+		}
+		names = append(names, d.Items[ii].Name)
+	}
+	i.nameOffset = ii
 	return names, nil
+}
+
+func (i *Dir) Close() error {
+	err := i.ItemBase.Close()
+	if err != nil {
+		return err
+	}
+	i.offset = 0
+	i.nameOffset = 0
+	return nil
 }

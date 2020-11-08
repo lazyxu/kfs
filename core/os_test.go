@@ -1,10 +1,12 @@
 package core
 
 import (
+	"fmt"
 	"io"
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -338,6 +340,128 @@ func BenchmarkLstatFile(b *testing.B) {
 
 func BenchmarkLstatDir(b *testing.B) {
 	benchmarkLstat(b, filepath.Join(runtime.GOROOT(), "src/os"))
+}
+
+// Read the directory one entry at a time.
+func smallReaddirnames(file Node, length int, t *testing.T) []string {
+	names := make([]string, length)
+	count := 0
+	for {
+		d, err := file.Readdirnames(1)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatalf("readdirnames %q failed: %v", file.Name(), err)
+		}
+		if len(d) == 0 {
+			t.Fatalf("readdirnames %q returned empty slice and no error", file.Name())
+		}
+		names[count] = d[0]
+		count++
+	}
+	return names[0:count]
+}
+
+// Check that reading a directory one entry at a time gives the same result
+// as reading it all at once.
+func TestReaddirnamesOneAtATime(t *testing.T) {
+	// big directory that doesn't change often.
+	dir := "/bin"
+	file, err := Open(dir)
+	if err != nil {
+		t.Fatalf("open %q failed: %v", dir, err)
+	}
+	defer file.Close()
+	all, err1 := file.Readdirnames(-1)
+	if err1 != nil {
+		t.Fatalf("readdirnames %q failed: %v", dir, err1)
+	}
+	file1, err2 := Open(dir)
+	if err2 != nil {
+		t.Fatalf("open %q failed: %v", dir, err2)
+	}
+	defer file1.Close()
+	small := smallReaddirnames(file1, len(all)+100, t) // +100 in case we screw up
+	if len(small) < len(all) {
+		t.Fatalf("len(small) is %d, less than %d", len(small), len(all))
+	}
+	for i, n := range all {
+		if small[i] != n {
+			t.Errorf("small read %q mismatch: %v", small[i], n)
+		}
+	}
+}
+
+func TestReaddirNValues(t *testing.T) {
+	if testing.Short() {
+		t.Skip("test.short; skipping")
+	}
+	dir, err := TempDir("", "")
+	if err != nil {
+		t.Fatalf("TempDir: %v", err)
+	}
+	defer RemoveAll(dir)
+	for i := 1; i <= 105; i++ {
+		f, err := Create(filepath.Join(dir, fmt.Sprintf("%d", i)))
+		if err != nil {
+			t.Fatalf("Create: %v", err)
+		}
+		f.Write([]byte(strings.Repeat("X", i)))
+		f.Close()
+	}
+
+	var d Node
+	openDir := func() {
+		var err error
+		d, err = Open(dir)
+		if err != nil {
+			t.Fatalf("Open directory: %v", err)
+		}
+	}
+
+	readDirExpect := func(n, want int, wantErr error) {
+		fi, err := d.Readdir(n)
+		if err != wantErr {
+			t.Fatalf("Readdir of %d got error %v, want %v", n, err, wantErr)
+		}
+		if g, e := len(fi), want; g != e {
+			t.Errorf("Readdir of %d got %d files, want %d", n, g, e)
+		}
+	}
+
+	readDirNamesExpect := func(n, want int, wantErr error) {
+		fi, err := d.Readdirnames(n)
+		if err != wantErr {
+			t.Fatalf("Readdirnames of %d got error %v, want %v", n, err, wantErr)
+		}
+		if g, e := len(fi), want; g != e {
+			t.Errorf("Readdirnames of %d got %d files, want %d", n, g, e)
+		}
+	}
+
+	for _, fn := range []func(int, int, error){readDirExpect, readDirNamesExpect} {
+		// Test the slurp case
+		openDir()
+		fn(0, 105, nil)
+		fn(0, 0, nil)
+		d.Close()
+
+		// Slurp with -1 instead
+		openDir()
+		fn(-1, 105, nil)
+		fn(-2, 0, nil)
+		fn(0, 0, nil)
+		d.Close()
+
+		// Test the bounded case
+		openDir()
+		fn(1, 1, nil)
+		fn(2, 2, nil)
+		fn(105, 102, nil) // and tests buffer >100 case
+		fn(3, 0, io.EOF)
+		d.Close()
+	}
 }
 
 // chtmpdir changes the working directory to a new temporary directory and

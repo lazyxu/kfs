@@ -19,12 +19,35 @@ type KFS struct {
 	root      *Dir
 	scheduler *scheduler.Scheduler
 	Opt       *kfscommon.Options
+	pwd       string
+}
+
+var defaultBinaries = []string{
+	"cat",
+	"chmod",
+	"cp",
+	"date",
+	"dd",
+	"df",
+	"hostname",
+	"link",
+	"ln",
+	"ls",
+	"mkdir",
+	"mv",
+	"ps",
+	"pwd",
+	"rm",
+	"rmdir",
+	"sync",
+	"unlink",
 }
 
 func New(opt *kfscommon.Options) *KFS {
 	kfs := &KFS{
 		Opt:       opt,
 		scheduler: scheduler.New(memory.New()),
+		pwd:       "/home/test",
 	}
 	object.EmptyDir.Write(kfs.scheduler)
 	object.EmptyFile.Write(kfs.scheduler)
@@ -32,7 +55,17 @@ func New(opt *kfscommon.Options) *KFS {
 	kfs.root.add(object.NewDirMetadata("demo", object.DefaultDirMode), object.EmptyDir)
 	kfs.root.add(object.NewFileMetadata("hello"), &object.Blob{Reader: strings.NewReader("hello world")})
 	kfs.root.add(object.NewFileMetadata("index.js"), &object.Blob{Reader: strings.NewReader("index")})
+	kfs.MkdirAll("/home/test", kfs.Opt.DirPerms)
+	kfs.Mkdir("/bin", kfs.Opt.DirPerms)
+	for _, b := range defaultBinaries {
+		kfs.Create(path.Join("/bin", b))
+	}
+	kfs.Mkdir("/tmp", kfs.Opt.DirPerms)
 	return kfs
+}
+
+func (kfs *KFS) Getwd() (dir string, err error) {
+	return kfs.pwd, nil
 }
 
 func (kfs *KFS) GetDir(path string) (dir *Dir, err error) {
@@ -61,6 +94,9 @@ func (kfs *KFS) GetFile(path string) (*File, error) {
 
 // getNode finds the Node by path starting from the root
 func (kfs *KFS) getNode(path string) (node Node, err error) {
+	//if !filepath.IsAbs(path) {
+	//	path = filepath.Join(kfs.pwd, path)
+	//}
 	path = strings.Trim(path, "/")
 	node = kfs.root
 	for path != "" {
