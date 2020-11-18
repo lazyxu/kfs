@@ -17,9 +17,7 @@ import (
 
 type Dir struct {
 	ItemBase
-	items      map[string]Node
-	offset     int
-	nameOffset int
+	items map[string]Node
 }
 
 func NewDir(kfs *KFS, name string, perm os.FileMode) *Dir {
@@ -193,29 +191,27 @@ func (i *Dir) WriteAt(content []byte, offset int64) (n int, err error) {
 // nil error. If it encounters an error before the end of the
 // directory, Readdir returns the FileInfo read until that point
 // and a non-nil error.
-func (i *Dir) Readdir(n int) (dirs []*object.Metadata, err error) {
+func (i *Dir) Readdir(n int, offset int) (dirs []*object.Metadata, err error) {
 	d, err := i.load()
 	if err != nil {
 		return nil, err
 	}
 	if n <= 0 {
-		if i.offset >= len(d.Items) {
+		if offset >= len(d.Items) {
 			return []*object.Metadata{}, nil
 		}
-		i.offset = len(d.Items)
+		offset = len(d.Items)
 		return d.Items, nil
 	}
-	if i.offset >= len(d.Items) {
+	if offset >= len(d.Items) {
 		return []*object.Metadata{}, io.EOF
 	}
-	ii := i.offset
-	for ; ii < len(d.Items); ii++ {
-		if ii >= i.offset+n {
+	for ii := offset; ii < len(d.Items); ii++ {
+		if ii >= offset+n {
 			break
 		}
 		dirs = append(dirs, d.Items[ii])
 	}
-	i.offset = ii
 	return dirs, nil
 }
 
@@ -234,33 +230,31 @@ func (i *Dir) Readdir(n int) (dirs []*object.Metadata, err error) {
 // nil error. If it encounters an error before the end of the
 // directory, Readdirnames returns the names read until that point and
 // a non-nil error.
-func (i *Dir) Readdirnames(n int) (names []string, err error) {
+func (i *Dir) Readdirnames(n int, nameOffset int) (names []string, err error) {
 	d, err := i.load()
 	if err != nil {
 		return nil, err
 	}
 	if n <= 0 {
-		if i.nameOffset >= len(d.Items) {
+		if nameOffset >= len(d.Items) {
 			return []string{}, nil
 		}
 		names = make([]string, len(d.Items))
 		for ii, item := range d.Items {
 			names[ii] = item.Name
 		}
-		i.nameOffset = len(d.Items)
+		nameOffset = len(d.Items)
 		return names, nil
 	}
-	if i.nameOffset >= len(d.Items) {
+	if nameOffset >= len(d.Items) {
 		return []string{}, io.EOF
 	}
-	ii := i.nameOffset
-	for ; ii < len(d.Items); ii++ {
-		if ii >= i.nameOffset+n {
+	for ii := nameOffset; ii < len(d.Items); ii++ {
+		if ii >= nameOffset+n {
 			break
 		}
 		names = append(names, d.Items[ii].Name)
 	}
-	i.nameOffset = ii
 	return names, nil
 }
 
@@ -269,8 +263,6 @@ func (i *Dir) Close() error {
 	if err != nil {
 		return err
 	}
-	i.offset = 0
-	i.nameOffset = 0
 	return nil
 }
 

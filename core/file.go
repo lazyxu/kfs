@@ -133,14 +133,14 @@ func (i *File) Truncate(size int64) error {
 	return nil
 }
 
-func (i *File) Readdirnames(n int) (names []string, err error) {
+func (i *File) Readdirnames(n int, offset int) (names []string, err error) {
 	if i == nil {
 		return nil, e.ErrInvalid
 	}
 	return nil, e.EIsFile
 }
 
-func (i *File) Readdir(n int) ([]*object.Metadata, error) {
+func (i *File) Readdir(n int, offset int) ([]*object.Metadata, error) {
 	if i == nil {
 		return nil, e.ErrInvalid
 	}

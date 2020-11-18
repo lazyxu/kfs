@@ -17,8 +17,8 @@ type Node interface {
 	ReadAt(buff []byte, off int64) (int, error)
 	Write(content []byte) (n int, err error)
 	WriteAt(content []byte, offset int64) (n int, err error)
-	Readdirnames(n int) (names []string, err error)
-	Readdir(n int) ([]*object.Metadata, error)
+	Readdirnames(n int, offset int) (names []string, err error)
+	Readdir(n int, offset int) ([]*object.Metadata, error)
 	Close() error
 	Open(flags int) (fd Handle, err error)
 }
