@@ -20,6 +20,7 @@ type Node interface {
 	Readdirnames(n int) (names []string, err error)
 	Readdir(n int) ([]*object.Metadata, error)
 	Close() error
+	Open(flags int) (fd Handle, err error)
 }
 
 type ItemBase struct {

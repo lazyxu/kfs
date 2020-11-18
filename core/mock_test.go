@@ -26,11 +26,11 @@ func Getwd() (dir string, err error) {
 	return kfs.Getwd()
 }
 
-func Open(name string) (Node, error) {
+func Open(name string) (Handle, error) {
 	return kfs.Open(name)
 }
 
-func Create(name string) (Node, error) {
+func Create(name string) (Handle, error) {
 	return kfs.Create(name)
 }
 

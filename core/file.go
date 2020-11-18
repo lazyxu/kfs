@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"os"
 
 	"github.com/lazyxu/kfs/core/e"
 
@@ -155,4 +156,71 @@ func (i *File) Close() error {
 	i.closed = true
 	i.opened = false
 	return nil
+}
+
+// Open a file according to the flags provided
+//
+//   O_RDONLY open the file read-only.
+//   O_WRONLY open the file write-only.
+//   O_RDWR   open the file read-write.
+//
+//   O_APPEND append data to the file when writing.
+//   O_CREATE create a new file if none exists.
+//   O_EXCL   used with O_CREATE, file must not exist
+//   O_SYNC   open for synchronous I/O.
+//   O_TRUNC  if possible, truncate file when opene
+//
+// We ignore O_SYNC and O_EXCL
+func (i *File) Open(flags int) (fd Handle, err error) {
+	var (
+		write    bool // if set need write support
+		read     bool // if set need read support
+		rdwrMode = flags & accessModeMask
+	)
+
+	// http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html
+	// The result of using O_TRUNC with O_RDONLY is undefined.
+	// Linux seems to truncate the file, but we prefer to return EINVAL
+	if rdwrMode == os.O_RDONLY && flags&os.O_TRUNC != 0 {
+		return nil, e.ErrInvalid
+	}
+	// Figure out the read/write intents
+	switch {
+	case rdwrMode == os.O_RDONLY:
+		read = true
+	case rdwrMode == os.O_WRONLY:
+		write = true
+	case rdwrMode == os.O_RDWR:
+		read = true
+		write = true
+	default:
+		logrus.Debug(i.Name(), "Can't figure out how to open with flags: 0x%X", flags)
+		return nil, e.ErrPermission
+	}
+
+	if read && write {
+		fd, err = i.openRW(flags)
+	} else if write {
+		fd, err = i.openWrite(flags)
+	} else if read {
+		fd, err = i.openRead()
+	}
+	return fd, err
+}
+
+// openRead open the file for read
+func (f *File) openRead() (fh *ReadFileHandle, err error) {
+	return newReadFileHandle(f), nil
+}
+
+// openWrite open the file for write
+func (f *File) openWrite(flags int) (fh *WriteFileHandle, err error) {
+	return newWriteFileHandle(f), nil
+}
+
+// openRW open the file for read and write using a temporay file
+//
+// It uses the open flags passed in.
+func (f *File) openRW(flags int) (fh *RWFileHandle, err error) {
+	return newRWFileHandle(f), nil
 }

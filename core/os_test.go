@@ -62,8 +62,8 @@ func localTmp() string {
 	return "/tmp"
 }
 
-func newFile(testName string, t *testing.T) (f Node) {
-	f, err := Create(path.Join(localTmp(), "_Go_"+testName))
+func newFile(testName string, t *testing.T) (fh Handle) {
+	fh, err := Create(path.Join(localTmp(), "_Go_"+testName))
 	if err != nil {
 		t.Fatalf("TempFile %s: %s", testName, err)
 	}
@@ -233,7 +233,7 @@ func testReaddir(dir string, contents []string, t *testing.T) {
 	for _, m := range contents {
 		found := false
 		for _, n := range s {
-			if equal(m, n.Name) {
+			if equal(m, n.Name()) {
 				if found {
 					t.Error("present twice:", m)
 				}
@@ -343,7 +343,7 @@ func BenchmarkLstatDir(b *testing.B) {
 }
 
 // Read the directory one entry at a time.
-func smallReaddirnames(file Node, length int, t *testing.T) []string {
+func smallReaddirnames(file Handle, length int, t *testing.T) []string {
 	names := make([]string, length)
 	count := 0
 	for {
@@ -411,7 +411,7 @@ func TestReaddirNValues(t *testing.T) {
 		f.Close()
 	}
 
-	var d Node
+	var d Handle
 	openDir := func() {
 		var err error
 		d, err = Open(dir)
