@@ -205,6 +205,7 @@ func (i *File) Open(flags int) (fd Handle, err error) {
 	} else if read {
 		fd, err = i.openRead()
 	}
+	// TODO: create
 	return fd, err
 }
 

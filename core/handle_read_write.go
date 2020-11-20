@@ -28,7 +28,7 @@ func (h *RWFileHandle) Chmod(mode os.FileMode) error     { return h.node.Chmod(m
 func (h *RWFileHandle) Chown(uid, gid int) error         { return e.ENotImpl }
 func (h *RWFileHandle) Close() error                     { return h.node.Close() }
 func (h *RWFileHandle) Fd() uintptr                      { return 0 }
-func (h *RWFileHandle) Name() string                     { return h.node.Name() }
+func (h *RWFileHandle) Name() string                     { return h.node.Path() }
 func (h *RWFileHandle) Read(b []byte) (n int, err error) { return h.node.Read(b) }
 func (h *RWFileHandle) ReadAt(b []byte, off int64) (n int, err error) {
 	return h.node.ReadAt(b, h.offset)

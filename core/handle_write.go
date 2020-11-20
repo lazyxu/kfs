@@ -25,7 +25,7 @@ func (h *WriteFileHandle) Chmod(mode os.FileMode) error     { return h.node.Chmo
 func (h *WriteFileHandle) Chown(uid, gid int) error         { return e.ENotImpl }
 func (h *WriteFileHandle) Close() error                     { return h.node.Close() }
 func (h *WriteFileHandle) Fd() uintptr                      { return 0 }
-func (h *WriteFileHandle) Name() string                     { return h.node.Name() }
+func (h *WriteFileHandle) Name() string                     { return h.node.Path() }
 func (h *WriteFileHandle) Read(b []byte) (n int, err error) { return h.node.Read(b) }
 func (h *WriteFileHandle) ReadAt(b []byte, off int64) (n int, err error) {
 	return h.node.ReadAt(b, h.offset)

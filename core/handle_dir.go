@@ -31,7 +31,7 @@ func (h *DirHandle) Close() error {
 	return h.node.Close()
 }
 func (h *DirHandle) Fd() uintptr  { return 0 }
-func (h *DirHandle) Name() string { return h.node.Name() }
+func (h *DirHandle) Name() string { return h.node.Path() }
 func (h *DirHandle) Readdir(n int) ([]os.FileInfo, error) {
 	dirs, err := h.node.Readdir(n, h.offset)
 	if err != nil {

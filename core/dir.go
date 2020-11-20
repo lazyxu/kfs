@@ -8,8 +8,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/lazyxu/kfs/object"
 
 	"github.com/lazyxu/kfs/core/e"
@@ -268,10 +266,10 @@ func (i *Dir) Close() error {
 
 // Open the directory according to the flags provided
 func (d *Dir) Open(flags int) (fd Handle, err error) {
-	rdwrMode := flags & accessModeMask
-	if rdwrMode != os.O_RDONLY {
-		logrus.Error(d, "Can only open directories read only")
-		return nil, e.ErrPermission
-	}
+	//rdwrMode := flags & accessModeMask
+	//if rdwrMode != os.O_RDONLY {
+	//	logrus.Error(d, "Can only open directories read only")
+	//	return nil, e.ErrPermission
+	//}
 	return newDirHandle(d), nil
 }

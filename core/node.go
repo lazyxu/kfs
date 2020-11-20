@@ -2,6 +2,7 @@ package core
 
 import (
 	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -21,6 +22,8 @@ type Node interface {
 	Readdir(n int, offset int) ([]*object.Metadata, error)
 	Close() error
 	Open(flags int) (fd Handle, err error)
+	Path() string
+	Parent() *Dir
 }
 
 type ItemBase struct {
@@ -32,6 +35,20 @@ type ItemBase struct {
 
 func (i *ItemBase) Name() string {
 	return i.Metadata.Name
+}
+
+func (i *ItemBase) Parent() *Dir {
+	return i.parent
+}
+
+func (i *ItemBase) Path() string {
+	parent := i.parent
+	p := i.Name()
+	for parent != nil {
+		p = path.Join(parent.Name(), p)
+		parent = parent.parent
+	}
+	return "/" + p
 }
 
 func (i *ItemBase) Size() int64 {
