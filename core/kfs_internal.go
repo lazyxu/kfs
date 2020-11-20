@@ -2,6 +2,7 @@ package core
 
 import (
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/lazyxu/kfs/object"
@@ -47,7 +48,7 @@ func New(opt *kfscommon.Options) *KFS {
 	kfs := &KFS{
 		Opt:       opt,
 		scheduler: scheduler.New(memory.New()),
-		pwd:       "/home/test",
+		pwd:       "/tmp",
 	}
 	object.EmptyDir.Write(kfs.scheduler)
 	object.EmptyFile.Write(kfs.scheduler)
@@ -94,9 +95,9 @@ func (kfs *KFS) GetFile(path string) (*File, error) {
 
 // getNode finds the Node by path starting from the root
 func (kfs *KFS) getNode(path string) (node Node, err error) {
-	//if !filepath.IsAbs(path) {
-	//	path = filepath.Join(kfs.pwd, path)
-	//}
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(kfs.pwd, path)
+	}
 	path = strings.Trim(path, "/")
 	node = kfs.root
 	for path != "" {
@@ -153,8 +154,7 @@ func (kfs *KFS) getNode(path string) (node Node, err error) {
 }
 
 func (kfs *KFS) getDirAndLeaf(name string) (*Dir, string, error) {
-	name = strings.Trim(name, "/")
-	parent, leaf := path.Split(name)
+	parent, leaf := filepath.Split(name)
 	dir, err := kfs.GetDir(parent)
 	if err != nil {
 		return nil, "", err
