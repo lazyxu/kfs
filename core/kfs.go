@@ -109,6 +109,9 @@ func (kfs *KFS) Rename(oldPath, newPath string) error {
 		metadata.Name = newName
 		return kfs.move(&metadata, newDir)
 	}
+	if newMetadata.IsDir() {
+		return e.EIsDir
+	}
 	return nil
 }
 
@@ -147,4 +150,14 @@ func (kfs *KFS) Chmod(name string, mode os.FileMode) error {
 		return err
 	}
 	return node.Chmod(mode)
+}
+
+// Chdir changes the current working directory to the named directory.
+func (kfs *KFS) Chdir(dir string) error {
+	node, err := kfs.GetDir(dir)
+	if err != nil {
+		return err
+	}
+	kfs.pwd = node.Path()
+	return nil
 }

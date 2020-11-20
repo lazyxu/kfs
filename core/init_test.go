@@ -57,3 +57,7 @@ type testENV struct {
 func (env *testENV) MustHaveSymlink(t testing.TB) {
 	t.Skipf("skipping test: cannot make symlinks")
 }
+
+func (env *testENV) MustHaveLink(t testing.TB) {
+	t.Skipf("skipping test: cannot make hard links")
+}

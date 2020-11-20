@@ -190,3 +190,52 @@ func TempFile(dir, pattern string) (f Handle, err error) {
 func Remove(name string) error {
 	return kfs.Remove(name)
 }
+
+// Link creates newname as a hard link to the oldname file.
+// If there is an error, it will be of type *LinkError.
+func Link(oldname, newname string) error {
+	return e.ENotImpl
+}
+
+// Chdir changes the current working directory to the named directory.
+func Chdir(dir string) error {
+	return kfs.Chdir(dir)
+}
+
+func SameFile(fi1, fi2 os.FileInfo) bool {
+	return os.SameFile(fi1, fi2)
+}
+
+const ModeSymlink = os.ModeSymlink
+
+// Readlink returns the destination of the named symbolic link.
+// If there is an error, it will be of type *PathError.
+func Readlink(name string) (string, error) {
+	return "", e.ENotImpl
+}
+
+// Rename renames (moves) oldpath to newpath.
+// If newpath already exists and is not a directory, Rename replaces it.
+// OS-specific restrictions may apply when oldpath and newpath are in different directories.
+// If there is an error, it will be of type *LinkError.
+func Rename(oldpath, newpath string) error {
+	return kfs.Rename(oldpath, newpath)
+}
+
+var IsNotExist = os.IsNotExist
+var IsExist = os.IsExist
+
+// WriteFile writes data to a file named by filename.
+// If the file does not exist, WriteFile creates it with permissions perm
+// (before umask); otherwise WriteFile truncates it before writing, without changing permissions.
+func WriteFile(filename string, data []byte, perm os.FileMode) error {
+	f, err := kfs.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(data)
+	if err1 := f.Close(); err == nil {
+		err = err1
+	}
+	return err
+}

@@ -567,9 +567,235 @@ func TestReaddirOfFile(t *testing.T) {
 	}
 }
 
+func TestHardLink(t *testing.T) {
+	testenv.MustHaveLink(t)
+
+	defer chtmpdir(t)()
+	from, to := "hardlinktestfrom", "hardlinktestto"
+	file, err := Create(to)
+	if err != nil {
+		t.Fatalf("open %q failed: %v", to, err)
+	}
+	if err = file.Close(); err != nil {
+		t.Errorf("close %q failed: %v", to, err)
+	}
+	err = Link(to, from)
+	if err != nil {
+		t.Fatalf("link %q, %q failed: %v", to, from, err)
+	}
+
+	none := "hardlinktestnone"
+	err = Link(none, none)
+
+	tostat, err := Stat(to)
+	if err != nil {
+		t.Fatalf("stat %q failed: %v", to, err)
+	}
+	fromstat, err := Stat(from)
+	if err != nil {
+		t.Fatalf("stat %q failed: %v", from, err)
+	}
+	if !SameFile(tostat, fromstat) {
+		t.Errorf("link %q, %q did not create hard link", to, from)
+	}
+	// We should not be able to perform the same Link() a second time
+	err = Link(to, from)
+	if !IsExist(err) {
+		t.Errorf("Link(%q, %q) err.Err = %q; want %q", to, from, err, "file exists error")
+	}
+}
+
 // chtmpdir changes the working directory to a new temporary directory and
 // provides a cleanup function.
 func chtmpdir(t *testing.T) func() {
+	oldwd, err := Getwd()
+	if err != nil {
+		t.Fatalf("chtmpdir: %v", err)
+	}
+	d, err := TempDir("", "test")
+	if err != nil {
+		t.Fatalf("chtmpdir: %v", err)
+	}
+	if err := Chdir(d); err != nil {
+		t.Fatalf("chtmpdir: %v", err)
+	}
 	return func() {
+		if err := Chdir(oldwd); err != nil {
+			t.Fatalf("chtmpdir: %v", err)
+		}
+		RemoveAll(d)
+	}
+}
+
+func TestSymlink(t *testing.T) {
+	testenv.MustHaveSymlink(t)
+
+	defer chtmpdir(t)()
+	from, to := "symlinktestfrom", "symlinktestto"
+	file, err := Create(to)
+	if err != nil {
+		t.Fatalf("Create(%q) failed: %v", to, err)
+	}
+	if err = file.Close(); err != nil {
+		t.Errorf("Close(%q) failed: %v", to, err)
+	}
+	err = Symlink(to, from)
+	if err != nil {
+		t.Fatalf("Symlink(%q, %q) failed: %v", to, from, err)
+	}
+	tostat, err := Lstat(to)
+	if err != nil {
+		t.Fatalf("Lstat(%q) failed: %v", to, err)
+	}
+	if tostat.Mode()&ModeSymlink != 0 {
+		t.Fatalf("Lstat(%q).Mode()&ModeSymlink = %v, want 0", to, tostat.Mode()&ModeSymlink)
+	}
+	fromstat, err := Stat(from)
+	if err != nil {
+		t.Fatalf("Stat(%q) failed: %v", from, err)
+	}
+	if !SameFile(tostat, fromstat) {
+		t.Errorf("Symlink(%q, %q) did not create symlink", to, from)
+	}
+	fromstat, err = Lstat(from)
+	if err != nil {
+		t.Fatalf("Lstat(%q) failed: %v", from, err)
+	}
+	if fromstat.Mode()&ModeSymlink == 0 {
+		t.Fatalf("Lstat(%q).Mode()&ModeSymlink = 0, want %v", from, ModeSymlink)
+	}
+	fromstat, err = Stat(from)
+	if err != nil {
+		t.Fatalf("Stat(%q) failed: %v", from, err)
+	}
+	if fromstat.Name() != from {
+		t.Errorf("Stat(%q).Name() = %q, want %q", from, fromstat.Name(), from)
+	}
+	if fromstat.Mode()&ModeSymlink != 0 {
+		t.Fatalf("Stat(%q).Mode()&ModeSymlink = %v, want 0", from, fromstat.Mode()&ModeSymlink)
+	}
+	s, err := Readlink(from)
+	if err != nil {
+		t.Fatalf("Readlink(%q) failed: %v", from, err)
+	}
+	if s != to {
+		t.Fatalf("Readlink(%q) = %q, want %q", from, s, to)
+	}
+	file, err = Open(from)
+	if err != nil {
+		t.Fatalf("Open(%q) failed: %v", from, err)
+	}
+	file.Close()
+}
+
+func TestLongSymlink(t *testing.T) {
+	testenv.MustHaveSymlink(t)
+
+	defer chtmpdir(t)()
+	s := "0123456789abcdef"
+	// Long, but not too long: a common limit is 255.
+	s = s + s + s + s + s + s + s + s + s + s + s + s + s + s + s
+	from := "longsymlinktestfrom"
+	err := Symlink(s, from)
+	if err != nil {
+		t.Fatalf("symlink %q, %q failed: %v", s, from, err)
+	}
+	r, err := Readlink(from)
+	if err != nil {
+		t.Fatalf("readlink %q failed: %v", from, err)
+	}
+	if r != s {
+		t.Fatalf("after symlink %q != %q", r, s)
+	}
+}
+
+func TestRename(t *testing.T) {
+	defer chtmpdir(t)()
+	from, to := "renamefrom", "renameto"
+
+	file, err := Create(from)
+	if err != nil {
+		t.Fatalf("open %q failed: %v", from, err)
+	}
+	if err = file.Close(); err != nil {
+		t.Errorf("close %q failed: %v", from, err)
+	}
+	err = Rename(from, to)
+	if err != nil {
+		t.Fatalf("rename %q, %q failed: %v", to, from, err)
+	}
+	_, err = Stat(to)
+	if err != nil {
+		t.Errorf("stat %q failed: %v", to, err)
+	}
+}
+
+func TestRenameOverwriteDest(t *testing.T) {
+	defer chtmpdir(t)()
+	from, to := "renamefrom", "renameto"
+
+	toData := []byte("to")
+	fromData := []byte("from")
+
+	err := WriteFile(to, toData, 0777)
+	if err != nil {
+		t.Fatalf("write file %q failed: %v", to, err)
+	}
+
+	err = WriteFile(from, fromData, 0777)
+	if err != nil {
+		t.Fatalf("write file %q failed: %v", from, err)
+	}
+	err = Rename(from, to)
+	if err != nil {
+		t.Fatalf("rename %q, %q failed: %v", to, from, err)
+	}
+
+	_, err = Stat(from)
+	if err == nil {
+		t.Errorf("from file %q still exists", from)
+	}
+	if err != nil && !IsNotExist(err) {
+		t.Fatalf("stat from: %v", err)
+	}
+	toFi, err := Stat(to)
+	if err != nil {
+		t.Fatalf("stat %q failed: %v", to, err)
+	}
+	if toFi.Size() != int64(len(fromData)) {
+		t.Errorf(`"to" size = %d; want %d (old "from" size)`, toFi.Size(), len(fromData))
+	}
+}
+
+func TestRenameFailed(t *testing.T) {
+	defer chtmpdir(t)()
+	from, to := "renamefrom", "renameto"
+
+	err := Rename(from, to)
+	if err == nil {
+		t.Errorf("rename %q, %q: expected error, got nil", from, to)
+	}
+}
+func TestRenameNotExisting(t *testing.T) {
+	defer chtmpdir(t)()
+	from, to := "doesnt-exist", "dest"
+
+	Mkdir(to, 0777)
+
+	if err := Rename(from, to); !IsNotExist(err) {
+		t.Errorf("Rename(%q, %q) = %v; want an IsNotExist error", from, to, err)
+	}
+}
+
+func TestRenameToDirFailed(t *testing.T) {
+	defer chtmpdir(t)()
+	from, to := "renamefrom", "renameto"
+
+	Mkdir(from, 0777)
+	Mkdir(to, 0777)
+
+	err := Rename(from, to)
+	if err == nil {
+		t.Errorf("rename %q, %q: expected error, got nil", from, to)
 	}
 }
