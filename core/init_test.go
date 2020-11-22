@@ -61,3 +61,7 @@ func (env *testENV) MustHaveSymlink(t testing.TB) {
 func (env *testENV) MustHaveLink(t testing.TB) {
 	t.Skipf("skipping test: cannot make hard links")
 }
+
+func (env *testENV) MustHaveExec(t testing.TB) {
+	t.Skipf("skipping test: cannot exec")
+}

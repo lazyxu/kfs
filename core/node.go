@@ -11,6 +11,8 @@ import (
 
 type Node interface {
 	os.FileInfo
+	BTime() time.Time
+	CTime() time.Time
 	IsFile() bool
 	Chmod(mode os.FileMode) error
 	Stat() (os.FileInfo, error)
@@ -24,6 +26,9 @@ type Node interface {
 	Open(flags int) (fd Handle, err error)
 	Path() string
 	Parent() *Dir
+	Truncate(size int64) error
+	SetATime(t time.Time)
+	SetMTime(t time.Time)
 }
 
 type ItemBase struct {
@@ -31,6 +36,24 @@ type ItemBase struct {
 	parent *Dir
 	mutex  sync.RWMutex
 	*object.Metadata
+}
+
+func (i *ItemBase) BTime() time.Time {
+	return time.Unix(0, i.Metadata.BirthTime)
+}
+func (i *ItemBase) CTime() time.Time {
+	return time.Unix(0, i.Metadata.ChangeTime)
+}
+
+func (i *ItemBase) SetATime(t time.Time) {
+	metadata := *i.Metadata
+	metadata.ChangeTime = t.UnixNano()
+	*i.Metadata = metadata
+}
+func (i *ItemBase) SetMTime(t time.Time) {
+	metadata := *i.Metadata
+	metadata.ModifyTime = t.UnixNano()
+	*i.Metadata = metadata
 }
 
 func (i *ItemBase) Name() string {
@@ -56,12 +79,13 @@ func (i *ItemBase) Size() int64 {
 }
 
 func (i *ItemBase) Mode() os.FileMode {
-	return i.Metadata.Mode
+	return i.Metadata.Mode & os.ModePerm
 }
 
 func (i *ItemBase) Chmod(mode os.FileMode) error {
 	metadata := *i.Metadata
-	metadata.Mode = mode
+	metadata.Mode = metadata.Mode&(^os.ModePerm) | mode&os.ModePerm
+	*i.Metadata = metadata
 	return i.update()
 }
 

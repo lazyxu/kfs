@@ -12,31 +12,85 @@ import (
 // transferred to the remote.
 type RWFileHandle struct {
 	baseHandle
-	node   *File
+	kfs    *KFS
+	path   string
 	closed bool
 	offset int64
 	opened bool
 }
 
-func newRWFileHandle(node *File) *RWFileHandle {
+func newRWFileHandle(kfs *KFS, path string) *RWFileHandle {
 	return &RWFileHandle{
-		node: node,
+		kfs:  kfs,
+		path: path,
 	}
 }
 
-func (h *RWFileHandle) Chmod(mode os.FileMode) error     { return h.node.Chmod(mode) }
-func (h *RWFileHandle) Chown(uid, gid int) error         { return e.ENotImpl }
-func (h *RWFileHandle) Close() error                     { return h.node.Close() }
-func (h *RWFileHandle) Fd() uintptr                      { return 0 }
-func (h *RWFileHandle) Name() string                     { return h.node.Path() }
-func (h *RWFileHandle) Read(b []byte) (n int, err error) { return h.node.Read(b) }
+func (h *RWFileHandle) Chmod(mode os.FileMode) error {
+	node, err := h.Node()
+	if err != nil {
+		return err
+	}
+	return node.Chmod(mode)
+}
+func (h *RWFileHandle) Chown(uid, gid int) error { return e.ENotImpl }
+func (h *RWFileHandle) Close() error {
+	node, err := h.Node()
+	if err != nil {
+		return err
+	}
+	return node.Close()
+}
+func (h *RWFileHandle) Fd() uintptr  { return 0 }
+func (h *RWFileHandle) Name() string { return h.path }
+func (h *RWFileHandle) Read(b []byte) (n int, err error) {
+	node, err := h.Node()
+	if err != nil {
+		return 0, err
+	}
+	return node.Read(b)
+}
 func (h *RWFileHandle) ReadAt(b []byte, off int64) (n int, err error) {
-	return h.node.ReadAt(b, h.offset)
+	node, err := h.Node()
+	if err != nil {
+		return 0, err
+	}
+	return node.ReadAt(b, h.offset)
 }
 func (h *RWFileHandle) Seek(offset int64, whence int) (ret int64, err error) { return 0, e.ENotImpl }
-func (h *RWFileHandle) Stat() (os.FileInfo, error)                           { return h.node.Stat() }
-func (h *RWFileHandle) Truncate(size int64) error                            { return h.node.Truncate(size) }
-func (h *RWFileHandle) Write(b []byte) (n int, err error)                    { return h.node.Write(b) }
-func (h *RWFileHandle) WriteAt(b []byte, off int64) (n int, err error)       { return h.node.WriteAt(b, off) }
-func (h *RWFileHandle) WriteString(s string) (n int, err error)              { return h.node.Write([]byte(s)) }
-func (h *RWFileHandle) Node() Node                                           { return h.node }
+func (h *RWFileHandle) Stat() (os.FileInfo, error) {
+	node, err := h.Node()
+	if err != nil {
+		return nil, err
+	}
+	return node.Stat()
+}
+func (h *RWFileHandle) Truncate(size int64) error {
+	node, err := h.Node()
+	if err != nil {
+		return err
+	}
+	return node.Truncate(size)
+}
+func (h *RWFileHandle) Write(b []byte) (n int, err error) {
+	node, err := h.Node()
+	if err != nil {
+		return 0, err
+	}
+	return node.Write(b)
+}
+func (h *RWFileHandle) WriteAt(b []byte, off int64) (n int, err error) {
+	node, err := h.Node()
+	if err != nil {
+		return 0, err
+	}
+	return node.WriteAt(b, off)
+}
+func (h *RWFileHandle) WriteString(s string) (n int, err error) {
+	node, err := h.Node()
+	if err != nil {
+		return 0, err
+	}
+	return node.Write([]byte(s))
+}
+func (h *RWFileHandle) Node() (Node, error) { return h.kfs.GetFile(h.path) }

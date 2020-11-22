@@ -74,7 +74,12 @@ func (i *File) getContent() (io.Reader, error) {
 }
 
 func (i *File) Write(content []byte) (n int, err error) {
-	return i.WriteAt(content, 0)
+	n, err = i.WriteAt(content, i.offset)
+	if err != nil {
+		return 0, err
+	}
+	i.offset += int64(n)
+	return n, nil
 }
 
 func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
@@ -211,17 +216,17 @@ func (i *File) Open(flags int) (fd Handle, err error) {
 
 // openRead open the file for read
 func (f *File) openRead() (fh *ReadFileHandle, err error) {
-	return newReadFileHandle(f), nil
+	return newReadFileHandle(f.kfs, f.Path()), nil
 }
 
 // openWrite open the file for write
 func (f *File) openWrite(flags int) (fh *WriteFileHandle, err error) {
-	return newWriteFileHandle(f), nil
+	return newWriteFileHandle(f.kfs, f.Path()), nil
 }
 
 // openRW open the file for read and write using a temporay file
 //
 // It uses the open flags passed in.
 func (f *File) openRW(flags int) (fh *RWFileHandle, err error) {
-	return newRWFileHandle(f), nil
+	return newRWFileHandle(f.kfs, f.Path()), nil
 }

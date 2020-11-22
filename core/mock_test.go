@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/lazyxu/kfs/core/e"
@@ -238,4 +239,65 @@ func WriteFile(filename string, data []byte, perm os.FileMode) error {
 		err = err1
 	}
 	return err
+}
+
+type FileMode = os.FileMode
+type FileInfo = os.FileInfo
+
+// Chmod changes the mode of the named file to mode.
+// If the file is a symbolic link, it changes the mode of the link's target.
+// If there is an error, it will be of type *PathError.
+//
+// A different subset of the mode bits are used, depending on the
+// operating system.
+//
+// On Unix, the mode's permission bits, ModeSetuid, ModeSetgid, and
+// ModeSticky are used.
+//
+// On Windows, only the 0200 bit (owner writable) of mode is used; it
+// controls whether the file's read-only attribute is set or cleared.
+// The other bits are currently unused. For compatibility with Go 1.12
+// and earlier, use a non-zero mode. Use mode 0400 for a read-only
+// file and 0600 for a readable+writable file.
+//
+// On Plan 9, the mode's permission bits, ModeAppend, ModeExclusive,
+// and ModeTemporary are used.
+func Chmod(name string, mode FileMode) error { return kfs.Chmod(name, mode) }
+
+// Truncate changes the size of the named file.
+// If the file is a symbolic link, it changes the size of the link's target.
+// If there is an error, it will be of type *PathError.
+func Truncate(name string, size int64) error {
+	if e := kfs.Truncate(name, size); e != nil {
+		return &PathError{"truncate", name, e}
+	}
+	return nil
+}
+func timespecToTime(ts syscall.Timespec) time.Time {
+	return time.Unix(int64(ts.Sec), int64(ts.Nsec))
+}
+
+// For testing.
+func Atime(fi os.FileInfo) time.Time {
+	n, ok := fi.(Node)
+	if !ok {
+		panic(errors.New("235"))
+	}
+	return n.ModTime()
+}
+
+// Chtimes changes the access and modification times of the named
+// file, similar to the Unix utime() or utimes() functions.
+//
+// The underlying filesystem may truncate or round the values to a
+// less precise time unit.
+// If there is an error, it will be of type *PathError.
+func Chtimes(name string, atime time.Time, mtime time.Time) error {
+	node, err := kfs.getNode(name)
+	if err != nil {
+		return err
+	}
+	node.SetATime(atime)
+	node.SetMTime(mtime)
+	return nil
 }

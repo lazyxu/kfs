@@ -1,10 +1,13 @@
 package core
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+	osexec "os/exec"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -12,6 +15,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 )
 
 var dot = []string{
@@ -70,6 +74,14 @@ func newFile(testName string, t *testing.T) (fh Handle) {
 	fh, err := Create(path.Join(localTmp(), "_Go_"+testName))
 	if err != nil {
 		t.Fatalf("TempFile %s: %s", testName, err)
+	}
+	return
+}
+
+func newDir(testName string, t *testing.T) (name string) {
+	name, err := TempDir(localTmp(), "_Go_"+testName)
+	if err != nil {
+		t.Fatalf("TempDir %s: %s", testName, err)
 	}
 	return
 }
@@ -496,13 +508,13 @@ func TestReaddirStatFailures(t *testing.T) {
 		*LstatP = Lstat
 	}()
 	var xerr error // error to return for x
-	*LstatP = func(path string) (os.FileInfo, error) {
+	*LstatP = func(path string) (FileInfo, error) {
 		if xerr != nil && strings.HasSuffix(path, "x") {
 			return nil, xerr
 		}
 		return Lstat(path)
 	}
-	readDir := func() ([]os.FileInfo, error) {
+	readDir := func() ([]FileInfo, error) {
 		d, err := Open(dir)
 		if err != nil {
 			t.Fatal(err)
@@ -858,5 +870,213 @@ func TestRenameCaseDifference(pt *testing.T) {
 				t.Errorf("unexpected name, got %q, want %q", dirNames[0], to)
 			}
 		})
+	}
+}
+
+func exec(t *testing.T, dir, cmd string, args []string, expect string) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("Pipe: %v", err)
+	}
+	defer r.Close()
+	attr := &os.ProcAttr{Dir: dir, Files: []*os.File{nil, w, os.Stderr}}
+	p, err := os.StartProcess(cmd, args, attr)
+	if err != nil {
+		t.Fatalf("StartProcess: %v", err)
+	}
+	w.Close()
+
+	var b bytes.Buffer
+	io.Copy(&b, r)
+	output := b.String()
+
+	fi1, _ := Stat(strings.TrimSpace(output))
+	fi2, _ := Stat(expect)
+	if !SameFile(fi1, fi2) {
+		t.Errorf("exec %q returned %q wanted %q",
+			strings.Join(append([]string{cmd}, args...), " "), output, expect)
+	}
+	p.Wait()
+}
+
+func TestStartProcess(t *testing.T) {
+	testenv.MustHaveExec(t)
+
+	var dir, cmd string
+	var args []string
+	switch runtime.GOOS {
+	case "android":
+		t.Skip("android doesn't have /bin/pwd")
+	case "windows":
+		cmd = os.Getenv("COMSPEC")
+		dir = os.Getenv("SystemRoot")
+		args = []string{"/c", "cd"}
+	default:
+		var err error
+		cmd, err = osexec.LookPath("pwd")
+		if err != nil {
+			t.Fatalf("Can't find pwd: %v", err)
+		}
+		dir = "/"
+		args = []string{}
+		t.Logf("Testing with %v", cmd)
+	}
+	cmddir, cmdbase := filepath.Split(cmd)
+	args = append([]string{cmdbase}, args...)
+	// Test absolute executable path.
+	exec(t, dir, cmd, args, dir)
+	// Test relative executable path.
+	exec(t, cmddir, cmdbase, args, cmddir)
+}
+
+func checkMode(t *testing.T, path string, mode FileMode) {
+	dir, err := Stat(path)
+	if err != nil {
+		t.Fatalf("Stat %q (looking for mode %#o): %s", path, mode, err)
+	}
+	if dir.Mode()&0777 != mode {
+		t.Errorf("Stat %q: mode %#o want %#o", path, dir.Mode(), mode)
+	}
+}
+
+func TestChmod(t *testing.T) {
+	// Chmod is not supported under windows.
+	if runtime.GOOS == "windows" {
+		return
+	}
+	f := newFile("TestChmod", t)
+	defer Remove(f.Name())
+	defer f.Close()
+
+	if err := Chmod(f.Name(), 0456); err != nil {
+		t.Fatalf("chmod %s 0456: %s", f.Name(), err)
+	}
+	checkMode(t, f.Name(), 0456)
+
+	if err := f.Chmod(0123); err != nil {
+		t.Fatalf("chmod %s 0123: %s", f.Name(), err)
+	}
+	checkMode(t, f.Name(), 0123)
+}
+
+func checkSize(t *testing.T, f Handle, size int64) {
+	dir, err := f.Stat()
+	if err != nil {
+		t.Fatalf("Stat %q (looking for size %d): %s", f.Name(), size, err)
+	}
+	if dir.Size() != size {
+		t.Errorf("Stat %q: size %d want %d", f.Name(), dir.Size(), size)
+	}
+}
+
+func TestFTruncate(t *testing.T) {
+	f := newFile("TestFTruncate", t)
+	defer Remove(f.Name())
+	defer f.Close()
+
+	checkSize(t, f, 0)
+	f.Write([]byte("hello, world\n"))
+	checkSize(t, f, 13)
+	f.Truncate(10)
+	checkSize(t, f, 10)
+	f.Truncate(1024)
+	checkSize(t, f, 1024)
+	f.Truncate(0)
+	checkSize(t, f, 0)
+	_, err := f.Write([]byte("surprise!"))
+	if err == nil {
+		checkSize(t, f, 13+9) // wrote at offset past where hello, world was.
+	}
+}
+
+func TestTruncate(t *testing.T) {
+	f := newFile("TestTruncate", t)
+	defer Remove(f.Name())
+	defer f.Close()
+
+	checkSize(t, f, 0)
+	f.Write([]byte("hello, world\n"))
+	checkSize(t, f, 13)
+	Truncate(f.Name(), 10)
+	checkSize(t, f, 10)
+	Truncate(f.Name(), 1024)
+	checkSize(t, f, 1024)
+	Truncate(f.Name(), 0)
+	checkSize(t, f, 0)
+	_, err := f.Write([]byte("surprise!"))
+	if err == nil {
+		checkSize(t, f, 13+9) // wrote at offset past where hello, world was.
+	}
+}
+
+// Use TempDir (via newFile) to make sure we're on a local file system,
+// so that timings are not distorted by latency and caching.
+// On NFS, timings can be off due to caching of meta-data on
+// NFS servers (Issue 848).
+func TestChtimes(t *testing.T) {
+	f := newFile("TestChtimes", t)
+	defer Remove(f.Name())
+
+	f.Write([]byte("hello, world\n"))
+	f.Close()
+
+	testChtimes(t, f.Name())
+}
+
+// Use TempDir (via newDir) to make sure we're on a local file system,
+// so that timings are not distorted by latency and caching.
+// On NFS, timings can be off due to caching of meta-data on
+// NFS servers (Issue 848).
+func TestChtimesDir(t *testing.T) {
+	name := newDir("TestChtimes", t)
+	defer RemoveAll(name)
+
+	testChtimes(t, name)
+}
+
+func testChtimes(t *testing.T, name string) {
+	st, err := Stat(name)
+	if err != nil {
+		t.Fatalf("Stat %s: %s", name, err)
+	}
+	preStat := st
+
+	// Move access and modification time back a second
+	at := Atime(preStat)
+	mt := preStat.ModTime()
+	err = Chtimes(name, at.Add(-time.Second), mt.Add(-time.Second))
+	if err != nil {
+		t.Fatalf("Chtimes %s: %s", name, err)
+	}
+
+	st, err = Stat(name)
+	if err != nil {
+		t.Fatalf("second Stat %s: %s", name, err)
+	}
+	postStat := st
+
+	pat := Atime(postStat)
+	pmt := postStat.ModTime()
+	if !pat.Before(at) {
+		switch runtime.GOOS {
+		case "plan9":
+			// Mtime is the time of the last change of
+			// content.  Similarly, atime is set whenever
+			// the contents are accessed; also, it is set
+			// whenever mtime is set.
+		case "netbsd":
+			mounts, _ := ioutil.ReadFile("/proc/mounts")
+			if strings.Contains(string(mounts), "noatime") {
+				t.Logf("AccessTime didn't go backwards, but see a filesystem mounted noatime; ignoring. Issue 19293.")
+			} else {
+				t.Logf("AccessTime didn't go backwards; was=%v, after=%v (Ignoring on NetBSD, assuming noatime, Issue 19293)", at, pat)
+			}
+		default:
+			t.Errorf("AccessTime didn't go backwards; was=%v, after=%v", at, pat)
+		}
+	}
+
+	if !pmt.Before(mt) {
+		t.Errorf("ModTime didn't go backwards; was=%v, after=%v", mt, pmt)
 	}
 }

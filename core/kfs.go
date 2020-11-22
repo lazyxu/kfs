@@ -161,3 +161,12 @@ func (kfs *KFS) Chdir(dir string) error {
 	kfs.pwd = node.Path()
 	return nil
 }
+
+// Truncate changes the size of the named file.
+func (kfs *KFS) Truncate(name string, size int64) error {
+	node, err := kfs.getNode(name)
+	if err != nil {
+		return err
+	}
+	return node.Truncate(size)
+}

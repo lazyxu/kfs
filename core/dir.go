@@ -271,5 +271,9 @@ func (d *Dir) Open(flags int) (fd Handle, err error) {
 	//	logrus.Error(d, "Can only open directories read only")
 	//	return nil, e.ErrPermission
 	//}
-	return newDirHandle(d), nil
+	return newDirHandle(d.kfs, d.Path()), nil
+}
+
+func (i *Dir) Truncate(size int64) error {
+	return e.ENotImpl
 }

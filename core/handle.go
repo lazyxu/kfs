@@ -41,7 +41,7 @@ type Handle interface {
 	// Additional methods useful for FUSE filesystems
 	Flush() error
 	Release() error
-	Node() Node
+	Node() (Node, error)
 }
 
 // baseHandle implements all the missing methods
@@ -66,7 +66,7 @@ func (h baseHandle) WriteAt(b []byte, off int64) (n int, err error)       { retu
 func (h baseHandle) WriteString(s string) (n int, err error)              { return 0, e.ENotImpl }
 func (h baseHandle) Flush() (err error)                                   { return e.ENotImpl }
 func (h baseHandle) Release() (err error)                                 { return e.ENotImpl }
-func (h baseHandle) Node() Node                                           { return nil }
+func (h baseHandle) Node() (Node, error)                                  { return nil, e.ENotImpl }
 
 type fileInfo struct {
 	name    string
