@@ -1709,3 +1709,124 @@ func TestReadAtOffset(t *testing.T) {
 		t.Fatalf("Read: have %q want %q", string(b), "hello")
 	}
 }
+
+// Verify that ReadAt doesn't allow negative offset.
+func TestReadAtNegativeOffset(t *testing.T) {
+	f := newFile("TestReadAtNegativeOffset", t)
+	defer Remove(f.Name())
+	defer f.Close()
+
+	const data = "hello, world\n"
+	io.WriteString(f, data)
+
+	f.Seek(0, 0)
+	b := make([]byte, 5)
+
+	n, err := f.ReadAt(b, -10)
+
+	const wantsub = "negative"
+	if !strings.Contains(fmt.Sprint(err), wantsub) || n != 0 {
+		t.Errorf("ReadAt(-10) = %v, %v; want 0, ...%q...", n, err, wantsub)
+	}
+}
+
+func TestWriteAt(t *testing.T) {
+	f := newFile("TestWriteAt", t)
+	defer Remove(f.Name())
+	defer f.Close()
+
+	const data = "hello, world\n"
+	io.WriteString(f, data)
+
+	n, err := f.WriteAt([]byte("WORLD"), 7)
+	if err != nil || n != 5 {
+		t.Fatalf("WriteAt 7: %d, %v", n, err)
+	}
+
+	b, err := ReadFile(f.Name())
+	if err != nil {
+		t.Fatalf("ReadFile %s: %v", f.Name(), err)
+	}
+	if string(b) != "hello, WORLD\n" {
+		t.Fatalf("after write: have %q want %q", string(b), "hello, WORLD\n")
+	}
+}
+
+// Verify that WriteAt doesn't allow negative offset.
+func TestWriteAtNegativeOffset(t *testing.T) {
+	f := newFile("TestWriteAtNegativeOffset", t)
+	defer Remove(f.Name())
+	defer f.Close()
+
+	n, err := f.WriteAt([]byte("WORLD"), -10)
+
+	const wantsub = "negative offset"
+	if !strings.Contains(fmt.Sprint(err), wantsub) || n != 0 {
+		t.Errorf("WriteAt(-10) = %v, %v; want 0, ...%q...", n, err, wantsub)
+	}
+}
+
+// Verify that WriteAt doesn't work in append mode.
+func TestWriteAtInAppendMode(t *testing.T) {
+	defer chtmpdir(t)()
+	f, err := OpenFile("write_at_in_append_mode.txt", O_APPEND|O_CREATE, 0666)
+	if err != nil {
+		t.Fatalf("OpenFile: %v", err)
+	}
+	defer f.Close()
+
+	_, err = f.WriteAt([]byte(""), 1)
+	if err == nil {
+		t.Fatalf("f.WriteAt returned %v, expected %v", err, ErrWriteAtInAppendMode)
+	}
+}
+
+func writeFile(t *testing.T, fname string, flag int, text string) string {
+	f, err := OpenFile(fname, flag, 0666)
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	n, err := io.WriteString(f, text)
+	if err != nil {
+		t.Fatalf("WriteString: %d, %v", n, err)
+	}
+	f.Close()
+	data, err := ReadFile(fname)
+	if err != nil {
+		t.Fatalf("ReadFile: %v", err)
+	}
+	return string(data)
+}
+
+func TestAppend(t *testing.T) {
+	defer chtmpdir(t)()
+	const f = "append.txt"
+	s := writeFile(t, f, O_CREATE|O_TRUNC|O_RDWR, "new")
+	if s != "new" {
+		t.Fatalf("writeFile: have %q want %q", s, "new")
+	}
+	s = writeFile(t, f, O_APPEND|O_RDWR, "|append")
+	if s != "new|append" {
+		t.Fatalf("writeFile: have %q want %q", s, "new|append")
+	}
+	s = writeFile(t, f, O_CREATE|O_APPEND|O_RDWR, "|append")
+	if s != "new|append|append" {
+		t.Fatalf("writeFile: have %q want %q", s, "new|append|append")
+	}
+	err := Remove(f)
+	if err != nil {
+		t.Fatalf("Remove: %v", err)
+	}
+	s = writeFile(t, f, O_CREATE|O_APPEND|O_RDWR, "new&append")
+	if s != "new&append" {
+		t.Fatalf("writeFile: after append have %q want %q", s, "new&append")
+	}
+	s = writeFile(t, f, O_CREATE|O_RDWR, "old")
+	if s != "old&append" {
+		t.Fatalf("writeFile: after create have %q want %q", s, "old&append")
+	}
+	s = writeFile(t, f, O_CREATE|O_TRUNC|O_RDWR, "new")
+	if s != "new" {
+		t.Fatalf("writeFile: after truncate have %q want %q", s, "new")
+	}
+}

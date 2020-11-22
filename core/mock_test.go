@@ -344,3 +344,20 @@ var StartProcess = os.StartProcess
 type ProcAttr = os.ProcAttr
 
 var Hostname = os.Hostname
+
+// ReadFile reads the file named by filename and returns the contents.
+// A successful call returns err == nil, not err == EOF. Because ReadFile
+// reads the whole file, it does not treat an EOF from Read as an error
+// to be reported.
+func ReadFile(filename string) ([]byte, error) {
+	n, err := kfs.GetFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return n.ReadAll()
+}
+
+const O_APPEND = os.O_APPEND
+const O_CREATE = os.O_CREATE
+const O_TRUNC = os.O_TRUNC
+const O_RDWR = os.O_RDWR

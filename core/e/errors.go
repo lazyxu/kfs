@@ -25,6 +25,7 @@ const (
 	EWriteObject
 	EIsFile
 	ENotFile
+	ENegative
 	EIsDir           = syscall.EISDIR
 	ENotDir          = syscall.ENOTDIR
 	ENoSuchFileOrDir = syscall.ENOENT
@@ -50,6 +51,7 @@ var errorNames = []string{
 	ENotFile:     "Not a file",
 	EInvalidType: "Invalid object type",
 	EWriteObject: "Failed to write object",
+	ENegative:    "negative offset",
 }
 
 // Error renders the error as a string

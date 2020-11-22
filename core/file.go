@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 
 	"github.com/lazyxu/kfs/core/e"
 
@@ -26,6 +27,16 @@ func NewFile(kfs *KFS, name string) *File {
 	}
 }
 
+func skip(reader io.Reader, off int64) (int, error) {
+	switch r := reader.(type) {
+	case io.Seeker:
+		n, err := r.Seek(off, io.SeekCurrent)
+		return int(n), err
+	}
+	n, err := io.CopyN(ioutil.Discard, reader, off)
+	return int(n), err
+}
+
 func (i *File) ReadAt(buff []byte, off int64) (int, error) {
 	i.mutex.RLock()
 	defer i.mutex.RUnlock()
@@ -36,20 +47,22 @@ func (i *File) ReadAt(buff []byte, off int64) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	switch r := reader.(type) {
-	case io.Seeker:
-		n, err := r.Seek(off, io.SeekCurrent)
-		if err != nil {
-			return int(n), err
-		}
-	default:
-		n, err := io.CopyN(ioutil.Discard, r, off)
-		if err != nil {
-			return int(n), err
-		}
+	n, err := skip(reader, off)
+	if err != nil {
+		return n, err
 	}
 	num, err := reader.Read(buff)
 	return num, err
+}
+
+func (i *File) ReadAll() ([]byte, error) {
+	i.mutex.RLock()
+	defer i.mutex.RUnlock()
+	reader, err := i.getContent()
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(reader)
 }
 
 func (i *File) getContent() (io.Reader, error) {
@@ -64,11 +77,15 @@ func (i *File) getContent() (io.Reader, error) {
 func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
+	l := len(content)
 	logrus.WithFields(logrus.Fields{
 		"content": string(content),
 		"offset":  offset,
-		"len":     len(content),
+		"len":     l,
 	}).Debug("SetContent")
+	if offset < 0 {
+		return 0, e.ENegative
+	}
 	buf := make([]byte, offset)
 	blob := new(object.Blob)
 	err = blob.Read(i.kfs.scheduler, i.Metadata.Hash)
@@ -82,6 +99,17 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 		}
 	}
 	content = append(buf, content...)
+	n, err = skip(blob.Reader, int64(l))
+	if err != nil && err != io.EOF {
+		return n, err
+	}
+	if err != io.EOF {
+		remain, err := ioutil.ReadAll(blob.Reader)
+		if err != nil {
+			return 0, err
+		}
+		content = append(content, remain...)
+	}
 	blob.Reader = bytes.NewReader(content)
 	hash, err := blob.Write(i.kfs.scheduler)
 	if err != nil {
@@ -89,7 +117,7 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 	}
 	i.Metadata.Hash = hash
 	i.Metadata.Size = int64(len(content))
-	return int(i.Metadata.Size), nil
+	return l, nil
 }
 
 func (i *File) Truncate(size int64) error {
@@ -165,6 +193,13 @@ func (i *File) Open(flags int) (fd Handle, err error) {
 	if rdwrMode == os.O_RDONLY && flags&os.O_TRUNC != 0 {
 		return nil, e.ErrInvalid
 	}
+
+	if flags&os.O_TRUNC != 0 {
+		err := i.Truncate(0)
+		if err != nil {
+			return nil, err
+		}
+	}
 	// Figure out the read/write intents
 	switch {
 	case rdwrMode == os.O_RDONLY:
@@ -186,7 +221,24 @@ func (i *File) Open(flags int) (fd Handle, err error) {
 	} else if read {
 		fd, err = i.openRead()
 	}
-	// TODO: create
+	// if creating a file, add the file to the directory
+	if err == nil && flags&os.O_CREATE != 0 {
+		// called without File.mu held
+		dir, leaf, err := i.kfs.getDirAndLeaf(path.Dir(i.Path()))
+		if err != nil {
+			return nil, err
+		}
+		_, err = dir.get(leaf)
+		if err == e.ErrNotExist {
+			err = dir.add(i.Metadata, object.EmptyFile)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
 	return fd, err
 }
 
@@ -197,12 +249,12 @@ func (f *File) openRead() (fh *ReadFileHandle, err error) {
 
 // openWrite open the file for write
 func (f *File) openWrite(flags int) (fh *WriteFileHandle, err error) {
-	return newWriteFileHandle(f.kfs, f.Path()), nil
+	return newWriteFileHandle(f.kfs, f.Path(), flags), nil
 }
 
 // openRW open the file for read and write using a temporay file
 //
 // It uses the open flags passed in.
 func (f *File) openRW(flags int) (fh *RWFileHandle, err error) {
-	return newRWFileHandle(f.kfs, f.Path()), nil
+	return newRWFileHandle(f.kfs, f.Path(), flags), nil
 }

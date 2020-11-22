@@ -9,10 +9,11 @@ type WriteFileHandle struct {
 	RWFileHandle
 }
 
-func newWriteFileHandle(kfs *KFS, path string) *WriteFileHandle {
+func newWriteFileHandle(kfs *KFS, path string, flags int) *WriteFileHandle {
 	return &WriteFileHandle{RWFileHandle{
-		kfs:  kfs,
-		path: path,
+		kfs:   kfs,
+		path:  path,
+		flags: flags,
 	}}
 }
 

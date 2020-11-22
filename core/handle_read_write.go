@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"os"
 
 	"github.com/lazyxu/kfs/core/e"
@@ -17,15 +18,19 @@ type RWFileHandle struct {
 	closed bool
 	offset int64
 	opened bool
+	flags  int
 }
 
-func newRWFileHandle(kfs *KFS, path string) *RWFileHandle {
+func newRWFileHandle(kfs *KFS, path string, flags int) *RWFileHandle {
 	return &RWFileHandle{
-		kfs:  kfs,
-		path: path,
+		kfs:   kfs,
+		path:  path,
+		flags: flags,
 	}
 }
-
+func (h *RWFileHandle) appendMode() bool {
+	return (h.flags & os.O_APPEND) != 0
+}
 func (h *RWFileHandle) Chmod(mode os.FileMode) error {
 	node, err := h.Node()
 	if err != nil {
@@ -112,10 +117,19 @@ func (h *RWFileHandle) Write(b []byte) (n int, err error) {
 	if err != nil {
 		return 0, err
 	}
+	if h.appendMode() {
+		h.offset = node.Size()
+	}
 	h.offset += int64(n)
 	return n, nil
 }
+
+var ErrWriteAtInAppendMode = errors.New("os: invalid use of WriteAt on file opened with O_APPEND")
+
 func (h *RWFileHandle) WriteAt(b []byte, off int64) (n int, err error) {
+	if h.appendMode() {
+		return 0, ErrWriteAtInAppendMode
+	}
 	node, err := h.Node()
 	if err != nil {
 		return 0, err
@@ -126,6 +140,9 @@ func (h *RWFileHandle) WriteString(s string) (n int, err error) {
 	node, err := h.Node()
 	if err != nil {
 		return 0, err
+	}
+	if h.appendMode() {
+		h.offset = node.Size()
 	}
 	n, err = node.WriteAt([]byte(s), h.offset)
 	if err != nil {
