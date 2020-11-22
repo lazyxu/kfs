@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/lazyxu/kfs/object"
 
 	"github.com/lazyxu/kfs/core/e"
@@ -146,24 +148,12 @@ func (i *Dir) ReadDirAll() ([]*object.Metadata, error) {
 	return d.Items, nil
 }
 
-func (i *Dir) Read(buff []byte) (int, error) {
-	return 0, &os.PathError{
-		Op:   "read",
-		Path: i.Name(),
-		Err:  e.EIsDir,
-	}
-}
-
 func (i *Dir) ReadAt(buff []byte, off int64) (int, error) {
 	return 0, &os.PathError{
 		Op:   "read",
 		Path: i.Name(),
 		Err:  e.EIsDir,
 	}
-}
-
-func (i *Dir) Write(content []byte) (n int, err error) {
-	return i.WriteAt(content, 0)
 }
 
 func (i *Dir) WriteAt(content []byte, offset int64) (n int, err error) {
@@ -266,11 +256,11 @@ func (i *Dir) Close() error {
 
 // Open the directory according to the flags provided
 func (d *Dir) Open(flags int) (fd Handle, err error) {
-	//rdwrMode := flags & accessModeMask
-	//if rdwrMode != os.O_RDONLY {
-	//	logrus.Error(d, "Can only open directories read only")
-	//	return nil, e.ErrPermission
-	//}
+	rdwrMode := flags & accessModeMask
+	if rdwrMode != os.O_RDONLY {
+		logrus.Error(d, "Can only open directories read only")
+		return nil, e.EIsDir
+	}
 	return newDirHandle(d.kfs, d.Path()), nil
 }
 

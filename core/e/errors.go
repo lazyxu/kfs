@@ -25,8 +25,9 @@ const (
 	EWriteObject
 	EIsFile
 	ENotFile
-	EIsDir  = syscall.EISDIR
-	ENotDir = syscall.ENOTDIR
+	EIsDir           = syscall.EISDIR
+	ENotDir          = syscall.ENOTDIR
+	ENoSuchFileOrDir = syscall.ENOENT
 )
 
 // Errors which have exact counterparts in os

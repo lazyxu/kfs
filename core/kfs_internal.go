@@ -114,7 +114,7 @@ func (kfs *KFS) getNode(path string) (node Node, err error) {
 		dir, ok := node.(*Dir)
 		if !ok {
 			// We need to look in a directory, but found a file
-			return nil, e.ErrNotExist
+			return nil, e.ENotDir
 		}
 		node, ok = dir.items[name]
 		if ok {

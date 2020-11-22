@@ -24,7 +24,7 @@ func newDirHandle(kfs *KFS, path string) *DirHandle {
 	}
 }
 
-func (h *DirHandle) Chdir() error { return e.ENotImpl }
+func (h *DirHandle) Chdir() error { h.kfs.pwd = h.path; return nil }
 func (h *DirHandle) Chmod(mode os.FileMode) error {
 	node, err := h.Node()
 	if err != nil {

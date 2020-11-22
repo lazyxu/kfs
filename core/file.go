@@ -15,9 +15,6 @@ import (
 
 type File struct {
 	ItemBase
-	offset int64 // file pointer offset
-	closed bool  // set if handle has been closed
-	opened bool
 }
 
 func NewFile(kfs *KFS, name string) *File {
@@ -27,15 +24,6 @@ func NewFile(kfs *KFS, name string) *File {
 			Metadata: object.NewFileMetadata(name),
 		},
 	}
-}
-
-func (i *File) Read(buff []byte) (int, error) {
-	n, err := i.ReadAt(buff, i.offset)
-	if err != nil {
-		return 0, err
-	}
-	i.offset += int64(n)
-	return n, nil
 }
 
 func (i *File) ReadAt(buff []byte, off int64) (int, error) {
@@ -71,15 +59,6 @@ func (i *File) getContent() (io.Reader, error) {
 		return nil, err
 	}
 	return blob.Reader, nil
-}
-
-func (i *File) Write(content []byte) (n int, err error) {
-	n, err = i.WriteAt(content, i.offset)
-	if err != nil {
-		return 0, err
-	}
-	i.offset += int64(n)
-	return n, nil
 }
 
 func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
@@ -157,9 +136,6 @@ func (i *File) Close() error {
 	if err != nil {
 		return err
 	}
-	i.offset = 0
-	i.closed = true
-	i.opened = false
 	return nil
 }
 

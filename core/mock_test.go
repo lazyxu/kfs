@@ -310,3 +310,37 @@ func Chtimes(name string, atime time.Time, mtime time.Time) error {
 	node.SetMTime(mtime)
 	return nil
 }
+
+var Setenv = os.Setenv
+var Getenv = os.Getenv
+var Stderr = os.Stderr
+var Exit = os.Exit
+
+// Pipe returns a connected pair of Files; reads from r return bytes written to w.
+// It returns the files and an error, if any.
+func Pipe() (r Handle, w Handle, err error) {
+	return nil, nil, e.ENotImpl
+}
+
+const O_RDONLY = os.O_RDONLY
+const O_WRONLY = os.O_WRONLY
+
+// OpenFile is the generalized open call; most users will use Open
+// or Create instead. It opens the named file with specified flag
+// (O_RDONLY etc.). If the file does not exist, and the O_CREATE flag
+// is passed, it is created with mode perm (before umask). If successful,
+// methods on the returned File can be used for I/O.
+// If there is an error, it will be of type *PathError.
+func OpenFile(name string, flag int, perm FileMode) (Handle, error) {
+	h, err := kfs.OpenFile(name, flag, perm)
+	if err != nil {
+		return nil, wrapErr("open", name, err)
+	}
+	return h, nil
+}
+
+var StartProcess = os.StartProcess
+
+type ProcAttr = os.ProcAttr
+
+var Hostname = os.Hostname

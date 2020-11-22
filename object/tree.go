@@ -36,7 +36,7 @@ func (o *Tree) GetNode(name string) (*Metadata, error) {
 			return it, nil
 		}
 	}
-	return nil, e.ErrNotExist
+	return nil, e.ENoSuchFileOrDir
 }
 
 func (o *Tree) Write(s *scheduler.Scheduler) (string, error) {

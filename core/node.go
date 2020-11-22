@@ -16,9 +16,7 @@ type Node interface {
 	IsFile() bool
 	Chmod(mode os.FileMode) error
 	Stat() (os.FileInfo, error)
-	Read(buff []byte) (int, error)
 	ReadAt(buff []byte, off int64) (int, error)
-	Write(content []byte) (n int, err error)
 	WriteAt(content []byte, offset int64) (n int, err error)
 	Readdirnames(n int, offset int) (names []string, err error)
 	Readdir(n int, offset int) ([]*object.Metadata, error)
