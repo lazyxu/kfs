@@ -1,6 +1,7 @@
 package core
 
 import (
+	"io"
 	"os"
 	"time"
 
@@ -81,3 +82,13 @@ func (f *fileInfo) Mode() os.FileMode  { return f.mode }
 func (f *fileInfo) ModTime() time.Time { return f.modTime }
 func (f *fileInfo) IsDir() bool        { return f.mode.IsDir() }
 func (f *fileInfo) Sys() interface{}   { return nil }
+
+// wrapErr wraps an error that occurred during an operation on an open file.
+// It passes io.EOF through unchanged, otherwise converts
+// poll.ErrFileClosing to ErrClosed and wraps the error in a PathError.
+func wrapErr(op string, path string, err error) error {
+	if err == nil || err == io.EOF {
+		return err
+	}
+	return &PathError{op, path, err}
+}

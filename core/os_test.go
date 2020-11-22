@@ -1,3 +1,7 @@
+// Copyright 2009 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package core
 
 import (
@@ -23,7 +27,14 @@ var dot = []string{
 	"file.go",
 	"node.go",
 	"os_test.go",
+	"mock_test.go",
+	"init_test.go",
 	"stat.go",
+	"handle.go",
+	"handle_dir.go",
+	"handle_write.go",
+	"handle_read.go",
+	"handle_read_write.go",
 }
 
 type sysDir struct {
@@ -31,14 +42,71 @@ type sysDir struct {
 	files []string
 }
 
-var sysdir = &sysDir{
-	"/etc",
-	[]string{
-		"group",
-		"hosts",
-		"passwd",
-	},
-}
+var sysdir = func() *sysDir {
+	/*
+		align with os/os_test.go
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	*/
+	return &sysDir{
+		"/etc",
+		[]string{
+			"group",
+			"hosts",
+			"passwd",
+		},
+	}
+}()
 
 func size(name string, t *testing.T) int64 {
 	file, err := Open(name)
@@ -62,11 +130,26 @@ func size(name string, t *testing.T) int64 {
 }
 
 func equal(name1, name2 string) bool {
+	/*
+		align with os/os_test.go
+
+
+
+	*/
 	return name1 == name2
 }
 
 // localTmp returns a local temporary directory not on NFS.
 func localTmp() string {
+	/*
+		align with os/os_test.go
+
+
+
+
+
+
+	*/
 	return "/tmp"
 }
 
@@ -116,6 +199,9 @@ func TestStatError(t *testing.T) {
 	if fi != nil {
 		t.Errorf("got %v, want nil", fi)
 	}
+	if perr, ok := err.(*PathError); !ok {
+		t.Errorf("got %T, want %T", err, perr)
+	}
 
 	testenv.MustHaveSymlink(t)
 
@@ -131,6 +217,9 @@ func TestStatError(t *testing.T) {
 	}
 	if fi != nil {
 		t.Errorf("got %v, want nil", fi)
+	}
+	if perr, ok := err.(*PathError); !ok {
+		t.Errorf("got %T, want %T", err, perr)
 	}
 }
 
@@ -191,21 +280,26 @@ func TestRead0(t *testing.T) {
 }
 
 // Reading a closed file should return ErrClosed error
-//func TestReadClosed(t *testing.T) {
-//	path := sfdir + "/" + sfname
-//	file, err := Open(path)
-//	if err != nil {
-//		t.Fatal("open failed:", err)
-//	}
-//	file.Close() // close immediately
-//
-//	b := make([]byte, 100)
-//	_, err = file.Read(b)
-//
-//	if err != os.ErrClosed {
-//		t.Errorf("Read: %v, want ErrClosed", err)
-//	}
-//}
+func TestReadClosed(t *testing.T) {
+	path := sfdir + "/" + sfname
+	file, err := Open(path)
+	if err != nil {
+		t.Fatal("open failed:", err)
+	}
+	file.Close() // close immediately
+
+	b := make([]byte, 100)
+	_, err = file.Read(b)
+
+	e, ok := err.(*PathError)
+	if !ok {
+		t.Fatalf("Read: %T(%v), want PathError", e, e)
+	}
+
+	if e.Err != ErrClosed {
+		t.Errorf("Read: %v, want PathError(ErrClosed)", e)
+	}
+}
 
 func testReaddirnames(dir string, contents []string, t *testing.T) {
 	file, err := Open(dir)
@@ -384,6 +478,23 @@ func smallReaddirnames(file Handle, length int, t *testing.T) []string {
 func TestReaddirnamesOneAtATime(t *testing.T) {
 	// big directory that doesn't change often.
 	dir := "/bin"
+	/*
+		align with os/os_test.go
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	*/
 	file, err := Open(dir)
 	if err != nil {
 		t.Fatalf("open %q failed: %v", dir, err)
@@ -495,6 +606,9 @@ func TestReaddirStatFailures(t *testing.T) {
 	// but are structured with different syscalls such
 	// that they don't use Lstat, so the hook below for
 	// testing it wouldn't work.
+	/*
+		align with os/os_test.go
+	*/
 	t.Skipf("skipping test")
 	dir, err := TempDir("", "")
 	if err != nil {
@@ -598,6 +712,10 @@ func TestHardLink(t *testing.T) {
 
 	none := "hardlinktestnone"
 	err = Link(none, none)
+	// Check the returned error is well-formed.
+	if lerr, ok := err.(*LinkError); !ok || lerr.Error() == "" {
+		t.Errorf("link %q, %q failed to return a valid error", none, none)
+	}
 
 	tostat, err := Stat(to)
 	if err != nil {
@@ -612,8 +730,24 @@ func TestHardLink(t *testing.T) {
 	}
 	// We should not be able to perform the same Link() a second time
 	err = Link(to, from)
-	if !IsExist(err) {
-		t.Errorf("Link(%q, %q) err.Err = %q; want %q", to, from, err, "file exists error")
+	switch err := err.(type) {
+	case *LinkError:
+		if err.Op != "link" {
+			t.Errorf("Link(%q, %q) err.Op = %q; want %q", to, from, err.Op, "link")
+		}
+		if err.Old != to {
+			t.Errorf("Link(%q, %q) err.Old = %q; want %q", to, from, err.Old, to)
+		}
+		if err.New != from {
+			t.Errorf("Link(%q, %q) err.New = %q; want %q", to, from, err.New, from)
+		}
+		if !IsExist(err.Err) {
+			t.Errorf("Link(%q, %q) err.Err = %q; want %q", to, from, err.Err, "file exists error")
+		}
+	case nil:
+		t.Errorf("link %q, %q: expected error, got nil", from, to)
+	default:
+		t.Errorf("link %q, %q: expected %T, got %T %v", from, to, new(LinkError), err, err)
 	}
 }
 
@@ -784,10 +918,24 @@ func TestRenameFailed(t *testing.T) {
 	from, to := "renamefrom", "renameto"
 
 	err := Rename(from, to)
-	if err == nil {
+	switch err := err.(type) {
+	case *LinkError:
+		if err.Op != "rename" {
+			t.Errorf("rename %q, %q: err.Op: want %q, got %q", from, to, "rename", err.Op)
+		}
+		if err.Old != from {
+			t.Errorf("rename %q, %q: err.Old: want %q, got %q", from, to, from, err.Old)
+		}
+		if err.New != to {
+			t.Errorf("rename %q, %q: err.New: want %q, got %q", from, to, to, err.New)
+		}
+	case nil:
 		t.Errorf("rename %q, %q: expected error, got nil", from, to)
+	default:
+		t.Errorf("rename %q, %q: expected %T, got %T %v", from, to, new(LinkError), err, err)
 	}
 }
+
 func TestRenameNotExisting(t *testing.T) {
 	defer chtmpdir(t)()
 	from, to := "doesnt-exist", "dest"
@@ -807,8 +955,21 @@ func TestRenameToDirFailed(t *testing.T) {
 	Mkdir(to, 0777)
 
 	err := Rename(from, to)
-	if err == nil {
+	switch err := err.(type) {
+	case *LinkError:
+		if err.Op != "rename" {
+			t.Errorf("rename %q, %q: err.Op: want %q, got %q", from, to, "rename", err.Op)
+		}
+		if err.Old != from {
+			t.Errorf("rename %q, %q: err.Old: want %q, got %q", from, to, from, err.Old)
+		}
+		if err.New != to {
+			t.Errorf("rename %q, %q: err.New: want %q, got %q", from, to, to, err.New)
+		}
+	case nil:
 		t.Errorf("rename %q, %q: expected error, got nil", from, to)
+	default:
+		t.Errorf("rename %q, %q: expected %T, got %T %v", from, to, new(LinkError), err, err)
 	}
 }
 

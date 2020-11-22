@@ -39,18 +39,29 @@ func (h *RWFileHandle) Close() error {
 	if err != nil {
 		return err
 	}
+	h.closed = true
 	return node.Close()
 }
 func (h *RWFileHandle) Fd() uintptr  { return 0 }
 func (h *RWFileHandle) Name() string { return h.path }
 func (h *RWFileHandle) Read(b []byte) (n int, err error) {
+	if h.closed {
+		return 0, wrapErr("read", h.path, e.ErrClosed)
+	}
 	node, err := h.Node()
 	if err != nil {
-		return 0, err
+		return 0, wrapErr("read", h.path, err)
 	}
-	return node.Read(b)
+	n, err = node.Read(b)
+	if err != nil {
+		return 0, wrapErr("read", h.path, err)
+	}
+	return n, nil
 }
 func (h *RWFileHandle) ReadAt(b []byte, off int64) (n int, err error) {
+	if h.closed {
+		return 0, e.ErrClosed
+	}
 	node, err := h.Node()
 	if err != nil {
 		return 0, err

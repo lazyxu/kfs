@@ -24,6 +24,7 @@ var kfs = New(&kfscommon.Options{
 })
 
 var ErrNotExist = os.ErrNotExist
+var ErrClosed = os.ErrClosed
 
 // lstat is overridden in tests.
 var lstat = Lstat
@@ -42,7 +43,11 @@ func Create(name string) (Handle, error) {
 }
 
 func Stat(name string) (os.FileInfo, error) {
-	return kfs.Stat(name)
+	info, err := kfs.Stat(name)
+	if err != nil {
+		return nil, &PathError{"stat", name, err}
+	}
+	return info, nil
 }
 
 func Lstat(name string) (os.FileInfo, error) {
@@ -220,7 +225,11 @@ func Readlink(name string) (string, error) {
 // OS-specific restrictions may apply when oldpath and newpath are in different directories.
 // If there is an error, it will be of type *LinkError.
 func Rename(oldpath, newpath string) error {
-	return kfs.Rename(oldpath, newpath)
+	err := kfs.Rename(oldpath, newpath)
+	if err != nil {
+		return &LinkError{"rename", oldpath, newpath, err}
+	}
+	return nil
 }
 
 var IsNotExist = os.IsNotExist
