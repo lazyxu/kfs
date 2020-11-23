@@ -23,7 +23,7 @@ func (kfs *KFS) Mkdir(name string, perm os.FileMode) error {
 // Open opens the named file for reading. If successful, methods on
 // the returned file can be used for reading; the associated file
 // descriptor has mode O_RDONLY.
-func (kfs *KFS) Open(name string) (Handle, error) {
+func (kfs *KFS) Open(name string) (*Handle, error) {
 	return kfs.OpenFile(name, os.O_RDONLY, 0)
 }
 
@@ -31,7 +31,7 @@ func (kfs *KFS) Open(name string) (Handle, error) {
 // it is truncated. If the file does not exist, it is created with mode 0666
 // (before umask). If successful, methods on the returned File can
 // be used for I/O; the associated file descriptor has mode O_RDWR.
-func (kfs *KFS) Create(name string) (Handle, error) {
+func (kfs *KFS) Create(name string) (*Handle, error) {
 	return kfs.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 }
 
@@ -39,7 +39,7 @@ func (kfs *KFS) Create(name string) (Handle, error) {
 const accessModeMask = os.O_RDONLY | os.O_WRONLY | os.O_RDWR
 
 // OpenFile a file according to the flags and perm provided
-func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (h Handle, err error) {
+func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (h *Handle, err error) {
 	// http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html
 	// The result of using O_TRUNC with O_RDONLY is undefined.
 	// Linux seems to truncate the file, but we prefer to return EINVAL

@@ -34,11 +34,11 @@ func Getwd() (dir string, err error) {
 	return kfs.Getwd()
 }
 
-func Open(name string) (Handle, error) {
+func Open(name string) (*Handle, error) {
 	return kfs.Open(name)
 }
 
-func Create(name string) (Handle, error) {
+func Create(name string) (*Handle, error) {
 	return kfs.Create(name)
 }
 
@@ -164,7 +164,7 @@ func TempDir(dir, pattern string) (name string, err error) {
 // will not choose the same file. The caller can use f.Name()
 // to find the pathname of the file. It is the caller's responsibility
 // to remove the file when no longer needed.
-func TempFile(dir, pattern string) (f Handle, err error) {
+func TempFile(dir, pattern string) (f *Handle, err error) {
 	if dir == "" {
 		dir = "/tmp"
 	}
@@ -323,7 +323,7 @@ var Exit = os.Exit
 
 // Pipe returns a connected pair of Files; reads from r return bytes written to w.
 // It returns the files and an error, if any.
-func Pipe() (r Handle, w Handle, err error) {
+func Pipe() (r *Handle, w *Handle, err error) {
 	return nil, nil, e.ENotImpl
 }
 
@@ -336,7 +336,7 @@ const O_WRONLY = os.O_WRONLY
 // is passed, it is created with mode perm (before umask). If successful,
 // methods on the returned File can be used for I/O.
 // If there is an error, it will be of type *PathError.
-func OpenFile(name string, flag int, perm FileMode) (Handle, error) {
+func OpenFile(name string, flag int, perm FileMode) (*Handle, error) {
 	h, err := kfs.OpenFile(name, flag, perm)
 	if err != nil {
 		return nil, wrapErr("open", name, err)
@@ -381,3 +381,10 @@ var Args = os.Args
 func MkdirAll(path string, perm os.FileMode) error {
 	return kfs.MkdirAll(path, perm)
 }
+
+type Process = os.Process
+
+var Getppid = os.Getppid
+var Getpid = os.Getpid
+var FindProcess = os.FindProcess
+var ErrInvalid = os.ErrInvalid

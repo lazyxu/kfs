@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"io"
 	"os"
 	"time"
@@ -34,11 +35,10 @@ type OsFiler interface {
 	WriteString(s string) (n int, err error)
 }
 
-// Handle is the interface satisfied by open files or directories.
+// handle is the interface satisfied by open files or directories.
 // It is the methods on *os.File, plus a few more useful for FUSE
 // filing systems.  Not all of them are supported.
-type Handle interface {
-	OsFiler
+type handle interface {
 	// Additional methods useful for FUSE filesystems
 	Flush() error
 	Release() error
@@ -46,28 +46,224 @@ type Handle interface {
 }
 
 // baseHandle implements all the missing methods
-type baseHandle struct{}
+type Handle struct {
+	kfs        *KFS
+	path       string
+	offset     int64
+	nameOffset int
+	isDir      bool
+	closed     bool
+	opened     bool
+	read       bool
+	write      bool
+	append     bool
+}
 
-func (h baseHandle) Chdir() error                                         { return e.ENotImpl }
-func (h baseHandle) Chmod(mode os.FileMode) error                         { return e.ENotImpl }
-func (h baseHandle) Chown(uid, gid int) error                             { return e.ENotImpl }
-func (h baseHandle) Close() error                                         { return e.ENotImpl }
-func (h baseHandle) Fd() uintptr                                          { return 0 }
-func (h baseHandle) Name() string                                         { return "" }
-func (h baseHandle) Read(b []byte) (n int, err error)                     { return 0, e.ENotImpl }
-func (h baseHandle) ReadAt(b []byte, off int64) (n int, err error)        { return 0, e.ENotImpl }
-func (h baseHandle) Readdir(n int) ([]os.FileInfo, error)                 { return nil, e.ENotImpl }
-func (h baseHandle) Readdirnames(n int) (names []string, err error)       { return nil, e.ENotImpl }
-func (h baseHandle) Seek(offset int64, whence int) (ret int64, err error) { return 0, e.ENotImpl }
-func (h baseHandle) Stat() (os.FileInfo, error)                           { return nil, e.ENotImpl }
-func (h baseHandle) Sync() error                                          { return nil }
-func (h baseHandle) Truncate(size int64) error                            { return e.ENotImpl }
-func (h baseHandle) Write(b []byte) (n int, err error)                    { return 0, e.ENotImpl }
-func (h baseHandle) WriteAt(b []byte, off int64) (n int, err error)       { return 0, e.ENotImpl }
-func (h baseHandle) WriteString(s string) (n int, err error)              { return 0, e.ENotImpl }
-func (h baseHandle) Flush() (err error)                                   { return e.ENotImpl }
-func (h baseHandle) Release() (err error)                                 { return e.ENotImpl }
-func (h baseHandle) Node() (Node, error)                                  { return nil, e.ENotImpl }
+func (h *Handle) Chdir() error {
+	if h == nil {
+		return e.ErrInvalid
+	}
+	h.kfs.pwd = h.path
+	return nil
+}
+func (h *Handle) Chmod(mode os.FileMode) error {
+	if h == nil {
+		return e.ErrInvalid
+	}
+	node, err := h.Node()
+	if err != nil {
+		return err
+	}
+	return node.Chmod(mode)
+}
+
+func (h *Handle) Chown(uid, gid int) error { return e.ErrInvalid }
+func (h *Handle) Close() error {
+	if h == nil {
+		return e.ErrInvalid
+	}
+	node, err := h.Node()
+	if err != nil {
+		return err
+	}
+	h.offset = 0
+	h.nameOffset = 0
+	h.closed = true
+	h.opened = false
+	return node.Close()
+}
+func (h *Handle) Fd() uintptr  { return 0 }
+func (h *Handle) Name() string { return h.path }
+func (h *Handle) Read(b []byte) (n int, err error) {
+	if h == nil {
+		return 0, e.ErrInvalid
+	}
+	if h.closed {
+		return 0, wrapErr("read", h.path, e.ErrClosed)
+	}
+	node, err := h.Node()
+	if err != nil {
+		return 0, wrapErr("read", h.path, err)
+	}
+	n, err = node.ReadAt(b, h.offset)
+	if err != nil {
+		return 0, wrapErr("read", h.path, err)
+	}
+	h.offset += int64(n)
+	return n, nil
+}
+func (h *Handle) ReadAt(b []byte, off int64) (n int, err error) {
+	if h == nil {
+		return 0, e.ErrInvalid
+	}
+	if h.closed {
+		return 0, e.ErrClosed
+	}
+	node, err := h.Node()
+	if err != nil {
+		return 0, err
+	}
+	return node.ReadAt(b, off)
+}
+func (h *Handle) Readdir(n int) ([]os.FileInfo, error) {
+	if h == nil {
+		return nil, e.ErrInvalid
+	}
+	node, err := h.Node()
+	if err != nil {
+		return nil, err
+	}
+	dirs, err := node.Readdir(n, int(h.offset))
+	if err != nil {
+		return []os.FileInfo{}, err
+	}
+	h.offset += int64(len(dirs))
+	infos := make([]os.FileInfo, len(dirs))
+	for i, dir := range dirs {
+		infos[i] = &fileInfo{
+			name:    dir.Name,
+			size:    dir.Size,
+			mode:    dir.Mode,
+			modTime: time.Unix(0, dir.ModifyTime),
+		}
+	}
+	return infos, nil
+}
+func (h *Handle) Readdirnames(n int) ([]string, error) {
+	if h == nil {
+		return nil, e.ErrInvalid
+	}
+	node, err := h.Node()
+	if err != nil {
+		return nil, err
+	}
+	names, err := node.Readdirnames(n, h.nameOffset)
+	if err != nil {
+		return names, err
+	}
+	h.nameOffset += len(names)
+	return names, err
+}
+func (h *Handle) Seek(offset int64, whence int) (ret int64, err error) {
+	if h == nil {
+		return 0, e.ErrInvalid
+	}
+	switch whence {
+	case 0:
+		h.offset = offset
+	case 1:
+		h.offset = h.offset + offset
+	case 2:
+		node, err := h.Node()
+		if err != nil {
+			return 0, err
+		}
+		h.offset = node.Size() + offset
+	default:
+		return 0, e.ErrInvalid
+	}
+	return
+}
+
+func (h *Handle) Stat() (os.FileInfo, error) {
+	if h == nil {
+		return nil, e.ErrInvalid
+	}
+	node, err := h.Node()
+	if err != nil {
+		return nil, err
+	}
+	return node.Stat()
+}
+func (h *Handle) Sync() error {
+	return e.ErrInvalid
+}
+func (h *Handle) Truncate(size int64) error {
+	node, err := h.Node()
+	if err != nil {
+		return err
+	}
+	return node.Truncate(size)
+}
+func (h *Handle) Write(b []byte) (n int, err error) {
+	if h == nil {
+		return 0, e.ErrInvalid
+	}
+	node, err := h.Node()
+	if err != nil {
+		return 0, err
+	}
+	n, err = node.WriteAt(b, h.offset)
+	if err != nil {
+		return 0, err
+	}
+	if h.append {
+		h.offset = node.Size()
+	}
+	h.offset += int64(n)
+	return n, nil
+}
+
+var ErrWriteAtInAppendMode = errors.New("os: invalid use of WriteAt on file opened with O_APPEND")
+
+func (h *Handle) WriteAt(b []byte, off int64) (n int, err error) {
+	if h == nil {
+		return 0, e.ErrInvalid
+	}
+	if h.append {
+		return 0, ErrWriteAtInAppendMode
+	}
+	node, err := h.Node()
+	if err != nil {
+		return 0, err
+	}
+	return node.WriteAt(b, off)
+}
+func (h *Handle) WriteString(s string) (n int, err error) {
+	if h == nil {
+		return 0, e.ErrInvalid
+	}
+	node, err := h.Node()
+	if err != nil {
+		return 0, err
+	}
+	if h.append {
+		h.offset = node.Size()
+	}
+	n, err = node.WriteAt([]byte(s), h.offset)
+	if err != nil {
+		return 0, err
+	}
+	h.offset += int64(n)
+	return n, nil
+}
+
+func (h *Handle) Node() (Node, error) {
+	if h == nil {
+		return nil, e.ErrInvalid
+	}
+	return h.kfs.getNode(h.path)
+}
 
 type fileInfo struct {
 	name    string

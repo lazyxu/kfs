@@ -33,8 +33,8 @@ var dot = []string{
 	"init_test.go",
 	"stat.go",
 	"handle.go",
-	"handle_dir.go",
-	"handle_write.go",
+	"const.go",
+	"kfs.go",
 }
 
 type sysDir struct {
@@ -153,7 +153,7 @@ func localTmp() string {
 	return "/tmp"
 }
 
-func newFile(testName string, t *testing.T) (fh Handle) {
+func newFile(testName string, t *testing.T) (fh *Handle) {
 	fh, err := Create(path.Join(localTmp(), "_Go_"+testName))
 	if err != nil {
 		t.Fatalf("TempFile %s: %s", testName, err)
@@ -453,7 +453,7 @@ func BenchmarkLstatDir(b *testing.B) {
 }
 
 // Read the directory one entry at a time.
-func smallReaddirnames(file Handle, length int, t *testing.T) []string {
+func smallReaddirnames(file *Handle, length int, t *testing.T) []string {
 	names := make([]string, length)
 	count := 0
 	for {
@@ -538,7 +538,7 @@ func TestReaddirNValues(t *testing.T) {
 		f.Close()
 	}
 
-	var d Handle
+	var d *Handle
 	openDir := func() {
 		var err error
 		d, err = Open(dir)
@@ -1120,7 +1120,7 @@ func TestChmod(t *testing.T) {
 	checkMode(t, f.Name(), 0123)
 }
 
-func checkSize(t *testing.T, f Handle, size int64) {
+func checkSize(t *testing.T, f *Handle, size int64) {
 	dir, err := f.Stat()
 	if err != nil {
 		t.Fatalf("Stat %q (looking for size %d): %s", f.Name(), size, err)
@@ -2178,5 +2178,116 @@ func TestLongPath(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func testKillProcess(t *testing.T, processKiller func(p *Process)) {
+	testenv.MustHaveExec(t)
+
+	// Re-exec the test binary itself to emulate "sleep 1".
+	cmd := osexec.Command(Args[0], "-test.run", "TestSleep")
+	err := cmd.Start()
+	if err != nil {
+		t.Fatalf("Failed to start test process: %v", err)
+	}
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		processKiller(cmd.Process)
+	}()
+	err = cmd.Wait()
+	if err == nil {
+		t.Errorf("Test process succeeded, but expected to fail")
+	}
+}
+
+// TestSleep emulates "sleep 1". It is a helper for testKillProcess, so we
+// don't have to rely on an external "sleep" command being available.
+func TestSleep(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping in short mode")
+	}
+	time.Sleep(time.Second)
+}
+
+func TestKillStartProcess(t *testing.T) {
+	testKillProcess(t, func(p *Process) {
+		err := p.Kill()
+		if err != nil {
+			t.Fatalf("Failed to kill test process: %v", err)
+		}
+	})
+}
+
+func TestGetppid(t *testing.T) {
+	if runtime.GOOS == "plan9" {
+		// TODO: golang.org/issue/8206
+		t.Skipf("skipping test on plan9; see issue 8206")
+	}
+
+	testenv.MustHaveExec(t)
+
+	if Getenv("GO_WANT_HELPER_PROCESS") == "1" {
+		fmt.Print(Getppid())
+		Exit(0)
+	}
+
+	cmd := osexec.Command(Args[0], "-test.run=TestGetppid")
+	cmd.Env = append(Environ(), "GO_WANT_HELPER_PROCESS=1")
+
+	// verify that Getppid() from the forked process reports our process id
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to spawn child process: %v %q", err, string(output))
+	}
+
+	childPpid := string(output)
+	ourPid := fmt.Sprintf("%d", Getpid())
+	if childPpid != ourPid {
+		t.Fatalf("Child process reports parent process id '%v', expected '%v'", childPpid, ourPid)
+	}
+}
+
+func TestKillFindProcess(t *testing.T) {
+	testKillProcess(t, func(p *Process) {
+		p2, err := FindProcess(p.Pid)
+		if err != nil {
+			t.Fatalf("Failed to find test process: %v", err)
+		}
+		err = p2.Kill()
+		if err != nil {
+			t.Fatalf("Failed to kill test process: %v", err)
+		}
+	})
+}
+
+var nilFileMethodTests = []struct {
+	name string
+	f    func(*Handle) error
+}{
+	{"Chdir", func(f *Handle) error { return f.Chdir() }},
+	{"Close", func(f *Handle) error { return f.Close() }},
+	{"Chmod", func(f *Handle) error { return f.Chmod(0) }},
+	{"Chown", func(f *Handle) error { return f.Chown(0, 0) }},
+	{"Read", func(f *Handle) error { _, err := f.Read(make([]byte, 0)); return err }},
+	{"ReadAt", func(f *Handle) error { _, err := f.ReadAt(make([]byte, 0), 0); return err }},
+	{"Readdir", func(f *Handle) error { _, err := f.Readdir(1); return err }},
+	{"Readdirnames", func(f *Handle) error { _, err := f.Readdirnames(1); return err }},
+	{"Seek", func(f *Handle) error { _, err := f.Seek(0, io.SeekStart); return err }},
+	{"Stat", func(f *Handle) error { _, err := f.Stat(); return err }},
+	{"Sync", func(f *Handle) error { return f.Sync() }},
+	{"Truncate", func(f *Handle) error { return f.Truncate(0) }},
+	{"Write", func(f *Handle) error { _, err := f.Write(make([]byte, 0)); return err }},
+	{"WriteAt", func(f *Handle) error { _, err := f.WriteAt(make([]byte, 0), 0); return err }},
+	{"WriteString", func(f *Handle) error { _, err := f.WriteString(""); return err }},
+}
+
+// Test that all File methods give ErrInvalid if the receiver is nil.
+func TestNilFileMethods(t *testing.T) {
+	for _, tt := range nilFileMethodTests {
+		var file *Handle
+		got := tt.f(file)
+		if got != ErrInvalid {
+			t.Errorf("%v should fail when f is nil; got %v", tt.name, got)
+		}
 	}
 }

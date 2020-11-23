@@ -179,7 +179,7 @@ func (i *File) Close() error {
 //   O_TRUNC  if possible, truncate file when opene
 //
 // We ignore O_SYNC and O_EXCL
-func (i *File) Open(flags int) (fd Handle, err error) {
+func (i *File) Open(flags int) (fd *Handle, err error) {
 	var (
 		write    bool // if set need write support
 		read     bool // if set need read support
@@ -213,29 +213,11 @@ func (i *File) Open(flags int) (fd Handle, err error) {
 		return nil, e.ErrPermission
 	}
 
-	if read && write {
-		fd, err = i.openRW(flags)
-	} else if write {
-		fd, err = i.openWrite(flags)
-	} else if read {
-		fd, err = i.openRead()
-	}
-	return fd, err
-}
-
-// openRead open the file for read
-func (f *File) openRead() (fh *ReadFileHandle, err error) {
-	return newReadFileHandle(f.kfs, f.Path()), nil
-}
-
-// openWrite open the file for write
-func (f *File) openWrite(flags int) (fh *WriteFileHandle, err error) {
-	return newWriteFileHandle(f.kfs, f.Path(), flags), nil
-}
-
-// openRW open the file for read and write using a temporay file
-//
-// It uses the open flags passed in.
-func (f *File) openRW(flags int) (fh *RWFileHandle, err error) {
-	return newRWFileHandle(f.kfs, f.Path(), flags), nil
+	return &Handle{
+		kfs:    i.kfs,
+		path:   i.Path(),
+		read:   read,
+		write:  write,
+		append: flags&os.O_APPEND != 0,
+	}, nil
 }

@@ -255,13 +255,18 @@ func (i *Dir) Close() error {
 }
 
 // Open the directory according to the flags provided
-func (d *Dir) Open(flags int) (fd Handle, err error) {
+func (d *Dir) Open(flags int) (fd *Handle, err error) {
 	rdwrMode := flags & accessModeMask
 	if rdwrMode != os.O_RDONLY {
 		logrus.Error(d, "Can only open directories read only")
 		return nil, e.EIsDir
 	}
-	return newDirHandle(d.kfs, d.Path()), nil
+	return &Handle{
+		kfs:   d.kfs,
+		path:  d.Path(),
+		isDir: true,
+		read:  true,
+	}, nil
 }
 
 func (i *Dir) Truncate(size int64) error {

@@ -21,7 +21,7 @@ type Node interface {
 	Readdirnames(n int, offset int) (names []string, err error)
 	Readdir(n int, offset int) ([]*object.Metadata, error)
 	Close() error
-	Open(flags int) (fd Handle, err error)
+	Open(flags int) (fd *Handle, err error)
 	Path() string
 	Parent() *Dir
 	Truncate(size int64) error
