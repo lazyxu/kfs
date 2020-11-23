@@ -51,8 +51,11 @@ func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (h Handle, er
 	}
 	var node Node
 	node, err = kfs.getNode(name)
-	if err != nil {
-		if err != e.ENoSuchFileOrDir || flags&os.O_CREATE == 0 {
+	if err != nil && err != e.ENoSuchFileOrDir {
+		return nil, err
+	}
+	if err == e.ENoSuchFileOrDir {
+		if flags&os.O_CREATE == 0 {
 			return nil, err
 		}
 		// If not found and O_CREATE then create the file

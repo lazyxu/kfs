@@ -2110,3 +2110,73 @@ func TestReadAtEOF(t *testing.T) {
 		t.Fatalf("ReadAt failed: %s", err)
 	}
 }
+
+func TestLongPath(t *testing.T) {
+	tmpdir := newDir("TestLongPath", t)
+	defer func(d string) {
+		if err := RemoveAll(d); err != nil {
+			t.Fatalf("RemoveAll failed: %v", err)
+		}
+	}(tmpdir)
+
+	// Test the boundary of 247 and fewer bytes (normal) and 248 and more bytes (adjusted).
+	sizes := []int{247, 248, 249, 400}
+	for len(tmpdir) < 400 {
+		tmpdir += "/dir3456789"
+	}
+	for _, sz := range sizes {
+		t.Run(fmt.Sprintf("length=%d", sz), func(t *testing.T) {
+			sizedTempDir := tmpdir[:sz-1] + "x" // Ensure it does not end with a slash.
+
+			// The various sized runs are for this call to trigger the boundary
+			// condition.
+			if err := MkdirAll(sizedTempDir, 0755); err != nil {
+				t.Fatalf("MkdirAll failed: %v", err)
+			}
+			data := []byte("hello world\n")
+			if err := WriteFile(sizedTempDir+"/foo.txt", data, 0644); err != nil {
+				t.Fatalf("ioutil.WriteFile() failed: %v", err)
+			}
+			if err := Rename(sizedTempDir+"/foo.txt", sizedTempDir+"/bar.txt"); err != nil {
+				t.Fatalf("Rename failed: %v", err)
+			}
+			mtime := time.Now().Truncate(time.Minute)
+			if err := Chtimes(sizedTempDir+"/bar.txt", mtime, mtime); err != nil {
+				t.Fatalf("Chtimes failed: %v", err)
+			}
+			names := []string{"bar.txt"}
+			if testenv.HasSymlink() {
+				if err := Symlink(sizedTempDir+"/bar.txt", sizedTempDir+"/symlink.txt"); err != nil {
+					t.Fatalf("Symlink failed: %v", err)
+				}
+				names = append(names, "symlink.txt")
+			}
+			if testenv.HasLink() {
+				if err := Link(sizedTempDir+"/bar.txt", sizedTempDir+"/link.txt"); err != nil {
+					t.Fatalf("Link failed: %v", err)
+				}
+				names = append(names, "link.txt")
+			}
+			for _, wantSize := range []int64{int64(len(data)), 0} {
+				for _, name := range names {
+					path := sizedTempDir + "/" + name
+					dir, err := Stat(path)
+					if err != nil {
+						t.Fatalf("Stat(%q) failed: %v", path, err)
+					}
+					filesize := size(path, t)
+					if dir.Size() != filesize || filesize != wantSize {
+						t.Errorf("Size(%q) is %d, len(ReadFile()) is %d, want %d", path, dir.Size(), filesize, wantSize)
+					}
+					err = Chmod(path, dir.Mode())
+					if err != nil {
+						t.Fatalf("Chmod(%q) failed: %v", path, err)
+					}
+				}
+				if err := Truncate(sizedTempDir+"/bar.txt", 0); err != nil {
+					t.Fatalf("Truncate failed: %v", err)
+				}
+			}
+		})
+	}
+}

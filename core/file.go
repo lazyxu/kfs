@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 
 	"github.com/lazyxu/kfs/core/e"
 
@@ -220,24 +219,6 @@ func (i *File) Open(flags int) (fd Handle, err error) {
 		fd, err = i.openWrite(flags)
 	} else if read {
 		fd, err = i.openRead()
-	}
-	// if creating a file, add the file to the directory
-	if err == nil && flags&os.O_CREATE != 0 {
-		// called without File.mu held
-		dir, leaf, err := i.kfs.getDirAndLeaf(path.Dir(i.Path()))
-		if err != nil {
-			return nil, err
-		}
-		_, err = dir.get(leaf)
-		if err == e.ErrNotExist {
-			err = dir.add(i.Metadata, object.EmptyFile)
-			if err != nil {
-				return nil, err
-			}
-		}
-		if err != nil {
-			return nil, err
-		}
 	}
 	return fd, err
 }

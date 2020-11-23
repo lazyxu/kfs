@@ -44,8 +44,15 @@ func (kfs *KFS) MkdirAll(path string, perm os.FileMode) error {
 			return err
 		}
 		metadata, err := d.GetNode(name)
-		if err == e.ErrNotExist {
-			node = NewDir(kfs, name, kfs.Opt.DirPerms)
+		if err == e.ENoSuchFileOrDir {
+			node = &Dir{
+				ItemBase: ItemBase{
+					kfs:      kfs,
+					parent:   dir,
+					Metadata: object.NewDirMetadata(name, perm),
+				},
+				items: make(map[string]Node),
+			}
 			dir.items[name] = node
 			continue
 		}
