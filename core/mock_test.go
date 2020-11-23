@@ -209,7 +209,12 @@ func Chdir(dir string) error {
 }
 
 func SameFile(fi1, fi2 os.FileInfo) bool {
-	return os.SameFile(fi1, fi2)
+	f1, ok1 := fi1.(*File)
+	f2, ok2 := fi2.(*File)
+	if !ok1 || !ok2 {
+		return false
+	}
+	return f1.Metadata == f2.Metadata
 }
 
 const ModeSymlink = os.ModeSymlink
@@ -361,3 +366,18 @@ const O_APPEND = os.O_APPEND
 const O_CREATE = os.O_CREATE
 const O_TRUNC = os.O_TRUNC
 const O_RDWR = os.O_RDWR
+
+type ProcessState = os.ProcessState
+
+const ModeDevice = os.ModeDevice
+const ModeCharDevice = os.ModeCharDevice
+
+var Stdout = os.Stdout
+var Stdin = os.Stdin
+var ModeNamedPipe = os.ModeNamedPipe
+var Environ = os.Environ
+var Args = os.Args
+
+func MkdirAll(path string, perm os.FileMode) error {
+	return kfs.MkdirAll(path, perm)
+}

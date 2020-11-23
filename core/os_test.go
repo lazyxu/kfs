@@ -7,6 +7,7 @@ package core
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -34,7 +35,6 @@ var dot = []string{
 	"handle.go",
 	"handle_dir.go",
 	"handle_write.go",
-	"handle_read.go",
 }
 
 type sysDir struct {
@@ -1828,5 +1828,285 @@ func TestAppend(t *testing.T) {
 	s = writeFile(t, f, O_CREATE|O_TRUNC|O_RDWR, "new")
 	if s != "new" {
 		t.Fatalf("writeFile: after truncate have %q want %q", s, "new")
+	}
+}
+
+func TestStatDirWithTrailingSlash(t *testing.T) {
+	// Create new temporary directory and arrange to clean it up.
+	path, err := TempDir("", "_TestStatDirWithSlash_")
+	if err != nil {
+		t.Fatalf("TempDir: %s", err)
+	}
+	defer RemoveAll(path)
+
+	// Stat of path should succeed.
+	_, err = Stat(path)
+	if err != nil {
+		t.Fatalf("stat %s failed: %s", path, err)
+	}
+
+	// Stat of path+"/" should succeed too.
+	path += "/"
+	_, err = Stat(path)
+	if err != nil {
+		t.Fatalf("stat %s failed: %s", path, err)
+	}
+}
+
+func TestNilProcessStateString(t *testing.T) {
+	var ps *ProcessState
+	s := ps.String()
+	if s != "<nil>" {
+		t.Errorf("(*ProcessState)(nil).String() = %q, want %q", s, "<nil>")
+	}
+}
+
+func TestSameFile(t *testing.T) {
+	defer chtmpdir(t)()
+	fa, err := Create("a")
+	if err != nil {
+		t.Fatalf("Create(a): %v", err)
+	}
+	fa.Close()
+	fb, err := Create("b")
+	if err != nil {
+		t.Fatalf("Create(b): %v", err)
+	}
+	fb.Close()
+
+	ia1, err := Stat("a")
+	if err != nil {
+		t.Fatalf("Stat(a): %v", err)
+	}
+	ia2, err := Stat("a")
+	if err != nil {
+		t.Fatalf("Stat(a): %v", err)
+	}
+	if !SameFile(ia1, ia2) {
+		t.Errorf("files should be same")
+	}
+
+	ib, err := Stat("b")
+	if err != nil {
+		t.Fatalf("Stat(b): %v", err)
+	}
+	if SameFile(ia1, ib) {
+		t.Errorf("files should be different")
+	}
+}
+
+func testDevNullFileInfo(t *testing.T, statname, devNullName string, fi FileInfo, ignoreCase bool) {
+	pre := fmt.Sprintf("%s(%q): ", statname, devNullName)
+	name := filepath.Base(devNullName)
+	if ignoreCase {
+		if strings.ToUpper(fi.Name()) != strings.ToUpper(name) {
+			t.Errorf(pre+"wrong file name have %v want %v", fi.Name(), name)
+		}
+	} else {
+		if fi.Name() != name {
+			t.Errorf(pre+"wrong file name have %v want %v", fi.Name(), name)
+		}
+	}
+	if fi.Size() != 0 {
+		t.Errorf(pre+"wrong file size have %d want 0", fi.Size())
+	}
+	if fi.Mode()&ModeDevice == 0 {
+		t.Errorf(pre+"wrong file mode %q: ModeDevice is not set", fi.Mode())
+	}
+	if fi.Mode()&ModeCharDevice == 0 {
+		t.Errorf(pre+"wrong file mode %q: ModeCharDevice is not set", fi.Mode())
+	}
+	if fi.Mode().IsRegular() {
+		t.Errorf(pre+"wrong file mode %q: IsRegular returns true", fi.Mode())
+	}
+}
+
+func testDevNullFile(t *testing.T, devNullName string, ignoreCase bool) {
+	t.Skip("skipping test: no /dev/null")
+	f, err := Open(devNullName)
+	if err != nil {
+		t.Fatalf("Open(%s): %v", devNullName, err)
+	}
+	defer f.Close()
+	fi, err := f.Stat()
+	if err != nil {
+		t.Fatalf("Stat(%s): %v", devNullName, err)
+	}
+	testDevNullFileInfo(t, "f.Stat", devNullName, fi, ignoreCase)
+
+	fi, err = Stat(devNullName)
+	if err != nil {
+		t.Fatalf("Stat(%s): %v", devNullName, err)
+	}
+	testDevNullFileInfo(t, "Stat", devNullName, fi, ignoreCase)
+}
+
+func TestDevNullFile(t *testing.T) {
+	testDevNullFile(t, DevNull, false)
+}
+
+var testLargeWrite = flag.Bool("large_write", false, "run TestLargeWriteToConsole test that floods console with output")
+
+func TestLargeWriteToConsole(t *testing.T) {
+	if !*testLargeWrite {
+		t.Skip("skipping console-flooding test; enable with -large_write")
+	}
+	b := make([]byte, 32000)
+	for i := range b {
+		b[i] = '.'
+	}
+	b[len(b)-1] = '\n'
+	n, err := Stdout.Write(b)
+	if err != nil {
+		t.Fatalf("Write to os.Stdout failed: %v", err)
+	}
+	if n != len(b) {
+		t.Errorf("Write to os.Stdout should return %d; got %d", len(b), n)
+	}
+	n, err = Stderr.Write(b)
+	if err != nil {
+		t.Fatalf("Write to os.Stderr failed: %v", err)
+	}
+	if n != len(b) {
+		t.Errorf("Write to os.Stderr should return %d; got %d", len(b), n)
+	}
+}
+
+func TestStatDirModeExec(t *testing.T) {
+	const mode = 0111
+
+	path, err := TempDir("", "go-build")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer RemoveAll(path)
+
+	if err := Chmod(path, 0777); err != nil {
+		t.Fatalf("Chmod %q 0777: %v", path, err)
+	}
+
+	dir, err := Stat(path)
+	if err != nil {
+		t.Fatalf("Stat %q (looking for mode %#o): %s", path, mode, err)
+	}
+	if dir.Mode()&mode != mode {
+		t.Errorf("Stat %q: mode %#o want %#o", path, dir.Mode()&mode, mode)
+	}
+}
+
+func TestStatStdin(t *testing.T) {
+	switch runtime.GOOS {
+	case "android", "plan9":
+		t.Skipf("%s doesn't have /bin/sh", runtime.GOOS)
+	}
+
+	testenv.MustHaveExec(t)
+
+	if Getenv("GO_WANT_HELPER_PROCESS") == "1" {
+		st, err := Stdin.Stat()
+		if err != nil {
+			t.Fatalf("Stat failed: %v", err)
+		}
+		fmt.Println(st.Mode() & ModeNamedPipe)
+		Exit(0)
+	}
+
+	fi, err := Stdin.Stat()
+	if err != nil {
+		t.Fatal(err)
+	}
+	switch mode := fi.Mode(); {
+	case mode&ModeCharDevice != 0 && mode&ModeDevice != 0:
+	case mode&ModeNamedPipe != 0:
+	default:
+		t.Fatalf("unexpected Stdin mode (%v), want ModeCharDevice or ModeNamedPipe", mode)
+	}
+
+	var cmd *osexec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = osexec.Command("cmd", "/c", "echo output | "+Args[0]+" -test.run=TestStatStdin")
+	} else {
+		cmd = osexec.Command("/bin/sh", "-c", "echo output | "+Args[0]+" -test.run=TestStatStdin")
+	}
+	cmd.Env = append(Environ(), "GO_WANT_HELPER_PROCESS=1")
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Failed to spawn child process: %v %q", err, string(output))
+	}
+
+	// result will be like "prw-rw-rw"
+	if len(output) < 1 || output[0] != 'p' {
+		t.Fatalf("Child process reports stdin is not pipe '%v'", string(output))
+	}
+}
+
+func TestStatRelativeSymlink(t *testing.T) {
+	testenv.MustHaveSymlink(t)
+
+	tmpdir, err := ioutil.TempDir("", "TestStatRelativeSymlink")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer RemoveAll(tmpdir)
+
+	target := filepath.Join(tmpdir, "target")
+	f, err := Create(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	st, err := f.Stat()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	link := filepath.Join(tmpdir, "link")
+	err = Symlink(filepath.Base(target), link)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	st1, err := Stat(link)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !SameFile(st, st1) {
+		t.Error("Stat doesn't follow relative symlink")
+	}
+
+	if runtime.GOOS == "windows" {
+		Remove(link)
+		err = Symlink(target[len(filepath.VolumeName(target)):], link)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		st1, err := Stat(link)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if !SameFile(st, st1) {
+			t.Error("Stat doesn't follow relative symlink")
+		}
+	}
+}
+
+func TestReadAtEOF(t *testing.T) {
+	f := newFile("TestReadAtEOF", t)
+	defer Remove(f.Name())
+	defer f.Close()
+
+	_, err := f.ReadAt(make([]byte, 10), 0)
+	switch err {
+	case io.EOF:
+		// all good
+	case nil:
+		t.Fatalf("ReadAt succeeded")
+	default:
+		t.Fatalf("ReadAt failed: %s", err)
 	}
 }

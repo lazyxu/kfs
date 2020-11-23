@@ -44,6 +44,8 @@ var defaultBinaries = []string{
 	"unlink",
 }
 
+const DevNull = "/dev/null"
+
 func New(opt *kfscommon.Options) *KFS {
 	kfs := &KFS{
 		Opt:       opt,
