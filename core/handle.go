@@ -82,6 +82,9 @@ func (h *Handle) Close() error {
 	if h == nil {
 		return e.ErrInvalid
 	}
+	if h.closed {
+		return wrapErr("close", h.path, e.ErrClosed)
+	}
 	node, err := h.Node()
 	if err != nil {
 		return err

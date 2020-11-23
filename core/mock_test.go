@@ -388,3 +388,9 @@ var Getppid = os.Getppid
 var Getpid = os.Getpid
 var FindProcess = os.FindProcess
 var ErrInvalid = os.ErrInvalid
+var IsTimeout = os.IsTimeout
+var ErrDeadlineExceeded = os.ErrDeadlineExceeded
+
+func UserHomeDir() (string, error) {
+	return "/home", nil
+}

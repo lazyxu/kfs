@@ -17,8 +17,10 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"runtime/debug"
 	"sort"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -2289,5 +2291,286 @@ func TestNilFileMethods(t *testing.T) {
 		if got != ErrInvalid {
 			t.Errorf("%v should fail when f is nil; got %v", tt.name, got)
 		}
+	}
+}
+
+func mkdirTree(t *testing.T, root string, level, max int) {
+	if level >= max {
+		return
+	}
+	level++
+	for i := 'a'; i < 'c'; i++ {
+		dir := filepath.Join(root, string(i))
+		if err := Mkdir(dir, 0700); err != nil {
+			t.Fatal(err)
+		}
+		mkdirTree(t, dir, level, max)
+	}
+}
+
+// Test that simultaneous RemoveAll do not report an error.
+// As long as it gets removed, we should be happy.
+func TestRemoveAllRace(t *testing.T) {
+	t.Skip("fix me")
+	if runtime.GOOS == "windows" {
+		// Windows has very strict rules about things like
+		// removing directories while someone else has
+		// them open. The racing doesn't work out nicely
+		// like it does on Unix.
+		t.Skip("skipping on windows")
+	}
+
+	n := runtime.GOMAXPROCS(16)
+	defer runtime.GOMAXPROCS(n)
+	root, err := ioutil.TempDir("", "issue")
+	if err != nil {
+		t.Fatal(err)
+	}
+	mkdirTree(t, root, 1, 6)
+	hold := make(chan struct{})
+	var wg sync.WaitGroup
+	for i := 0; i < 4; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-hold
+			err := RemoveAll(root)
+			if err != nil {
+				t.Errorf("unexpected error: %T, %q", err, err)
+			}
+		}()
+	}
+	close(hold) // let workers race to remove root
+	wg.Wait()
+}
+
+// Test that reading from a pipe doesn't use up a thread.
+func TestPipeThreads(t *testing.T) {
+	t.Skip("skipping on kfs; no support for os.Pipe")
+	switch runtime.GOOS {
+	case "freebsd":
+		t.Skip("skipping on FreeBSD; issue 19093")
+	case "illumos", "solaris":
+		t.Skip("skipping on Solaris and illumos; issue 19111")
+	case "windows":
+		t.Skip("skipping on Windows; issue 19098")
+	case "plan9":
+		t.Skip("skipping on Plan 9; does not support runtime poller")
+	case "js":
+		t.Skip("skipping on js; no support for os.Pipe")
+	}
+	threads := 100
+
+	// OpenBSD has a low default for max number of files.
+	if runtime.GOOS == "openbsd" {
+		threads = 50
+	}
+
+	r := make([]*Handle, threads)
+	w := make([]*Handle, threads)
+	for i := 0; i < threads; i++ {
+		rp, wp, err := Pipe()
+		if err != nil {
+			for j := 0; j < i; j++ {
+				r[j].Close()
+				w[j].Close()
+			}
+			t.Fatal(err)
+		}
+		r[i] = rp
+		w[i] = wp
+	}
+
+	defer debug.SetMaxThreads(debug.SetMaxThreads(threads / 2))
+
+	creading := make(chan bool, threads)
+	cdone := make(chan bool, threads)
+	for i := 0; i < threads; i++ {
+		go func(i int) {
+			var b [1]byte
+			creading <- true
+			if _, err := r[i].Read(b[:]); err != nil {
+				t.Error(err)
+			}
+			if err := r[i].Close(); err != nil {
+				t.Error(err)
+			}
+			cdone <- true
+		}(i)
+	}
+
+	for i := 0; i < threads; i++ {
+		<-creading
+	}
+
+	// If we are still alive, it means that the 100 goroutines did
+	// not require 100 threads.
+
+	for i := 0; i < threads; i++ {
+		if _, err := w[i].Write([]byte{0}); err != nil {
+			t.Error(err)
+		}
+		if err := w[i].Close(); err != nil {
+			t.Error(err)
+		}
+		<-cdone
+	}
+}
+
+func testDoubleCloseError(t *testing.T, path string) {
+	file, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatalf("unexpected error from Close: %v", err)
+	}
+	if err := file.Close(); err == nil {
+		t.Error("second Close did not fail")
+	} else if pe, ok := err.(*PathError); !ok {
+		t.Errorf("second Close returned unexpected error type %T; expected os.PathError", pe)
+	} else if pe.Err != ErrClosed {
+		t.Errorf("second Close returned %q, wanted %q", err, ErrClosed)
+	} else {
+		t.Logf("second close returned expected error %q", err)
+	}
+}
+
+func TestDoubleCloseError(t *testing.T) {
+	testDoubleCloseError(t, filepath.Join(sfdir, sfname))
+	testDoubleCloseError(t, sfdir)
+}
+
+func TestUserHomeDir(t *testing.T) {
+	dir, err := UserHomeDir()
+	if dir == "" && err == nil {
+		t.Fatal("UserHomeDir returned an empty string but no error")
+	}
+	if err != nil {
+		t.Skipf("UserHomeDir failed: %v", err)
+	}
+	fi, err := Stat(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !fi.IsDir() {
+		t.Fatalf("dir %s is not directory; type = %v", dir, fi.Mode())
+	}
+}
+
+func TestDirSeek(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		testenv.SkipFlaky(t, 36019)
+	}
+	wd, err := Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := Open(wd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dirnames1, err := f.Readdirnames(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ret, err := f.Seek(0, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ret != 0 {
+		t.Fatalf("seek result not zero: %d", ret)
+	}
+
+	dirnames2, err := f.Readdirnames(0)
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+
+	if len(dirnames1) != len(dirnames2) {
+		t.Fatalf("listings have different lengths: %d and %d\n", len(dirnames1), len(dirnames2))
+	}
+	for i, n1 := range dirnames1 {
+		n2 := dirnames2[i]
+		if n1 != n2 {
+			t.Fatalf("different name i=%d n1=%s n2=%s\n", i, n1, n2)
+		}
+	}
+}
+
+func TestReaddirSmallSeek(t *testing.T) {
+	t.Skip("fix me")
+	// See issue 37161. Read only one entry from a directory,
+	// seek to the beginning, and read again. We should not see duplicate entries.
+	if runtime.GOOS == "windows" {
+		testenv.SkipFlaky(t, 36019)
+	}
+	wd, err := Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	df, err := Open(filepath.Join(wd, "testdata", "issue37161"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	names1, err := df.Readdirnames(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = df.Seek(0, 0); err != nil {
+		t.Fatal(err)
+	}
+	names2, err := df.Readdirnames(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(names2) != 3 {
+		t.Fatalf("first names: %v, second names: %v", names1, names2)
+	}
+}
+
+// isDeadlineExceeded reports whether err is or wraps os.ErrDeadlineExceeded.
+// We also check that the error has a Timeout method that returns true.
+func isDeadlineExceeded(err error) bool {
+	if !IsTimeout(err) {
+		return false
+	}
+	if !errors.Is(err, ErrDeadlineExceeded) {
+		return false
+	}
+	return true
+}
+
+// Test that opening a file does not change its permissions.  Issue 38225.
+func TestOpenFileKeepsPermissions(t *testing.T) {
+	t.Skip("fix me")
+	t.Parallel()
+	dir := t.TempDir()
+	name := filepath.Join(dir, "x")
+	f, err := Create(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Error(err)
+	}
+	f, err = OpenFile(name, O_WRONLY|O_CREATE|O_TRUNC, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fi, err := f.Stat(); err != nil {
+		t.Error(err)
+	} else if fi.Mode()&0222 == 0 {
+		t.Errorf("f.Stat.Mode after OpenFile is %v, should be writable", fi.Mode())
+	}
+	if err := f.Close(); err != nil {
+		t.Error(err)
+	}
+	if fi, err := Stat(name); err != nil {
+		t.Error(err)
+	} else if fi.Mode()&0222 == 0 {
+		t.Errorf("Stat after OpenFile is %v, should be writable", fi.Mode())
 	}
 }

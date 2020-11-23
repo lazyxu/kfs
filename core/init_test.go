@@ -2,6 +2,7 @@ package core
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os"
 	"path"
@@ -72,4 +73,13 @@ func (env *testENV) HasSymlink() bool {
 
 func (env *testENV) HasLink() bool {
 	return false
+}
+
+var flaky = flag.Bool("flaky", false, "run known-flaky tests too")
+
+func (env *testENV) SkipFlaky(t testing.TB, issue int) {
+	t.Helper()
+	if !*flaky {
+		t.Skipf("skipping known flaky test without the -flaky flag; see golang.org/issue/%d", issue)
+	}
 }
