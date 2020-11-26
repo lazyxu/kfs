@@ -39,7 +39,7 @@ func (kfs *KFS) MkdirAll(path string, perm os.FileMode) error {
 			continue
 		}
 
-		d, err := object.ReadDir(kfs.scheduler, dir.Metadata.Hash)
+		d, err := object.ReadDir(kfs.storage, dir.Metadata.Hash)
 		if err != nil {
 			return err
 		}

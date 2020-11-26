@@ -96,7 +96,7 @@ func (i *ItemBase) Sys() interface{} {
 }
 
 func (i *ItemBase) updateObj(o object.Object) error {
-	hash, err := o.Write(i.kfs.scheduler)
+	hash, err := o.Write(i.kfs.storage)
 	if err != nil {
 		return err
 	}

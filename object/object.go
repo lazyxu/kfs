@@ -1,10 +1,12 @@
 package object
 
-import "github.com/lazyxu/kfs/scheduler"
+import (
+	"github.com/lazyxu/kfs/storage"
+)
 
 type Object interface {
 	IsDir() bool
 	IsFile() bool
-	Write(s *scheduler.Scheduler) (string, error)
-	Read(s *scheduler.Scheduler, key string) error
+	Write(s storage.Storage) (string, error)
+	Read(s storage.Storage, key string) error
 }

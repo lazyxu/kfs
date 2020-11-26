@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"io"
 
-	"github.com/lazyxu/kfs/scheduler"
 	"github.com/lazyxu/kfs/storage"
 )
 
@@ -18,13 +17,13 @@ var EmptyFile = &Blob{
 }
 var EmptyFileHash = string(sha256.New().Sum([]byte{}))
 
-func (o *Blob) Write(s *scheduler.Scheduler) (string, error) {
-	return s.WriteStream(storage.TypFile, o.Reader)
+func (o *Blob) Write(s storage.Storage) (string, error) {
+	return s.Write(storage.TypFile, o.Reader)
 }
 
-func (o *Blob) Read(s *scheduler.Scheduler, key string) error {
+func (o *Blob) Read(s storage.Storage, key string) error {
 	var err error
-	o.Reader, err = s.ReadStream(storage.TypFile, key)
+	o.Reader, err = s.Read(storage.TypFile, key)
 	return err
 }
 

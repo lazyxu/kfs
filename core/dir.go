@@ -32,7 +32,7 @@ func NewDir(kfs *KFS, name string, perm os.FileMode) *Dir {
 
 func (i *Dir) load() (*object.Tree, error) {
 	tree := new(object.Tree)
-	err := tree.Read(i.kfs.scheduler, i.Metadata.Hash)
+	err := tree.Read(i.kfs.storage, i.Metadata.Hash)
 	return tree, err
 }
 
@@ -73,7 +73,7 @@ func (i *Dir) add(metadata *object.Metadata, item object.Object) error {
 		}
 		metadata.Size = size
 	}
-	itemHash, err := item.Write(i.kfs.scheduler)
+	itemHash, err := item.Write(i.kfs.storage)
 	if err != nil {
 		return err
 	}

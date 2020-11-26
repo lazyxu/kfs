@@ -6,7 +6,6 @@ import (
 	"encoding/gob"
 
 	"github.com/lazyxu/kfs/core/e"
-	"github.com/lazyxu/kfs/scheduler"
 	"github.com/lazyxu/kfs/storage"
 )
 
@@ -39,24 +38,24 @@ func (o *Tree) GetNode(name string) (*Metadata, error) {
 	return nil, e.ENoSuchFileOrDir
 }
 
-func (o *Tree) Write(s *scheduler.Scheduler) (string, error) {
+func (o *Tree) Write(s storage.Storage) (string, error) {
 	var b bytes.Buffer
 	err := gob.NewEncoder(&b).Encode(o)
 	if err != nil {
 		return "", e.EWriteObject
 	}
-	return s.WriteStream(storage.TypDir, &b)
+	return s.Write(storage.TypDir, &b)
 }
 
-func (o *Tree) Read(s *scheduler.Scheduler, key string) error {
-	reader, err := s.ReadStream(storage.TypDir, key)
+func (o *Tree) Read(s storage.Storage, key string) error {
+	reader, err := s.Read(storage.TypDir, key)
 	if err != nil {
 		return err
 	}
 	return gob.NewDecoder(reader).Decode(o)
 }
 
-func ReadDir(s *scheduler.Scheduler, key string) (*Tree, error) {
+func ReadDir(s storage.Storage, key string) (*Tree, error) {
 	tree := new(Tree)
 	err := tree.Read(s, key)
 	return tree, err

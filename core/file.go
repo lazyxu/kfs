@@ -66,7 +66,7 @@ func (i *File) ReadAll() ([]byte, error) {
 
 func (i *File) getContent() (io.Reader, error) {
 	blob := new(object.Blob)
-	err := blob.Read(i.kfs.scheduler, i.Metadata.Hash)
+	err := blob.Read(i.kfs.storage, i.Metadata.Hash)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 	}
 	buf := make([]byte, offset)
 	blob := new(object.Blob)
-	err = blob.Read(i.kfs.scheduler, i.Metadata.Hash)
+	err = blob.Read(i.kfs.storage, i.Metadata.Hash)
 	if err != nil {
 		return 0, err
 	}
@@ -110,7 +110,7 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 		content = append(content, remain...)
 	}
 	blob.Reader = bytes.NewReader(content)
-	hash, err := blob.Write(i.kfs.scheduler)
+	hash, err := blob.Write(i.kfs.storage)
 	if err != nil {
 		return 0, err
 	}
@@ -125,7 +125,7 @@ func (i *File) Truncate(size int64) error {
 	content := make([]byte, size)
 	blob := new(object.Blob)
 	if size != 0 {
-		err := blob.Read(i.kfs.scheduler, i.Metadata.Hash)
+		err := blob.Read(i.kfs.storage, i.Metadata.Hash)
 		if err != nil {
 			return err
 		}
@@ -135,7 +135,7 @@ func (i *File) Truncate(size int64) error {
 		}
 	}
 	blob.Reader = bytes.NewReader(content)
-	hash, err := blob.Write(i.kfs.scheduler)
+	hash, err := blob.Write(i.kfs.storage)
 	if err != nil {
 		return err
 	}

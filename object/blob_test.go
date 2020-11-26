@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lazyxu/kfs/scheduler"
 	"github.com/lazyxu/kfs/storage/memory"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -14,7 +13,7 @@ import (
 func TestSpec(t *testing.T) {
 	Convey("Create a file", t, func() {
 		str := "hello, world!"
-		s := scheduler.New(memory.New())
+		s := memory.New()
 		blob1 := &Blob{Reader: strings.NewReader(str)}
 		Convey("Write to storage", func() {
 			key, err1 := blob1.Write(s)
