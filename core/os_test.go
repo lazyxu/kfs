@@ -1726,7 +1726,7 @@ func TestReadAtNegativeOffset(t *testing.T) {
 
 	n, err := f.ReadAt(b, -10)
 
-	const wantsub = "negative"
+	const wantsub = "negative offset"
 	if !strings.Contains(fmt.Sprint(err), wantsub) || n != 0 {
 		t.Errorf("ReadAt(-10) = %v, %v; want 0, ...%q...", n, err, wantsub)
 	}

@@ -2,8 +2,9 @@ package object
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/gob"
+
+	"github.com/lazyxu/kfs/storage/kfshash"
 
 	"github.com/lazyxu/kfs/core/e"
 	"github.com/lazyxu/kfs/storage"
@@ -18,15 +19,21 @@ var EmptyDir = &Tree{
 }
 var EmptyDirHash string
 
-func init() {
-	var b bytes.Buffer
-	err := gob.NewEncoder(&b).Encode(EmptyDir)
+func Init(hashFunc func() kfshash.Hash) error {
+	b := &bytes.Buffer{}
+	err := gob.NewEncoder(b).Encode(EmptyDir)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	hash := sha256.New()
-	_, err = hash.Write(b.Bytes())
-	EmptyDirHash = string(hash.Sum(nil))
+	EmptyDirHash, err = hashFunc().Cal(b)
+	if err != nil {
+		return err
+	}
+	EmptyFileHash, err = hashFunc().Cal(bytes.NewReader([]byte{}))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (o *Tree) GetNode(name string) (*Metadata, error) {
@@ -39,16 +46,16 @@ func (o *Tree) GetNode(name string) (*Metadata, error) {
 }
 
 func (o *Tree) Write(s storage.Storage) (string, error) {
-	var b bytes.Buffer
-	err := gob.NewEncoder(&b).Encode(o)
+	b := &bytes.Buffer{}
+	err := gob.NewEncoder(b).Encode(o)
 	if err != nil {
 		return "", e.EWriteObject
 	}
-	return s.Write(storage.TypDir, &b)
+	return s.Write(storage.TypTree, b)
 }
 
 func (o *Tree) Read(s storage.Storage, key string) error {
-	reader, err := s.Read(storage.TypDir, key)
+	reader, err := s.Read(storage.TypTree, key)
 	if err != nil {
 		return err
 	}

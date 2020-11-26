@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -121,6 +122,9 @@ func (h *Handle) ReadAt(b []byte, off int64) (n int, err error) {
 	}
 	if h.closed {
 		return 0, e.ErrClosed
+	}
+	if off < 0 {
+		return 0, fmt.Errorf("negative offset: %d", off)
 	}
 	node, err := h.Node()
 	if err != nil {

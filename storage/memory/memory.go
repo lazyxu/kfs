@@ -18,8 +18,8 @@ type Storage struct {
 
 func New() *Storage {
 	objs := make(map[int]map[string][]byte, 16)
-	objs[storage.TypDir] = make(map[string][]byte, 16)
-	objs[storage.TypFile] = make(map[string][]byte, 16)
+	objs[storage.TypTree] = make(map[string][]byte, 16)
+	objs[storage.TypBlob] = make(map[string][]byte, 16)
 	return &Storage{
 		objs: objs,
 	}

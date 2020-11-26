@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	TypFile = iota
-	TypDir
+	TypBlob = iota
+	TypTree
 )
 
 type Storage interface {

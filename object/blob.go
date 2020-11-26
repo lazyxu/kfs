@@ -2,7 +2,6 @@ package object
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"io"
 
 	"github.com/lazyxu/kfs/storage"
@@ -15,15 +14,15 @@ type Blob struct {
 var EmptyFile = &Blob{
 	Reader: bytes.NewReader([]byte{}),
 }
-var EmptyFileHash = string(sha256.New().Sum([]byte{}))
+var EmptyFileHash string
 
 func (o *Blob) Write(s storage.Storage) (string, error) {
-	return s.Write(storage.TypFile, o.Reader)
+	return s.Write(storage.TypBlob, o.Reader)
 }
 
 func (o *Blob) Read(s storage.Storage, key string) error {
 	var err error
-	o.Reader, err = s.Read(storage.TypFile, key)
+	o.Reader, err = s.Read(storage.TypBlob, key)
 	return err
 }
 

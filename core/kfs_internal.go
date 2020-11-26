@@ -1,15 +1,18 @@
 package core
 
 import (
+	"crypto/sha256"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/lazyxu/kfs/storage/kfshash"
+
+	"github.com/lazyxu/kfs/storage/fs"
+
 	"github.com/lazyxu/kfs/storage"
 
 	"github.com/lazyxu/kfs/object"
-
-	"github.com/lazyxu/kfs/storage/memory"
 
 	"github.com/lazyxu/kfs/core/e"
 
@@ -47,9 +50,20 @@ var defaultBinaries = []string{
 const DevNull = "/dev/null"
 
 func New(opt *kfscommon.Options) *KFS {
+	hashFunc := func() kfshash.Hash {
+		return kfshash.FromStdHash(sha256.New())
+	}
+	s, err := fs.New("temp", hashFunc, true, true)
+	if err != nil {
+		panic(err)
+	}
+	err = object.Init(hashFunc)
+	if err != nil {
+		panic(err)
+	}
 	kfs := &KFS{
 		Opt:     opt,
-		storage: memory.New(),
+		storage: s,
 		pwd:     "/tmp",
 	}
 	object.EmptyDir.Write(kfs.storage)
