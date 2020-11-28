@@ -33,10 +33,15 @@ type wrapper struct {
 }
 
 func (h *wrapper) Cal(r io.Reader) (string, error) {
-	if _, err := io.Copy(h, r); err != nil {
-		return "", nil
+	//b := new(bytes.Buffer)
+	//rr := io.TeeReader(r, b)
+	if r != nil {
+		if _, err := io.Copy(h, r); err != nil {
+			return "", nil
+		}
 	}
 	key := hex.EncodeToString(h.Sum(nil))
+	//fmt.Println("---", key, b.String())
 	return key, nil
 }
 

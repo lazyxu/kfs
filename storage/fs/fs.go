@@ -15,10 +15,8 @@ import (
 )
 
 type Storage struct {
-	root         string
-	hashFunc     func() kfshash.Hash
-	checkOnRead  bool
-	checkOnWrite bool
+	storage.BaseStorage
+	root string
 
 	tempFileID uint32
 }
@@ -42,7 +40,7 @@ func (s *Storage) objectPath(typ int, key string) string {
 	return path.Join(s.root, "objects", typeToString(typ), key)
 }
 
-func New(root string, hashFunc func() kfshash.Hash, checkOnRead bool, checkOnWrite bool) (*Storage, error) {
+func New(root string, hashFunc func() kfshash.Hash, checkOnWrite bool, checkOnRead bool) (*Storage, error) {
 	err := os.MkdirAll(path.Join(root, "objects", "tree"), dirPerm)
 	if err != nil {
 		return nil, err
@@ -56,10 +54,9 @@ func New(root string, hashFunc func() kfshash.Hash, checkOnRead bool, checkOnWri
 		return nil, err
 	}
 	return &Storage{
-		root:         root,
-		hashFunc:     hashFunc,
-		checkOnRead:  checkOnRead,
-		checkOnWrite: checkOnWrite,
+		BaseStorage: storage.NewBase(hashFunc, checkOnWrite, checkOnRead),
+		root:        "temp",
+		tempFileID:  0,
 	}, nil
 }
 
@@ -67,30 +64,23 @@ func (s *Storage) Read(typ int, key string) (io.Reader, error) {
 	return os.Open(s.objectPath(typ, key))
 }
 
-func calc(f *os.File, h kfshash.Hash) (string, error) {
-	return h.Cal(f)
-}
-
 func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
 	id := atomic.AddUint32(&s.tempFileID, 1)
 	pTemp := path.Join(s.root, "temp", strconv.FormatUint(uint64(id), 10))
-	fTemp, err := os.OpenFile(pTemp, os.O_RDWR|os.O_CREATE|os.O_TRUNC, filePerm)
+	fTemp, err := os.OpenFile(pTemp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filePerm)
 	if err != nil {
 		return "", err
 	}
 	w := bufio.NewWriter(fTemp)
-	_, err = w.ReadFrom(reader)
+	hw := s.HashFunc()
+	rr := io.TeeReader(reader, hw)
+	_, err = w.ReadFrom(rr)
 	if err != nil {
 		fTemp.Close()
 		return "", err
 	}
 	fTemp.Close()
-	fTemp2, err := os.OpenFile(pTemp, os.O_RDONLY, filePerm)
-	if err != nil {
-		return "", err
-	}
-	defer fTemp2.Close()
-	key, err := calc(fTemp2, s.hashFunc())
+	key, err := hw.Cal(nil)
 	if err != nil {
 		return "", err
 	}
@@ -102,8 +92,8 @@ func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if s.checkOnWrite {
-		actualKey, err := calc(fCurrent, s.hashFunc())
+	if s.CheckOnWrite() {
+		actualKey, err := s.HashFunc().Cal(fCurrent)
 		if err != nil {
 			return "", err
 		}

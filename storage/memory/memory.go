@@ -2,9 +2,10 @@ package memory
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"io"
 	"sync"
+
+	"github.com/lazyxu/kfs/storage/kfshash"
 
 	"github.com/lazyxu/kfs/storage"
 
@@ -12,16 +13,18 @@ import (
 )
 
 type Storage struct {
+	storage.BaseStorage
 	mutex sync.RWMutex
 	objs  map[int]map[string][]byte
 }
 
-func New() *Storage {
+func New(hashFunc func() kfshash.Hash, checkOnWrite bool, checkOnRead bool) *Storage {
 	objs := make(map[int]map[string][]byte, 16)
 	objs[storage.TypTree] = make(map[string][]byte, 16)
 	objs[storage.TypBlob] = make(map[string][]byte, 16)
 	return &Storage{
-		objs: objs,
+		BaseStorage: storage.NewBase(hashFunc, checkOnWrite, checkOnRead),
+		objs:        objs,
 	}
 }
 
@@ -44,18 +47,18 @@ func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
 	defer s.mutex.Unlock()
 
 	buf := new(bytes.Buffer)
-	_, err := buf.ReadFrom(reader)
+	hw := s.HashFunc()
+	rr := io.TeeReader(reader, hw)
+	_, err := buf.ReadFrom(rr)
 	if err != nil {
 		return "", err
 	}
 	data := buf.Bytes()
 
-	hash := sha256.New()
-	_, err = hash.Write(data)
+	key, err := hw.Cal(nil)
 	if err != nil {
 		return "", err
 	}
-	key := string(hash.Sum(nil))
 
 	typedObjs, ok := s.objs[typ]
 	if !ok {

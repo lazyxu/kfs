@@ -20,7 +20,7 @@ var EmptyDir = &Tree{
 var EmptyDirHash string
 
 func Init(hashFunc func() kfshash.Hash) error {
-	b := &bytes.Buffer{}
+	b := new(bytes.Buffer)
 	err := gob.NewEncoder(b).Encode(EmptyDir)
 	if err != nil {
 		return err

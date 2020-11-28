@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/lazyxu/kfs/storage/kfshash"
+	"github.com/lazyxu/kfs/storage/memory"
 
-	"github.com/lazyxu/kfs/storage/fs"
+	"github.com/lazyxu/kfs/storage/kfshash"
 
 	"github.com/lazyxu/kfs/storage"
 
@@ -53,11 +53,9 @@ func New(opt *kfscommon.Options) *KFS {
 	hashFunc := func() kfshash.Hash {
 		return kfshash.FromStdHash(sha256.New())
 	}
-	s, err := fs.New("temp", hashFunc, true, true)
-	if err != nil {
-		panic(err)
-	}
-	err = object.Init(hashFunc)
+	//s, _ := fs.New("root", hashFunc, true, true)
+	s := memory.New(hashFunc, true, true)
+	err := object.Init(hashFunc)
 	if err != nil {
 		panic(err)
 	}
@@ -69,15 +67,36 @@ func New(opt *kfscommon.Options) *KFS {
 	object.EmptyDir.Write(kfs.storage)
 	object.EmptyFile.Write(kfs.storage)
 	kfs.root = NewDir(kfs, "", object.DefaultDirMode)
-	kfs.root.add(object.NewDirMetadata("demo", object.DefaultDirMode), object.EmptyDir)
-	kfs.root.add(object.NewFileMetadata("hello"), &object.Blob{Reader: strings.NewReader("hello world")})
-	kfs.root.add(object.NewFileMetadata("index.js"), &object.Blob{Reader: strings.NewReader("index")})
-	kfs.MkdirAll("/home/test", kfs.Opt.DirPerms)
-	kfs.Mkdir("/bin", kfs.Opt.DirPerms)
-	for _, b := range defaultBinaries {
-		kfs.Create(path.Join("/bin", b))
+	err = kfs.root.add(object.NewDirMetadata("demo", object.DefaultDirMode), object.EmptyDir)
+	if err != nil {
+		panic(err)
 	}
-	kfs.Mkdir("/tmp", kfs.Opt.DirPerms)
+	err = kfs.root.add(object.NewFileMetadata("hello"), &object.Blob{Reader: strings.NewReader("hello world")})
+	if err != nil {
+		panic(err)
+	}
+	err = kfs.root.add(object.NewFileMetadata("index.js"), &object.Blob{Reader: strings.NewReader("index")})
+	if err != nil {
+		panic(err)
+	}
+	err = kfs.MkdirAll("/home/test", kfs.Opt.DirPerms)
+	if err != nil {
+		panic(err)
+	}
+	err = kfs.Mkdir("/bin", kfs.Opt.DirPerms)
+	if err != nil {
+		panic(err)
+	}
+	for _, b := range defaultBinaries {
+		_, err = kfs.Create(path.Join("/bin", b))
+		if err != nil {
+			panic(err)
+		}
+	}
+	err = kfs.Mkdir("/tmp", kfs.Opt.DirPerms)
+	if err != nil {
+		panic(err)
+	}
 	return kfs
 }
 
