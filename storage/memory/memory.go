@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/lazyxu/kfs/storage/kfshash"
+	"github.com/lazyxu/kfs/kfscrypto"
 
 	"github.com/lazyxu/kfs/storage"
 
@@ -18,7 +18,7 @@ type Storage struct {
 	objs  map[int]map[string][]byte
 }
 
-func New(hashFunc func() kfshash.Hash, checkOnWrite bool, checkOnRead bool) *Storage {
+func New(hashFunc func() kfscrypto.Hash, checkOnWrite bool, checkOnRead bool) *Storage {
 	objs := make(map[int]map[string][]byte, 16)
 	objs[storage.TypTree] = make(map[string][]byte, 16)
 	objs[storage.TypBlob] = make(map[string][]byte, 16)

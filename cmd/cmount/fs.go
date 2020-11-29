@@ -1,9 +1,13 @@
 package main
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/lazyxu/kfs/kfscrypto"
+	"github.com/lazyxu/kfs/storage/memory"
 
 	"github.com/lazyxu/kfs/object"
 
@@ -23,13 +27,18 @@ type FS struct {
 
 func NewFS() *FS {
 	logrus.SetLevel(logrus.TraceLevel)
+	hashFunc := func() kfscrypto.Hash {
+		return kfscrypto.FromStdHash(sha256.New())
+	}
+	storage := memory.New(hashFunc, true, true)
+	serializable := &kfscrypto.GobEncoder{}
 	return &FS{
 		kfs: core.New(&kfscommon.Options{
 			UID:       uint32(os.Getuid()),
 			GID:       uint32(os.Getgid()),
 			DirPerms:  fuse.S_IFDIR | 0755,
 			FilePerms: fuse.S_IFREG | 0644,
-		}),
+		}, storage, hashFunc, serializable),
 	}
 }
 

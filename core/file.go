@@ -21,7 +21,7 @@ func NewFile(kfs *KFS, name string) *File {
 	return &File{
 		ItemBase: ItemBase{
 			kfs:      kfs,
-			Metadata: object.NewFileMetadata(name),
+			Metadata: kfs.baseObject.NewFileMetadata(name),
 		},
 	}
 }

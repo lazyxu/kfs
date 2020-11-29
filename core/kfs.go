@@ -17,7 +17,7 @@ func (kfs *KFS) Mkdir(name string, perm os.FileMode) error {
 	if err != nil {
 		return err
 	}
-	return dir.add(object.NewDirMetadata(leaf, perm), object.EmptyDir)
+	return dir.add(kfs.baseObject.NewDirMetadata(leaf, perm), kfs.baseObject.EmptyDir)
 }
 
 // Open opens the named file for reading. If successful, methods on

@@ -1,14 +1,11 @@
 package core
 
 import (
-	"crypto/sha256"
 	"path"
 	"path/filepath"
 	"strings"
 
-	"github.com/lazyxu/kfs/storage/memory"
-
-	"github.com/lazyxu/kfs/storage/kfshash"
+	"github.com/lazyxu/kfs/kfscrypto"
 
 	"github.com/lazyxu/kfs/storage"
 
@@ -20,10 +17,11 @@ import (
 )
 
 type KFS struct {
-	root    *Dir
-	storage storage.Storage
-	Opt     *kfscommon.Options
-	pwd     string
+	baseObject *object.BaseObject
+	root       *Dir
+	storage    storage.Storage
+	Opt        *kfscommon.Options
+	pwd        string
 }
 
 var defaultBinaries = []string{
@@ -49,33 +47,27 @@ var defaultBinaries = []string{
 
 const DevNull = "/dev/null"
 
-func New(opt *kfscommon.Options) *KFS {
-	hashFunc := func() kfshash.Hash {
-		return kfshash.FromStdHash(sha256.New())
-	}
-	//s, _ := fs.New("root", hashFunc, true, true)
-	s := memory.New(hashFunc, true, true)
-	err := object.Init(hashFunc)
-	if err != nil {
-		panic(err)
-	}
+func New(opt *kfscommon.Options, s storage.Storage,
+	hashFunc func() kfscrypto.Hash, serializable kfscrypto.Serializable) *KFS {
+	baseObject := object.Init(hashFunc, serializable)
 	kfs := &KFS{
-		Opt:     opt,
-		storage: s,
-		pwd:     "/tmp",
+		Opt:        opt,
+		storage:    s,
+		pwd:        "/tmp",
+		baseObject: baseObject,
 	}
-	object.EmptyDir.Write(kfs.storage)
-	object.EmptyFile.Write(kfs.storage)
+	baseObject.EmptyDir.Write(kfs.storage)
+	baseObject.EmptyFile.Write(kfs.storage)
 	kfs.root = NewDir(kfs, "", object.DefaultDirMode)
-	err = kfs.root.add(object.NewDirMetadata("demo", object.DefaultDirMode), object.EmptyDir)
+	err := kfs.root.add(baseObject.NewDirMetadata("demo", object.DefaultDirMode), baseObject.EmptyDir)
 	if err != nil {
 		panic(err)
 	}
-	err = kfs.root.add(object.NewFileMetadata("hello"), &object.Blob{Reader: strings.NewReader("hello world")})
+	err = kfs.root.add(baseObject.NewFileMetadata("hello"), &object.Blob{Reader: strings.NewReader("hello world")})
 	if err != nil {
 		panic(err)
 	}
-	err = kfs.root.add(object.NewFileMetadata("index.js"), &object.Blob{Reader: strings.NewReader("index")})
+	err = kfs.root.add(baseObject.NewFileMetadata("index.js"), &object.Blob{Reader: strings.NewReader("index")})
 	if err != nil {
 		panic(err)
 	}
@@ -156,7 +148,7 @@ func (kfs *KFS) getNode(path string) (node Node, err error) {
 			continue
 		}
 
-		d, err := object.ReadDir(kfs.storage, dir.Metadata.Hash)
+		d, err := kfs.baseObject.ReadDir(kfs.storage, dir.Metadata.Hash)
 		if err != nil {
 			return nil, err
 		}

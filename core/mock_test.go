@@ -11,17 +11,7 @@ import (
 	"time"
 
 	"github.com/lazyxu/kfs/core/e"
-
-	"github.com/lazyxu/kfs/core/kfscommon"
-	"github.com/lazyxu/kfs/object"
 )
-
-var kfs = New(&kfscommon.Options{
-	UID:       uint32(os.Getuid()),
-	GID:       uint32(os.Getgid()),
-	DirPerms:  object.S_IFDIR | 0755,
-	FilePerms: object.S_IFREG | 0644,
-})
 
 var ErrNotExist = os.ErrNotExist
 var ErrClosed = os.ErrClosed

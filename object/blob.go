@@ -1,20 +1,15 @@
 package object
 
 import (
-	"bytes"
 	"io"
 
 	"github.com/lazyxu/kfs/storage"
 )
 
 type Blob struct {
+	base   *BaseObject
 	Reader io.Reader
 }
-
-var EmptyFile = &Blob{
-	Reader: bytes.NewReader([]byte{}),
-}
-var EmptyFileHash string
 
 func (o *Blob) Write(s storage.Storage) (string, error) {
 	return s.Write(storage.TypBlob, o.Reader)

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"sync/atomic"
 
-	"github.com/lazyxu/kfs/storage/kfshash"
+	"github.com/lazyxu/kfs/kfscrypto"
 
 	"github.com/lazyxu/kfs/storage"
 )
@@ -40,7 +40,7 @@ func (s *Storage) objectPath(typ int, key string) string {
 	return path.Join(s.root, "objects", typeToString(typ), key)
 }
 
-func New(root string, hashFunc func() kfshash.Hash, checkOnWrite bool, checkOnRead bool) (*Storage, error) {
+func New(root string, hashFunc func() kfscrypto.Hash, checkOnWrite bool, checkOnRead bool) (*Storage, error) {
 	err := os.MkdirAll(path.Join(root, "objects", "tree"), dirPerm)
 	if err != nil {
 		return nil, err

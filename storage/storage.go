@@ -3,7 +3,7 @@ package storage
 import (
 	"io"
 
-	"github.com/lazyxu/kfs/storage/kfshash"
+	"github.com/lazyxu/kfs/kfscrypto"
 )
 
 const (
@@ -18,19 +18,19 @@ type Storage interface {
 }
 
 type BaseStorage struct {
-	hashFunc     func() kfshash.Hash
+	hashFunc     func() kfscrypto.Hash
 	checkOnWrite bool
 	checkOnRead  bool
 }
 
-func NewBase(hashFunc func() kfshash.Hash, checkOnWrite bool, checkOnRead bool) BaseStorage {
+func NewBase(hashFunc func() kfscrypto.Hash, checkOnWrite bool, checkOnRead bool) BaseStorage {
 	return BaseStorage{
 		hashFunc:     hashFunc,
 		checkOnRead:  checkOnWrite,
 		checkOnWrite: checkOnRead,
 	}
 }
-func (s *BaseStorage) HashFunc() kfshash.Hash {
+func (s *BaseStorage) HashFunc() kfscrypto.Hash {
 	return s.hashFunc()
 }
 

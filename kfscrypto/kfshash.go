@@ -1,4 +1,4 @@
-package kfshash
+package kfscrypto
 
 import (
 	"encoding/hex"

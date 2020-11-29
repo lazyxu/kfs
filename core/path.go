@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/lazyxu/kfs/core/e"
-	"github.com/lazyxu/kfs/object"
 )
 
 // MkdirAll creates a directory named path,
@@ -39,7 +38,7 @@ func (kfs *KFS) MkdirAll(path string, perm os.FileMode) error {
 			continue
 		}
 
-		d, err := object.ReadDir(kfs.storage, dir.Metadata.Hash)
+		d, err := kfs.baseObject.ReadDir(kfs.storage, dir.Metadata.Hash)
 		if err != nil {
 			return err
 		}
@@ -49,7 +48,7 @@ func (kfs *KFS) MkdirAll(path string, perm os.FileMode) error {
 				ItemBase: ItemBase{
 					kfs:      kfs,
 					parent:   dir,
-					Metadata: object.NewDirMetadata(name, perm),
+					Metadata: kfs.baseObject.NewDirMetadata(name, perm),
 				},
 				items: make(map[string]Node),
 			}

@@ -24,14 +24,14 @@ func NewDir(kfs *KFS, name string, perm os.FileMode) *Dir {
 	return &Dir{
 		ItemBase: ItemBase{
 			kfs:      kfs,
-			Metadata: object.NewDirMetadata(name, perm),
+			Metadata: kfs.baseObject.NewDirMetadata(name, perm),
 		},
 		items: make(map[string]Node),
 	}
 }
 
 func (i *Dir) load() (*object.Tree, error) {
-	tree := new(object.Tree)
+	tree := i.kfs.baseObject.NewTree()
 	err := tree.Read(i.kfs.storage, i.Metadata.Hash)
 	return tree, err
 }
@@ -90,10 +90,10 @@ func (i *Dir) Create(name string, flags int) (*File, error) {
 		ItemBase: ItemBase{
 			kfs:      i.kfs,
 			parent:   i,
-			Metadata: object.NewFileMetadata(name),
+			Metadata: i.kfs.baseObject.NewFileMetadata(name),
 		},
 	}
-	err := i.add(f.Metadata, object.EmptyFile)
+	err := i.add(f.Metadata, i.kfs.baseObject.EmptyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (i *Dir) remove(name string, all bool) error {
 	}
 	for index, item := range d.Items {
 		if item.Name == name {
-			if all || item.IsFile() || item.Hash == object.EmptyDirHash {
+			if all || item.IsFile() || item.Hash == i.kfs.baseObject.EmptyDirHash {
 				d.Items = append(d.Items[0:index], d.Items[index+1:]...)
 				delete(i.items, name)
 				return i.updateObj(d)

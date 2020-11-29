@@ -2,38 +2,14 @@ package object
 
 import (
 	"bytes"
-	"encoding/gob"
-
-	"github.com/lazyxu/kfs/storage/kfshash"
 
 	"github.com/lazyxu/kfs/core/e"
 	"github.com/lazyxu/kfs/storage"
 )
 
 type Tree struct {
+	base  *BaseObject
 	Items []*Metadata
-}
-
-var EmptyDir = &Tree{
-	Items: make([]*Metadata, 0),
-}
-var EmptyDirHash string
-
-func Init(hashFunc func() kfshash.Hash) error {
-	b := new(bytes.Buffer)
-	err := gob.NewEncoder(b).Encode(EmptyDir)
-	if err != nil {
-		return err
-	}
-	EmptyDirHash, err = hashFunc().Cal(b)
-	if err != nil {
-		return err
-	}
-	EmptyFileHash, err = hashFunc().Cal(bytes.NewReader([]byte{}))
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (o *Tree) GetNode(name string) (*Metadata, error) {
@@ -47,7 +23,7 @@ func (o *Tree) GetNode(name string) (*Metadata, error) {
 
 func (o *Tree) Write(s storage.Storage) (string, error) {
 	b := &bytes.Buffer{}
-	err := gob.NewEncoder(b).Encode(o)
+	err := o.base.serializable.Serialize(o, b)
 	if err != nil {
 		return "", e.EWriteObject
 	}
@@ -59,11 +35,11 @@ func (o *Tree) Read(s storage.Storage, key string) error {
 	if err != nil {
 		return err
 	}
-	return gob.NewDecoder(reader).Decode(o)
+	return o.base.serializable.Deserialize(o, reader)
 }
 
-func ReadDir(s storage.Storage, key string) (*Tree, error) {
-	tree := new(Tree)
+func (base *BaseObject) ReadDir(s storage.Storage, key string) (*Tree, error) {
+	tree := base.NewTree()
 	err := tree.Read(s, key)
 	return tree, err
 }

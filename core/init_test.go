@@ -2,6 +2,7 @@ package core
 
 import (
 	"bufio"
+	"crypto/sha256"
 	"flag"
 	"fmt"
 	"os"
@@ -11,10 +12,28 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/lazyxu/kfs/storage/memory"
+
+	"github.com/lazyxu/kfs/core/kfscommon"
+	"github.com/lazyxu/kfs/kfscrypto"
 	"github.com/lazyxu/kfs/object"
 )
 
+var kfs *KFS
+
 func init() {
+	hashFunc := func() kfscrypto.Hash {
+		return kfscrypto.FromStdHash(sha256.New())
+	}
+	//storage, _ := fs.New("temp", hashFunc, true, true)
+	storage := memory.New(hashFunc, true, true)
+	serializable := &kfscrypto.GobEncoder{}
+	kfs = New(&kfscommon.Options{
+		UID:       uint32(os.Getuid()),
+		GID:       uint32(os.Getgid()),
+		DirPerms:  object.S_IFDIR | 0755,
+		FilePerms: object.S_IFREG | 0644,
+	}, storage, hashFunc, serializable)
 	kfs.Mkdir("/etc", object.DefaultDirMode)
 	group, _ := kfs.Create("/etc/group")
 	group.WriteAt([]byte(strings.Repeat("x", 1000)), 0)

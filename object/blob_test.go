@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lazyxu/kfs/storage/kfshash"
+	"github.com/lazyxu/kfs/kfscrypto"
 
 	"github.com/lazyxu/kfs/storage/memory"
 
@@ -16,8 +16,8 @@ import (
 func TestSpec(t *testing.T) {
 	Convey("Create a file", t, func() {
 		str := "hello, world!"
-		hashFunc := func() kfshash.Hash {
-			return kfshash.FromStdHash(sha256.New())
+		hashFunc := func() kfscrypto.Hash {
+			return kfscrypto.FromStdHash(sha256.New())
 		}
 		s := memory.New(hashFunc, false, false)
 		blob1 := &Blob{Reader: strings.NewReader(str)}
