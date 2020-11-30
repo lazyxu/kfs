@@ -1,10 +1,12 @@
-package core
+package node
 
 import (
 	"os"
 	"path"
 	"sync"
 	"time"
+
+	"github.com/lazyxu/kfs/storage"
 
 	"github.com/lazyxu/kfs/object"
 )
@@ -21,18 +23,17 @@ type Node interface {
 	Readdirnames(n int, offset int) (names []string, err error)
 	Readdir(n int, offset int) ([]*object.Metadata, error)
 	Close() error
-	Open(flags int) (fd *Handle, err error)
 	Path() string
-	Parent() *Dir
 	Truncate(size int64) error
 	SetATime(t time.Time)
 	SetMTime(t time.Time)
 }
 
 type ItemBase struct {
-	kfs    *KFS
-	parent *Dir
-	mutex  sync.RWMutex
+	obj     *object.Obj
+	storage storage.Storage
+	Parent  *Dir
+	mutex   sync.RWMutex
 	*object.Metadata
 }
 
@@ -58,16 +59,12 @@ func (i *ItemBase) Name() string {
 	return i.Metadata.Name
 }
 
-func (i *ItemBase) Parent() *Dir {
-	return i.parent
-}
-
 func (i *ItemBase) Path() string {
-	parent := i.parent
+	parent := i.Parent
 	p := i.Name()
 	for parent != nil {
 		p = path.Join(parent.Name(), p)
-		parent = parent.parent
+		parent = parent.Parent
 	}
 	return "/" + p
 }
@@ -96,7 +93,7 @@ func (i *ItemBase) Sys() interface{} {
 }
 
 func (i *ItemBase) updateObj(o object.Object) error {
-	hash, err := o.Write(i.kfs.storage)
+	hash, err := o.Write(i.storage)
 	if err != nil {
 		return err
 	}
@@ -105,10 +102,10 @@ func (i *ItemBase) updateObj(o object.Object) error {
 }
 
 func (i *ItemBase) update() error {
-	if i.parent == nil {
+	if i.Parent == nil {
 		return nil
 	}
-	dd, err := i.parent.load()
+	dd, err := i.Parent.load()
 	if err != nil {
 		return err
 	}
@@ -116,7 +113,7 @@ func (i *ItemBase) update() error {
 		if item.Name == i.Metadata.Name {
 			items := append(dd.Items[0:index], i.Metadata)
 			dd.Items = append(items, dd.Items[index+1:]...)
-			return i.parent.updateObj(dd)
+			return i.Parent.updateObj(dd)
 		}
 	}
 	return nil

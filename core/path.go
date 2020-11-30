@@ -5,6 +5,8 @@ import (
 	"path"
 	"strings"
 
+	node2 "github.com/lazyxu/kfs/node"
+
 	"github.com/lazyxu/kfs/core/e"
 )
 
@@ -15,7 +17,7 @@ import (
 // directories that MkdirAll creates.
 func (kfs *KFS) MkdirAll(path string, perm os.FileMode) error {
 	path = strings.Trim(path, "/")
-	var node Node
+	var node node2.Node
 	node = kfs.root
 	for path != "" {
 		i := strings.IndexRune(path, '/')
@@ -28,55 +30,35 @@ func (kfs *KFS) MkdirAll(path string, perm os.FileMode) error {
 		if name == "" {
 			continue
 		}
-		dir, ok := node.(*Dir)
+		dir, ok := node.(*node2.Dir)
 		if !ok {
 			// We need to look in a directory, but found a file
 			return e.ENotDir
 		}
-		node, ok = dir.items[name]
+		node, ok = dir.Items[name]
 		if ok {
 			continue
 		}
 
-		d, err := kfs.baseObject.ReadDir(kfs.storage, dir.Metadata.Hash)
+		d, err := kfs.obj.ReadDir(kfs.storage, dir.Metadata.Hash)
 		if err != nil {
 			return err
 		}
 		metadata, err := d.GetNode(name)
 		if err == e.ENoSuchFileOrDir {
-			node = &Dir{
-				ItemBase: ItemBase{
-					kfs:      kfs,
-					parent:   dir,
-					Metadata: kfs.baseObject.NewDirMetadata(name, perm),
-				},
-				items: make(map[string]Node),
-			}
-			dir.items[name] = node
+			node = node2.NewDir(kfs.storage, kfs.obj, kfs.obj.NewDirMetadata(name, perm), dir)
+			dir.Items[name] = node
 			continue
 		}
 		if err != nil {
 			return err
 		}
 		if metadata.IsDir() {
-			node = &Dir{
-				ItemBase: ItemBase{
-					kfs:      kfs,
-					parent:   dir,
-					Metadata: metadata,
-				},
-				items: make(map[string]Node),
-			}
-			dir.items[name] = node
+			node = node2.NewDir(kfs.storage, kfs.obj, metadata, dir)
+			dir.Items[name] = node
 		} else {
-			node = &File{
-				ItemBase: ItemBase{
-					kfs:      kfs,
-					parent:   dir,
-					Metadata: metadata,
-				},
-			}
-			dir.items[name] = node
+			node = node2.NewFile(kfs.storage, kfs.obj, metadata, dir)
+			dir.Items[name] = node
 		}
 	}
 	return nil
@@ -92,5 +74,5 @@ func (kfs *KFS) RemoveAll(name string) error {
 	if err != nil {
 		return err
 	}
-	return dir.remove(leaf, true)
+	return dir.RemoveChild(leaf, true)
 }

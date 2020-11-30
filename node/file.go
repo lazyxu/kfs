@@ -1,10 +1,11 @@
-package core
+package node
 
 import (
 	"bytes"
 	"io"
 	"io/ioutil"
-	"os"
+
+	"github.com/lazyxu/kfs/storage"
 
 	"github.com/lazyxu/kfs/core/e"
 
@@ -17,15 +18,16 @@ type File struct {
 	ItemBase
 }
 
-func NewFile(kfs *KFS, name string) *File {
+func NewFile(s storage.Storage, obj *object.Obj, metadata *object.Metadata, parent *Dir) *File {
 	return &File{
 		ItemBase: ItemBase{
-			kfs:      kfs,
-			Metadata: kfs.baseObject.NewFileMetadata(name),
+			storage:  s,
+			obj:      obj,
+			Metadata: metadata,
+			Parent:   parent,
 		},
 	}
 }
-
 func skip(reader io.Reader, off int64) (int, error) {
 	switch r := reader.(type) {
 	case io.Seeker:
@@ -66,7 +68,7 @@ func (i *File) ReadAll() ([]byte, error) {
 
 func (i *File) getContent() (io.Reader, error) {
 	blob := new(object.Blob)
-	err := blob.Read(i.kfs.storage, i.Metadata.Hash)
+	err := blob.Read(i.storage, i.Metadata.Hash)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +89,7 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 	}
 	buf := make([]byte, offset)
 	blob := new(object.Blob)
-	err = blob.Read(i.kfs.storage, i.Metadata.Hash)
+	err = blob.Read(i.storage, i.Metadata.Hash)
 	if err != nil {
 		return 0, err
 	}
@@ -110,7 +112,7 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 		content = append(content, remain...)
 	}
 	blob.Reader = bytes.NewReader(content)
-	hash, err := blob.Write(i.kfs.storage)
+	hash, err := blob.Write(i.storage)
 	if err != nil {
 		return 0, err
 	}
@@ -125,7 +127,7 @@ func (i *File) Truncate(size int64) error {
 	content := make([]byte, size)
 	blob := new(object.Blob)
 	if size != 0 {
-		err := blob.Read(i.kfs.storage, i.Metadata.Hash)
+		err := blob.Read(i.storage, i.Metadata.Hash)
 		if err != nil {
 			return err
 		}
@@ -135,7 +137,7 @@ func (i *File) Truncate(size int64) error {
 		}
 	}
 	blob.Reader = bytes.NewReader(content)
-	hash, err := blob.Write(i.kfs.storage)
+	hash, err := blob.Write(i.storage)
 	if err != nil {
 		return err
 	}
@@ -164,60 +166,4 @@ func (i *File) Close() error {
 		return err
 	}
 	return nil
-}
-
-// Open a file according to the flags provided
-//
-//   O_RDONLY open the file read-only.
-//   O_WRONLY open the file write-only.
-//   O_RDWR   open the file read-write.
-//
-//   O_APPEND append data to the file when writing.
-//   O_CREATE create a new file if none exists.
-//   O_EXCL   used with O_CREATE, file must not exist
-//   O_SYNC   open for synchronous I/O.
-//   O_TRUNC  if possible, truncate file when opene
-//
-// We ignore O_SYNC and O_EXCL
-func (i *File) Open(flags int) (fd *Handle, err error) {
-	var (
-		write    bool // if set need write support
-		read     bool // if set need read support
-		rdwrMode = flags & accessModeMask
-	)
-
-	// http://pubs.opengroup.org/onlinepubs/7908799/xsh/open.html
-	// The result of using O_TRUNC with O_RDONLY is undefined.
-	// Linux seems to truncate the file, but we prefer to return EINVAL
-	if rdwrMode == os.O_RDONLY && flags&os.O_TRUNC != 0 {
-		return nil, e.ErrInvalid
-	}
-
-	if flags&os.O_TRUNC != 0 {
-		err := i.Truncate(0)
-		if err != nil {
-			return nil, err
-		}
-	}
-	// Figure out the read/write intents
-	switch {
-	case rdwrMode == os.O_RDONLY:
-		read = true
-	case rdwrMode == os.O_WRONLY:
-		write = true
-	case rdwrMode == os.O_RDWR:
-		read = true
-		write = true
-	default:
-		logrus.Debug(i.Name(), "Can't figure out how to open with flags: 0x%X", flags)
-		return nil, e.ErrPermission
-	}
-
-	return &Handle{
-		kfs:    i.kfs,
-		path:   i.Path(),
-		read:   read,
-		write:  write,
-		append: flags&os.O_APPEND != 0,
-	}, nil
 }

@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/lazyxu/kfs/node"
+
 	"github.com/lazyxu/kfs/core/e"
 )
 
@@ -199,8 +201,8 @@ func Chdir(dir string) error {
 }
 
 func SameFile(fi1, fi2 os.FileInfo) bool {
-	f1, ok1 := fi1.(*File)
-	f2, ok2 := fi2.(*File)
+	f1, ok1 := fi1.(*node.File)
+	f2, ok2 := fi2.(*node.File)
 	if !ok1 || !ok2 {
 		return false
 	}
@@ -283,7 +285,7 @@ func timespecToTime(ts syscall.Timespec) time.Time {
 
 // For testing.
 func Atime(fi os.FileInfo) time.Time {
-	n, ok := fi.(Node)
+	n, ok := fi.(node.Node)
 	if !ok {
 		panic(errors.New("235"))
 	}
@@ -297,7 +299,7 @@ func Atime(fi os.FileInfo) time.Time {
 // less precise time unit.
 // If there is an error, it will be of type *PathError.
 func Chtimes(name string, atime time.Time, mtime time.Time) error {
-	node, err := kfs.getNode(name)
+	node, err := kfs.GetNode(name)
 	if err != nil {
 		return err
 	}

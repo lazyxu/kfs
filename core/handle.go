@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/lazyxu/kfs/node"
+
 	"github.com/lazyxu/kfs/core/e"
 )
 
@@ -43,7 +45,7 @@ type handle interface {
 	// Additional methods useful for FUSE filesystems
 	Flush() error
 	Release() error
-	Node() (Node, error)
+	Node() (node.Node, error)
 }
 
 // baseHandle implements all the missing methods
@@ -67,6 +69,7 @@ func (h *Handle) Chdir() error {
 	h.kfs.pwd = h.path
 	return nil
 }
+
 func (h *Handle) Chmod(mode os.FileMode) error {
 	if h == nil {
 		return e.ErrInvalid
@@ -265,11 +268,11 @@ func (h *Handle) WriteString(s string) (n int, err error) {
 	return n, nil
 }
 
-func (h *Handle) Node() (Node, error) {
+func (h *Handle) Node() (node.Node, error) {
 	if h == nil {
 		return nil, e.ErrInvalid
 	}
-	return h.kfs.getNode(h.path)
+	return h.kfs.GetNode(h.path)
 }
 
 type fileInfo struct {

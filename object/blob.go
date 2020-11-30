@@ -7,7 +7,7 @@ import (
 )
 
 type Blob struct {
-	base   *BaseObject
+	base   *Obj
 	Reader io.Reader
 }
 

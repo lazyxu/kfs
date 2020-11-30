@@ -6,7 +6,7 @@ import (
 
 // Stat returns a FileInfo describing the named file.
 func (kfs *KFS) Stat(name string) (os.FileInfo, error) {
-	n, err := kfs.getNode(name)
+	n, err := kfs.GetNode(name)
 	if err != nil {
 		return nil, err
 	}

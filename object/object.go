@@ -14,7 +14,7 @@ type Object interface {
 	Read(s storage.Storage, key string) error
 }
 
-type BaseObject struct {
+type Obj struct {
 	serializable  kfscrypto.Serializable
 	EmptyDirHash  string
 	EmptyFileHash string
@@ -22,8 +22,8 @@ type BaseObject struct {
 	EmptyDir      *Tree
 }
 
-func Init(hashFunc func() kfscrypto.Hash, serializable kfscrypto.Serializable) *BaseObject {
-	o := &BaseObject{serializable: serializable}
+func Init(hashFunc func() kfscrypto.Hash, serializable kfscrypto.Serializable) *Obj {
+	o := &Obj{serializable: serializable}
 	o.EmptyFile = &Blob{
 		base:   o,
 		Reader: bytes.NewReader([]byte{}),
@@ -48,10 +48,10 @@ func Init(hashFunc func() kfscrypto.Hash, serializable kfscrypto.Serializable) *
 	return o
 }
 
-func (base *BaseObject) NewBlob() *Blob {
+func (base *Obj) NewBlob() *Blob {
 	return &Blob{base: base}
 }
 
-func (base *BaseObject) NewTree() *Tree {
+func (base *Obj) NewTree() *Tree {
 	return &Tree{base: base}
 }

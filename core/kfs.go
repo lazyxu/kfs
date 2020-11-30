@@ -4,6 +4,8 @@ import (
 	"os"
 	"path"
 
+	node2 "github.com/lazyxu/kfs/node"
+
 	"github.com/lazyxu/kfs/object"
 
 	"github.com/lazyxu/kfs/core/e"
@@ -17,7 +19,7 @@ func (kfs *KFS) Mkdir(name string, perm os.FileMode) error {
 	if err != nil {
 		return err
 	}
-	return dir.add(kfs.baseObject.NewDirMetadata(leaf, perm), kfs.baseObject.EmptyDir)
+	return dir.AddChild(kfs.obj.NewDirMetadata(leaf, perm), kfs.obj.EmptyDir)
 }
 
 // Open opens the named file for reading. If successful, methods on
@@ -49,8 +51,8 @@ func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (h *Handle, e
 	if name == "" {
 		return nil, e.ENoSuchFileOrDir
 	}
-	var node Node
-	node, err = kfs.getNode(name)
+	var node node2.Node
+	node, err = kfs.GetNode(name)
 	if err != nil && err != e.ENoSuchFileOrDir {
 		return nil, err
 	}
@@ -68,7 +70,10 @@ func (kfs *KFS) OpenFile(name string, flags int, perm os.FileMode) (h *Handle, e
 			return nil, err
 		}
 	}
-	return node.Open(flags)
+	if node.IsDir() {
+		return kfs._openDir(node.(*node2.Dir), flags)
+	}
+	return kfs._openFile(node.(*node2.File), flags)
 }
 
 // Rename renames (moves) oldpath to newpath.
@@ -80,7 +85,7 @@ func (kfs *KFS) Rename(oldPath, newPath string) error {
 	if err != nil {
 		return err
 	}
-	oldMetadata, err := oldDir.get(oldName)
+	oldMetadata, err := oldDir.GetChild(oldName)
 	if err != nil {
 		return err
 	}
@@ -89,9 +94,9 @@ func (kfs *KFS) Rename(oldPath, newPath string) error {
 	if err != nil {
 		return err
 	}
-	newMetadata, err := newDir.get(newName)
+	newMetadata, err := newDir.GetChild(newName)
 	if err == e.ErrNotExist {
-		err := oldDir.remove(oldName, true)
+		err := oldDir.RemoveChild(oldName, true)
 		if err != nil {
 			return err
 		}
@@ -103,11 +108,11 @@ func (kfs *KFS) Rename(oldPath, newPath string) error {
 		return err
 	}
 	if oldMetadata.IsFile() && newMetadata.IsFile() {
-		err = oldDir.remove(oldName, true)
+		err = oldDir.RemoveChild(oldName, true)
 		if err != nil {
 			return err
 		}
-		err = newDir.remove(newName, true)
+		err = newDir.RemoveChild(newName, true)
 		if err != nil {
 			return err
 		}
@@ -121,21 +126,21 @@ func (kfs *KFS) Rename(oldPath, newPath string) error {
 	return nil
 }
 
-func (kfs *KFS) move(metadata *object.Metadata, newDir *Dir) error {
+func (kfs *KFS) move(metadata *object.Metadata, newDir *node2.Dir) error {
 	if metadata.IsFile() {
 		blob := new(object.Blob)
 		err := blob.Read(kfs.storage, metadata.Hash)
 		if err != nil {
 			return err
 		}
-		return newDir.add(metadata, blob)
+		return newDir.AddChild(metadata, blob)
 	} else {
 		tree := new(object.Tree)
 		err := tree.Read(kfs.storage, metadata.Hash)
 		if err != nil {
 			return err
 		}
-		return newDir.add(metadata, tree)
+		return newDir.AddChild(metadata, tree)
 	}
 }
 
@@ -146,12 +151,12 @@ func (kfs *KFS) Remove(name string) error {
 	if err != nil {
 		return err
 	}
-	return dir.remove(leaf, false)
+	return dir.RemoveChild(leaf, false)
 }
 
 // Chmod changes the mode of the named file to mode.
 func (kfs *KFS) Chmod(name string, mode os.FileMode) error {
-	node, err := kfs.getNode(name)
+	node, err := kfs.GetNode(name)
 	if err != nil {
 		return err
 	}
@@ -170,7 +175,7 @@ func (kfs *KFS) Chdir(dir string) error {
 
 // Truncate changes the size of the named file.
 func (kfs *KFS) Truncate(name string, size int64) error {
-	node, err := kfs.getNode(name)
+	node, err := kfs.GetNode(name)
 	if err != nil {
 		return err
 	}

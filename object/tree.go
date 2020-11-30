@@ -8,7 +8,7 @@ import (
 )
 
 type Tree struct {
-	base  *BaseObject
+	base  *Obj
 	Items []*Metadata
 }
 
@@ -38,7 +38,7 @@ func (o *Tree) Read(s storage.Storage, key string) error {
 	return o.base.serializable.Deserialize(o, reader)
 }
 
-func (base *BaseObject) ReadDir(s storage.Storage, key string) (*Tree, error) {
+func (base *Obj) ReadDir(s storage.Storage, key string) (*Tree, error) {
 	tree := base.NewTree()
 	err := tree.Read(s, key)
 	return tree, err

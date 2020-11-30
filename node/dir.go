@@ -1,4 +1,4 @@
-package core
+package node
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/sirupsen/logrus"
+	"github.com/lazyxu/kfs/storage"
 
 	"github.com/lazyxu/kfs/object"
 
@@ -17,22 +17,24 @@ import (
 
 type Dir struct {
 	ItemBase
-	items map[string]Node
+	Items map[string]Node
 }
 
-func NewDir(kfs *KFS, name string, perm os.FileMode) *Dir {
+func NewDir(s storage.Storage, obj *object.Obj, metadata *object.Metadata, parent *Dir) *Dir {
 	return &Dir{
 		ItemBase: ItemBase{
-			kfs:      kfs,
-			Metadata: kfs.baseObject.NewDirMetadata(name, perm),
+			storage:  s,
+			obj:      obj,
+			Metadata: metadata,
+			Parent:   parent,
 		},
-		items: make(map[string]Node),
+		Items: make(map[string]Node),
 	}
 }
 
 func (i *Dir) load() (*object.Tree, error) {
-	tree := i.kfs.baseObject.NewTree()
-	err := tree.Read(i.kfs.storage, i.Metadata.Hash)
+	tree := i.obj.NewTree()
+	err := tree.Read(i.storage, i.Metadata.Hash)
 	return tree, err
 }
 
@@ -55,7 +57,7 @@ func getSize(r io.Reader) (int64, error) {
 	}
 }
 
-func (i *Dir) add(metadata *object.Metadata, item object.Object) error {
+func (i *Dir) AddChild(metadata *object.Metadata, item object.Object) error {
 	d, err := i.load()
 	if err != nil {
 		return err
@@ -73,7 +75,7 @@ func (i *Dir) add(metadata *object.Metadata, item object.Object) error {
 		}
 		metadata.Size = size
 	}
-	itemHash, err := item.Write(i.kfs.storage)
+	itemHash, err := item.Write(i.storage)
 	if err != nil {
 		return err
 	}
@@ -86,21 +88,15 @@ func (i *Dir) add(metadata *object.Metadata, item object.Object) error {
 func (i *Dir) Create(name string, flags int) (*File, error) {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
-	f := &File{
-		ItemBase: ItemBase{
-			kfs:      i.kfs,
-			parent:   i,
-			Metadata: i.kfs.baseObject.NewFileMetadata(name),
-		},
-	}
-	err := i.add(f.Metadata, i.kfs.baseObject.EmptyFile)
+	f := NewFile(i.storage, i.obj, i.obj.NewFileMetadata(name, os.FileMode(flags)), i)
+	err := i.AddChild(f.Metadata, i.obj.EmptyFile)
 	if err != nil {
 		return nil, err
 	}
 	return f, nil
 }
 
-func (i *Dir) get(name string) (*object.Metadata, error) {
+func (i *Dir) GetChild(name string) (*object.Metadata, error) {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 	d, err := i.load()
@@ -115,7 +111,7 @@ func (i *Dir) get(name string) (*object.Metadata, error) {
 	return nil, e.ErrNotExist
 }
 
-func (i *Dir) remove(name string, all bool) error {
+func (i *Dir) RemoveChild(name string, all bool) error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 	d, err := i.load()
@@ -124,9 +120,9 @@ func (i *Dir) remove(name string, all bool) error {
 	}
 	for index, item := range d.Items {
 		if item.Name == name {
-			if all || item.IsFile() || item.Hash == i.kfs.baseObject.EmptyDirHash {
+			if all || item.IsFile() || item.Hash == i.obj.EmptyDirHash {
 				d.Items = append(d.Items[0:index], d.Items[index+1:]...)
-				delete(i.items, name)
+				delete(i.Items, name)
 				return i.updateObj(d)
 			}
 			if item.IsDir() {
@@ -252,21 +248,6 @@ func (i *Dir) Close() error {
 		return err
 	}
 	return nil
-}
-
-// Open the directory according to the flags provided
-func (d *Dir) Open(flags int) (fd *Handle, err error) {
-	rdwrMode := flags & accessModeMask
-	if rdwrMode != os.O_RDONLY {
-		logrus.Error(d, "Can only open directories read only")
-		return nil, e.EIsDir
-	}
-	return &Handle{
-		kfs:   d.kfs,
-		path:  d.Path(),
-		isDir: true,
-		read:  true,
-	}, nil
 }
 
 func (i *Dir) Truncate(size int64) error {

@@ -23,10 +23,10 @@ func (i *Metadata) IsDir() bool {
 	return i.Mode&S_IFDIR != 0
 }
 
-func (base *BaseObject) NewDirMetadata(name string, perm os.FileMode) *Metadata {
+func (base *Obj) NewDirMetadata(name string, perm os.FileMode) *Metadata {
 	now := time.Now().UnixNano()
 	return &Metadata{
-		Mode:       S_IFDIR | perm,
+		Mode:       S_IFDIR | (perm & os.ModePerm),
 		BirthTime:  now,
 		ModifyTime: now,
 		ChangeTime: now,
@@ -36,10 +36,10 @@ func (base *BaseObject) NewDirMetadata(name string, perm os.FileMode) *Metadata 
 	}
 }
 
-func (base *BaseObject) NewFileMetadata(name string) *Metadata {
+func (base *Obj) NewFileMetadata(name string, perm os.FileMode) *Metadata {
 	now := time.Now().UnixNano()
 	return &Metadata{
-		Mode:       DefaultFileMode,
+		Mode:       S_IFREG | (perm & os.ModePerm),
 		BirthTime:  now,
 		ModifyTime: now,
 		ChangeTime: now,
