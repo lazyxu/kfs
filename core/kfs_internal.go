@@ -35,6 +35,9 @@ type KFS struct {
 	pwd     string
 }
 
+func (kfs *KFS) Root() *node.Dir {
+	return kfs.root
+}
 func (kfs *KFS) Object() *object.Obj {
 	return kfs.obj
 }

@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package pb;
+
+service KoalaFS {
+    rpc ls(PathRequest) returns (FilesResponse) {}
+    rpc cp(MoveRequest) returns (Void) {}
+    rpc mv(MoveRequest) returns (Void) {}
+    rpc createFile(PathRequest) returns (FileStat) {}
+    rpc mkdir(PathRequest) returns (FileStat) {}
+    rpc remove(PathListRequest) returns (Void) {}
+    rpc download(DownloadRequest) returns (DownloadResponse) {}
+    rpc upload(UploadRequest) returns (UploadResponse) {}
+}
+
+message PathRequest {
+    string path = 1;
+}
+
+message PathListRequest {
+    repeated string path = 1;
+}
+
+message DownloadRequest {
+    repeated string path = 1;
+    bytes hash = 2;
+}
+
+message FilesResponse {
+    repeated FileStat files = 1;
+    string path = 2;
+}
+
+message FileStat {
+    string name = 1;
+    string type = 2;
+    int64 size = 3;
+    int64 atimeMs = 4;
+    int64 mtimeMs = 5;
+    int64 ctimeMs = 6;
+    int64 birthtimeMs = 7;
+    repeated FileStat files = 8;
+}
+
+message MoveRequest {
+    repeated string src = 1;
+    string dst = 2;
+}
+
+message Void {
+    repeated FileStat files = 1;
+}
+
+message DownloadResponse {
+    repeated bytes hash = 1;
+    bytes singleFileContent = 2;
+}
+
+message UploadRequest {
+    string path = 1;
+    repeated bytes hash = 2;
+    bytes data = 3;
+}
+
+message UploadResponse {
+    repeated FileStat files = 1;
+    bytes hash = 2;
+}

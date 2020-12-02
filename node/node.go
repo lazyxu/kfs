@@ -27,6 +27,8 @@ type Node interface {
 	Truncate(size int64) error
 	SetATime(t time.Time)
 	SetMTime(t time.Time)
+	Obj() *object.Obj
+	Storage() storage.Storage
 }
 
 type ItemBase struct {
@@ -35,6 +37,14 @@ type ItemBase struct {
 	Parent  *Dir
 	mutex   sync.RWMutex
 	*object.Metadata
+}
+
+func (i *ItemBase) Obj() *object.Obj {
+	return i.obj
+}
+
+func (i *ItemBase) Storage() storage.Storage {
+	return i.storage
 }
 
 func (i *ItemBase) BTime() time.Time {
