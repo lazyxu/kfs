@@ -6,15 +6,38 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/lazyxu/kfs/storage"
+
 	"github.com/lazyxu/kfs/object"
 
 	"github.com/lazyxu/kfs/core/e"
 )
 
+type Mount struct {
+	root  *Dir
+	dirty []Node
+}
+
+func NewMount(root *Dir) *Mount {
+	return &Mount{
+		root:  root,
+		dirty: make([]Node, 0),
+	}
+}
+
+func (m *Mount) Obj() *object.Obj {
+	return m.root.obj
+}
+
+func (m *Mount) Storage() storage.Storage {
+	return m.root.storage
+}
+
 // GetNode finds the Node by path.
-func GetNode(n Node, path string) (Node, error) {
-	obj := n.Obj()
-	storage := n.Storage()
+func (m *Mount) GetNode(path string) (Node, error) {
+	obj := m.Obj()
+	s := m.Storage()
+	var n Node = m.root
 	for path != "" {
 		i := strings.IndexRune(path, '/')
 		var name string
@@ -36,7 +59,7 @@ func GetNode(n Node, path string) (Node, error) {
 			continue
 		}
 
-		d, err := obj.ReadDir(storage, dir.Metadata.Hash)
+		d, err := obj.ReadDir(s, dir.Metadata.Hash)
 		if err != nil {
 			return nil, err
 		}
@@ -45,18 +68,18 @@ func GetNode(n Node, path string) (Node, error) {
 			return nil, err
 		}
 		if metadata.IsDir() {
-			n = NewDir(storage, obj, metadata, dir)
+			n = NewDir(s, obj, metadata, dir)
 			dir.Items[name] = n
 		} else {
-			n = NewFile(storage, obj, metadata, dir)
+			n = NewFile(s, obj, metadata, dir)
 			dir.Items[name] = n
 		}
 	}
 	return n, nil
 }
 
-func GetDir(n Node, path string) (dir *Dir, err error) {
-	n, err = GetNode(n, path)
+func (m *Mount) GetDir(path string) (*Dir, error) {
+	n, err := m.GetNode(path)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +90,8 @@ func GetDir(n Node, path string) (dir *Dir, err error) {
 	return dir, nil
 }
 
-func GetFile(n Node, path string) (*File, error) {
-	n, err := GetNode(n, path)
+func (m *Mount) GetFile(path string) (*File, error) {
+	n, err := m.GetNode(path)
 	if err != nil {
 		return nil, err
 	}
@@ -82,9 +105,9 @@ func GetFile(n Node, path string) (*File, error) {
 // Rename renames (moves) oldpath to newpath.
 // If newpath already exists and is not a directory, Rename replaces it.
 // OS-specific restrictions may apply when oldpath and newpath are in different directories.
-func Rename(n Node, oldPath, newPath string) error {
+func (m *Mount) Rename(oldPath, newPath string) error {
 	oldParent, oldName := path.Split(oldPath)
-	oldDir, err := GetDir(n, oldParent)
+	oldDir, err := m.GetDir(oldParent)
 	if err != nil {
 		return err
 	}
@@ -93,7 +116,7 @@ func Rename(n Node, oldPath, newPath string) error {
 		return err
 	}
 	newParent, newName := path.Split(newPath)
-	newDir, err := GetDir(n, newParent)
+	newDir, err := m.GetDir(newParent)
 	if err != nil {
 		return err
 	}
@@ -129,9 +152,9 @@ func Rename(n Node, oldPath, newPath string) error {
 	return nil
 }
 
-func Mv(n Node, oldPath, newPath string) error {
+func (m *Mount) Mv(oldPath, newPath string) error {
 	oldParent, oldName := path.Split(oldPath)
-	oldDir, err := GetDir(n, oldParent)
+	oldDir, err := m.GetDir(oldParent)
 	if err != nil {
 		return err
 	}
@@ -140,7 +163,7 @@ func Mv(n Node, oldPath, newPath string) error {
 		return err
 	}
 	newParent, newName := path.Split(newPath)
-	newDir, err := GetDir(n, newParent)
+	newDir, err := m.GetDir(newParent)
 	if err != nil {
 		return err
 	}
@@ -175,7 +198,7 @@ func Mv(n Node, oldPath, newPath string) error {
 		if err != nil {
 			return err
 		}
-		newDir, err := GetDir(n, newPath)
+		newDir, err := m.GetDir(newPath)
 		if err != nil {
 			return err
 		}
@@ -206,9 +229,9 @@ func move(newDir *Dir, metadata *object.Metadata) error {
 	}
 }
 
-func Cp(n Node, oldPath, newPath string) error {
+func (m *Mount) Cp(oldPath, newPath string) error {
 	oldParent, oldName := path.Split(oldPath)
-	oldDir, err := GetDir(n, oldParent)
+	oldDir, err := m.GetDir(oldParent)
 	if err != nil {
 		return err
 	}
@@ -216,13 +239,13 @@ func Cp(n Node, oldPath, newPath string) error {
 	if err != nil {
 		return err
 	}
-	newDir, err := GetDir(n, newPath)
+	newDir, err := m.GetDir(newPath)
 	if err != nil {
 		return err
 	}
 	for i := 1; i < math.MaxInt64; i++ {
 		name := oldName + "(" + strconv.Itoa(i) + ")"
-		_, err := GetNode(n, path.Join(newPath, name))
+		_, err := m.GetNode(path.Join(newPath, name))
 		if err == e.ENoSuchFileOrDir {
 			metadata := *oldMetadata
 			metadata.Name = name

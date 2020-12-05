@@ -29,7 +29,7 @@ import (
 
 type RootDirectory struct {
 	pb.UnimplementedKoalaFSServer
-	root *node.Dir
+	m *node.Mount
 }
 
 func New() pb.KoalaFSServer {
@@ -45,7 +45,7 @@ func New() pb.KoalaFSServer {
 		DirPerms:  object.S_IFDIR | 0755,
 		FilePerms: object.S_IFREG | 0644,
 	}, storage, hashFunc, serializable)
-	return &RootDirectory{root: kfs.Root()}
+	return &RootDirectory{m: node.NewMount(kfs.Root())}
 }
 
 func getPathFromMetadata(ctx context.Context) string {
@@ -57,8 +57,8 @@ func getPathFromMetadata(ctx context.Context) string {
 	return pwd[0]
 }
 
-func getFileList(root node.Node, path string) ([]*pb.FileStat, error) {
-	n, err := node.GetNode(root, path)
+func getFileList(m *node.Mount, path string) ([]*pb.FileStat, error) {
+	n, err := m.GetNode(path)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func getFileList(root node.Node, path string) ([]*pb.FileStat, error) {
 
 func (g *RootDirectory) Ls(ctx context.Context, req *pb.PathRequest) (resp *pb.FilesResponse, err error) {
 	resp = new(pb.FilesResponse)
-	resp.Files, err = getFileList(g.root, req.Path)
+	resp.Files, err = getFileList(g.m, req.Path)
 	if err != nil {
 		resp.Path = getPathFromMetadata(ctx)
 		return resp, err
@@ -96,54 +96,54 @@ func (g *RootDirectory) Ls(ctx context.Context, req *pb.PathRequest) (resp *pb.F
 func (g *RootDirectory) Cp(ctx context.Context, req *pb.MoveRequest) (resp *pb.Void, err error) {
 	resp = new(pb.Void)
 	for _, src := range req.Src {
-		err := node.Cp(g.root, src, req.Dst)
+		err := g.m.Cp(src, req.Dst)
 		if err != nil {
 			return resp, err
 		}
 	}
-	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	resp.Files, err = getFileList(g.m, getPathFromMetadata(ctx))
 	return resp, err
 }
 
 func (g *RootDirectory) Mv(ctx context.Context, req *pb.MoveRequest) (resp *pb.Void, err error) {
 	resp = new(pb.Void)
 	for _, src := range req.Src {
-		err := node.Mv(g.root, src, req.Dst)
+		err := g.m.Mv(src, req.Dst)
 		if err != nil {
 			return resp, err
 		}
 	}
-	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	resp.Files, err = getFileList(g.m, getPathFromMetadata(ctx))
 	return resp, err
 }
 
 func (g *RootDirectory) CreateFile(ctx context.Context, req *pb.PathRequest) (resp *pb.FileStat, err error) {
 	resp = new(pb.FileStat)
 	parent, leaf := filepath.Split(req.Path)
-	dir, err := node.GetDir(g.root, parent)
+	dir, err := g.m.GetDir(parent)
 	if err != nil {
 		return nil, err
 	}
-	err = dir.AddChild(g.root.Obj().NewFileMetadata(leaf, object.DefaultFileMode), g.root.Obj().EmptyFile)
+	err = dir.AddChild(g.m.Obj().NewFileMetadata(leaf, object.DefaultFileMode), g.m.Obj().EmptyFile)
 	if err != nil {
 		return nil, err
 	}
-	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	resp.Files, err = getFileList(g.m, getPathFromMetadata(ctx))
 	return resp, err
 }
 
 func (g *RootDirectory) Mkdir(ctx context.Context, req *pb.PathRequest) (resp *pb.FileStat, err error) {
 	resp = new(pb.FileStat)
 	parent, leaf := filepath.Split(req.Path)
-	dir, err := node.GetDir(g.root, parent)
+	dir, err := g.m.GetDir(parent)
 	if err != nil {
 		return nil, err
 	}
-	err = dir.AddChild(g.root.Obj().NewDirMetadata(leaf, object.DefaultDirMode), g.root.Obj().EmptyDir)
+	err = dir.AddChild(g.m.Obj().NewDirMetadata(leaf, object.DefaultDirMode), g.m.Obj().EmptyDir)
 	if err != nil {
 		return nil, err
 	}
-	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	resp.Files, err = getFileList(g.m, getPathFromMetadata(ctx))
 	return resp, err
 }
 
@@ -151,7 +151,7 @@ func (g *RootDirectory) Remove(ctx context.Context, req *pb.PathListRequest) (re
 	resp = new(pb.Void)
 	for _, p := range req.Path {
 		parent, leaf := filepath.Split(p)
-		dir, err := node.GetDir(g.root, parent)
+		dir, err := g.m.GetDir(parent)
 		if err != nil {
 			return nil, err
 		}
@@ -160,13 +160,13 @@ func (g *RootDirectory) Remove(ctx context.Context, req *pb.PathListRequest) (re
 			return nil, err
 		}
 	}
-	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	resp.Files, err = getFileList(g.m, getPathFromMetadata(ctx))
 	return resp, err
 }
 
 func (g *RootDirectory) Download(ctx context.Context, req *pb.DownloadRequest) (*pb.DownloadResponse, error) {
 	json := new(pb.DownloadResponse)
-	n, err := node.GetFile(g.root, req.Path[0])
+	n, err := g.m.GetFile(req.Path[0])
 	if err != nil {
 		return json, err
 	}
@@ -184,16 +184,16 @@ func (g *RootDirectory) Download(ctx context.Context, req *pb.DownloadRequest) (
 func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp *pb.UploadResponse, err error) {
 	resp = new(pb.UploadResponse)
 	parent, leaf := filepath.Split(req.Path)
-	dir, err := node.GetDir(g.root, parent)
+	dir, err := g.m.GetDir(parent)
 	if err != nil {
 		return nil, err
 	}
-	b := g.root.Obj().NewBlob()
+	b := g.m.Obj().NewBlob()
 	b.Reader = bytes.NewReader(req.Data)
-	err = dir.AddChild(g.root.Obj().NewFileMetadata(leaf, object.DefaultFileMode), b)
+	err = dir.AddChild(g.m.Obj().NewFileMetadata(leaf, object.DefaultFileMode), b)
 	if err != nil {
 		return nil, err
 	}
-	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	resp.Files, err = getFileList(g.m, getPathFromMetadata(ctx))
 	return resp, err
 }
