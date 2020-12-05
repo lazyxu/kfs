@@ -19,7 +19,8 @@ func (kfs *KFS) Mkdir(name string, perm os.FileMode) error {
 	if err != nil {
 		return err
 	}
-	return dir.AddChild(kfs.obj.NewDirMetadata(leaf, perm), kfs.obj.EmptyDir)
+	err = dir.AddChild(kfs.obj.NewDirMetadata(leaf, perm), kfs.obj.EmptyDir)
+	return err
 }
 
 // Open opens the named file for reading. If successful, methods on
@@ -133,14 +134,16 @@ func (kfs *KFS) move(metadata *object.Metadata, newDir *node2.Dir) error {
 		if err != nil {
 			return err
 		}
-		return newDir.AddChild(metadata, blob)
+		err = newDir.AddChild(metadata, blob)
+		return err
 	} else {
 		tree := new(object.Tree)
 		err := tree.Read(kfs.storage, metadata.Hash)
 		if err != nil {
 			return err
 		}
-		return newDir.AddChild(metadata, tree)
+		err = newDir.AddChild(metadata, tree)
+		return err
 	}
 }
 

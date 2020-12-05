@@ -44,7 +44,7 @@ func (i *File) ReadAt(buff []byte, off int64) (int, error) {
 	if len(buff) == 0 {
 		return 0, nil
 	}
-	reader, err := i.getContent()
+	reader, err := i.Content()
 	if err != nil {
 		return 0, err
 	}
@@ -59,14 +59,14 @@ func (i *File) ReadAt(buff []byte, off int64) (int, error) {
 func (i *File) ReadAll() ([]byte, error) {
 	i.mutex.RLock()
 	defer i.mutex.RUnlock()
-	reader, err := i.getContent()
+	reader, err := i.Content()
 	if err != nil {
 		return nil, err
 	}
 	return ioutil.ReadAll(reader)
 }
 
-func (i *File) getContent() (io.Reader, error) {
+func (i *File) Content() (io.Reader, error) {
 	blob := new(object.Blob)
 	err := blob.Read(i.storage, i.Metadata.Hash)
 	if err != nil {

@@ -1,9 +1,12 @@
 package rootdirectory
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/lazyxu/kfs/node"
 
@@ -26,7 +29,7 @@ import (
 
 type RootDirectory struct {
 	pb.UnimplementedKoalaFSServer
-	kfs *core.KFS
+	root *node.Dir
 }
 
 func New() pb.KoalaFSServer {
@@ -42,7 +45,7 @@ func New() pb.KoalaFSServer {
 		DirPerms:  object.S_IFDIR | 0755,
 		FilePerms: object.S_IFREG | 0644,
 	}, storage, hashFunc, serializable)
-	return &RootDirectory{kfs: kfs}
+	return &RootDirectory{root: kfs.Root()}
 }
 
 func getPathFromMetadata(ctx context.Context) string {
@@ -54,35 +57,18 @@ func getPathFromMetadata(ctx context.Context) string {
 	return pwd[0]
 }
 
-//func getFileList(path string) []*pb.FileStat {
-//	tree, err := fs.GetTree(path)
-//	if err != nil {
-//		logrus.Panic(err, path)
-//	}
-//	var files []*pb.FileStat
-//	for _, item := range tree.TreeItems {
-//		files = append(files, &pb.FileStat{
-//			Name:    item.Name,
-//			Type:    util.Condition(item.Type == fs.TypeBlob, "file", "dir"),
-//			Size:    int64(item.Size),
-//			MtimeMs: item.MTime,
-//		})
-//	}
-//	return files
-//}
-
-func (g *RootDirectory) Ls(ctx context.Context, req *pb.PathRequest) (*pb.FilesResponse, error) {
-	json := new(pb.FilesResponse)
-	n, err := node.GetNode(g.kfs.Root(), req.Path)
+func getFileList(root node.Node, path string) ([]*pb.FileStat, error) {
+	n, err := node.GetNode(root, path)
 	if err != nil {
-		return json, err
+		return nil, err
 	}
 	list, err := n.Readdir(-1, 0)
 	if err != nil {
-		return json, err
+		return nil, err
 	}
-	for _, m := range list {
-		json.Files = append(json.Files, &pb.FileStat{
+	l := make([]*pb.FileStat, len(list))
+	for i, m := range list {
+		l[i] = &pb.FileStat{
 			Name:        m.Name,
 			Type:        cond.String(m.IsFile(), "file", "dir"),
 			Size:        m.Size,
@@ -91,171 +77,123 @@ func (g *RootDirectory) Ls(ctx context.Context, req *pb.PathRequest) (*pb.FilesR
 			CtimeMs:     m.ChangeTime,
 			BirthtimeMs: m.BirthTime,
 			Files:       nil,
-		})
+		}
+	}
+	return l, nil
+}
+
+func (g *RootDirectory) Ls(ctx context.Context, req *pb.PathRequest) (resp *pb.FilesResponse, err error) {
+	resp = new(pb.FilesResponse)
+	resp.Files, err = getFileList(g.root, req.Path)
+	if err != nil {
+		resp.Path = getPathFromMetadata(ctx)
+		return resp, err
+	}
+	resp.Path = req.Path
+	return resp, err
+}
+
+func (g *RootDirectory) Cp(ctx context.Context, req *pb.MoveRequest) (resp *pb.Void, err error) {
+	resp = new(pb.Void)
+	for _, src := range req.Src {
+		err := node.Cp(g.root, src, req.Dst)
+		if err != nil {
+			return resp, err
+		}
+	}
+	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	return resp, err
+}
+
+func (g *RootDirectory) Mv(ctx context.Context, req *pb.MoveRequest) (resp *pb.Void, err error) {
+	resp = new(pb.Void)
+	for _, src := range req.Src {
+		err := node.Mv(g.root, src, req.Dst)
+		if err != nil {
+			return resp, err
+		}
+	}
+	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	return resp, err
+}
+
+func (g *RootDirectory) CreateFile(ctx context.Context, req *pb.PathRequest) (resp *pb.FileStat, err error) {
+	resp = new(pb.FileStat)
+	parent, leaf := filepath.Split(req.Path)
+	dir, err := node.GetDir(g.root, parent)
+	if err != nil {
+		return nil, err
+	}
+	err = dir.AddChild(g.root.Obj().NewFileMetadata(leaf, object.DefaultFileMode), g.root.Obj().EmptyFile)
+	if err != nil {
+		return nil, err
+	}
+	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	return resp, err
+}
+
+func (g *RootDirectory) Mkdir(ctx context.Context, req *pb.PathRequest) (resp *pb.FileStat, err error) {
+	resp = new(pb.FileStat)
+	parent, leaf := filepath.Split(req.Path)
+	dir, err := node.GetDir(g.root, parent)
+	if err != nil {
+		return nil, err
+	}
+	err = dir.AddChild(g.root.Obj().NewDirMetadata(leaf, object.DefaultDirMode), g.root.Obj().EmptyDir)
+	if err != nil {
+		return nil, err
+	}
+	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	return resp, err
+}
+
+func (g *RootDirectory) Remove(ctx context.Context, req *pb.PathListRequest) (resp *pb.Void, err error) {
+	resp = new(pb.Void)
+	for _, p := range req.Path {
+		parent, leaf := filepath.Split(p)
+		dir, err := node.GetDir(g.root, parent)
+		if err != nil {
+			return nil, err
+		}
+		err = dir.RemoveChild(leaf, true)
+		if err != nil {
+			return nil, err
+		}
+	}
+	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	return resp, err
+}
+
+func (g *RootDirectory) Download(ctx context.Context, req *pb.DownloadRequest) (*pb.DownloadResponse, error) {
+	json := new(pb.DownloadResponse)
+	n, err := node.GetFile(g.root, req.Path[0])
+	if err != nil {
+		return json, err
+	}
+	r, err := n.Content()
+	if err != nil {
+		return json, err
+	}
+	json.SingleFileContent, err = ioutil.ReadAll(r)
+	if err != nil {
+		return json, err
 	}
 	return json, err
 }
 
-//func (s *RootDirectory) Cp(ctx context.Context, req *pb.MoveRequest) (json *pb.Void, err error) {
-//	defer util.Catch(&err)
-//	logrus.Infoln("Request Cp", req)
-//	var srcList []string
-//	for _, src := range req.GetSrc() {
-//		src = filepath.Clean("/" + src)
-//		srcList = append(srcList, src)
-//	}
-//	dst := filepath.Clean("/" + req.GetDst())
-//	err = fs.Copy(srcList, dst)
-//	if err != nil {
-//		return &pb.Void{}, err
-//	}
-//	json = &pb.Void{Files: getFileList(getPathFromMetadata(ctx))}
-//	logrus.Infoln("Result Cp", json)
-//	return json, err
-//}
-
-//func (s *RootDirectory) Mv(ctx context.Context, req *pb.MoveRequest) (json *pb.Void, err error) {
-//	defer util.Catch(&err)
-//	logrus.Infoln("Request Mv", req)
-//	var srcList []string
-//	for _, src := range req.GetSrc() {
-//		src = filepath.Clean("/" + src)
-//		srcList = append(srcList, src)
-//	}
-//	dst := filepath.Clean("/" + req.GetDst())
-//	err = fs.Move(srcList, dst)
-//	if err != nil {
-//		return &pb.Void{}, err
-//	}
-//	json = &pb.Void{Files: getFileList(getPathFromMetadata(ctx))}
-//	logrus.Infoln("Result Mv", json)
-//	return json, err
-//}
-//
-//func (s *RootDirectory) CreateFile(ctx context.Context, req *pb.PathRequest) (json *pb.FileStat, err error) {
-//	defer util.Catch(&err)
-//	logrus.Infoln("Request CreateFile", req)
-//	path := req.Path
-//	var item *fs.TreeItem
-//	if len(path) == 0 {
-//		path = getPathFromMetadata(ctx)
-//		item, _ = fs.NewFile(path)
-//	} else {
-//		path = filepath.Clean("/" + req.Path)
-//		item, _ = fs.CreateFile(path, []byte{})
-//	}
-//	json = &pb.FileStat{
-//		Name:    item.Name,
-//		Type:    util.Condition(item.Type == fs.TypeBlob, "file", "dir"),
-//		Size:    int64(item.Size),
-//		MtimeMs: item.MTime,
-//		Files:   getFileList(path),
-//	}
-//	logrus.Infoln("Result CreateFile", json)
-//	return json, err
-//}
-//
-//func (s *RootDirectory) Mkdir(ctx context.Context, req *pb.PathRequest) (json *pb.FileStat, err error) {
-//	defer util.Catch(&err)
-//	logrus.Infoln("Request Mkdir", req)
-//	path := req.Path
-//	var item *fs.TreeItem
-//	if len(path) == 0 {
-//		path = getPathFromMetadata(ctx)
-//		item, _ = fs.NewDir(path)
-//	} else {
-//		path = filepath.Clean("/" + req.Path)
-//		item, _ = fs.CreateDir(path)
-//	}
-//	json = &pb.FileStat{
-//		Name:    item.Name,
-//		Type:    util.Condition(item.Type == fs.TypeBlob, "file", "dir"),
-//		Size:    int64(item.Size),
-//		MtimeMs: item.MTime,
-//		Files:   getFileList(path),
-//	}
-//	logrus.Infoln("Result Mkdir", json)
-//	return json, err
-//}
-//
-
-//func (s *RootDirectory) Remove(ctx context.Context, req *pb.PathListRequest) (*pb.Void, error) {
-//	json := new(pb.Void)
-//	for _, p := range req.Path {
-//		n, err := node.GetNode(s.kfs.Root(), p)
-//		if err != nil {
-//			return json, err
-//		}
-//		n.
-//	}
-//	defer util.Catch(&err)
-//	logrus.Infoln("Request Remove", req)
-//	var pathList []string
-//	for _, path := range req.Path {
-//		pathList = append(pathList, filepath.Clean("/"+path))
-//		err = fs.Remove(pathList)
-//		if err != nil {
-//			return &pb.Void{}, err
-//		}
-//	}
-//	json = &pb.Void{Files: getFileList(getPathFromMetadata(ctx))}
-//	logrus.Infoln("Result Remove", json)
-//	return json, err
-//}
-
-//
-//func (s *RootDirectory) Download(ctx context.Context, req *pb.DownloadRequest) (json *pb.DownloadResponse, err error) {
-//	defer util.Catch(&err)
-//	logrus.Infoln("Request Download", req)
-//	var blob *fs.Blob
-//	if req.Hash != nil && len(req.Hash) > 0 {
-//		blob, err = fs.DownloadByHash(req.Hash)
-//	} else {
-//		pathList := req.Path
-//		if len(pathList) > 1 {
-//			return &pb.DownloadResponse{}, status.Errorf(codes.InvalidArgument, "Not a single file")
-//		}
-//		path := filepath.Clean("/" + pathList[0])
-//		blob, err = fs.DownloadByPath(path)
-//	}
-//	if err != nil {
-//		return &pb.DownloadResponse{}, err
-//	}
-//	if blob.Type == fs.BlobSingle {
-//		json = &pb.DownloadResponse{
-//			SingleFileContent: blob.Data,
-//		}
-//		logrus.Infoln("Result Download size", len(blob.Data))
-//	} else {
-//		json = &pb.DownloadResponse{
-//			Hash: blob.HashList,
-//		}
-//		logrus.Infoln("Result Download blocks", len(blob.HashList))
-//	}
-//	return json, err
-//}
-//
-//func (s *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (json *pb.UploadResponse, err error) {
-//	defer util.Catch(&err)
-//	logrus.Infoln("Request Upload", req.Path, len(req.Data), req.Hash)
-//	if len(req.Path) > 0 || len(req.Hash) > 0 {
-//		path := req.Path
-//		path = filepath.Clean("/" + path)
-//		hash, err := fs.Upload(path, req.Data, req.Hash)
-//		if err != nil {
-//			return &pb.UploadResponse{}, err
-//		}
-//		json = &pb.UploadResponse{
-//			Files: getFileList(getPathFromMetadata(ctx)),
-//			Hash:  hash,
-//		}
-//	} else {
-//		hash := fs.UploadBlock(req.Data)
-//		json = &pb.UploadResponse{
-//			Files: getFileList(getPathFromMetadata(ctx)), // TODO: There is no need to refresh files
-//			Hash:  hash,
-//		}
-//	}
-//	logrus.Infoln("Result Upload", hex.EncodeToString(json.Hash))
-//	return json, err
-//}
+func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp *pb.UploadResponse, err error) {
+	resp = new(pb.UploadResponse)
+	parent, leaf := filepath.Split(req.Path)
+	dir, err := node.GetDir(g.root, parent)
+	if err != nil {
+		return nil, err
+	}
+	b := g.root.Obj().NewBlob()
+	b.Reader = bytes.NewReader(req.Data)
+	err = dir.AddChild(g.root.Obj().NewFileMetadata(leaf, object.DefaultFileMode), b)
+	if err != nil {
+		return nil, err
+	}
+	resp.Files, err = getFileList(g.root, getPathFromMetadata(ctx))
+	return resp, err
+}
