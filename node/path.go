@@ -145,9 +145,7 @@ func (m *Mount) Rename(oldPath, newPath string) error {
 		if err != nil {
 			return err
 		}
-		metadata := *oldMetadata
-		metadata.Name = newName
-		return move(newDir, &metadata)
+		return move(newDir, oldMetadata, newName)
 	}
 	if err != nil {
 		return err
@@ -161,9 +159,7 @@ func (m *Mount) Rename(oldPath, newPath string) error {
 		if err != nil {
 			return err
 		}
-		metadata := *oldMetadata
-		metadata.Name = newName
-		return move(newDir, &metadata)
+		return move(newDir, oldMetadata, newName)
 	}
 	if newMetadata.IsDir() {
 		return e.EIsDir
@@ -186,15 +182,24 @@ func (m *Mount) Mv(oldPath, newPath string) error {
 	if err != nil {
 		return err
 	}
+	if newName == "" {
+		err = oldDir.RemoveChild(oldName, true)
+		if err != nil {
+			return err
+		}
+		newDir, err := m.GetDir(newPath)
+		if err != nil {
+			return err
+		}
+		return move(newDir, oldMetadata, oldName)
+	}
 	newMetadata, err := newDir.GetChild(newName)
 	if err == e.ErrNotExist {
 		err := oldDir.RemoveChild(oldName, true)
 		if err != nil {
 			return err
 		}
-		metadata := *oldMetadata
-		metadata.Name = newName
-		return move(newDir, &metadata)
+		return move(newDir, oldMetadata, newName)
 	}
 	if err != nil {
 		return err
@@ -208,9 +213,7 @@ func (m *Mount) Mv(oldPath, newPath string) error {
 		if err != nil {
 			return err
 		}
-		metadata := *oldMetadata
-		metadata.Name = newName
-		return move(newDir, &metadata)
+		return move(newDir, oldMetadata, newName)
 	}
 	if newMetadata.IsDir() {
 		err = oldDir.RemoveChild(oldName, true)
@@ -221,21 +224,21 @@ func (m *Mount) Mv(oldPath, newPath string) error {
 		if err != nil {
 			return err
 		}
-		metadata := *oldMetadata
-		metadata.Name = oldName
-		return move(newDir, &metadata)
+		return move(newDir, oldMetadata, oldName)
 	}
 	return nil
 }
 
-func move(newDir *Dir, metadata *object.Metadata) error {
+func move(newDir *Dir, oldMetadata *object.Metadata, name string) error {
+	metadata := *oldMetadata
+	metadata.Name = name
 	if metadata.IsFile() {
 		blob := newDir.Obj().NewBlob()
 		err := blob.Read(newDir.Storage(), metadata.Hash)
 		if err != nil {
 			return err
 		}
-		err = newDir.AddChild(metadata, blob)
+		err = newDir.AddChild(&metadata, blob)
 		return err
 	} else {
 		tree := newDir.Obj().NewTree()
@@ -243,7 +246,7 @@ func move(newDir *Dir, metadata *object.Metadata) error {
 		if err != nil {
 			return err
 		}
-		err = newDir.AddChild(metadata, tree)
+		err = newDir.AddChild(&metadata, tree)
 		return err
 	}
 }
@@ -262,13 +265,19 @@ func (m *Mount) Cp(oldPath, newPath string) error {
 	if err != nil {
 		return err
 	}
+	name := oldName
+	_, err = m.GetNode(path.Join(newPath, name))
+	if err == e.ENoSuchFileOrDir {
+		return move(newDir, oldMetadata, name)
+	}
+	if err != nil {
+		return err
+	}
 	for i := 1; i < math.MaxInt64; i++ {
 		name := oldName + "(" + strconv.Itoa(i) + ")"
 		_, err := m.GetNode(path.Join(newPath, name))
 		if err == e.ENoSuchFileOrDir {
-			metadata := *oldMetadata
-			metadata.Name = name
-			return move(newDir, &metadata)
+			return move(newDir, oldMetadata, name)
 		}
 		if err != nil {
 			return err
