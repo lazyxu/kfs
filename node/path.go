@@ -14,29 +14,35 @@ import (
 )
 
 type Mount struct {
-	root  *Dir
-	dirty []Node
+	name    string
+	root    *Dir
+	obj     *object.Obj
+	storage storage.Storage
 }
 
-func NewMount(root *Dir) *Mount {
+func NewMount(root *Dir, name string) *Mount {
 	return &Mount{
-		root:  root,
-		dirty: make([]Node, 0),
+		name:    name,
+		root:    root,
+		obj:     root.obj,
+		storage: root.storage,
 	}
 }
 
+func (m *Mount) Commit() string {
+	return m.root.Hash
+}
+
 func (m *Mount) Obj() *object.Obj {
-	return m.root.obj
+	return m.obj
 }
 
 func (m *Mount) Storage() storage.Storage {
-	return m.root.storage
+	return m.storage
 }
 
 // GetNode finds the Node by path.
 func (m *Mount) GetNode(path string) (Node, error) {
-	obj := m.Obj()
-	s := m.Storage()
 	var n Node = m.root
 	for path != "" {
 		i := strings.IndexRune(path, '/')
@@ -59,7 +65,7 @@ func (m *Mount) GetNode(path string) (Node, error) {
 			continue
 		}
 
-		d, err := obj.ReadDir(s, dir.Metadata.Hash)
+		d, err := m.obj.ReadDir(m.storage, dir.Metadata.Hash)
 		if err != nil {
 			return nil, err
 		}
@@ -68,10 +74,10 @@ func (m *Mount) GetNode(path string) (Node, error) {
 			return nil, err
 		}
 		if metadata.IsDir() {
-			n = NewDir(s, obj, metadata, dir)
+			n = NewDir(m.storage, m.obj, metadata, dir)
 			dir.Items[name] = n
 		} else {
-			n = NewFile(s, obj, metadata, dir)
+			n = NewFile(m.storage, m.obj, metadata, dir)
 			dir.Items[name] = n
 		}
 	}

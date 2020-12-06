@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/lazyxu/kfs/storage"
@@ -37,6 +38,7 @@ type ItemBase struct {
 	Parent  *Dir
 	mutex   sync.RWMutex
 	*object.Metadata
+	dirty uint64
 }
 
 func (i *ItemBase) Obj() *object.Obj {
@@ -112,6 +114,7 @@ func (i *ItemBase) updateObj(o object.Object) error {
 }
 
 func (i *ItemBase) update() error {
+	atomic.AddUint64(&i.dirty, 1)
 	if i.Parent == nil {
 		return nil
 	}
