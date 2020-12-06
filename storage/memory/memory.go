@@ -16,6 +16,7 @@ type Storage struct {
 	storage.BaseStorage
 	mutex sync.RWMutex
 	objs  map[int]map[string][]byte
+	refs  map[string]string
 }
 
 func New(hashFunc func() kfscrypto.Hash, checkOnWrite bool, checkOnRead bool) *Storage {
@@ -25,6 +26,7 @@ func New(hashFunc func() kfscrypto.Hash, checkOnWrite bool, checkOnRead bool) *S
 	return &Storage{
 		BaseStorage: storage.NewBase(hashFunc, checkOnWrite, checkOnRead),
 		objs:        objs,
+		refs:        make(map[string]string, 8),
 	}
 }
 
@@ -80,4 +82,24 @@ func (s *Storage) Delete(typ int, key string) error {
 	}
 	delete(typedObjs, key)
 	return nil
+}
+
+func (s *Storage) UpdateRef(name string, expect string, desire string) error {
+	s.mutex.Lock()
+	if expect != "" && s.refs[name] != expect {
+		return e.ErrInvalid
+	}
+	s.refs[name] = desire
+	s.mutex.Unlock()
+	return nil
+}
+
+func (s *Storage) GetRef(name string) (string, error) {
+	s.mutex.RLock()
+	hash, ok := s.refs[name]
+	s.mutex.RUnlock()
+	if !ok {
+		return "", e.ErrNotExist
+	}
+	return hash, nil
 }

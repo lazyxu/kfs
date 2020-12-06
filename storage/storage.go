@@ -9,12 +9,15 @@ import (
 const (
 	TypBlob = iota
 	TypTree
+	TypRef
 )
 
 type Storage interface {
 	Read(typ int, key string) (io.Reader, error)
 	Write(typ int, reader io.Reader) (string, error)
 	Delete(typ int, key string) error
+	UpdateRef(name string, expect string, desire string) error
+	GetRef(name string) (string, error)
 }
 
 type BaseStorage struct {

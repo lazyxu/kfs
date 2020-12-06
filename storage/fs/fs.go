@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"strconv"
@@ -46,6 +47,10 @@ func New(root string, hashFunc func() kfscrypto.Hash, checkOnWrite bool, checkOn
 		return nil, err
 	}
 	err = os.MkdirAll(path.Join(root, "objects", "blob"), dirPerm)
+	if err != nil {
+		return nil, err
+	}
+	err = os.MkdirAll(path.Join(root, "refs"), dirPerm)
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +117,16 @@ moveTempFile:
 }
 
 func (s *Storage) Delete(typ int, key string) error {
-	p := path.Join(s.root, "objects", typeToString(typ), key)
+	p := s.objectPath(typ, key)
 	return os.Remove(p)
+}
+
+func (s *Storage) UpdateRef(name string, expect string, desire string) error {
+	// TODO: expect
+	return ioutil.WriteFile(path.Join(s.root, "refs", name), []byte(desire), filePerm)
+}
+
+func (s *Storage) GetRef(name string) (string, error) {
+	bytes, err := ioutil.ReadFile(path.Join(s.root, "refs", name))
+	return string(bytes), err
 }

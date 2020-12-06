@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/lazyxu/kfs/kfscrypto"
+
 	"github.com/lazyxu/kfs/storage"
 
 	"github.com/lazyxu/kfs/object"
@@ -15,22 +17,33 @@ import (
 
 type Mount struct {
 	name    string
+	head    string
 	root    *Dir
 	obj     *object.Obj
 	storage storage.Storage
 }
 
-func NewMount(root *Dir, name string) *Mount {
+func NewMount(name string, hashFunc func() kfscrypto.Hash, s storage.Storage,
+	serializable kfscrypto.Serializable) (*Mount, error) {
+	obj := object.Init(hashFunc, serializable)
+	head, err := s.GetRef(name)
+	if err != nil {
+		return nil, err
+	}
+	root := NewDir(s, obj, &object.Metadata{
+		Hash: head,
+	}, nil)
 	return &Mount{
 		name:    name,
+		head:    head,
 		root:    root,
-		obj:     root.obj,
-		storage: root.storage,
-	}
+		obj:     obj,
+		storage: s,
+	}, nil
 }
 
-func (m *Mount) Commit() string {
-	return m.root.Hash
+func (m *Mount) Commit() error {
+	return m.storage.UpdateRef(m.name, m.head, m.root.Hash)
 }
 
 func (m *Mount) Obj() *object.Obj {
