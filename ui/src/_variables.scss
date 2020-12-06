@@ -1,0 +1,21 @@
+:root {
+  --header-color: #3b3c3e;
+  --header-path-color: #646568;
+  --footer-color: #3c3c3c;
+  --background-color: #1e1f21;
+  --footer-hover-color: #555555;
+  --color: white;
+  --z-header: 1000;
+  --z-body: 100;
+  --z-body-select: 101;
+  --z-footer: 1000;
+}
+@keyframes slideIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
