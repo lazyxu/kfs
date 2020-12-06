@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/lazyxu/kfs/storage/fs"
+
 	"github.com/lazyxu/kfs/storage"
 
 	"github.com/lazyxu/kfs/node"
@@ -20,7 +22,6 @@ import (
 
 	"github.com/lazyxu/kfs/core/kfscommon"
 	"github.com/lazyxu/kfs/kfscrypto"
-	"github.com/lazyxu/kfs/storage/memory"
 
 	"github.com/lazyxu/kfs/core"
 
@@ -45,7 +46,11 @@ func init() {
 	hashFunc = func() kfscrypto.Hash {
 		return kfscrypto.FromStdHash(sha256.New())
 	}
-	s = memory.New(hashFunc, true, true)
+	var err error
+	s, err = fs.New("temp", hashFunc, true, true)
+	if err != nil {
+		panic(err)
+	}
 	serializable = &kfscrypto.GobEncoder{}
 	kfs := core.New(&kfscommon.Options{
 		UID:       uint32(os.Getuid()),
@@ -53,14 +58,14 @@ func init() {
 		DirPerms:  object.S_IFDIR | 0755,
 		FilePerms: object.S_IFREG | 0644,
 	}, s, hashFunc, serializable)
-	err := kfs.Storage().UpdateRef("default", "", kfs.Root().Hash)
+	err = kfs.Storage().UpdateRef("default", "", kfs.Root().Hash)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (g *RootDirectory) mount(name string) *node.Mount {
-	m, err := node.NewMount(name, hashFunc, s, serializable)
+func (g *RootDirectory) mount(ctx context.Context) *node.Mount {
+	m, err := node.NewMount(getMountFromMetadata(ctx), hashFunc, s, serializable)
 	if err != nil {
 		panic(err)
 	}
@@ -133,7 +138,7 @@ func getFileList(m *node.Mount, path string) ([]*pb.FileStat, error) {
 func (g *RootDirectory) Ls(ctx context.Context, req *pb.PathRequest) (resp *pb.FilesResponse, err error) {
 	resp = new(pb.FilesResponse)
 	defer catch(&err)
-	m := g.mount(getMountFromMetadata(ctx))
+	m := g.mount(ctx)
 	resp.Files, err = getFileList(m, req.Path)
 	if err != nil {
 		resp.Path = getPathFromMetadata(ctx)
@@ -252,7 +257,7 @@ func (g *RootDirectory) Remove(ctx context.Context, req *pb.PathListRequest) (re
 func (g *RootDirectory) Download(ctx context.Context, req *pb.DownloadRequest) (resp *pb.DownloadResponse, err error) {
 	resp = new(pb.DownloadResponse)
 	defer catch(&err)
-	m := g.mount(getMountFromMetadata(ctx))
+	m := g.mount(ctx)
 	n, err := m.GetFile(req.Path[0])
 	if err != nil {
 		return resp, err

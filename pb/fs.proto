@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package pb;
 
+option go_package = "github.com/lazyxu/kfs/pb";
+
 service KoalaFS {
     rpc ls(PathRequest) returns (FilesResponse) {}
     rpc cp(MoveRequest) returns (Void) {}

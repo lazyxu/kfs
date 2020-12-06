@@ -1,1 +1,1 @@
-protoc --go_out=plugins=grpc:. pb/fs.proto
+protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. pb/fs.proto
