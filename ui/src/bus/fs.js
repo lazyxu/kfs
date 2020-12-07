@@ -237,11 +237,15 @@ export async function download(pathList) {
 
 export async function upload(path, data, hashList = []) {
   try {
-    console.log('---grpc upload---', path, data, hashList);
+    let hash = await fetch("http://localhost:9999/api/upload", {
+      method: 'POST',
+      body: data,
+    }).then(resp=>resp.text())
+    console.log('---grpc upload---', path, hash);
     const message = await invoke(KoalaFS.upload,
-      new UploadRequest().setPath(path).setData(data).setHashList(hashList));
+      new UploadRequest().setPath(path).setHash(hash));
     console.log('---grpc upload cb---', message);
-    return message.getHash();
+    return hash;
   } catch (e) {
     console.error('---grpc upload error---', e);
     error('上传文件', e.message);

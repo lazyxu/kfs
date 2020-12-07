@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/lazyxu/kfs/storage/fs"
 
@@ -124,9 +125,9 @@ func getFileList(m *node.Mount, path string) ([]*pb.FileStat, error) {
 			Type:        cond.String(m.IsFile(), "file", "dir"),
 			Size:        m.Size,
 			AtimeMs:     cmp.LargeInt64(m.ModifyTime, m.ChangeTime),
-			MtimeMs:     m.ModifyTime,
-			CtimeMs:     m.ChangeTime,
-			BirthtimeMs: m.BirthTime,
+			MtimeMs:     m.ModifyTime / time.Millisecond.Nanoseconds(),
+			CtimeMs:     m.ChangeTime / time.Millisecond.Nanoseconds(),
+			BirthtimeMs: m.BirthTime / time.Millisecond.Nanoseconds(),
 			Files:       nil,
 		}
 	}

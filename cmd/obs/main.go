@@ -49,5 +49,15 @@ func main() {
 		}
 		return nil
 	})
+	e.POST("/api/upload", func(c echo.Context) error {
+		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+		b := obj.NewBlob()
+		b.Reader = c.Request().Body
+		hash, err := b.Write(s)
+		if err != nil {
+			return err
+		}
+		return c.String(http.StatusOK, hash)
+	})
 	e.Logger.Fatal(e.Start(":9999"))
 }
