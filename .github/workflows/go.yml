@@ -40,7 +40,7 @@ jobs:
         export PATH="$PATH:$(go env GOPATH)/bin"
 
     - name: Generate pb.go
-      run: sh tools/protoc.sh
+      run: sh tools/protoc_go.sh
 
     - name: Test
       run: go test -v ./...

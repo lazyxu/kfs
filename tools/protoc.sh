@@ -1,1 +1,2 @@
-protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. pb/fs.proto
+sh tools/protoc_go.sh
+sh tools/protoc_js.sh
