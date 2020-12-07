@@ -204,7 +204,7 @@ export async function download(pathList) {
       new DownloadRequest().setPathList(pathList));
     console.log('---grpc download cb---', message);
     for (const hash of message.getHashList()) {
-      fetch("http://localhost:9999/api/download/" + hash)
+      fetch("https://localhost:9999/api/download/" + hash)
         .then(response => response.blob())
         .then(blob => {
           const aTag = document.createElement('a');
@@ -237,13 +237,13 @@ export async function download(pathList) {
 
 export async function upload(path, data, hashList = []) {
   try {
-    let hash = await fetch("http://localhost:9999/api/upload", {
+    let hash = await fetch("https://localhost:9999/api/upload", {
       method: 'POST',
       body: data,
     }).then(resp=>resp.text())
-    console.log('---grpc upload---', path, hash);
+    console.log('---grpc upload---', path, hash, data.size);
     const message = await invoke(KoalaFS.upload,
-      new UploadRequest().setPath(path).setHash(hash));
+      new UploadRequest().setPath(path).setHash(hash).setSize(data.size));
     console.log('---grpc upload cb---', message);
     return hash;
   } catch (e) {

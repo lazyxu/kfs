@@ -49,8 +49,18 @@ func main() {
 		}
 		return nil
 	})
+	e.OPTIONS("/api/upload", func(c echo.Context) error {
+		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+		c.Response().Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		c.Response().Header().Set("Access-Control-Allow-Headers", "*")
+		c.Response().Header().Set("Access-Control-Expose-Headers", "Authorization")
+		return nil
+	})
 	e.POST("/api/upload", func(c echo.Context) error {
 		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+		c.Response().Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		c.Response().Header().Set("Access-Control-Allow-Headers", "*")
+		c.Response().Header().Set("Access-Control-Expose-Headers", "Authorization")
 		b := obj.NewBlob()
 		b.Reader = c.Request().Body
 		hash, err := b.Write(s)
@@ -59,5 +69,5 @@ func main() {
 		}
 		return c.String(http.StatusOK, hash)
 	})
-	e.Logger.Fatal(e.Start(":9999"))
+	e.Logger.Fatal(e.StartTLS(":9999", "cert.pem", "key.pem"))
 }

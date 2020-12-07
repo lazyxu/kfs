@@ -24,10 +24,10 @@ class component extends React.Component {
       console.log(this.input.files);
       const blob = this.input.files[0];
       const path = join(busState.pwd, blob.name);
-      const total = blob.size;
+      // const total = blob.size;
 
-      const bytes = await myFileReader(blob);
-      upload(path, bytes);
+      // const bytes = await myFileReader(blob);
+      upload(path, blob);
       // if (total <= MAX_BLOCK_BYTES) {
       //   const bytes = await myFileReader(blob);
       //   upload(path, bytes);

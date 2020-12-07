@@ -51,6 +51,10 @@ func init() {
 		panic(err)
 	}
 	serializable = &kfscrypto.GobEncoder{}
+	_, err = s.GetRef("default")
+	if err == nil {
+		return
+	}
 	kfs := core.New(&kfscommon.Options{
 		UID:       uint32(os.Getuid()),
 		GID:       uint32(os.Getgid()),
@@ -279,6 +283,7 @@ func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp
 		}
 		meta := m.Obj().NewFileMetadata(leaf, object.DefaultFileMode)
 		meta.Hash = req.Hash
+		meta.Size = req.Size
 		err = dir.AddChildMetadata(meta)
 		if err != nil {
 			return err
