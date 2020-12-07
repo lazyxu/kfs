@@ -43,7 +43,12 @@ func NewMount(name string, hashFunc func() kfscrypto.Hash, s storage.Storage,
 }
 
 func (m *Mount) Commit() error {
-	return m.storage.UpdateRef(m.name, m.head, m.root.Hash)
+	err := m.storage.UpdateRef(m.name, m.head, m.root.Hash)
+	if err != nil {
+		return err
+	}
+	m.head = m.root.Hash
+	return nil
 }
 
 func (m *Mount) Obj() *object.Obj {

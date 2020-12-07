@@ -85,6 +85,22 @@ func (i *Dir) AddChild(metadata *object.Metadata, item object.Object) error {
 	return i.updateObj(d)
 }
 
+func (i *Dir) AddChildMetadata(metadata *object.Metadata) error {
+	d, err := i.load()
+	if err != nil {
+		return err
+	}
+	for _, it := range d.Items {
+		if it.Name == metadata.Name {
+			return e.ErrExist
+		}
+	}
+
+	d.Items = append(d.Items, metadata)
+
+	return i.updateObj(d)
+}
+
 func (i *Dir) Create(name string, flags int) (*File, error) {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()

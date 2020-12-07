@@ -1,10 +1,8 @@
 package rootdirectory
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -258,17 +256,13 @@ func (g *RootDirectory) Download(ctx context.Context, req *pb.DownloadRequest) (
 	resp = new(pb.DownloadResponse)
 	defer catch(&err)
 	m := g.mount(ctx)
-	n, err := m.GetFile(req.Path[0])
-	if err != nil {
-		return resp, err
-	}
-	r, err := n.Content()
-	if err != nil {
-		return resp, err
-	}
-	resp.SingleFileContent, err = ioutil.ReadAll(r)
-	if err != nil {
-		return resp, err
+	resp.Hash = make([]string, len(req.Path))
+	for i, p := range req.Path {
+		n, err := m.GetFile(p)
+		if err != nil {
+			return resp, err
+		}
+		resp.Hash[i] = n.Hash
 	}
 	return resp, err
 }
@@ -282,9 +276,9 @@ func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp
 		if err != nil {
 			return err
 		}
-		b := m.Obj().NewBlob()
-		b.Reader = bytes.NewReader(req.Data)
-		err = dir.AddChild(m.Obj().NewFileMetadata(leaf, object.DefaultFileMode), b)
+		meta := m.Obj().NewFileMetadata(leaf, object.DefaultFileMode)
+		meta.Hash = req.Hash
+		err = dir.AddChildMetadata(meta)
 		if err != nil {
 			return err
 		}

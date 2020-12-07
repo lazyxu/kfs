@@ -8,6 +8,7 @@ require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/improbable-eng/grpc-web v0.13.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
+	github.com/labstack/echo/v4 v4.1.17 // indirect
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	github.com/smartystreets/goconvey v1.6.4

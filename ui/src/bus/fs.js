@@ -203,21 +203,32 @@ export async function download(pathList) {
     const message = await invoke(KoalaFS.download,
       new DownloadRequest().setPathList(pathList));
     console.log('---grpc download cb---', message);
-    const hashList = message.getHashList();
-    const blockCount = hashList.length;
-    if (hashList && blockCount > 0) {
-      const blobs = await map(hashList, async (hash, i) => {
-        const hashHex = hash.map((x) => (`00${x.toString(16)}`).slice(-2)).join('');
-        console.log(`download block ${i}/${blockCount}---`, hashHex);
-        const message = await invoke(KoalaFS.download,
-          new DownloadRequest().setHash(hash));
-        console.log(`download block ${i}/${blockCount} cb---`, hashHex, message);
-        return message.getSinglefilecontent();
-      }, 2);
-      createAndDownloadFile(basename(pathList[0]), [...blobs]);
-    } else {
-      createAndDownloadFile(basename(pathList[0]), [message.getSinglefilecontent()]);
+    for (const hash of message.getHashList()) {
+      fetch("http://localhost:9999/api/download/" + hash)
+        .then(response => response.blob())
+        .then(blob => {
+          const aTag = document.createElement('a');
+          aTag.download = basename(pathList[0]);
+          aTag.href = URL.createObjectURL(blob);
+          aTag.click();
+          URL.revokeObjectURL(blob);
+        })
     }
+    // const hashList = message.getHashList();
+    // const blockCount = hashList.length;
+    // if (hashList && blockCount > 0) {
+    //   const blobs = await map(hashList, async (hash, i) => {
+    //     const hashHex = hash.map((x) => (`00${x.toString(16)}`).slice(-2)).join('');
+    //     console.log(`download block ${i}/${blockCount}---`, hashHex);
+    //     const message = await invoke(KoalaFS.download,
+    //       new DownloadRequest().setHash(hash));
+    //     console.log(`download block ${i}/${blockCount} cb---`, hashHex, message);
+    //     return message.getSinglefilecontent();
+    //   }, 2);
+    //   createAndDownloadFile(basename(pathList[0]), [...blobs]);
+    // } else {
+    //   createAndDownloadFile(basename(pathList[0]), [message.getSinglefilecontent()]);
+    // }
   } catch (e) {
     console.error('---grpc download error---', e);
     error('下载文件', e.message);

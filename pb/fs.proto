@@ -25,7 +25,6 @@ message PathListRequest {
 
 message DownloadRequest {
     repeated string path = 1;
-    bytes hash = 2;
 }
 
 message FilesResponse {
@@ -54,17 +53,14 @@ message Void {
 }
 
 message DownloadResponse {
-    repeated bytes hash = 1;
-    bytes singleFileContent = 2;
+    repeated string hash = 1;
 }
 
 message UploadRequest {
     string path = 1;
-    repeated bytes hash = 2;
-    bytes data = 3;
+    string hash = 2;
 }
 
 message UploadResponse {
     repeated FileStat files = 1;
-    bytes hash = 2;
 }
