@@ -60,7 +60,7 @@ func init() {
 		GID:       uint32(os.Getgid()),
 		DirPerms:  object.S_IFDIR | 0755,
 		FilePerms: object.S_IFREG | 0644,
-	}, s, hashFunc, serializable)
+	}, s, serializable)
 	err = kfs.Storage().UpdateRef("default", "", kfs.Root().Hash)
 	if err != nil {
 		panic(err)

@@ -32,13 +32,13 @@ func main() {
 		panic(err)
 	}
 	serializable = &kfscrypto.GobEncoder{}
-	obj = object.Init(hashFunc, serializable)
+	obj = object.Init(s)
 	e := echo.New()
 	e.GET("/api/download/:hash", func(c echo.Context) error {
 		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
 		hash := c.Param("hash")
 		b := obj.NewBlob()
-		err := b.Read(s, hash)
+		err := b.Read(hash)
 		if err != nil {
 			return err
 		}
@@ -63,7 +63,7 @@ func main() {
 		c.Response().Header().Set("Access-Control-Expose-Headers", "Authorization")
 		b := obj.NewBlob()
 		b.Reader = c.Request().Body
-		hash, err := b.Write(s)
+		hash, err := b.Write()
 		if err != nil {
 			return err
 		}

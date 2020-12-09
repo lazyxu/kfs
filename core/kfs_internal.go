@@ -68,31 +68,42 @@ var defaultBinaries = []string{
 
 const DevNull = "/dev/null"
 
-func New(opt *kfscommon.Options, s storage.Storage,
-	hashFunc func() kfscrypto.Hash, serializable kfscrypto.Serializable) *KFS {
-	obj := object.Init(hashFunc, serializable)
+func New(opt *kfscommon.Options, s storage.Storage, serializable kfscrypto.Serializable) *KFS {
+	obj := object.Init(s)
 	kfs := &KFS{
 		Opt:     opt,
 		storage: s,
 		pwd:     "/tmp",
 		obj:     obj,
 	}
-	obj.EmptyDir.Write(kfs.storage)
-	obj.EmptyFile.Write(kfs.storage)
+	obj.EmptyDir.Write()
+	obj.EmptyFile.Write()
 	kfs.root = node.NewDir(s, obj, obj.NewDirMetadata("", object.DefaultDirMode), nil)
 	err := kfs.root.AddChild(obj.NewDirMetadata("demo", object.DefaultDirMode), obj.EmptyDir)
 	if err != nil {
 		panic(err)
 	}
+	hello := obj.NewBlob()
+	hello.Reader = strings.NewReader("hello world")
+	_, err = hello.Write()
+	if err != nil {
+		panic(err)
+	}
 	err = kfs.root.AddChild(
 		obj.NewFileMetadata("hello", object.DefaultFileMode),
-		&object.Blob{Reader: strings.NewReader("hello world")})
+		hello)
+	if err != nil {
+		panic(err)
+	}
+	index := obj.NewBlob()
+	index.Reader = strings.NewReader("index")
+	_, err = hello.Write()
 	if err != nil {
 		panic(err)
 	}
 	err = kfs.root.AddChild(
 		obj.NewFileMetadata("index.js", object.DefaultFileMode),
-		&object.Blob{Reader: strings.NewReader("index")})
+		index)
 	if err != nil {
 		panic(err)
 	}

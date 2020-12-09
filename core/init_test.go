@@ -33,7 +33,7 @@ func init() {
 		GID:       uint32(os.Getgid()),
 		DirPerms:  object.S_IFDIR | 0755,
 		FilePerms: object.S_IFREG | 0644,
-	}, storage, hashFunc, serializable)
+	}, storage, serializable)
 	kfs.Mkdir("/etc", object.DefaultDirMode)
 	group, _ := kfs.Create("/etc/group")
 	group.WriteAt([]byte(strings.Repeat("x", 1000)), 0)

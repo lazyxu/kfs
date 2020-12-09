@@ -25,7 +25,7 @@ type Mount struct {
 
 func NewMount(name string, hashFunc func() kfscrypto.Hash, s storage.Storage,
 	serializable kfscrypto.Serializable) (*Mount, error) {
-	obj := object.Init(hashFunc, serializable)
+	obj := object.Init(s)
 	head, err := s.GetRef(name)
 	if err != nil {
 		return nil, err
@@ -239,7 +239,7 @@ func move(newDir *Dir, oldMetadata *object.Metadata, name string) error {
 	metadata.Name = name
 	if metadata.IsFile() {
 		blob := newDir.Obj().NewBlob()
-		err := blob.Read(newDir.Storage(), metadata.Hash)
+		err := blob.Read(metadata.Hash)
 		if err != nil {
 			return err
 		}
@@ -247,7 +247,7 @@ func move(newDir *Dir, oldMetadata *object.Metadata, name string) error {
 		return err
 	} else {
 		tree := newDir.Obj().NewTree()
-		err := tree.Read(newDir.Storage(), metadata.Hash)
+		err := tree.Read(metadata.Hash)
 		if err != nil {
 			return err
 		}

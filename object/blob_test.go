@@ -20,13 +20,15 @@ func TestSpec(t *testing.T) {
 			return kfscrypto.FromStdHash(sha256.New())
 		}
 		s := memory.New(hashFunc)
-		blob1 := &Blob{Reader: strings.NewReader(str)}
+		obj := Init(s)
+		blob1 := obj.NewBlob()
+		blob1.Reader = strings.NewReader(str)
 		Convey("Write to storage", func() {
-			key, err1 := blob1.Write(s)
+			key, err1 := blob1.Write()
 			So(err1, ShouldBeNil)
 			Convey("Read from storage", func() {
-				blob2 := new(Blob)
-				err2 := blob2.Read(s, key)
+				blob2 := obj.NewBlob()
+				err2 := blob2.Read(key)
 				So(err2, ShouldBeNil)
 				Convey("Should be same", func() {
 					buf := new(strings.Builder)

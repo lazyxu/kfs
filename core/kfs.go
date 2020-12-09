@@ -129,8 +129,8 @@ func (kfs *KFS) Rename(oldPath, newPath string) error {
 
 func (kfs *KFS) move(metadata *object.Metadata, newDir *node2.Dir) error {
 	if metadata.IsFile() {
-		blob := new(object.Blob)
-		err := blob.Read(kfs.storage, metadata.Hash)
+		blob := kfs.obj.NewBlob()
+		err := blob.Read(metadata.Hash)
 		if err != nil {
 			return err
 		}
@@ -138,7 +138,7 @@ func (kfs *KFS) move(metadata *object.Metadata, newDir *node2.Dir) error {
 		return err
 	} else {
 		tree := new(object.Tree)
-		err := tree.Read(kfs.storage, metadata.Hash)
+		err := tree.Read(metadata.Hash)
 		if err != nil {
 			return err
 		}

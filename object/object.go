@@ -10,20 +10,26 @@ import (
 type Object interface {
 	IsDir() bool
 	IsFile() bool
-	Write(s storage.Storage) (string, error)
-	Read(s storage.Storage, key string) error
+	Write() (string, error)
+	Read(key string) error
 }
 
 type Obj struct {
-	serializable  kfscrypto.Serializable
+	s             storage.Storage
 	EmptyDirHash  string
 	EmptyFileHash string
 	EmptyFile     *Blob
 	EmptyDir      *Tree
 }
 
-func Init(hashFunc func() kfscrypto.Hash, serializable kfscrypto.Serializable) *Obj {
-	o := &Obj{serializable: serializable}
+var serializable kfscrypto.Serializable
+
+func init() {
+	serializable = &kfscrypto.GobEncoder{}
+}
+
+func Init(s storage.Storage) *Obj {
+	o := &Obj{s: s}
 	o.EmptyFile = &Blob{
 		base:   o,
 		Reader: bytes.NewReader([]byte{}),
@@ -32,7 +38,7 @@ func Init(hashFunc func() kfscrypto.Hash, serializable kfscrypto.Serializable) *
 		base:  o,
 		Items: make([]*Metadata, 0),
 	}
-	hw := hashFunc()
+	hw := s.HashFunc()
 	err := serializable.Serialize(o.EmptyDir, hw)
 	if err != nil {
 		panic(err)
@@ -41,7 +47,7 @@ func Init(hashFunc func() kfscrypto.Hash, serializable kfscrypto.Serializable) *
 	if err != nil {
 		panic(err)
 	}
-	o.EmptyFileHash, err = hashFunc().Cal(o.EmptyFile.Reader)
+	o.EmptyFileHash, err = s.HashFunc().Cal(o.EmptyFile.Reader)
 	if err != nil {
 		panic(err)
 	}

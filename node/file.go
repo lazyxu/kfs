@@ -67,8 +67,8 @@ func (i *File) ReadAll() ([]byte, error) {
 }
 
 func (i *File) Content() (io.Reader, error) {
-	blob := new(object.Blob)
-	err := blob.Read(i.storage, i.Metadata.Hash)
+	blob := i.obj.NewBlob()
+	err := blob.Read(i.Metadata.Hash)
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +88,8 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 		return 0, e.ENegative
 	}
 	buf := make([]byte, offset)
-	blob := new(object.Blob)
-	err = blob.Read(i.storage, i.Metadata.Hash)
+	blob := i.obj.NewBlob()
+	err = blob.Read(i.Metadata.Hash)
 	if err != nil {
 		return 0, err
 	}
@@ -112,7 +112,7 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 		content = append(content, remain...)
 	}
 	blob.Reader = bytes.NewReader(content)
-	hash, err := blob.Write(i.storage)
+	hash, err := blob.Write()
 	if err != nil {
 		return 0, err
 	}
@@ -125,9 +125,9 @@ func (i *File) Truncate(size int64) error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 	content := make([]byte, size)
-	blob := new(object.Blob)
+	blob := i.obj.NewBlob()
 	if size != 0 {
-		err := blob.Read(i.storage, i.Metadata.Hash)
+		err := blob.Read(i.Metadata.Hash)
 		if err != nil {
 			return err
 		}
@@ -137,7 +137,7 @@ func (i *File) Truncate(size int64) error {
 		}
 	}
 	blob.Reader = bytes.NewReader(content)
-	hash, err := blob.Write(i.storage)
+	hash, err := blob.Write()
 	if err != nil {
 		return err
 	}

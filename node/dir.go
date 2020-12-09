@@ -34,7 +34,7 @@ func NewDir(s storage.Storage, obj *object.Obj, metadata *object.Metadata, paren
 
 func (i *Dir) load() (*object.Tree, error) {
 	tree := i.obj.NewTree()
-	err := tree.Read(i.storage, i.Metadata.Hash)
+	err := tree.Read(i.Metadata.Hash)
 	return tree, err
 }
 
@@ -75,7 +75,7 @@ func (i *Dir) AddChild(metadata *object.Metadata, item object.Object) error {
 		}
 		metadata.Size = size
 	}
-	itemHash, err := item.Write(i.storage)
+	itemHash, err := item.Write()
 	if err != nil {
 		return err
 	}

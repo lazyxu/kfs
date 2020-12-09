@@ -38,7 +38,7 @@ func NewFS() *FS {
 			GID:       uint32(os.Getgid()),
 			DirPerms:  fuse.S_IFDIR | 0755,
 			FilePerms: fuse.S_IFREG | 0644,
-		}, storage, hashFunc, serializable),
+		}, storage, serializable),
 	}
 }
 

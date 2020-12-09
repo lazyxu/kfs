@@ -21,26 +21,26 @@ func (o *Tree) GetNode(name string) (*Metadata, error) {
 	return nil, e.ENoSuchFileOrDir
 }
 
-func (o *Tree) Write(s storage.Storage) (string, error) {
+func (o *Tree) Write() (string, error) {
 	b := &bytes.Buffer{}
-	err := o.base.serializable.Serialize(o, b)
+	err := serializable.Serialize(o, b)
 	if err != nil {
 		return "", e.EWriteObject
 	}
-	return s.Write(storage.TypTree, b)
+	return o.base.s.Write(storage.TypTree, b)
 }
 
-func (o *Tree) Read(s storage.Storage, key string) error {
-	reader, err := s.Read(storage.TypTree, key)
+func (o *Tree) Read(key string) error {
+	reader, err := o.base.s.Read(storage.TypTree, key)
 	if err != nil {
 		return err
 	}
-	return o.base.serializable.Deserialize(o, reader)
+	return serializable.Deserialize(o, reader)
 }
 
 func (base *Obj) ReadDir(s storage.Storage, key string) (*Tree, error) {
 	tree := base.NewTree()
-	err := tree.Read(s, key)
+	err := tree.Read(key)
 	return tree, err
 }
 

@@ -105,7 +105,7 @@ func (i *ItemBase) Sys() interface{} {
 }
 
 func (i *ItemBase) updateObj(o object.Object) error {
-	hash, err := o.Write(i.storage)
+	hash, err := o.Write()
 	if err != nil {
 		return err
 	}
