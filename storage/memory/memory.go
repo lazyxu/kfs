@@ -19,12 +19,12 @@ type Storage struct {
 	refs  map[string]string
 }
 
-func New(hashFunc func() kfscrypto.Hash, checkOnWrite bool, checkOnRead bool) *Storage {
+func New(hashFunc func() kfscrypto.Hash) *Storage {
 	objs := make(map[int]map[string][]byte, 16)
 	objs[storage.TypTree] = make(map[string][]byte, 16)
 	objs[storage.TypBlob] = make(map[string][]byte, 16)
 	return &Storage{
-		BaseStorage: storage.NewBase(hashFunc, checkOnWrite, checkOnRead),
+		BaseStorage: storage.NewBase(hashFunc),
 		objs:        objs,
 		refs:        make(map[string]string, 8),
 	}

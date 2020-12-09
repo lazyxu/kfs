@@ -21,26 +21,14 @@ type Storage interface {
 }
 
 type BaseStorage struct {
-	hashFunc     func() kfscrypto.Hash
-	checkOnWrite bool
-	checkOnRead  bool
+	hashFunc func() kfscrypto.Hash
 }
 
-func NewBase(hashFunc func() kfscrypto.Hash, checkOnWrite bool, checkOnRead bool) BaseStorage {
+func NewBase(hashFunc func() kfscrypto.Hash) BaseStorage {
 	return BaseStorage{
-		hashFunc:     hashFunc,
-		checkOnRead:  checkOnWrite,
-		checkOnWrite: checkOnRead,
+		hashFunc: hashFunc,
 	}
 }
 func (s *BaseStorage) HashFunc() kfscrypto.Hash {
 	return s.hashFunc()
-}
-
-func (s *BaseStorage) CheckOnRead() bool {
-	return s.checkOnRead
-}
-
-func (s *BaseStorage) CheckOnWrite() bool {
-	return s.checkOnWrite
 }

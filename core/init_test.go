@@ -26,7 +26,7 @@ func init() {
 		return kfscrypto.FromStdHash(sha256.New())
 	}
 	//storage, _ := fs.New("temp", hashFunc, true, true)
-	storage := memory.New(hashFunc, true, true)
+	storage := memory.New(hashFunc)
 	serializable := &kfscrypto.GobEncoder{}
 	kfs = New(&kfscommon.Options{
 		UID:       uint32(os.Getuid()),

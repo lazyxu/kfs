@@ -27,7 +27,7 @@ func main() {
 		return kfscrypto.FromStdHash(sha256.New())
 	}
 	var err error
-	s, err = fs.New("temp", hashFunc, true, true)
+	s, err = fs.New("temp", hashFunc)
 	if err != nil {
 		panic(err)
 	}

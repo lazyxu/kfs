@@ -30,7 +30,7 @@ func NewFS() *FS {
 	hashFunc := func() kfscrypto.Hash {
 		return kfscrypto.FromStdHash(sha256.New())
 	}
-	storage := memory.New(hashFunc, true, true)
+	storage := memory.New(hashFunc)
 	serializable := &kfscrypto.GobEncoder{}
 	return &FS{
 		kfs: core.New(&kfscommon.Options{

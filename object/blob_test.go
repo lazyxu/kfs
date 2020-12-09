@@ -19,7 +19,7 @@ func TestSpec(t *testing.T) {
 		hashFunc := func() kfscrypto.Hash {
 			return kfscrypto.FromStdHash(sha256.New())
 		}
-		s := memory.New(hashFunc, false, false)
+		s := memory.New(hashFunc)
 		blob1 := &Blob{Reader: strings.NewReader(str)}
 		Convey("Write to storage", func() {
 			key, err1 := blob1.Write(s)

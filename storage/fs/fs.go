@@ -2,7 +2,6 @@ package fs
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -41,7 +40,7 @@ func (s *Storage) objectPath(typ int, key string) string {
 	return path.Join(s.root, "objects", typeToString(typ), key)
 }
 
-func New(root string, hashFunc func() kfscrypto.Hash, checkOnWrite bool, checkOnRead bool) (*Storage, error) {
+func New(root string, hashFunc func() kfscrypto.Hash) (*Storage, error) {
 	err := os.MkdirAll(path.Join(root, "objects", "tree"), dirPerm)
 	if err != nil {
 		return nil, err
@@ -59,7 +58,7 @@ func New(root string, hashFunc func() kfscrypto.Hash, checkOnWrite bool, checkOn
 		return nil, err
 	}
 	return &Storage{
-		BaseStorage: storage.NewBase(hashFunc, checkOnWrite, checkOnRead),
+		BaseStorage: storage.NewBase(hashFunc),
 		root:        "temp",
 		tempFileID:  0,
 	}, nil
@@ -91,25 +90,18 @@ func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
 	}
 	p := s.objectPath(typ, key)
 	fCurrent, err := os.OpenFile(p, os.O_RDONLY, filePerm)
-	if os.IsNotExist(err) {
-		goto moveTempFile
+	if err == nil {
+		return key, fCurrent.Close()
 	}
+	if !os.IsNotExist(err) {
+		return "", err
+	}
+	// file not exists
+	err = os.Rename(pTemp, p)
 	if err != nil {
 		return "", err
 	}
-	if s.CheckOnWrite() {
-		actualKey, err := s.HashFunc().Cal(fCurrent)
-		if err != nil {
-			return "", err
-		}
-		if actualKey != key {
-			fmt.Fprintf(os.Stderr, "invalid object: expected %s, actual %s", key, actualKey)
-			goto moveTempFile
-		}
-	}
-	return key, nil
-moveTempFile:
-	err = os.Rename(pTemp, p)
+	err = os.Chmod(p, 0444) // read only
 	if err != nil {
 		return "", err
 	}
