@@ -1,7 +1,6 @@
 package fs
 
 import (
-	"bufio"
 	"io"
 	"io/ioutil"
 	"os"
@@ -37,15 +36,19 @@ func typeToString(typ int) string {
 }
 
 func (s *Storage) objectPath(typ int, key string) string {
-	return path.Join(s.root, "objects", typeToString(typ), key)
+	return path.Join(s.root, typeToString(typ), key)
+}
+
+func (s *Storage) stageObjectPath(typ int, key string) string {
+	return path.Join(s.root, "stage", typeToString(typ), key)
 }
 
 func New(root string, hashFunc func() kfscrypto.Hash) (*Storage, error) {
-	err := os.MkdirAll(path.Join(root, "objects", "tree"), dirPerm)
+	err := os.MkdirAll(path.Join(root, "tree"), dirPerm)
 	if err != nil {
 		return nil, err
 	}
-	err = os.MkdirAll(path.Join(root, "objects", "blob"), dirPerm)
+	err = os.MkdirAll(path.Join(root, "blob"), dirPerm)
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +57,14 @@ func New(root string, hashFunc func() kfscrypto.Hash) (*Storage, error) {
 		return nil, err
 	}
 	err = os.MkdirAll(path.Join(root, "temp"), dirPerm)
+	if err != nil {
+		return nil, err
+	}
+	err = os.MkdirAll(path.Join(root, "stage", "tree"), dirPerm)
+	if err != nil {
+		return nil, err
+	}
+	err = os.MkdirAll(path.Join(root, "stage", "blob"), dirPerm)
 	if err != nil {
 		return nil, err
 	}
@@ -75,10 +86,9 @@ func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	w := bufio.NewWriter(fTemp)
 	hw := s.HashFunc()
 	rr := io.TeeReader(reader, hw)
-	_, err = w.ReadFrom(rr)
+	_, err = io.Copy(fTemp, rr)
 	if err != nil {
 		fTemp.Close()
 		return "", err
@@ -107,6 +117,31 @@ func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
 	}
 	return key, nil
 }
+
+//func (s *Storage) Transaction(f func() error) (uint32, error) {
+//	pCommit := path.Join(s.root, "stage", strconv.FormatUint(uint64(id), 10))
+//	err := os.RemoveAll(pCommit)
+//	if err != nil {
+//		return id, err
+//	}
+//	err = os.MkdirAll(pCommit, dirPerm)
+//	if err != nil {
+//		return id, err
+//	}
+//	err = os.MkdirAll(path.Join(pCommit, "tree"), dirPerm)
+//	if err != nil {
+//		return id, err
+//	}
+//	err = os.MkdirAll(path.Join(pCommit, "blob"), dirPerm)
+//	if err != nil {
+//		return id, err
+//	}
+//	err = f()
+//	if err != nil {
+//		return id, err
+//	}
+//	return id, nil
+//}
 
 func (s *Storage) Delete(typ int, key string) error {
 	p := s.objectPath(typ, key)

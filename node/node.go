@@ -104,7 +104,7 @@ func (i *ItemBase) Sys() interface{} {
 	return i.Metadata
 }
 
-func (i *ItemBase) updateObj(o object.Object) error {
+func (i *ItemBase) updateObj(o *object.Tree) error {
 	hash, err := o.Write()
 	if err != nil {
 		return err

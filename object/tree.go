@@ -43,11 +43,3 @@ func (base *Obj) ReadDir(s storage.Storage, key string) (*Tree, error) {
 	err := tree.Read(key)
 	return tree, err
 }
-
-func (o *Tree) IsDir() bool {
-	return true
-}
-
-func (o *Tree) IsFile() bool {
-	return false
-}

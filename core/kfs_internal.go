@@ -76,10 +76,16 @@ func New(opt *kfscommon.Options, s storage.Storage, serializable kfscrypto.Seria
 		pwd:     "/tmp",
 		obj:     obj,
 	}
-	obj.EmptyDir.Write()
-	obj.EmptyFile.Write()
+	_, err := obj.WriteTree(obj.EmptyDir)
+	if err != nil {
+		panic(err)
+	}
+	_, err = obj.WriteBlob(obj.EmptyFile.Reader)
+	if err != nil {
+		panic(err)
+	}
 	kfs.root = node.NewDir(s, obj, obj.NewDirMetadata("", object.DefaultDirMode), nil)
-	err := kfs.root.AddChild(obj.NewDirMetadata("demo", object.DefaultDirMode), obj.EmptyDir)
+	err = kfs.root.AddChild(obj.NewDirMetadata("demo", object.DefaultDirMode), obj.EmptyDir)
 	if err != nil {
 		panic(err)
 	}

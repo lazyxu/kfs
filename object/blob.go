@@ -20,11 +20,3 @@ func (o *Blob) Read(key string) error {
 	o.Reader, err = o.base.s.Read(storage.TypBlob, key)
 	return err
 }
-
-func (o *Blob) IsDir() bool {
-	return false
-}
-
-func (o *Blob) IsFile() bool {
-	return true
-}

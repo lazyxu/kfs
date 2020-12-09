@@ -67,12 +67,11 @@ func (i *File) ReadAll() ([]byte, error) {
 }
 
 func (i *File) Content() (io.Reader, error) {
-	blob := i.obj.NewBlob()
-	err := blob.Read(i.Metadata.Hash)
+	r, err := i.obj.ReadBlob(i.Metadata.Hash)
 	if err != nil {
 		return nil, err
 	}
-	return blob.Reader, nil
+	return r, nil
 }
 
 func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
@@ -88,31 +87,29 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 		return 0, e.ENegative
 	}
 	buf := make([]byte, offset)
-	blob := i.obj.NewBlob()
-	err = blob.Read(i.Metadata.Hash)
+	r, err := i.obj.ReadBlob(i.Metadata.Hash)
 	if err != nil {
 		return 0, err
 	}
 	if offset != 0 {
-		_, err = blob.Reader.Read(buf)
+		_, err = r.Read(buf)
 		if err != nil {
 			return 0, err
 		}
 	}
 	content = append(buf, content...)
-	n, err = skip(blob.Reader, int64(l))
+	n, err = skip(r, int64(l))
 	if err != nil && err != io.EOF {
 		return n, err
 	}
 	if err != io.EOF {
-		remain, err := ioutil.ReadAll(blob.Reader)
+		remain, err := ioutil.ReadAll(r)
 		if err != nil {
 			return 0, err
 		}
 		content = append(content, remain...)
 	}
-	blob.Reader = bytes.NewReader(content)
-	hash, err := blob.Write()
+	hash, err := i.obj.WriteBlob(bytes.NewReader(content))
 	if err != nil {
 		return 0, err
 	}

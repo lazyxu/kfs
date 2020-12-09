@@ -14,18 +14,23 @@ import (
 
 type Storage struct {
 	storage.BaseStorage
-	mutex sync.RWMutex
-	objs  map[int]map[string][]byte
-	refs  map[string]string
+	mutex    sync.RWMutex
+	objs     map[int]map[string][]byte
+	tempObjs map[int]map[string][]byte
+	refs     map[string]string
 }
 
 func New(hashFunc func() kfscrypto.Hash) *Storage {
 	objs := make(map[int]map[string][]byte, 16)
 	objs[storage.TypTree] = make(map[string][]byte, 16)
 	objs[storage.TypBlob] = make(map[string][]byte, 16)
+	tempObjs := make(map[int]map[string][]byte, 16)
+	tempObjs[storage.TypTree] = make(map[string][]byte, 16)
+	tempObjs[storage.TypBlob] = make(map[string][]byte, 16)
 	return &Storage{
 		BaseStorage: storage.NewBase(hashFunc),
 		objs:        objs,
+		tempObjs:    tempObjs,
 		refs:        make(map[string]string, 8),
 	}
 }
@@ -71,6 +76,10 @@ func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
 	}
 	typedObjs[key] = data
 	return key, nil
+}
+
+func (s *Storage) Commit(typ int, key string) error {
+	return nil
 }
 
 func (s *Storage) Delete(typ int, key string) error {

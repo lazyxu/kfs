@@ -21,18 +21,15 @@ func TestSpec(t *testing.T) {
 		}
 		s := memory.New(hashFunc)
 		obj := Init(s)
-		blob1 := obj.NewBlob()
-		blob1.Reader = strings.NewReader(str)
 		Convey("Write to storage", func() {
-			key, err1 := blob1.Write()
+			key, err1 := obj.WriteBlob(strings.NewReader(str))
 			So(err1, ShouldBeNil)
 			Convey("Read from storage", func() {
-				blob2 := obj.NewBlob()
-				err2 := blob2.Read(key)
+				blob2, err2 := obj.ReadBlob(key)
 				So(err2, ShouldBeNil)
 				Convey("Should be same", func() {
 					buf := new(strings.Builder)
-					n, err3 := io.Copy(buf, blob2.Reader)
+					n, err3 := io.Copy(buf, blob2)
 					So(err3, ShouldBeNil)
 					So(n, ShouldEqual, len(str))
 					So(str, ShouldEqual, buf.String())

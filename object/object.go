@@ -2,14 +2,15 @@ package object
 
 import (
 	"bytes"
+	"io"
+
+	"github.com/lazyxu/kfs/core/e"
 
 	"github.com/lazyxu/kfs/kfscrypto"
 	"github.com/lazyxu/kfs/storage"
 )
 
 type Object interface {
-	IsDir() bool
-	IsFile() bool
 	Write() (string, error)
 	Read(key string) error
 }
@@ -60,4 +61,34 @@ func (base *Obj) NewBlob() *Blob {
 
 func (base *Obj) NewTree() *Tree {
 	return &Tree{base: base}
+}
+
+func (base *Obj) WriteBlob(r io.Reader) (string, error) {
+	return base.s.Write(storage.TypBlob, r)
+}
+
+func (base *Obj) ReadBlob(key string) (io.Reader, error) {
+	return base.s.Read(storage.TypBlob, key)
+}
+
+func (base *Obj) WriteTree(t *Tree) (string, error) {
+	b := &bytes.Buffer{}
+	err := serializable.Serialize(t, b)
+	if err != nil {
+		return "", e.EWriteObject
+	}
+	return base.s.Write(storage.TypTree, b)
+}
+
+func (base *Obj) ReadTree(key string) (*Tree, error) {
+	reader, err := base.s.Read(storage.TypTree, key)
+	if err != nil {
+		return nil, err
+	}
+	var t *Tree
+	err = serializable.Deserialize(t, reader)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
 }

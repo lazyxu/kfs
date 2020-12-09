@@ -37,13 +37,12 @@ func main() {
 	e.GET("/api/download/:hash", func(c echo.Context) error {
 		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
 		hash := c.Param("hash")
-		b := obj.NewBlob()
-		err := b.Read(hash)
+		r, err := obj.ReadBlob(hash)
 		if err != nil {
 			return err
 		}
 		c.Response().WriteHeader(http.StatusOK)
-		_, err = io.Copy(c.Response(), b.Reader)
+		_, err = io.Copy(c.Response(), r)
 		if err != nil {
 			return err
 		}
@@ -61,9 +60,7 @@ func main() {
 		c.Response().Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		c.Response().Header().Set("Access-Control-Allow-Headers", "*")
 		c.Response().Header().Set("Access-Control-Expose-Headers", "Authorization")
-		b := obj.NewBlob()
-		b.Reader = c.Request().Body
-		hash, err := b.Write()
+		hash, err := obj.WriteBlob(c.Request().Body)
 		if err != nil {
 			return err
 		}

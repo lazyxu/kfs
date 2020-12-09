@@ -13,7 +13,7 @@ function invoke(method, request, metadata) {
   return new Promise((resolve) => {
     grpc.invoke(method, {
       request,
-      host: 'https://localhost:9091',
+      host: `https://${window.location.hostname}:9091`,
       metadata: Object.assign(metadata || {}, { 'kfs-pwd': busState.pwd, 'kfs-mount': 'default' }),
       onHeaders: (headers) => {
         // console.log(headers);
@@ -204,7 +204,7 @@ export async function download(pathList) {
       new DownloadRequest().setPathList(pathList));
     console.log('---grpc download cb---', message);
     for (const hash of message.getHashList()) {
-      fetch("https://localhost:9999/api/download/" + hash)
+      fetch(`https://${window.location.hostname}:9999/api/download/` + hash)
         .then(response => response.blob())
         .then(blob => {
           const aTag = document.createElement('a');
@@ -237,7 +237,7 @@ export async function download(pathList) {
 
 export async function upload(path, data, hashList = []) {
   try {
-    let hash = await fetch("https://localhost:9999/api/upload", {
+    let hash = await fetch(`https://${window.location.hostname}:9999/api/upload`, {
       method: 'POST',
       body: data,
     }).then(resp=>resp.text())
