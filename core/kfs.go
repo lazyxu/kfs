@@ -101,9 +101,8 @@ func (kfs *KFS) Rename(oldPath, newPath string) error {
 		if err != nil {
 			return err
 		}
-		metadata := *oldMetadata
-		metadata.Name = newName
-		return kfs.move(&metadata, newDir)
+		metadata := oldMetadata.Builder().Name(newName).Build()
+		return kfs.move(metadata, newDir)
 	}
 	if err != nil {
 		return err
@@ -117,9 +116,8 @@ func (kfs *KFS) Rename(oldPath, newPath string) error {
 		if err != nil {
 			return err
 		}
-		metadata := *oldMetadata
-		metadata.Name = newName
-		return kfs.move(&metadata, newDir)
+		metadata := oldMetadata.Builder().Name(newName).Build()
+		return kfs.move(metadata, newDir)
 	}
 	if newMetadata.IsDir() {
 		return e.EIsDir

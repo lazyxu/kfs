@@ -235,15 +235,14 @@ func (m *Mount) Mv(oldPath, newPath string) error {
 }
 
 func move(newDir *Dir, oldMetadata *object.Metadata, name string) error {
-	metadata := *oldMetadata
-	metadata.Name = name
+	metadata := oldMetadata.Builder().Name(name).Build()
 	if metadata.IsFile() {
 		blob := newDir.Obj().NewBlob()
 		err := blob.Read(metadata.Hash)
 		if err != nil {
 			return err
 		}
-		err = newDir.AddChild(&metadata, blob)
+		err = newDir.AddChild(metadata, blob)
 		return err
 	} else {
 		tree := newDir.Obj().NewTree()
@@ -251,7 +250,7 @@ func move(newDir *Dir, oldMetadata *object.Metadata, name string) error {
 		if err != nil {
 			return err
 		}
-		err = newDir.AddChild(&metadata, tree)
+		err = newDir.AddChild(metadata, tree)
 		return err
 	}
 }

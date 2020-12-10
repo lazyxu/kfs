@@ -15,6 +15,65 @@ type Metadata struct {
 	Hash       string
 }
 
+func (m *Metadata) Builder() *MetadataBuilder {
+	return &MetadataBuilder{
+		mode:       m.Mode,
+		birthTime:  m.BirthTime,
+		modifyTime: m.ModifyTime,
+		changeTime: m.ChangeTime,
+		name:       m.Name,
+		Size:       m.Size,
+		hash:       m.Hash,
+	}
+}
+
+type MetadataBuilder struct {
+	mode       os.FileMode
+	birthTime  int64
+	modifyTime int64
+	changeTime int64
+	name       string
+	Size       int64
+	hash       string
+}
+
+func (m *MetadataBuilder) Mode(mode os.FileMode) *MetadataBuilder {
+	m.mode = mode
+	return m
+}
+
+func (m *MetadataBuilder) Hash(hash string) *MetadataBuilder {
+	m.hash = hash
+	return m
+}
+
+func (m *MetadataBuilder) Name(name string) *MetadataBuilder {
+	m.name = name
+	return m
+}
+
+func (m *MetadataBuilder) ChangeTime(changeTime int64) *MetadataBuilder {
+	m.changeTime = changeTime
+	return m
+}
+
+func (m *MetadataBuilder) ModifyTime(modifyTime int64) *MetadataBuilder {
+	m.modifyTime = modifyTime
+	return m
+}
+
+func (m *MetadataBuilder) Build() *Metadata {
+	return &Metadata{
+		Mode:       m.mode,
+		BirthTime:  m.birthTime,
+		ModifyTime: m.modifyTime,
+		ChangeTime: m.changeTime,
+		Name:       m.name,
+		Size:       m.Size,
+		Hash:       m.hash,
+	}
+}
+
 func (i *Metadata) IsFile() bool {
 	return i.Mode&S_IFREG != 0
 }

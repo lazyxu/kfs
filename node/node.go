@@ -57,14 +57,11 @@ func (i *ItemBase) CTime() time.Time {
 }
 
 func (i *ItemBase) SetATime(t time.Time) {
-	metadata := *i.Metadata
-	metadata.ChangeTime = t.UnixNano()
-	*i.Metadata = metadata
+	i.Metadata = i.Metadata.Builder().ChangeTime(t.UnixNano()).Build()
 }
+
 func (i *ItemBase) SetMTime(t time.Time) {
-	metadata := *i.Metadata
-	metadata.ModifyTime = t.UnixNano()
-	*i.Metadata = metadata
+	i.Metadata = i.Metadata.Builder().ModifyTime(t.UnixNano()).Build()
 }
 
 func (i *ItemBase) Name() string {
@@ -90,9 +87,8 @@ func (i *ItemBase) Mode() os.FileMode {
 }
 
 func (i *ItemBase) Chmod(mode os.FileMode) error {
-	metadata := *i.Metadata
-	metadata.Mode = metadata.Mode&(^os.ModePerm) | mode&os.ModePerm
-	*i.Metadata = metadata
+	mode = i.Metadata.Mode&(^os.ModePerm) | mode&os.ModePerm
+	i.Metadata = i.Metadata.Builder().Mode(mode).Build()
 	return i.update()
 }
 
