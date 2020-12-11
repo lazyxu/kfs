@@ -10,8 +10,8 @@ type Metadata struct {
 	BirthTime  int64
 	ModifyTime int64
 	ChangeTime int64
-	Name       string
 	Size       int64
+	Name       string
 	Hash       string
 }
 

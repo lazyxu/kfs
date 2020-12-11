@@ -17,7 +17,6 @@ import (
 )
 
 var s storage.Storage
-var serializable kfscrypto.Serializable
 var hashFunc func() kfscrypto.Hash
 var obj *object.Obj
 
@@ -31,7 +30,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	serializable = &kfscrypto.GobEncoder{}
 	obj = object.Init(s)
 	e := echo.New()
 	e.GET("/api/download/:hash", func(c echo.Context) error {

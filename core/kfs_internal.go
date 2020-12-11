@@ -10,8 +10,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/lazyxu/kfs/kfscrypto"
-
 	"github.com/lazyxu/kfs/storage"
 
 	"github.com/lazyxu/kfs/object"
@@ -68,7 +66,7 @@ var defaultBinaries = []string{
 
 const DevNull = "/dev/null"
 
-func New(opt *kfscommon.Options, s storage.Storage, serializable kfscrypto.Serializable) *KFS {
+func New(opt *kfscommon.Options, s storage.Storage) *KFS {
 	obj := object.Init(s)
 	kfs := &KFS{
 		Opt:     opt,

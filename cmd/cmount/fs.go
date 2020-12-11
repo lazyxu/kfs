@@ -31,14 +31,13 @@ func NewFS() *FS {
 		return kfscrypto.FromStdHash(sha256.New())
 	}
 	storage := memory.New(hashFunc)
-	serializable := &kfscrypto.GobEncoder{}
 	return &FS{
 		kfs: core.New(&kfscommon.Options{
 			UID:       uint32(os.Getuid()),
 			GID:       uint32(os.Getgid()),
 			DirPerms:  fuse.S_IFDIR | 0755,
 			FilePerms: fuse.S_IFREG | 0644,
-		}, storage, serializable),
+		}, storage),
 	}
 }
 

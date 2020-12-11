@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/lazyxu/kfs/core/e"
-
-	"github.com/lazyxu/kfs/kfscrypto"
 	"github.com/lazyxu/kfs/storage"
 )
 
@@ -23,12 +20,6 @@ type Obj struct {
 	EmptyDir      *Tree
 }
 
-var serializable kfscrypto.Serializable
-
-func init() {
-	serializable = &kfscrypto.GobEncoder{}
-}
-
 func Init(s storage.Storage) *Obj {
 	o := &Obj{s: s}
 	o.EmptyFile = &Blob{
@@ -40,11 +31,11 @@ func Init(s storage.Storage) *Obj {
 		Items: make([]*Metadata, 0),
 	}
 	hw := s.HashFunc()
-	err := serializable.Serialize(o.EmptyDir, hw)
+	r, err := o.EmptyDir.Serialize()
 	if err != nil {
 		panic(err)
 	}
-	o.EmptyDirHash, err = hw.Cal(nil)
+	o.EmptyDirHash, err = hw.Cal(r)
 	if err != nil {
 		panic(err)
 	}
@@ -72,21 +63,12 @@ func (base *Obj) ReadBlob(key string) (io.Reader, error) {
 }
 
 func (base *Obj) WriteTree(t *Tree) (string, error) {
-	b := &bytes.Buffer{}
-	err := serializable.Serialize(t, b)
-	if err != nil {
-		return "", e.EWriteObject
-	}
-	return base.s.Write(storage.TypTree, b)
+	return t.Write()
 }
 
 func (base *Obj) ReadTree(key string) (*Tree, error) {
-	reader, err := base.s.Read(storage.TypTree, key)
-	if err != nil {
-		return nil, err
-	}
 	var t *Tree
-	err = serializable.Deserialize(t, reader)
+	err := t.Read(key)
 	if err != nil {
 		return nil, err
 	}

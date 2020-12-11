@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/lazyxu/kfs/kfscrypto"
-
 	"github.com/lazyxu/kfs/storage"
 
 	"github.com/lazyxu/kfs/object"
@@ -23,8 +21,7 @@ type Mount struct {
 	storage storage.Storage
 }
 
-func NewMount(name string, hashFunc func() kfscrypto.Hash, s storage.Storage,
-	serializable kfscrypto.Serializable) (*Mount, error) {
+func NewMount(name string, s storage.Storage) (*Mount, error) {
 	obj := object.Init(s)
 	head, err := s.GetRef(name)
 	if err != nil {

@@ -27,13 +27,12 @@ func init() {
 	}
 	//storage, _ := fs.New("temp", hashFunc, true, true)
 	storage := memory.New(hashFunc)
-	serializable := &kfscrypto.GobEncoder{}
 	kfs = New(&kfscommon.Options{
 		UID:       uint32(os.Getuid()),
 		GID:       uint32(os.Getgid()),
 		DirPerms:  object.S_IFDIR | 0755,
 		FilePerms: object.S_IFREG | 0644,
-	}, storage, serializable)
+	}, storage)
 	kfs.Mkdir("/etc", object.DefaultDirMode)
 	group, _ := kfs.Create("/etc/group")
 	group.WriteAt([]byte(strings.Repeat("x", 1000)), 0)

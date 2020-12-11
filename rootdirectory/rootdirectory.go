@@ -38,7 +38,6 @@ func New() pb.KoalaFSServer {
 }
 
 var s storage.Storage
-var serializable kfscrypto.Serializable
 var hashFunc func() kfscrypto.Hash
 
 func init() {
@@ -50,7 +49,6 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	serializable = &kfscrypto.GobEncoder{}
 	_, err = s.GetRef("default")
 	if err == nil {
 		return
@@ -60,7 +58,7 @@ func init() {
 		GID:       uint32(os.Getgid()),
 		DirPerms:  object.S_IFDIR | 0755,
 		FilePerms: object.S_IFREG | 0644,
-	}, s, serializable)
+	}, s)
 	err = kfs.Storage().UpdateRef("default", "", kfs.Root().Hash())
 	if err != nil {
 		panic(err)
@@ -68,7 +66,7 @@ func init() {
 }
 
 func (g *RootDirectory) mount(ctx context.Context) *node.Mount {
-	m, err := node.NewMount(getMountFromMetadata(ctx), hashFunc, s, serializable)
+	m, err := node.NewMount(getMountFromMetadata(ctx), s)
 	if err != nil {
 		panic(err)
 	}
@@ -77,7 +75,7 @@ func (g *RootDirectory) mount(ctx context.Context) *node.Mount {
 
 func (g *RootDirectory) transaction(ctx context.Context, f func(m *node.Mount) error) (m *node.Mount, err error) {
 	for i := 0; i < 100; i++ {
-		m, err = node.NewMount(getMountFromMetadata(ctx), hashFunc, s, serializable)
+		m, err = node.NewMount(getMountFromMetadata(ctx), s)
 		if err != nil {
 			return nil, err
 		}
