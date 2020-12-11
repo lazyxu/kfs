@@ -33,12 +33,12 @@ type Node interface {
 }
 
 type ItemBase struct {
-	obj     *object.Obj
-	storage storage.Storage
-	Parent  *Dir
-	mutex   sync.RWMutex
-	*object.Metadata
-	dirty uint64
+	obj      *object.Obj
+	storage  storage.Storage
+	Parent   *Dir
+	mutex    sync.RWMutex
+	metadata *object.Metadata
+	dirty    uint64
 }
 
 func (i *ItemBase) Obj() *object.Obj {
@@ -49,23 +49,31 @@ func (i *ItemBase) Storage() storage.Storage {
 	return i.storage
 }
 
+func (i *ItemBase) Hash() string {
+	return i.metadata.Hash
+}
+
+func (i *ItemBase) Metadata() *object.Metadata {
+	return i.metadata
+}
+
 func (i *ItemBase) BTime() time.Time {
-	return time.Unix(0, i.Metadata.BirthTime)
+	return time.Unix(0, i.metadata.BirthTime)
 }
 func (i *ItemBase) CTime() time.Time {
-	return time.Unix(0, i.Metadata.ChangeTime)
+	return time.Unix(0, i.metadata.ChangeTime)
 }
 
 func (i *ItemBase) SetATime(t time.Time) {
-	i.Metadata = i.Metadata.Builder().ChangeTime(t.UnixNano()).Build()
+	i.metadata = i.metadata.Builder().ChangeTime(t.UnixNano()).Build()
 }
 
 func (i *ItemBase) SetMTime(t time.Time) {
-	i.Metadata = i.Metadata.Builder().ModifyTime(t.UnixNano()).Build()
+	i.metadata = i.metadata.Builder().ModifyTime(t.UnixNano()).Build()
 }
 
 func (i *ItemBase) Name() string {
-	return i.Metadata.Name
+	return i.metadata.Name
 }
 
 func (i *ItemBase) Path() string {
@@ -79,25 +87,25 @@ func (i *ItemBase) Path() string {
 }
 
 func (i *ItemBase) Size() int64 {
-	return i.Metadata.Size
+	return i.metadata.Size
 }
 
 func (i *ItemBase) Mode() os.FileMode {
-	return i.Metadata.Mode & os.ModePerm
+	return i.metadata.Mode() & os.ModePerm
 }
 
 func (i *ItemBase) Chmod(mode os.FileMode) error {
-	mode = i.Metadata.Mode&(^os.ModePerm) | mode&os.ModePerm
-	i.Metadata = i.Metadata.Builder().Mode(mode).Build()
+	mode = (i.metadata.Mode() & (^os.ModePerm)) | (mode & os.ModePerm)
+	i.metadata = i.metadata.Builder().Mode(mode).Build()
 	return i.update()
 }
 
 func (i *ItemBase) ModTime() time.Time {
-	return time.Unix(0, i.ModifyTime)
+	return time.Unix(0, i.metadata.ModifyTime)
 }
 
 func (i *ItemBase) Sys() interface{} {
-	return i.Metadata
+	return i.metadata
 }
 
 func (i *ItemBase) updateObj(o *object.Tree) error {
@@ -105,7 +113,7 @@ func (i *ItemBase) updateObj(o *object.Tree) error {
 	if err != nil {
 		return err
 	}
-	i.Metadata.Hash = hash
+	i.metadata.Hash = hash
 	return i.update()
 }
 
@@ -119,13 +127,21 @@ func (i *ItemBase) update() error {
 		return err
 	}
 	for index, item := range dd.Items {
-		if item.Name == i.Metadata.Name {
-			items := append(dd.Items[0:index], i.Metadata)
+		if item.Name == i.metadata.Name {
+			items := append(dd.Items[0:index], i.metadata)
 			dd.Items = append(items, dd.Items[index+1:]...)
 			return i.Parent.updateObj(dd)
 		}
 	}
 	return nil
+}
+
+func (i *ItemBase) IsDir() bool {
+	return i.metadata.IsDir()
+}
+
+func (i *ItemBase) IsFile() bool {
+	return i.metadata.IsFile()
 }
 
 func (i *ItemBase) Stat() (os.FileInfo, error) {

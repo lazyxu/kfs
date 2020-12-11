@@ -206,7 +206,7 @@ func SameFile(fi1, fi2 os.FileInfo) bool {
 	if !ok1 || !ok2 {
 		return false
 	}
-	return f1.Metadata == f2.Metadata
+	return f1.Metadata() == f2.Metadata()
 }
 
 const ModeSymlink = os.ModeSymlink

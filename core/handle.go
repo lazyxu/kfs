@@ -153,7 +153,7 @@ func (h *Handle) Readdir(n int) ([]os.FileInfo, error) {
 		infos[i] = &fileInfo{
 			name:    dir.Name,
 			size:    dir.Size,
-			mode:    dir.Mode,
+			mode:    dir.Mode(),
 			modTime: time.Unix(0, dir.ModifyTime),
 		}
 	}

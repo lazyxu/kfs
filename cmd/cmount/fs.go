@@ -321,7 +321,7 @@ func (fs *FS) stat(metadata *object.Metadata, stat *fuse.Stat_t) {
 	blocks := (size + 511) / 512
 	// stat.Dev // Device ID of device containing file. [IGNORED]
 	// stat.Ino // File serial number. [IGNORED unless the use_ino mount option is given.]
-	stat.Mode = uint32(metadata.Mode)
+	stat.Mode = uint32(metadata.Mode())
 	stat.Nlink = 1
 	stat.Uid = fs.kfs.Opt.UID
 	stat.Gid = fs.kfs.Opt.GID

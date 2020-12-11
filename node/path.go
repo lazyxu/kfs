@@ -43,11 +43,11 @@ func NewMount(name string, hashFunc func() kfscrypto.Hash, s storage.Storage,
 }
 
 func (m *Mount) Commit() error {
-	err := m.storage.UpdateRef(m.name, m.head, m.root.Hash)
+	err := m.storage.UpdateRef(m.name, m.head, m.root.Hash())
 	if err != nil {
 		return err
 	}
-	m.head = m.root.Hash
+	m.head = m.root.Hash()
 	return nil
 }
 
@@ -83,7 +83,7 @@ func (m *Mount) GetNode(path string) (Node, error) {
 			continue
 		}
 
-		d, err := m.obj.ReadDir(m.storage, dir.Metadata.Hash)
+		d, err := m.obj.ReadDir(m.storage, dir.metadata.Hash)
 		if err != nil {
 			return nil, err
 		}

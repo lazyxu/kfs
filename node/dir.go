@@ -25,7 +25,7 @@ func NewDir(s storage.Storage, obj *object.Obj, metadata *object.Metadata, paren
 		ItemBase: ItemBase{
 			storage:  s,
 			obj:      obj,
-			Metadata: metadata,
+			metadata: metadata,
 			Parent:   parent,
 		},
 		Items: make(map[string]Node),
@@ -34,7 +34,7 @@ func NewDir(s storage.Storage, obj *object.Obj, metadata *object.Metadata, paren
 
 func (i *Dir) load() (*object.Tree, error) {
 	tree := i.obj.NewTree()
-	err := tree.Read(i.Metadata.Hash)
+	err := tree.Read(i.metadata.Hash)
 	return tree, err
 }
 
@@ -105,7 +105,7 @@ func (i *Dir) Create(name string, flags int) (*File, error) {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 	f := NewFile(i.storage, i.obj, i.obj.NewFileMetadata(name, os.FileMode(flags)), i)
-	err := i.AddChild(f.Metadata, i.obj.EmptyFile)
+	err := i.AddChild(f.metadata, i.obj.EmptyFile)
 	if err != nil {
 		return nil, err
 	}

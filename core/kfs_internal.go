@@ -190,7 +190,7 @@ func (kfs *KFS) GetNode(path string) (n node.Node, err error) {
 			continue
 		}
 
-		d, err := kfs.obj.ReadDir(kfs.storage, dir.Metadata.Hash)
+		d, err := kfs.obj.ReadDir(kfs.storage, dir.Hash())
 		if err != nil {
 			return nil, err
 		}

@@ -61,7 +61,7 @@ func init() {
 		DirPerms:  object.S_IFDIR | 0755,
 		FilePerms: object.S_IFREG | 0644,
 	}, s, serializable)
-	err = kfs.Storage().UpdateRef("default", "", kfs.Root().Hash)
+	err = kfs.Storage().UpdateRef("default", "", kfs.Root().Hash())
 	if err != nil {
 		panic(err)
 	}
@@ -267,7 +267,7 @@ func (g *RootDirectory) Download(ctx context.Context, req *pb.DownloadRequest) (
 		if err != nil {
 			return resp, err
 		}
-		resp.Hash[i] = n.Hash
+		resp.Hash[i] = n.Hash()
 	}
 	return resp, err
 }

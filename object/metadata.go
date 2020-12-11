@@ -6,7 +6,7 @@ import (
 )
 
 type Metadata struct {
-	Mode       os.FileMode
+	Mmode      os.FileMode
 	BirthTime  int64
 	ModifyTime int64
 	ChangeTime int64
@@ -17,12 +17,12 @@ type Metadata struct {
 
 func (m *Metadata) Builder() *MetadataBuilder {
 	return &MetadataBuilder{
-		mode:       m.Mode,
+		mode:       m.Mmode,
 		birthTime:  m.BirthTime,
 		modifyTime: m.ModifyTime,
 		changeTime: m.ChangeTime,
 		name:       m.Name,
-		Size:       m.Size,
+		size:       m.Size,
 		hash:       m.Hash,
 	}
 }
@@ -33,7 +33,7 @@ type MetadataBuilder struct {
 	modifyTime int64
 	changeTime int64
 	name       string
-	Size       int64
+	size       int64
 	hash       string
 }
 
@@ -64,28 +64,32 @@ func (m *MetadataBuilder) ModifyTime(modifyTime int64) *MetadataBuilder {
 
 func (m *MetadataBuilder) Build() *Metadata {
 	return &Metadata{
-		Mode:       m.mode,
+		Mmode:      m.mode,
 		BirthTime:  m.birthTime,
 		ModifyTime: m.modifyTime,
 		ChangeTime: m.changeTime,
 		Name:       m.name,
-		Size:       m.Size,
+		Size:       m.size,
 		Hash:       m.hash,
 	}
 }
 
+func (i *Metadata) Mode() os.FileMode {
+	return i.Mmode
+}
+
 func (i *Metadata) IsFile() bool {
-	return i.Mode&S_IFREG != 0
+	return i.Mmode&S_IFREG != 0
 }
 
 func (i *Metadata) IsDir() bool {
-	return i.Mode&S_IFDIR != 0
+	return i.Mmode&S_IFDIR != 0
 }
 
 func (base *Obj) NewDirMetadata(name string, perm os.FileMode) *Metadata {
 	now := time.Now().UnixNano()
 	return &Metadata{
-		Mode:       S_IFDIR | (perm & os.ModePerm),
+		Mmode:      S_IFDIR | (perm & os.ModePerm),
 		BirthTime:  now,
 		ModifyTime: now,
 		ChangeTime: now,
@@ -98,7 +102,7 @@ func (base *Obj) NewDirMetadata(name string, perm os.FileMode) *Metadata {
 func (base *Obj) NewFileMetadata(name string, perm os.FileMode) *Metadata {
 	now := time.Now().UnixNano()
 	return &Metadata{
-		Mode:       S_IFREG | (perm & os.ModePerm),
+		Mmode:      S_IFREG | (perm & os.ModePerm),
 		BirthTime:  now,
 		ModifyTime: now,
 		ChangeTime: now,
