@@ -34,7 +34,7 @@ func NewDir(s storage.Storage, obj *object.Obj, metadata *object.Metadata, paren
 
 func (i *Dir) load() (*object.Tree, error) {
 	tree := i.obj.NewTree()
-	err := tree.Read(i.metadata.Hash)
+	err := tree.Read(i.metadata.Hash())
 	return tree, err
 }
 
@@ -57,41 +57,13 @@ func getSize(r io.Reader) (int64, error) {
 	}
 }
 
-func (i *Dir) AddChild(metadata *object.Metadata, item object.Object) error {
+func (i *Dir) AddChild(metadata *object.Metadata) error {
 	d, err := i.load()
 	if err != nil {
 		return err
 	}
 	for _, it := range d.Items {
-		if it.Name == metadata.Name {
-			return e.ErrExist
-		}
-	}
-
-	if blob, ok := item.(*object.Blob); ok {
-		size, err := getSize(blob.Reader)
-		if err != nil {
-			return err
-		}
-		metadata.Size = size
-	}
-	itemHash, err := item.Write()
-	if err != nil {
-		return err
-	}
-	metadata.Hash = itemHash
-	d.Items = append(d.Items, metadata)
-
-	return i.updateObj(d)
-}
-
-func (i *Dir) AddChildMetadata(metadata *object.Metadata) error {
-	d, err := i.load()
-	if err != nil {
-		return err
-	}
-	for _, it := range d.Items {
-		if it.Name == metadata.Name {
+		if it.Name() == metadata.Name() {
 			return e.ErrExist
 		}
 	}
@@ -105,7 +77,7 @@ func (i *Dir) Create(name string, flags int) (*File, error) {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 	f := NewFile(i.storage, i.obj, i.obj.NewFileMetadata(name, os.FileMode(flags)), i)
-	err := i.AddChild(f.metadata, i.obj.EmptyFile)
+	err := i.AddChild(f.metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +92,7 @@ func (i *Dir) GetChild(name string) (*object.Metadata, error) {
 		return nil, err
 	}
 	for _, item := range d.Items {
-		if item.Name == name {
+		if item.Name() == name {
 			return item, nil
 		}
 	}
@@ -135,8 +107,8 @@ func (i *Dir) RemoveChild(name string, all bool) error {
 		return err
 	}
 	for index, item := range d.Items {
-		if item.Name == name {
-			if all || item.IsFile() || item.Hash == i.obj.EmptyDirHash {
+		if item.Name() == name {
+			if all || item.IsFile() || item.Hash() == i.obj.EmptyDirHash {
 				d.Items = append(d.Items[0:index], d.Items[index+1:]...)
 				delete(i.Items, name)
 				return i.updateObj(d)
@@ -241,7 +213,7 @@ func (i *Dir) Readdirnames(n int, nameOffset int) (names []string, err error) {
 		}
 		names = make([]string, len(d.Items))
 		for ii, item := range d.Items {
-			names[ii] = item.Name
+			names[ii] = item.Name()
 		}
 		nameOffset = len(d.Items)
 		return names, nil
@@ -253,7 +225,7 @@ func (i *Dir) Readdirnames(n int, nameOffset int) (names []string, err error) {
 		if ii >= nameOffset+n {
 			break
 		}
-		names = append(names, d.Items[ii].Name)
+		names = append(names, d.Items[ii].Name())
 	}
 	return names, nil
 }

@@ -153,7 +153,7 @@ func TempDir(dir, pattern string) (name string, err error) {
 // If dir is the empty string, TempFile uses the default directory
 // for temporary files (see os.TempDir).
 // Multiple programs calling TempFile simultaneously
-// will not choose the same file. The caller can use f.Name()
+// will not choose the same file. The caller can use f.name()
 // to find the pathname of the file. It is the caller's responsibility
 // to remove the file when no longer needed.
 func TempFile(dir, pattern string) (f *Handle, err error) {

@@ -16,7 +16,7 @@ type Tree struct {
 
 func (o *Tree) GetNode(name string) (*Metadata, error) {
 	for _, it := range o.Items {
-		if it.Name == name {
+		if it.name == name {
 			return it, nil
 		}
 	}
@@ -35,34 +35,34 @@ func (o *Tree) Serialize() (io.Reader, error) {
 	b := &bytes.Buffer{}
 	var err error
 	for _, item := range o.Items {
-		err = binary.Write(b, binary.LittleEndian, uint32(item.Mmode))
+		err = binary.Write(b, binary.LittleEndian, uint32(item.mode))
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			return nil, err
 		}
-		err = binary.Write(b, binary.LittleEndian, item.BirthTime)
+		err = binary.Write(b, binary.LittleEndian, item.birthTime)
 		if err != nil {
 			return nil, err
 		}
-		err = binary.Write(b, binary.LittleEndian, item.ModifyTime)
+		err = binary.Write(b, binary.LittleEndian, item.modifyTime)
 		if err != nil {
 			return nil, err
 		}
-		err = binary.Write(b, binary.LittleEndian, item.ChangeTime)
+		err = binary.Write(b, binary.LittleEndian, item.changeTime)
 		if err != nil {
 			return nil, err
 		}
-		err = binary.Write(b, binary.LittleEndian, item.Size)
+		err = binary.Write(b, binary.LittleEndian, item.size)
 		if err != nil {
 			return nil, err
 		}
-		_, err = b.Write([]byte(item.Hash))
+		_, err = b.Write([]byte(item.hash))
 		if err != nil {
 			return nil, err
 		}
-		_, err = b.WriteString(item.Name)
+		_, err = b.WriteString(item.name)
 		if err != nil {
 			return nil, err
 		}
@@ -78,26 +78,26 @@ func (o *Tree) Deserialize(b io.Reader) error {
 	var err error
 	for {
 		item := new(Metadata)
-		err = binary.Read(b, binary.LittleEndian, &item.Mmode)
+		err = binary.Read(b, binary.LittleEndian, &item.mode)
 		if err == io.EOF {
 			return nil
 		}
 		if err != nil {
 			return err
 		}
-		err = binary.Read(b, binary.LittleEndian, &item.BirthTime)
+		err = binary.Read(b, binary.LittleEndian, &item.birthTime)
 		if err != nil {
 			return err
 		}
-		err = binary.Read(b, binary.LittleEndian, &item.ModifyTime)
+		err = binary.Read(b, binary.LittleEndian, &item.modifyTime)
 		if err != nil {
 			return err
 		}
-		err = binary.Read(b, binary.LittleEndian, &item.ChangeTime)
+		err = binary.Read(b, binary.LittleEndian, &item.changeTime)
 		if err != nil {
 			return err
 		}
-		err = binary.Read(b, binary.LittleEndian, &item.Size)
+		err = binary.Read(b, binary.LittleEndian, &item.size)
 		if err != nil {
 			return err
 		}
@@ -106,7 +106,7 @@ func (o *Tree) Deserialize(b io.Reader) error {
 		if err != nil {
 			return err
 		}
-		item.Hash = string(hash)
+		item.hash = string(hash)
 		for {
 			temp := make([]byte, 1)
 			_, err = b.Read(temp)
@@ -116,7 +116,7 @@ func (o *Tree) Deserialize(b io.Reader) error {
 			if temp[0] == '\n' {
 				break
 			}
-			item.Name += string(temp)
+			item.name += string(temp)
 		}
 		o.Items = append(o.Items, item)
 	}

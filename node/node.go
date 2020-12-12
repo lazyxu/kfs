@@ -50,7 +50,7 @@ func (i *ItemBase) Storage() storage.Storage {
 }
 
 func (i *ItemBase) Hash() string {
-	return i.metadata.Hash
+	return i.metadata.Hash()
 }
 
 func (i *ItemBase) Metadata() *object.Metadata {
@@ -58,10 +58,11 @@ func (i *ItemBase) Metadata() *object.Metadata {
 }
 
 func (i *ItemBase) BTime() time.Time {
-	return time.Unix(0, i.metadata.BirthTime)
+	return i.metadata.BirthTime()
 }
+
 func (i *ItemBase) CTime() time.Time {
-	return time.Unix(0, i.metadata.ChangeTime)
+	return i.metadata.ChangeTime()
 }
 
 func (i *ItemBase) SetATime(t time.Time) {
@@ -73,7 +74,7 @@ func (i *ItemBase) SetMTime(t time.Time) {
 }
 
 func (i *ItemBase) Name() string {
-	return i.metadata.Name
+	return i.metadata.Name()
 }
 
 func (i *ItemBase) Path() string {
@@ -87,7 +88,7 @@ func (i *ItemBase) Path() string {
 }
 
 func (i *ItemBase) Size() int64 {
-	return i.metadata.Size
+	return i.metadata.Size()
 }
 
 func (i *ItemBase) Mode() os.FileMode {
@@ -101,7 +102,7 @@ func (i *ItemBase) Chmod(mode os.FileMode) error {
 }
 
 func (i *ItemBase) ModTime() time.Time {
-	return time.Unix(0, i.metadata.ModifyTime)
+	return i.metadata.ModifyTime()
 }
 
 func (i *ItemBase) Sys() interface{} {
@@ -113,7 +114,8 @@ func (i *ItemBase) updateObj(o *object.Tree) error {
 	if err != nil {
 		return err
 	}
-	i.metadata.Hash = hash
+	i.metadata = i.metadata.Builder().
+		Hash(hash).Build()
 	return i.update()
 }
 
@@ -127,7 +129,7 @@ func (i *ItemBase) update() error {
 		return err
 	}
 	for index, item := range dd.Items {
-		if item.Name == i.metadata.Name {
+		if item.Name() == i.metadata.Name() {
 			items := append(dd.Items[0:index], i.metadata)
 			dd.Items = append(items, dd.Items[index+1:]...)
 			return i.Parent.updateObj(dd)

@@ -817,7 +817,7 @@ func TestSymlink(t *testing.T) {
 		t.Fatalf("Stat(%q) failed: %v", from, err)
 	}
 	if fromstat.Name() != from {
-		t.Errorf("Stat(%q).Name() = %q, want %q", from, fromstat.Name(), from)
+		t.Errorf("Stat(%q).name() = %q, want %q", from, fromstat.Name(), from)
 	}
 	if fromstat.Mode()&ModeSymlink != 0 {
 		t.Fatalf("Stat(%q).Mode()&ModeSymlink = %v, want 0", from, fromstat.Mode()&ModeSymlink)
@@ -1651,7 +1651,7 @@ func TestHostname(t *testing.T) {
 	testenv.MustHaveExec(t)
 
 	// Check internal Hostname() against the output of /bin/hostname.
-	// Allow that the internal Hostname returns a Fully Qualified Domain Name
+	// Allow that the internal Hostname returns a Fully Qualified Domain name
 	// and the /bin/hostname only returns the first component
 	want := runBinHostname(t)
 	if hostname != want {

@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/lazyxu/kfs/storage/fs"
 
@@ -123,13 +122,13 @@ func getFileList(m *node.Mount, path string) ([]*pb.FileStat, error) {
 	l := make([]*pb.FileStat, len(list))
 	for i, m := range list {
 		l[i] = &pb.FileStat{
-			Name:        m.Name,
+			Name:        m.Name(),
 			Type:        cond.String(m.IsFile(), "file", "dir"),
-			Size:        m.Size,
-			AtimeMs:     cmp.LargeInt64(m.ModifyTime, m.ChangeTime),
-			MtimeMs:     m.ModifyTime / time.Millisecond.Nanoseconds(),
-			CtimeMs:     m.ChangeTime / time.Millisecond.Nanoseconds(),
-			BirthtimeMs: m.BirthTime / time.Millisecond.Nanoseconds(),
+			Size:        m.Size(),
+			AtimeMs:     cmp.LargeInt64(m.ModifyTime().UnixNano(), m.ChangeTime().UnixNano()),
+			MtimeMs:     m.ModifyTime().UnixNano(),
+			CtimeMs:     m.ChangeTime().UnixNano(),
+			BirthtimeMs: m.BirthTime().UnixNano(),
 			Files:       nil,
 		}
 	}
@@ -196,7 +195,7 @@ func (g *RootDirectory) CreateFile(ctx context.Context, req *pb.PathRequest) (re
 		if err != nil {
 			return err
 		}
-		err = dir.AddChild(m.Obj().NewFileMetadata(leaf, object.DefaultFileMode), m.Obj().EmptyFile)
+		err = dir.AddChild(m.Obj().NewFileMetadata(leaf, object.DefaultFileMode))
 		if err != nil {
 			return err
 		}
@@ -218,7 +217,7 @@ func (g *RootDirectory) Mkdir(ctx context.Context, req *pb.PathRequest) (resp *p
 		if err != nil {
 			return err
 		}
-		err = dir.AddChild(m.Obj().NewDirMetadata(leaf, object.DefaultDirMode), m.Obj().EmptyDir)
+		err = dir.AddChild(m.Obj().NewDirMetadata(leaf, object.DefaultDirMode))
 		if err != nil {
 			return err
 		}
@@ -279,10 +278,9 @@ func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp
 		if err != nil {
 			return err
 		}
-		meta := m.Obj().NewFileMetadata(leaf, object.DefaultFileMode)
-		meta.Hash = req.Hash
-		meta.Size = req.Size
-		err = dir.AddChildMetadata(meta)
+		meta := m.Obj().NewFileMetadata(leaf, object.DefaultFileMode).Builder().
+			Hash(req.Hash).Size(req.Size).Build()
+		err = dir.AddChild(meta)
 		if err != nil {
 			return err
 		}

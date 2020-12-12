@@ -19,7 +19,7 @@ func (kfs *KFS) Mkdir(name string, perm os.FileMode) error {
 	if err != nil {
 		return err
 	}
-	err = dir.AddChild(kfs.obj.NewDirMetadata(leaf, perm), kfs.obj.EmptyDir)
+	err = dir.AddChild(kfs.obj.NewDirMetadata(leaf, perm))
 	return err
 }
 
@@ -128,19 +128,19 @@ func (kfs *KFS) Rename(oldPath, newPath string) error {
 func (kfs *KFS) move(metadata *object.Metadata, newDir *node2.Dir) error {
 	if metadata.IsFile() {
 		blob := kfs.obj.NewBlob()
-		err := blob.Read(metadata.Hash)
+		err := blob.Read(metadata.Hash())
 		if err != nil {
 			return err
 		}
-		err = newDir.AddChild(metadata, blob)
+		err = newDir.AddChild(metadata)
 		return err
 	} else {
 		tree := new(object.Tree)
-		err := tree.Read(metadata.Hash)
+		err := tree.Read(metadata.Hash())
 		if err != nil {
 			return err
 		}
-		err = newDir.AddChild(metadata, tree)
+		err = newDir.AddChild(metadata)
 		return err
 	}
 }

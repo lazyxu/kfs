@@ -151,10 +151,10 @@ func (h *Handle) Readdir(n int) ([]os.FileInfo, error) {
 	infos := make([]os.FileInfo, len(dirs))
 	for i, dir := range dirs {
 		infos[i] = &fileInfo{
-			name:    dir.Name,
-			size:    dir.Size,
+			name:    dir.Name(),
+			size:    dir.Size(),
 			mode:    dir.Mode(),
-			modTime: time.Unix(0, dir.ModifyTime),
+			modTime: dir.ModifyTime(),
 		}
 	}
 	return infos, nil

@@ -27,9 +27,8 @@ func NewMount(name string, s storage.Storage) (*Mount, error) {
 	if err != nil {
 		return nil, err
 	}
-	root := NewDir(s, obj, &object.Metadata{
-		Hash: head,
-	}, nil)
+	root := NewDir(s, obj,
+		obj.NewDirMetadata(name, object.DefaultDirMode).Builder().Hash(head).Build(), nil)
 	return &Mount{
 		name:    name,
 		head:    head,
@@ -80,7 +79,7 @@ func (m *Mount) GetNode(path string) (Node, error) {
 			continue
 		}
 
-		d, err := m.obj.ReadDir(m.storage, dir.metadata.Hash)
+		d, err := m.obj.ReadDir(m.storage, dir.metadata.Hash())
 		if err != nil {
 			return nil, err
 		}
@@ -235,19 +234,19 @@ func move(newDir *Dir, oldMetadata *object.Metadata, name string) error {
 	metadata := oldMetadata.Builder().Name(name).Build()
 	if metadata.IsFile() {
 		blob := newDir.Obj().NewBlob()
-		err := blob.Read(metadata.Hash)
+		err := blob.Read(metadata.Hash())
 		if err != nil {
 			return err
 		}
-		err = newDir.AddChild(metadata, blob)
+		err = newDir.AddChild(metadata)
 		return err
 	} else {
 		tree := newDir.Obj().NewTree()
-		err := tree.Read(metadata.Hash)
+		err := tree.Read(metadata.Hash())
 		if err != nil {
 			return err
 		}
-		err = newDir.AddChild(metadata, tree)
+		err = newDir.AddChild(metadata)
 		return err
 	}
 }

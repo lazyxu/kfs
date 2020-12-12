@@ -76,6 +76,7 @@ func New(root string, hashFunc func() kfscrypto.Hash) (*Storage, error) {
 }
 
 func (s *Storage) Read(typ int, key string) (io.Reader, error) {
+	// TODO: close file.
 	return os.Open(s.objectPath(typ, key))
 }
 

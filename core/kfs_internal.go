@@ -83,31 +83,31 @@ func New(opt *kfscommon.Options, s storage.Storage) *KFS {
 		panic(err)
 	}
 	kfs.root = node.NewDir(s, obj, obj.NewDirMetadata("", object.DefaultDirMode), nil)
-	err = kfs.root.AddChild(obj.NewDirMetadata("demo", object.DefaultDirMode), obj.EmptyDir)
+	err = kfs.root.AddChild(obj.NewDirMetadata("demo", object.DefaultDirMode))
 	if err != nil {
 		panic(err)
 	}
 	hello := obj.NewBlob()
 	hello.Reader = strings.NewReader("hello world")
-	_, err = hello.Write()
+	helloHash, err := hello.Write()
 	if err != nil {
 		panic(err)
 	}
 	err = kfs.root.AddChild(
-		obj.NewFileMetadata("hello", object.DefaultFileMode),
-		hello)
+		obj.NewFileMetadata("hello", object.DefaultFileMode).
+			Builder().Hash(helloHash).Build())
 	if err != nil {
 		panic(err)
 	}
 	index := obj.NewBlob()
 	index.Reader = strings.NewReader("index")
-	_, err = hello.Write()
+	indexHash, err := hello.Write()
 	if err != nil {
 		panic(err)
 	}
 	err = kfs.root.AddChild(
-		obj.NewFileMetadata("index.js", object.DefaultFileMode),
-		index)
+		obj.NewFileMetadata("index.js", object.DefaultFileMode).
+			Builder().Hash(indexHash).Build())
 	if err != nil {
 		panic(err)
 	}

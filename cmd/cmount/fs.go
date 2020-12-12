@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/lazyxu/kfs/kfscrypto"
 	"github.com/lazyxu/kfs/storage/memory"
@@ -275,11 +274,11 @@ func (fs *FS) Readdir(path string,
 	}
 	for _, n := range nodes {
 		logrus.WithFields(logrus.Fields{
-			"name": n.Name,
+			"name": n.name,
 		}).Debug("node")
 		var stat fuse.Stat_t
 		fs.stat(n, &stat)
-		fill(n.Name, &stat, 0)
+		fill(n.name, &stat, 0)
 	}
 	return 0
 }
@@ -316,7 +315,7 @@ func (fs *FS) Listxattr(path string, fill func(name string) bool) int {
 
 // stat fills up the stat block for Node.
 func (fs *FS) stat(metadata *object.Metadata, stat *fuse.Stat_t) {
-	size := metadata.Size
+	size := metadata.size
 	blocks := (size + 511) / 512
 	// stat.Dev // Device ID of device containing file. [IGNORED]
 	// stat.Ino // File serial number. [IGNORED unless the use_ino mount option is given.]
@@ -326,11 +325,11 @@ func (fs *FS) stat(metadata *object.Metadata, stat *fuse.Stat_t) {
 	stat.Gid = fs.kfs.Opt.GID
 	// stat.Rdev // Device ID (if file is character or block special).
 	stat.Size = size
-	stat.Atim = fuse.NewTimespec(time.Unix(0, metadata.ModifyTime))
-	stat.Mtim = fuse.NewTimespec(time.Unix(0, metadata.ModifyTime))
-	stat.Ctim = fuse.NewTimespec(time.Unix(0, metadata.ChangeTime))
+	stat.Atim = fuse.NewTimespec(metadata.ModifyTime())
+	stat.Mtim = fuse.NewTimespec(metadata.ModifyTime())
+	stat.Ctim = fuse.NewTimespec(metadata.ChangeTime())
 	stat.Blksize = 512
 	stat.Blocks = blocks
-	stat.Birthtim = fuse.NewTimespec(time.Unix(0, metadata.BirthTime))
+	stat.Birthtim = fuse.NewTimespec(metadata.BirthTime())
 	// stat.Flags
 }
