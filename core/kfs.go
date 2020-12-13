@@ -126,23 +126,7 @@ func (kfs *KFS) Rename(oldPath, newPath string) error {
 }
 
 func (kfs *KFS) move(metadata *object.Metadata, newDir *node2.Dir) error {
-	if metadata.IsFile() {
-		blob := kfs.obj.NewBlob()
-		err := blob.Read(metadata.Hash())
-		if err != nil {
-			return err
-		}
-		err = newDir.AddChild(metadata)
-		return err
-	} else {
-		tree := new(object.Tree)
-		err := tree.Read(metadata.Hash())
-		if err != nil {
-			return err
-		}
-		err = newDir.AddChild(metadata)
-		return err
-	}
+	return newDir.AddChild(metadata)
 }
 
 // Remove removes the named file or (empty) directory.

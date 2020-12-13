@@ -7,11 +7,6 @@ import (
 	"github.com/lazyxu/kfs/storage"
 )
 
-type Object interface {
-	Write() (string, error)
-	Read(key string) error
-}
-
 type Obj struct {
 	s             storage.Storage
 	EmptyDirHash  string
@@ -62,15 +57,23 @@ func (base *Obj) ReadBlob(key string) (io.Reader, error) {
 	return base.s.Read(storage.TypBlob, key)
 }
 
+func (base *Obj) ReadBlobByWriter(key string, w io.Writer) (int64, error) {
+	return base.s.ReadByWriter(storage.TypBlob, key, w)
+}
+
 func (base *Obj) WriteTree(t *Tree) (string, error) {
-	return t.Write()
+	r, err := t.Serialize()
+	if err != nil {
+		return "", err
+	}
+	return base.s.Write(storage.TypTree, r)
 }
 
 func (base *Obj) ReadTree(key string) (*Tree, error) {
-	var t *Tree
-	err := t.Read(key)
+	b, err := base.s.Read(storage.TypTree, key)
 	if err != nil {
 		return nil, err
 	}
-	return t, nil
+	t := base.NewTree()
+	return t, t.Deserialize(b)
 }

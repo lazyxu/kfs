@@ -79,7 +79,7 @@ func (m *Mount) GetNode(path string) (Node, error) {
 			continue
 		}
 
-		d, err := m.obj.ReadDir(m.storage, dir.metadata.Hash())
+		d, err := m.obj.ReadTree(dir.metadata.Hash())
 		if err != nil {
 			return nil, err
 		}
@@ -233,20 +233,10 @@ func (m *Mount) Mv(oldPath, newPath string) error {
 func move(newDir *Dir, oldMetadata *object.Metadata, name string) error {
 	metadata := oldMetadata.Builder().Name(name).Build()
 	if metadata.IsFile() {
-		blob := newDir.Obj().NewBlob()
-		err := blob.Read(metadata.Hash())
-		if err != nil {
-			return err
-		}
-		err = newDir.AddChild(metadata)
+		err := newDir.AddChild(metadata)
 		return err
 	} else {
-		tree := newDir.Obj().NewTree()
-		err := tree.Read(metadata.Hash())
-		if err != nil {
-			return err
-		}
-		err = newDir.AddChild(metadata)
+		err := newDir.AddChild(metadata)
 		return err
 	}
 }

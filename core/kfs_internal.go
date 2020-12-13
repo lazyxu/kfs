@@ -87,9 +87,7 @@ func New(opt *kfscommon.Options, s storage.Storage) *KFS {
 	if err != nil {
 		panic(err)
 	}
-	hello := obj.NewBlob()
-	hello.Reader = strings.NewReader("hello world")
-	helloHash, err := hello.Write()
+	helloHash, err := obj.WriteBlob(strings.NewReader("hello world"))
 	if err != nil {
 		panic(err)
 	}
@@ -99,9 +97,7 @@ func New(opt *kfscommon.Options, s storage.Storage) *KFS {
 	if err != nil {
 		panic(err)
 	}
-	index := obj.NewBlob()
-	index.Reader = strings.NewReader("index")
-	indexHash, err := hello.Write()
+	indexHash, err := obj.WriteBlob(strings.NewReader("index"))
 	if err != nil {
 		panic(err)
 	}
@@ -188,7 +184,7 @@ func (kfs *KFS) GetNode(path string) (n node.Node, err error) {
 			continue
 		}
 
-		d, err := kfs.obj.ReadDir(kfs.storage, dir.Hash())
+		d, err := kfs.obj.ReadTree(dir.Hash())
 		if err != nil {
 			return nil, err
 		}

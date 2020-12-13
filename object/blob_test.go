@@ -2,7 +2,6 @@ package object
 
 import (
 	"crypto/sha256"
-	"io"
 	"strings"
 	"testing"
 
@@ -25,13 +24,10 @@ func TestSpec(t *testing.T) {
 			key, err1 := obj.WriteBlob(strings.NewReader(str))
 			So(err1, ShouldBeNil)
 			Convey("Read from storage", func() {
-				blob2, err2 := obj.ReadBlob(key)
+				buf := new(strings.Builder)
+				_, err2 := obj.ReadBlobByWriter(key, buf)
 				So(err2, ShouldBeNil)
 				Convey("Should be same", func() {
-					buf := new(strings.Builder)
-					n, err3 := io.Copy(buf, blob2)
-					So(err3, ShouldBeNil)
-					So(n, ShouldEqual, len(str))
 					So(str, ShouldEqual, buf.String())
 				})
 			})

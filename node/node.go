@@ -110,7 +110,7 @@ func (i *ItemBase) Sys() interface{} {
 }
 
 func (i *ItemBase) updateObj(o *object.Tree) error {
-	hash, err := o.Write()
+	hash, err := i.obj.WriteTree(o)
 	if err != nil {
 		return err
 	}

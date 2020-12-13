@@ -6,7 +6,6 @@ import (
 	"io"
 
 	"github.com/lazyxu/kfs/core/e"
-	"github.com/lazyxu/kfs/storage"
 )
 
 type Tree struct {
@@ -21,14 +20,6 @@ func (o *Tree) GetNode(name string) (*Metadata, error) {
 		}
 	}
 	return nil, e.ENoSuchFileOrDir
-}
-
-func (o *Tree) Write() (string, error) {
-	r, err := o.Serialize()
-	if err != nil {
-		return "", err
-	}
-	return o.base.s.Write(storage.TypTree, r)
 }
 
 func (o *Tree) Serialize() (io.Reader, error) {
@@ -120,18 +111,4 @@ func (o *Tree) Deserialize(b io.Reader) error {
 		}
 		o.Items = append(o.Items, item)
 	}
-}
-
-func (o *Tree) Read(key string) error {
-	b, err := o.base.s.Read(storage.TypTree, key)
-	if err != nil {
-		return err
-	}
-	return o.Deserialize(b)
-}
-
-func (base *Obj) ReadDir(s storage.Storage, key string) (*Tree, error) {
-	tree := base.NewTree()
-	err := tree.Read(key)
-	return tree, err
 }

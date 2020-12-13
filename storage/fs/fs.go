@@ -75,6 +75,19 @@ func New(root string, hashFunc func() kfscrypto.Hash) (*Storage, error) {
 	}, nil
 }
 
+func (s *Storage) ReadByWriter(typ int, key string, writer io.Writer) (int64, error) {
+	f, err := os.Open(s.objectPath(typ, key))
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+	n, err := io.Copy(writer, f)
+	if err != nil {
+		return n, err
+	}
+	return n, err
+}
+
 func (s *Storage) Read(typ int, key string) (io.Reader, error) {
 	// TODO: close file.
 	return os.Open(s.objectPath(typ, key))

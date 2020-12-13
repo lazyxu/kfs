@@ -33,9 +33,7 @@ func NewDir(s storage.Storage, obj *object.Obj, metadata *object.Metadata, paren
 }
 
 func (i *Dir) load() (*object.Tree, error) {
-	tree := i.obj.NewTree()
-	err := tree.Read(i.metadata.Hash())
-	return tree, err
+	return i.obj.ReadTree(i.metadata.Hash())
 }
 
 func getSize(r io.Reader) (int64, error) {

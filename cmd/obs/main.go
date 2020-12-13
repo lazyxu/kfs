@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/sha256"
-	"io"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -35,15 +34,11 @@ func main() {
 	e.GET("/api/download/:hash", func(c echo.Context) error {
 		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
 		hash := c.Param("hash")
-		r, err := obj.ReadBlob(hash)
+		_, err := obj.ReadBlobByWriter(hash, c.Response())
 		if err != nil {
 			return err
 		}
 		c.Response().WriteHeader(http.StatusOK)
-		_, err = io.Copy(c.Response(), r)
-		if err != nil {
-			return err
-		}
 		return nil
 	})
 	e.OPTIONS("/api/upload", func(c echo.Context) error {
