@@ -13,8 +13,7 @@ const (
 )
 
 type Storage interface {
-	Read(typ int, key string) (io.Reader, error)
-	ReadByWriter(typ int, key string, writer io.Writer) (int64, error)
+	Read(typ int, key string, f func(reader io.Reader) error) error
 	Write(typ int, reader io.Reader) (string, error)
 	//Commit(typ int, key string) error
 	//Delete(typ int, key string) error

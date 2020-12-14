@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"io"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -34,7 +35,10 @@ func main() {
 	e.GET("/api/download/:hash", func(c echo.Context) error {
 		c.Response().Header().Set("Access-Control-Allow-Origin", "*")
 		hash := c.Param("hash")
-		_, err := obj.ReadBlobByWriter(hash, c.Response())
+		err := obj.ReadBlob(hash, func(r io.Reader) error {
+			_, err := io.Copy(c.Response(), r)
+			return err
+		})
 		if err != nil {
 			return err
 		}

@@ -53,12 +53,8 @@ func (base *Obj) WriteBlob(r io.Reader) (string, error) {
 	return base.s.Write(storage.TypBlob, r)
 }
 
-func (base *Obj) ReadBlob(key string) (io.Reader, error) {
-	return base.s.Read(storage.TypBlob, key)
-}
-
-func (base *Obj) ReadBlobByWriter(key string, w io.Writer) (int64, error) {
-	return base.s.ReadByWriter(storage.TypBlob, key, w)
+func (base *Obj) ReadBlob(key string, f func(io.Reader) error) error {
+	return base.s.Read(storage.TypBlob, key, f)
 }
 
 func (base *Obj) WriteTree(t *Tree) (string, error) {
@@ -70,10 +66,9 @@ func (base *Obj) WriteTree(t *Tree) (string, error) {
 }
 
 func (base *Obj) ReadTree(key string) (*Tree, error) {
-	b, err := base.s.Read(storage.TypTree, key)
-	if err != nil {
-		return nil, err
-	}
 	t := base.NewTree()
-	return t, t.Deserialize(b)
+	err := base.s.Read(storage.TypTree, key, func(r io.Reader) error {
+		return t.Deserialize(r)
+	})
+	return t, err
 }

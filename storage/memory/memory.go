@@ -35,33 +35,19 @@ func New(hashFunc func() kfscrypto.Hash) *Storage {
 	}
 }
 
-func (s *Storage) ReadByWriter(typ int, key string, writer io.Writer) (int64, error) {
+func (s *Storage) Read(typ int, key string, f func(reader io.Reader) error) error {
 	s.mutex.RLock()
-	defer s.mutex.RUnlock()
 	typedObjs, ok := s.objs[typ]
 	if !ok {
-		return 0, e.EInvalidType
+		s.mutex.RUnlock()
+		return e.EInvalidType
 	}
 	data, ok := typedObjs[key]
+	s.mutex.RUnlock()
 	if !ok {
-		return 0, e.ErrNotExist
+		return e.ErrNotExist
 	}
-	n, err := writer.Write(data)
-	return int64(n), err
-}
-
-func (s *Storage) Read(typ int, key string) (io.Reader, error) {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-	typedObjs, ok := s.objs[typ]
-	if !ok {
-		return nil, e.EInvalidType
-	}
-	data, ok := typedObjs[key]
-	if !ok {
-		return nil, e.ErrNotExist
-	}
-	return bytes.NewReader(data), nil
+	return f(bytes.NewReader(data))
 }
 
 func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
