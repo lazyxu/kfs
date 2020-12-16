@@ -2,21 +2,23 @@ package main
 
 import (
 	"net"
+	"net/http"
 
-	"github.com/lazyxu/kfs/pb"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
-func serverHttp(srv pb.KoalaFSServer) {
+func serverHttp(handler http.Handler) {
 	lis, err := net.Listen("tcp", httpPort)
 	if err != nil {
 		logrus.Fatal("failed to listen", err)
 	}
-	s := grpc.NewServer()
-	pb.RegisterKoalaFSServer(s, srv)
+	httpServer := &http.Server{
+		Addr:    httpsPort,
+		Handler: http.DefaultServeMux,
+	}
+	httpServer.Handler = handler
 	logrus.WithFields(logrus.Fields{"httpPort": httpPort}).Info("Listening")
-	if err := s.Serve(lis); err != nil {
+	if err := httpServer.Serve(lis); err != nil {
 		logrus.Fatal("failed to serve", err)
 	}
 }

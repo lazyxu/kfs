@@ -1,12 +1,8 @@
 package node
 
 import (
-	"bytes"
-	"errors"
 	"io"
 	"os"
-	"reflect"
-	"strings"
 
 	"github.com/lazyxu/kfs/storage"
 
@@ -34,25 +30,6 @@ func NewDir(s storage.Storage, obj *object.Obj, metadata *object.Metadata, paren
 
 func (i *Dir) load() (*object.Tree, error) {
 	return i.obj.ReadTree(i.metadata.Hash())
-}
-
-func getSize(r io.Reader) (int64, error) {
-	switch v := r.(type) {
-	case *bytes.Buffer:
-		return int64(v.Len()), nil
-	case *bytes.Reader:
-		return int64(v.Len()), nil
-	case *strings.Reader:
-		return int64(v.Len()), nil
-	case *os.File:
-		info, err := v.Stat()
-		if err != nil {
-			return 0, err
-		}
-		return info.Size(), nil
-	default:
-		return 0, errors.New("invalid type: " + reflect.TypeOf(r).String())
-	}
 }
 
 func (i *Dir) AddChild(metadata *object.Metadata) error {

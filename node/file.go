@@ -3,8 +3,8 @@ package node
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
-	"os"
+
+	"github.com/lazyxu/kfs/util"
 
 	"github.com/lazyxu/kfs/storage"
 
@@ -29,15 +29,6 @@ func NewFile(s storage.Storage, obj *object.Obj, metadata *object.Metadata, pare
 		},
 	}
 }
-func skip(reader io.Reader, off int64) (int, error) {
-	switch r := reader.(type) {
-	case io.Seeker:
-		n, err := r.Seek(off, io.SeekCurrent)
-		return int(n), err
-	}
-	n, err := io.CopyN(ioutil.Discard, reader, off)
-	return int(n), err
-}
 
 func (i *File) ReadAt(buff []byte, off int64) (int, error) {
 	i.mutex.RLock()
@@ -47,7 +38,7 @@ func (i *File) ReadAt(buff []byte, off int64) (int, error) {
 	}
 	var n int
 	err := i.Content(func(r io.Reader) error {
-		_, err := skip(r, off)
+		_, err := util.Skip(r, off)
 		if err != nil {
 			return err
 		}
@@ -75,25 +66,6 @@ func (i *File) Content(f func(reader io.Reader) error) error {
 	return i.obj.ReadBlob(i.metadata.Hash(), f)
 }
 
-func SizeOfReader(r io.Reader) (int64, error) {
-	switch r.(type) {
-	case *os.File:
-		rr := r.(*os.File)
-		info, err := rr.Stat()
-		if err != nil {
-			return 0, err
-		}
-		return info.Size(), nil
-	case *bytes.Reader:
-		rr := r.(*bytes.Reader)
-		return int64(rr.Len()), nil
-	case *bytes.Buffer:
-		rr := r.(*bytes.Buffer)
-		return int64(rr.Len()), nil
-	}
-	return 0, e.ErrInvalid
-}
-
 func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
@@ -115,7 +87,7 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 			}
 			buf = buf[:n]
 		}
-		n, err = skip(r, int64(l))
+		n, err = util.Skip(r, int64(l))
 		if err != nil && err != io.EOF {
 			return err
 		}
@@ -126,7 +98,7 @@ func (i *File) WriteAt(content []byte, offset int64) (n int, err error) {
 		if err != nil {
 			return err
 		}
-		remain, err := SizeOfReader(r)
+		remain, err := util.Size(r)
 		if err != nil {
 			return err
 		}

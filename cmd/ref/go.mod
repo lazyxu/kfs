@@ -1,4 +1,4 @@
-module github.com/lazyxu/kfs/cmd/obs
+module github.com/lazyxu/kfs/cmd/ref
 
 go 1.15
 

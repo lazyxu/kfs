@@ -2,26 +2,17 @@ package rootdirectory
 
 import (
 	"context"
-	"crypto/sha256"
-	"os"
 	"path/filepath"
-
-	"github.com/lazyxu/kfs/storage/fs"
 
 	"github.com/lazyxu/kfs/storage"
 
 	"github.com/lazyxu/kfs/node"
 
-	"github.com/lazyxu/kfs/utils/cmp"
+	"github.com/lazyxu/kfs/util/cmp"
 
-	"github.com/lazyxu/kfs/utils/cond"
+	"github.com/lazyxu/kfs/util/cond"
 
 	"github.com/lazyxu/kfs/object"
-
-	"github.com/lazyxu/kfs/core/kfscommon"
-	"github.com/lazyxu/kfs/kfscrypto"
-
-	"github.com/lazyxu/kfs/core"
 
 	"github.com/lazyxu/kfs/pb"
 	"github.com/sirupsen/logrus"
@@ -29,43 +20,16 @@ import (
 )
 
 type RootDirectory struct {
+	s storage.Storage
 	pb.UnimplementedKoalaFSServer
 }
 
-func New() pb.KoalaFSServer {
-	return &RootDirectory{}
-}
-
-var s storage.Storage
-var hashFunc func() kfscrypto.Hash
-
-func init() {
-	hashFunc = func() kfscrypto.Hash {
-		return kfscrypto.FromStdHash(sha256.New())
-	}
-	var err error
-	s, err = fs.New("temp", hashFunc)
-	if err != nil {
-		panic(err)
-	}
-	_, err = s.GetRef("default")
-	if err == nil {
-		return
-	}
-	kfs := core.New(&kfscommon.Options{
-		UID:       uint32(os.Getuid()),
-		GID:       uint32(os.Getgid()),
-		DirPerms:  object.S_IFDIR | 0755,
-		FilePerms: object.S_IFREG | 0644,
-	}, s)
-	err = kfs.Storage().UpdateRef("default", "", kfs.Root().Hash())
-	if err != nil {
-		panic(err)
-	}
+func New(s storage.Storage) pb.KoalaFSServer {
+	return &RootDirectory{s: s}
 }
 
 func (g *RootDirectory) mount(ctx context.Context) *node.Mount {
-	m, err := node.NewMount(getMountFromMetadata(ctx), s)
+	m, err := node.NewMount(getMountFromMetadata(ctx), g.s)
 	if err != nil {
 		panic(err)
 	}
@@ -74,7 +38,7 @@ func (g *RootDirectory) mount(ctx context.Context) *node.Mount {
 
 func (g *RootDirectory) transaction(ctx context.Context, f func(m *node.Mount) error) (m *node.Mount, err error) {
 	for i := 0; i < 100; i++ {
-		m, err = node.NewMount(getMountFromMetadata(ctx), s)
+		m, err = node.NewMount(getMountFromMetadata(ctx), g.s)
 		if err != nil {
 			return nil, err
 		}

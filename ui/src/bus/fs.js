@@ -13,7 +13,7 @@ function invoke(method, request, metadata) {
   return new Promise((resolve) => {
     grpc.invoke(method, {
       request,
-      host: `https://${window.location.hostname}:9091`,
+      host: `http://${window.location.hostname}:9091`,
       metadata: Object.assign(metadata || {}, { 'kfs-pwd': busState.pwd, 'kfs-mount': 'default' }),
       onHeaders: (headers) => {
         // console.log(headers);
@@ -204,15 +204,16 @@ export async function download(pathList) {
       new DownloadRequest().setPathList(pathList));
     console.log('---grpc download cb---', message);
     for (const hash of message.getHashList()) {
-      fetch(`https://${window.location.hostname}:9999/api/download/` + hash)
-        .then(response => response.blob())
-        .then(blob => {
-          const aTag = document.createElement('a');
-          aTag.download = basename(pathList[0]);
-          aTag.href = URL.createObjectURL(blob);
-          aTag.click();
-          URL.revokeObjectURL(blob);
-        })
+      const response = await fetch(`http://${window.location.hostname}:9091/api/download?hash=` + hash)
+      if (!response.ok) {
+        throw Error(await response.text())
+      }
+      const blob = await response.blob();
+      const aTag = document.createElement('a');
+      aTag.download = basename(pathList[0]);
+      aTag.href = URL.createObjectURL(blob);
+      aTag.click();
+      URL.revokeObjectURL(blob);
     }
     // const hashList = message.getHashList();
     // const blockCount = hashList.length;
@@ -237,10 +238,10 @@ export async function download(pathList) {
 
 export async function upload(path, data, hashList = []) {
   try {
-    let hash = await fetch(`https://${window.location.hostname}:9999/api/upload`, {
+    let hash = await fetch(`http://${window.location.hostname}:9091/api/upload`, {
       method: 'POST',
       body: data,
-    }).then(resp=>resp.text())
+    }).then(resp => resp.text())
     console.log('---grpc upload---', path, hash, data.size);
     const message = await invoke(KoalaFS.upload,
       new UploadRequest().setPath(path).setHash(hash).setSize(data.size));

@@ -4,9 +4,13 @@ go 1.15
 
 require (
 	github.com/billziss-gh/cgofuse v1.4.0 // indirect
+	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/golang/protobuf v1.4.3
+	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/improbable-eng/grpc-web v0.13.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo/v4 v4.1.17 // indirect
+	github.com/rs/cors v1.7.0 // indirect
 	github.com/sirupsen/logrus v1.6.0
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/stretchr/testify v1.4.0 // indirect
