@@ -204,7 +204,7 @@ export async function download(pathList) {
       new DownloadRequest().setPathList(pathList));
     console.log('---grpc download cb---', message);
     for (const hash of message.getHashList()) {
-      const response = await fetch(`http://${window.location.hostname}:9091/api/download?hash=` + hash)
+      const response = await fetch(`http://${window.location.hostname}:9091/api/download/${hash}`)
       if (!response.ok) {
         throw Error(await response.text())
       }
