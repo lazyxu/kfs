@@ -23,7 +23,7 @@ jobs:
 
     - name: Get dependencies
       run: |
-        go get -v -t -d ./...
+        cd kfscore && go get -v -t -d ./...
         if [ -f Gopkg.toml ]; then
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
@@ -43,4 +43,4 @@ jobs:
       run: sh tools/protoc_go.sh
 
     - name: Test
-      run: go test -v ./...
+      run: cd kfscore && go test -v ./...
