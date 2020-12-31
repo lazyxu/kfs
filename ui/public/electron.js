@@ -1,5 +1,3 @@
-require('./server');
-
 // 引入electron并创建一个Browserwindow
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { app, BrowserWindow } = require('electron');
@@ -21,7 +19,12 @@ function createWindow() {
     }))
   */
   // 加载应用----适用于 react 项目
-  mainWindow.loadURL('http://localhost:3000/');
+  // mainWindow.loadURL('http://localhost:3000/');
+  mainWindow.loadURL(process.env.ELECTRON_START_URL || require('url').format({
+    pathname: require('path').join(__dirname, 'index.html'),
+    protocol: 'file:',
+    slashes: true
+  }))
 
   // 打开开发者工具，默认不打开
   mainWindow.webContents.openDevTools();

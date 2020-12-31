@@ -7,13 +7,14 @@ import { error } from 'bus/notification';
 import { dirname, basename, join } from 'utils/filepath';
 
 import { grpc } from '@improbable-eng/grpc-web';
-import map from 'promise.map';
+
+const host = 'http://127.0.0.1:9091';
 
 function invoke(method, request, metadata) {
   return new Promise((resolve) => {
     grpc.invoke(method, {
       request,
-      host: `http://${window.location.hostname}:9091`,
+      host,
       metadata: Object.assign(metadata || {}, { 'kfs-pwd': busState.pwd, 'kfs-mount': 'default' }),
       onHeaders: (headers) => {
         // console.log(headers);
@@ -204,9 +205,9 @@ export async function download(pathList) {
       new DownloadRequest().setPathList(pathList));
     console.log('---grpc download cb---', message);
     for (const hash of message.getHashList()) {
-      const response = await fetch(`http://${window.location.hostname}:9091/api/download/${hash}`)
+      const response = await fetch(`${host}/api/download/${hash}`);
       if (!response.ok) {
-        throw Error(await response.text())
+        throw Error(await response.text());
       }
       const blob = await response.blob();
       const aTag = document.createElement('a');
@@ -238,10 +239,10 @@ export async function download(pathList) {
 
 export async function upload(path, data, hashList = []) {
   try {
-    let hash = await fetch(`http://${window.location.hostname}:9091/api/upload`, {
+    const hash = await fetch(`${host}/api/upload`, {
       method: 'POST',
       body: data,
-    }).then(resp => resp.text())
+    }).then(resp => resp.text());
     console.log('---grpc upload---', path, hash, data.size);
     const message = await invoke(KoalaFS.upload,
       new UploadRequest().setPath(path).setHash(hash).setSize(data.size));

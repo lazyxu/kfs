@@ -4,7 +4,6 @@ import UploadFile from 'components/UploadFile';
 
 import styled from 'styled-components';
 
-
 const Option = styled.div`
   color: #ffffff;
   padding: 0.2em 5em 0.2em 1.5em;
@@ -54,7 +53,10 @@ class component extends React.Component {
             fn = option.fn;
           }
           return enabled ? (
-            <Option key={o} onMouseDown={(e) => { fn(e); onFinish && onFinish(); e.stopPropagation(); }}>
+            <Option
+              key={o}
+              onMouseDown={(e) => { fn(e); onFinish && onFinish(); e.stopPropagation(); }}
+            >
               {o === '上传文件'
                 ? <UploadFile text={o} />
                 : o}

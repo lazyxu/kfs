@@ -5,7 +5,6 @@ import Dir from 'components/Dir';
 import File from 'components/File';
 import ContextMenu from 'components/ContextMenu';
 
-
 import {
   inState, busState, setState, busValue,
 } from 'bus/bus';

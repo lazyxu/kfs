@@ -189,8 +189,10 @@ class component extends React.Component {
           e.preventDefault();
           if (e.target.getAttribute('data-tag') === 'choose-able') {
             let { clientX, clientY } = e;
-            (clientX > busValue.fileListView.clientWidth - 200) && (clientX = busValue.fileListView.clientWidth - 200);
-            (clientY > busValue.fileListView.clientHeight - 200) && (clientY = busValue.fileListView.clientHeight - 200);
+            (clientX > busValue.fileListView.clientWidth - 200)
+              && (clientX = busValue.fileListView.clientWidth - 200);
+            (clientY > busValue.fileListView.clientHeight - 200)
+              && (clientY = busValue.fileListView.clientHeight - 200);
             const path = join(busState.pwd, name);
             setState({
               contextMenu: null,
@@ -219,7 +221,8 @@ class component extends React.Component {
                 chosen: (_chosen) => {
                   const v = _chosen[path];
                   if (v === 1) {
-                    const cnt = Object.values(_chosen).filter((v) => v > 0).reduce((a, b) => a + b, 0);
+                    const cnt = Object.values(_chosen)
+                      .filter((v) => v > 0).reduce((a, b) => a + b, 0);
                     if (cnt !== 1) {
                       return {};
                     }
@@ -229,12 +232,14 @@ class component extends React.Component {
                       delete _chosen[item];
                     });
                   }
-                  Object.keys(_chosen).forEach((path) => _chosen[path] === 2 && (_chosen[path] = 1));
+                  Object.keys(_chosen)
+                    .forEach((path) => _chosen[path] === 2 && (_chosen[path] = 1));
                   if (v === 2) {
                     _chosen[path] = 1;
                   } else {
                     _chosen[path] = v ? 0 : 1;
                   }
+                  return {};
                 },
               });
             }
@@ -286,7 +291,8 @@ class component extends React.Component {
                             delete _chosen[item];
                           });
                         }
-                        Object.keys(_chosen).forEach((path) => _chosen[path] === 2 && (_chosen[path] = 1));
+                        Object.keys(_chosen)
+                          .forEach((path) => _chosen[path] === 2 && (_chosen[path] = 1));
                         if (e.metaKey) {
                           _chosen[path] = v ? 0 : 1;
                         } else {

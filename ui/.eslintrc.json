@@ -29,6 +29,9 @@
                 "classes": false
             }
         ],
+        "max-len": "warn",
+        "no-restricted-syntax": "warn",
+        "arrow-parens": "off",
         "no-shadow": "warn",
         "no-param-reassign": "warn",
         "no-unused-expressions": "off",
@@ -45,6 +48,7 @@
         "react/destructuring-assignment": "off",
         "react/state-in-constructor": "off",
         "react/prefer-stateless-function": "off",
+        "react/no-array-index-key": "warn",
         "react/jsx-props-no-spreading": "warn"
     },
     "settings": {

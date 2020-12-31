@@ -66,10 +66,10 @@ class component extends React.Component {
             e.preventDefault();
           }
         }}
-        onMouseDown={(e) => e.button !== 2 && setState({ contextMenu: null, contextMenuForFile: null })}
+        onMouseDown={(e) => e.button !== 2
+          && setState({ contextMenu: null, contextMenuForFile: null })}
       >
-        {/* {this.state.loaded ? <Path /> : <span>loading...</span>}
-        {this.state.loaded && <ViewDefault />} */}
+        {!this.state.loaded && <span>loading...</span>}
         <StyledHeader />
         <StyledViewDefault />
         <StyledStatusBar />
