@@ -17,12 +17,14 @@ const App = styled.div`
   height: 100%;
   width: 100%;
   position: fixed;
-  background-color: var(--background-color);
   color: var(--color);
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr 1.5em;
   user-select: element;
+  :focus {
+    outline: none;
+  }
 `;
 const StyledHeader = styled(Header)`
   grid-column: 1;

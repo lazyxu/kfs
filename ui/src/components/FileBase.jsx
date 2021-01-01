@@ -33,16 +33,6 @@ const TextInEdit = styled.textarea`
   color: white;
   background-color: transparent;
 `;
-
-const fileImg = document.createElement('img');
-fileImg.src = '/file.png';
-fileImg.height = '3.7em';
-fileImg.width = '3.7em';
-const dirImg = document.createElement('img');
-dirImg.src = '/dir.png';
-dirImg.height = '3.7em';
-dirImg.width = '3.7em';
-
 class component extends React.Component {
   constructor(props) {
     super(props);
@@ -147,7 +137,6 @@ class component extends React.Component {
           });
           const files = Object.keys(busState.chosen).filter((k) => busState.chosen[k] > 0);
           e.dataTransfer.setData('text/plain', JSON.stringify(files));
-          e.dataTransfer.setDragImage(type === 'file' ? fileImg : dirImg, 0, 0);
           console.log('onDragStart', name, e.dataTransfer.getData('text/plain'));
         }}
         onDragEnter={(e) => {

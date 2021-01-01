@@ -2,7 +2,7 @@ import React from 'react';
 
 import styled from 'styled-components';
 
-function component({
+export default function ({
   hoverCursor, hoverColor, margin, icon, size, color, onClick, padding,
 }) {
   const Icon = styled.svg`
@@ -24,5 +24,3 @@ function component({
     </Icon>
   );
 }
-
-export default component;
