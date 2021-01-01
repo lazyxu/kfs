@@ -40,6 +40,7 @@
         "no-plusplus": "off",
         "no-return-assign": "warn",
         "func-names": "off",
+        "arrow-body-style": "warn",
         "prefer-promise-reject-errors": "warn",
         "no-await-in-loop": "off",
         "max-classes-per-file": "off",

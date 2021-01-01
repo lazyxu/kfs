@@ -37,6 +37,9 @@
     "pack": "react-app-rewired build && electron-builder --dir",
     "dist": "react-app-rewired build && electron-builder"
   },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
   "extends": null,
   "build": {
     "appId": "meteorkl@126.com",

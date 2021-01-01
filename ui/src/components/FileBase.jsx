@@ -5,6 +5,7 @@ import { busState, setState, busValue } from 'bus/bus';
 import { mv } from 'bus/fs';
 import { warn } from 'bus/notification';
 import { join } from 'utils/filepath';
+import FileIcon from 'components/FileIcon';
 
 const File = styled.div`
   width: 5em;
@@ -17,13 +18,6 @@ const TextWrapper = styled.div`
   height: 4em;
   width: 100%;
   text-align: center;
-  background-color: transparent;
-`;
-const Icon = styled.svg`
-  height: 100%;
-  width: 100%;
-  vertical-align: -0.15em;
-  fill: #dddddd;
   background-color: transparent;
 `;
 const TextInEdit = styled.textarea`
@@ -44,13 +38,11 @@ class component extends React.Component {
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps) {
-    if (this.props.type === nextProps.type
-      && this.props.name === nextProps.name
-      && this.props.chosen === 2
+    if (this.props.chosen === 2
       && nextProps.chosen !== 2) {
       const { name } = this.props;
       const fileName = this.fileNameElm.value;
-      const { pwd } = busState;
+      const pwd = this.props.dir;
       console.log('---rename---', pwd, join(pwd, name), join(pwd, fileName));
       const src = join(pwd, name);
       const dst = join(pwd, fileName);
@@ -95,17 +87,6 @@ class component extends React.Component {
 
   render() {
     const { type, name, chosen } = this.props;
-    const IconWrapper = styled.div`
-      padding: 0.3em;
-      margin: 0 0.3em;
-      height: 4em;
-      width: cal(100% - 0.5em);
-      background-color: transparent;
-      background-color: ${chosen && '#343537'};
-      border: 1px dashed transparent;
-      border-color: ${this.state.dragOver && 'white'};
-      border-radius: 0.3em;
-    `;
     const Text = styled.p`
       font-size: 1em;
       padding: 0;
@@ -121,15 +102,13 @@ class component extends React.Component {
       overflow-wrap: break-word;
       margin: 0;
     `;
-    const { pwd } = busState;
-    const path = join(pwd, name);
+    const { path } = this.props;
     return (
       <File
         name="file"
         data-path={path}
         draggable="true"
         onDragStart={(e) => {
-          const path = join(busState.pwd, name);
           setState({
             chosen: (_chosen) => {
               _chosen[path] = 1;
@@ -141,32 +120,35 @@ class component extends React.Component {
         }}
         onDragEnter={(e) => {
           e.preventDefault();
-          if (type === 'dir' && !this.state.dragOver) {
-            // console.log('onDragEnter', e.dataTransfer.getData('text/plain'));
+          if (type === 'dir' && !this.state.dragOver && !busState.chosen[path]) {
+            console.log('onDragEnter', e.dataTransfer.getData('text/plain'));
             this.setState({ dragOver: true });
           }
         }}
         onDragOver={(e) => {
+          // console.log('onDragOver', e.dataTransfer.getData('text/plain'));
+          if (type === 'dir' && !this.state.dragOver && !busState.chosen[path]) {
+            this.setState({ dragOver: true });
+          }
           e.preventDefault();
         }}
         onDragLeave={(e) => {
           e.preventDefault();
           if (type === 'dir' && this.state.dragOver) {
-            // console.log('onDragLeave', e.dataTransfer.getData('text/plain'));
+            console.log('onDragLeave', e.dataTransfer.getData('text/plain'));
             this.setState({ dragOver: false });
           }
         }}
         onDrop={(e) => {
-          if (type === 'dir') {
+          console.log('onDrop', e.dataTransfer.getData('text/plain'));
+          if (type === 'dir' && !busState.chosen[path]) {
             let files = e.dataTransfer.getData('text/plain');
             files = JSON.parse(files);
-            const { pwd } = busState;
-            const dst = join(pwd, name);
-            console.log('onDrop', files, dst);
-            if (files.includes(dst)) {
+            console.log('onDrop', files, path);
+            if (files.includes(path)) {
               warn('移动文件至文件夹', '移动文件夹至本身');
             } else {
-              mv(files, dst);
+              mv(files, path);
             }
             if (type === 'dir' && this.state.dragOver) {
               this.setState({ dragOver: false });
@@ -182,7 +164,6 @@ class component extends React.Component {
               && (clientX = busValue.fileListView.clientWidth - 200);
             (clientY > busValue.fileListView.clientHeight - 200)
               && (clientY = busValue.fileListView.clientHeight - 200);
-            const path = join(busState.pwd, name);
             setState({
               contextMenu: null,
               contextMenuForFile: { x: clientX, y: clientY },
@@ -198,14 +179,17 @@ class component extends React.Component {
           }
         }}
       >
-        <IconWrapper
-          data-tag="choose-able"
+        <FileIcon
+          xlinkHref={type === 'file' ? '#icon-file3' : '#icon-floderblue'}
+          style={{
+            backgroundColor: chosen ? '#343537' : 'transparent',
+            border: `1px dashed ${this.state.dragOver ? 'white' : 'transparent'}`,
+          }}
           onMouseDown={(e) => {
             if (e.button === 2) {
               return;
             }
             if (this.onMouseDown()) {
-              const path = join(busState.pwd, name);
               setState({
                 chosen: (_chosen) => {
                   const v = _chosen[path];
@@ -233,11 +217,7 @@ class component extends React.Component {
               });
             }
           }}
-        >
-          <Icon data-tag="choose-able" aria-hidden="true">
-            <use data-tag="choose-able" xlinkHref={type === 'file' ? '#icon-file3' : '#icon-floderblue'} />
-          </Icon>
-        </IconWrapper>
+        />
         <TextWrapper>
           {chosen === 2
             ? (
@@ -249,7 +229,7 @@ class component extends React.Component {
                 onKeyPress={(e) => {
                   if (e.which === 13) {
                     const fileName = e.target.value;
-                    const { pwd } = busState;
+                    const pwd = this.props.dir;
                     const src = join(pwd, name);
                     const dst = join(pwd, fileName);
                     setState({
@@ -273,7 +253,6 @@ class component extends React.Component {
                   if (this.onMouseDown()) {
                     setState({
                       chosen: (_chosen) => {
-                        const path = join(busState.pwd, name);
                         const v = _chosen[path];
                         if (chosen === 2 || !e.metaKey) {
                           Object.keys(_chosen).forEach((item) => {

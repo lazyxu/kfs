@@ -220,8 +220,8 @@ class component extends React.Component {
         {files.map((f) => {
           const path = join(busState.pwd, f.name);
           return f.type === 'file'
-            ? <File key={path} {...f} chosen={chosen[path] || boxChosen[path]} />
-            : <Dir key={path} {...f} chosen={chosen[path] || boxChosen[path]} />;
+            ? <File key={`${f.type}-${path}`} {...f} chosen={chosen[path] || boxChosen[path]} dir={busState.pwd} path={path} />
+            : <Dir key={`${f.type}-${path}`} {...f} chosen={chosen[path] || boxChosen[path]} dir={busState.pwd} path={path} />;
         })}
       </View>
     );
