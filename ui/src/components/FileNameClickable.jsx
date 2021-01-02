@@ -4,15 +4,13 @@ import FileName from 'components/FileName';
 import { useClick } from 'use/use';
 
 export default React.memo(({
-  name, style, onClick, onDoubleClick,
+  name, onClick, onDoubleClick, ...props
 }) => {
   return (
     <FileName
       name={name}
-      attributes={{
-        onMouseDown: useClick(onClick, onDoubleClick),
-        style,
-      }}
+      onMouseDown={useClick(onClick, onDoubleClick)}
+      {...props}
     />
   );
 });

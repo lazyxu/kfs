@@ -17,12 +17,12 @@ const FileName = styled.p`
 `;
 
 export default React.memo(({
-  name, attributes,
+  name, ...props
 }) => {
   return (
     <FileName
       data-tag="choose-able"
-      {...attributes}
+      {...props}
     >
       {name}
     </FileName>

@@ -18,13 +18,12 @@ const FileIcon = styled.div`
 `;
 
 export default React.memo(({
-  xlinkHref, style, onMouseDown,
+  xlinkHref, ...props
 }) => {
   return (
     <FileIcon
       data-tag="choose-able"
-      onMouseDown={onMouseDown}
-      style={style}
+      {...props}
     >
       <Icon data-tag="choose-able" aria-hidden="true">
         <use data-tag="choose-able" xlinkHref={xlinkHref} />
