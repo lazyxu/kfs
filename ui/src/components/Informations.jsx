@@ -15,19 +15,16 @@ const Information = styled.div`
   background-color: #303030;
   display: block;
 `;
-
-class component extends React.Component {
-  render() {
-    return (
-      <Informations>
-        {this.props.informations.map((info, i) => (
-          <Information key={i}>
-            {info}
-          </Information>
-        ))}
-      </Informations>
-    );
-  }
-}
-
-export default component;
+export default React.memo(({
+  informations,
+}) => {
+  return (
+    <Informations>
+      {informations.map((info, i) => (
+        <Information key={i}>
+          {info}
+        </Information>
+      ))}
+    </Informations>
+  );
+});

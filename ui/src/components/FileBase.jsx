@@ -5,7 +5,8 @@ import { busState, setState, busValue } from 'bus/bus';
 import { mv } from 'bus/fs';
 import { warn } from 'bus/notification';
 import { join } from 'utils/filepath';
-import FileIcon from 'components/FileIcon';
+import FileIconClickable from 'components/FileIconClickable';
+import FileNameClickable from './FileNameClickable';
 
 const File = styled.div`
   width: 5em;
@@ -86,23 +87,10 @@ class component extends React.Component {
   }
 
   render() {
-    const { type, name, chosen } = this.props;
-    const Text = styled.p`
-      font-size: 1em;
-      padding: 0;
-      overflow : hidden;
-      text-overflow: ellipsis;
-      background-color: transparent;
-      background-color: ${chosen === 1 && '#0e5ccd'};
-      border-radius: 0.3em;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      user-select: none;
-      overflow-wrap: break-word;
-      margin: 0;
-    `;
-    const { path } = this.props;
+    const {
+      type, name, chosen, path,
+    } = this.props;
+    console.log('---FileNameClickable._chosen.render---', chosen);
     return (
       <File
         name="file"
@@ -179,43 +167,50 @@ class component extends React.Component {
           }
         }}
       >
-        <FileIcon
+        <FileIconClickable
+          path={path}
           xlinkHref={type === 'file' ? '#icon-file3' : '#icon-floderblue'}
           style={{
             backgroundColor: chosen ? '#343537' : 'transparent',
             border: `1px dashed ${this.state.dragOver ? 'white' : 'transparent'}`,
           }}
-          onMouseDown={(e) => {
-            if (e.button === 2) {
-              return;
-            }
-            if (this.onMouseDown()) {
-              setState({
-                chosen: (_chosen) => {
-                  const v = _chosen[path];
-                  if (v === 1) {
-                    const cnt = Object.values(_chosen)
-                      .filter((v) => v > 0).reduce((a, b) => a + b, 0);
-                    if (cnt !== 1) {
-                      return {};
-                    }
+          onClick={e => {
+            console.log('---onClick---', this.clicked, this.props);
+            const {
+              atimems, mtimems, ctimems, birthtimems,
+            } = this.props;
+            setState({
+              atimems, mtimems, ctimems, birthtimems,
+            });
+            setState({
+              chosen: (_chosen) => {
+                const v = _chosen[path];
+                if (v === 1) {
+                  const cnt = Object.values(_chosen)
+                    .filter((v) => v > 0).reduce((a, b) => a + b, 0);
+                  if (cnt !== 1) {
+                    return {};
                   }
-                  if (!e.metaKey) {
-                    Object.keys(_chosen).forEach((item) => {
-                      delete _chosen[item];
-                    });
-                  }
-                  Object.keys(_chosen)
-                    .forEach((path) => _chosen[path] === 2 && (_chosen[path] = 1));
-                  if (v === 2) {
-                    _chosen[path] = 1;
-                  } else {
-                    _chosen[path] = v ? 0 : 1;
-                  }
-                  return {};
-                },
-              });
-            }
+                }
+                if (!e.metaKey) {
+                  Object.keys(_chosen).forEach((item) => {
+                    delete _chosen[item];
+                  });
+                }
+                Object.keys(_chosen)
+                  .forEach((path) => _chosen[path] === 2 && (_chosen[path] = 1));
+                if (v === 2) {
+                  _chosen[path] = 1;
+                } else {
+                  _chosen[path] = v ? 0 : 1;
+                }
+                return {};
+              },
+            });
+          }}
+          onDoubleClick={e => {
+            console.log('---onDoubleClick---', this.clicked, this.props);
+            this.props.onDoubleClick && this.props.onDoubleClick();
           }}
         />
         <TextWrapper>
@@ -244,35 +239,36 @@ class component extends React.Component {
               />
             )
             : (
-              <Text
-                data-tag="choose-able"
-                onMouseDown={(e) => {
-                  if (e.button === 2) {
-                    return;
-                  }
-                  if (this.onMouseDown()) {
-                    setState({
-                      chosen: (_chosen) => {
-                        const v = _chosen[path];
-                        if (chosen === 2 || !e.metaKey) {
-                          Object.keys(_chosen).forEach((item) => {
-                            delete _chosen[item];
-                          });
-                        }
-                        Object.keys(_chosen)
-                          .forEach((path) => _chosen[path] === 2 && (_chosen[path] = 1));
-                        if (e.metaKey) {
-                          _chosen[path] = v ? 0 : 1;
-                        } else {
-                          _chosen[path] = v ? 2 : 1;
-                        }
-                      },
-                    });
-                  }
+              <FileNameClickable
+                name={name}
+                style={{ backgroundColor: chosen === 1 ? '#0e5ccd' : 'transparent' }}
+                onClick={e => {
+                  console.log('---FileNameClickable.onClick---', this.clicked, this.props);
+                  setState({
+                    chosen: (_chosen) => {
+                      const v = _chosen[path];
+                      console.log('---FileNameClickable._chosen---', _chosen[path]);
+                      if (chosen === 2 || !e.metaKey) {
+                        Object.keys(_chosen).forEach((item) => {
+                          delete _chosen[item];
+                        });
+                      }
+                      Object.keys(_chosen)
+                        .forEach((path) => _chosen[path] === 2 && (_chosen[path] = 1));
+                      if (e.metaKey) {
+                        _chosen[path] = v ? 0 : 1;
+                      } else {
+                        _chosen[path] = v ? 2 : 1;
+                      }
+                      console.log('---FileNameClickable._chosen.done---', _chosen[path]);
+                    },
+                  });
                 }}
-              >
-                {name}
-              </Text>
+                onDoubleClick={e => {
+                  console.log('---FileNameClickable.onDoubleClick---', this.clicked, this.props);
+                  this.props.onDoubleClick && this.props.onDoubleClick();
+                }}
+              />
             )}
         </TextWrapper>
       </File>
