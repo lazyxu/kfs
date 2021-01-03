@@ -3,7 +3,9 @@ import React from 'react';
 import styled from 'styled-components';
 
 import Icon from 'components/Icon';
+import ConfigEditor from 'containers/ConfigEditor';
 import Path from 'containers/Path';
+import { busState, setState } from 'bus/bus';
 
 const Header = styled.div`
   position: relative;
@@ -15,22 +17,27 @@ const Header = styled.div`
 const Empty = styled.div`
   flex: 1;
 `;
-class component extends React.Component {
-  render() {
-    return (
-      <Header>
-        <Path />
-        <Empty />
-        <Icon
-          icon="setting"
-          color="#cccccc"
-          size="1.8em"
-          hoverColor="white"
-          hoverCursor="pointer"
-        />
-      </Header>
-    );
-  }
-}
 
-export default component;
+export default React.memo(({
+  name, ...props
+}) => {
+  const [isOpen, setOpen] = React.useState(false);
+  return (
+    <Header>
+      <Path />
+      <Empty />
+      <Icon
+        icon="setting"
+        color="#cccccc"
+        size="1.8em"
+        hoverColor="white"
+        hoverCursor="pointer"
+        onClick={e => { setOpen(true); }}
+      />
+      <ConfigEditor
+        isOpen={isOpen}
+        close={e => { setOpen(false); }}
+      />
+    </Header>
+  );
+});

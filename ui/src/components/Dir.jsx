@@ -3,9 +3,6 @@ import React from 'react';
 import FileBase from 'components/FileBase';
 import { cd } from 'bus/fs';
 
-import { busState } from 'bus/bus';
-import { join } from 'utils/filepath';
-
 export default React.memo(({
   ...props
 }) => {
@@ -13,7 +10,7 @@ export default React.memo(({
     <FileBase
       {...props}
       type="dir"
-      onDoubleClick={() => cd(join(busState.pwd, props.name))}
+      onDoubleClick={() => cd(props.path)}
     />
   );
 });

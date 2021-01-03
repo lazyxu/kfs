@@ -20,13 +20,14 @@ const App = styled.div`
   color: var(--color);
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr 1.5em;
+  grid-template-rows: auto 1fr auto;
   user-select: element;
   :focus {
     outline: none;
   }
 `;
 const StyledHeader = styled(Header)`
+  background-color: red;
   grid-column: 1;
   grid-row: 1;
   z-index: var(--z-header);

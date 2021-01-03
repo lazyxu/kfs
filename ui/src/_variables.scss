@@ -1,14 +1,24 @@
 :root {
   --header-color: #3b3c3e;
   --header-path-color: #646568;
-  --footer-color: #3c3c3c;
+  --footer-color: #0075c4;
   --background-color: #1e1f21;
-  --footer-hover-color: #555555;
+  --footer-hover-color: #1e84c9;
   --color: white;
   --z-header: 1000;
   --z-body: 100;
   --z-body-select: 101;
   --z-footer: 1000;
+  --z-modal-bg: 10000;
+  --z-modal-dialog: 10001;
+  --header-height: 2em;
+  --footer-height: var(--header-height);
+  --modal-header-color: var(--header-color);
+  --modal-body-color: #252525;
+  --modal-footer-color: #3c3c3c;
+  --modal-header-height: 1.5em;
+  --modal-footer-height: var(--modal-header-height);
+  --modal-radius: 5px;
 }
 @keyframes slideIn {
   from {

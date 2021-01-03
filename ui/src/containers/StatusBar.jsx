@@ -147,7 +147,7 @@ class component extends React.Component {
             icon="notice"
             color="white"
             size="1em"
-            padding="0 0.5em"
+            padding="0.2em 0.5em 0 0.5em"
             onClick={() => this.setState(
               (prevState) => ({ showNotifications: !prevState.showNotifications }),
             )}
