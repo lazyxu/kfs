@@ -7,14 +7,13 @@ import { error } from 'bus/notification';
 import { dirname, basename, join } from 'utils/filepath';
 
 import { grpc } from '@improbable-eng/grpc-web';
-
-const host = 'http://127.0.0.1:9091';
+import { getConfig } from 'adaptor/config';
 
 function invoke(method, request, metadata) {
   return new Promise((resolve) => {
     grpc.invoke(method, {
       request,
-      host,
+      host: getConfig().host,
       metadata: Object.assign(metadata || {}, { 'kfs-pwd': busState.pwd, 'kfs-mount': 'default' }),
       onHeaders: (headers) => {
         // console.log(headers);
@@ -205,7 +204,7 @@ export async function download(pathList) {
       new DownloadRequest().setPathList(pathList));
     console.log('---grpc download cb---', message);
     for (const hash of message.getHashList()) {
-      const response = await fetch(`${host}/api/download/${hash}`);
+      const response = await fetch(`${getConfig().host}/api/download/${hash}`);
       if (!response.ok) {
         throw Error(await response.text());
       }
@@ -239,7 +238,7 @@ export async function download(pathList) {
 
 export async function upload(path, data, hashList = []) {
   try {
-    const hash = await fetch(`${host}/api/upload`, {
+    const hash = await fetch(`${getConfig().host}/api/upload`, {
       method: 'POST',
       body: data,
     }).then(resp => resp.text());

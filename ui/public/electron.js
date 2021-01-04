@@ -6,8 +6,12 @@ const { app, BrowserWindow } = require('electron');
 let mainWindow;
 
 function createWindow() {
-// 创建浏览器窗口,宽高自定义具体大小你开心就好
-  mainWindow = new BrowserWindow({ width: 800, height: 600 });
+  // 创建浏览器窗口,宽高自定义具体大小你开心就好
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: { nodeIntegration: true, enableRemoteModule: true },
+  });
   global.mainWindow = mainWindow;
 
   /*

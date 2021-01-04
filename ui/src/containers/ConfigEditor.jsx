@@ -3,6 +3,8 @@ import React from 'react';
 import styled from 'styled-components';
 import Modal from 'components/Modal';
 
+import { getConfig, setConfig } from 'adaptor/config';
+
 const Textarea = styled.textarea`
   white-space: pre;
   word-break: break-all;
@@ -30,46 +32,52 @@ const Button = styled.button`
 export default React.memo(({
   ...props
 }) => {
-  const bodyRef = React.useRef();
-  const [text, setText] = React.useState(false);
+  const [textarea, setTextarea] = React.useState({
+    text: '',
+    valid: false,
+  });
+  React.useEffect(() => {
+    if (props.isOpen) {
+      console.log('load config', JSON.stringify(getConfig(), undefined, 2));
+      setTextarea({
+        text: JSON.stringify(getConfig(), undefined, 2),
+        valid: true,
+      });
+    }
+  }, [props.isOpen]);
   return (
     <Modal
       title="配置"
-      save={() => {
-        console.log(text);
-        try {
-          JSON.parse(text);
-        } catch (e) {
-          console.warn(e);
-          return false;
-        }
-        return true;
-      }}
-      disableSave={!text}
       {...props}
     >
       <Textarea
         spellCheck="false"
-        ref={bodyRef}
         onChange={e => {
           const text = e.target.value;
           try {
             JSON.parse(text);
-            setText(text);
+            setTextarea({
+              text,
+              valid: true,
+            });
           } catch (e) {
-            setText(false);
+            setTextarea({
+              text,
+              valid: false,
+            });
             console.log(text, e);
           }
         }}
-        defaultValue="frehgeh"
+        value={textarea.text}
       />
       <Button
-        disabled={!text}
+        disabled={!textarea.valid}
         type="button"
         onClick={() => {
-          console.log(text);
+          console.log(textarea);
           try {
-            JSON.parse(text);
+            JSON.parse(textarea.text);
+            setConfig(textarea.text);
           } catch (e) {
             console.warn(e);
             return;
