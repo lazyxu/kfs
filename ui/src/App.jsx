@@ -9,7 +9,7 @@ import './App.css';
 import './_variables.scss';
 
 import { cd } from 'bus/fs';
-import { setState, busState } from 'bus/bus';
+import { setState, busState, inState } from 'bus/bus';
 import 'bus/triggers';
 import { join } from 'utils/filepath';
 
@@ -43,6 +43,7 @@ const StyledStatusBar = styled(StatusBar)`
   z-index: var(--z-footer);
 `;
 
+@inState('windows')
 class component extends React.Component {
   state = {
     loaded: false,
@@ -76,6 +77,23 @@ class component extends React.Component {
         <StyledHeader />
         <StyledViewDefault />
         <StyledStatusBar />
+        {Object.values(this.state.windows).sort((a, b) => a.zIndex - b.zIndex).map(w => {
+          const Window = w.elm;
+          return (
+            <Window
+              key={w.id}
+              id={w.id}
+              isOpen="true"
+              close={() => {
+                this.setState(prev => {
+                  delete prev.windows[w.id];
+                  return { windows: prev.windows };
+                });
+              }}
+              zIndex={w.zIndex}
+            />
+          );
+        })}
       </App>
     );
   }

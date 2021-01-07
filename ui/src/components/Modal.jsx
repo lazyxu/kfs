@@ -73,7 +73,7 @@ const NESWResizeable = styled.div`
 `;
 
 export default React.memo(({
-  isOpen, disableSave, save, close, children, title, content, ...props
+  id, zIndex, isOpen, disableSave, save, close, children, title, content, ...props
 }) => {
   const cur = React.useRef();
   const [pos, setPos] = React.useState({
@@ -239,11 +239,34 @@ export default React.memo(({
       {...props}
       style={Object.assign(props.style || {}, {
         display: isOpen ? 'grid' : 'none',
+        zIndex,
         top: `${pos.top}px`,
         left: `${pos.left}px`,
         width: `${pos.width}px`,
         height: `${pos.height}px`,
       })}
+      onClick={e => {
+        setState({
+          windows: (windows => {
+            const cur = windows[id];
+            const vals = Object.values(windows).sort((a, b) => b.zIndex - a.zIndex);
+            if (vals.length === 1) {
+              return;
+            }
+            if (cur === vals[0]) {
+              return;
+            }
+            const maxZIndex = vals[0].zIndex;
+            for (let i = 1; i < vals.length; i++) {
+              vals[i - 1].zIndex = vals[i].zIndex;
+              if (vals[i] === cur) {
+                break;
+              }
+            }
+            cur.zIndex = maxZIndex;
+          }),
+        });
+      }}
       onKeyDown={e => { e.stopPropagation(); }}
     >
       <NWSEResizeable
@@ -291,3 +314,19 @@ export default React.memo(({
     </Modal>
   );
 });
+
+let id = 0;
+busState.windows = {};
+export function newWindow(elm) {
+  id++;
+  setState({
+    windows: (windows => {
+      windows[id] = {
+        elm,
+        id,
+        zIndex: id,
+      };
+    }),
+  });
+  return id;
+}

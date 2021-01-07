@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import Icon from 'components/Icon';
 import ConfigEditor from 'containers/ConfigEditor';
 import Path from 'containers/Path';
-import { busState, setState } from 'bus/bus';
+import { newWindow } from 'components/Modal';
 
 const Header = styled.div`
   position: relative;
@@ -21,7 +21,6 @@ const Empty = styled.div`
 export default React.memo(({
   name, ...props
 }) => {
-  const [isOpen, setOpen] = React.useState(false);
   return (
     <Header>
       <Path />
@@ -32,11 +31,9 @@ export default React.memo(({
         size="1.8em"
         hoverColor="white"
         hoverCursor="pointer"
-        onClick={e => { setOpen(true); }}
-      />
-      <ConfigEditor
-        isOpen={isOpen}
-        close={e => { setOpen(false); }}
+        onClick={e => {
+          newWindow(ConfigEditor);
+        }}
       />
     </Header>
   );
