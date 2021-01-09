@@ -1,9 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import ViewDefault from 'containers/GridView';
-import Header from 'containers/Header';
-import StatusBar from 'containers/StatusBar';
+import Icon from 'components/Icon';
+import App from 'components/App';
+
+import ResourceManager from 'apps/ResourceManager';
+import ConfigEditor from 'apps/ConfigEditor';
 
 import './App.css';
 import './_variables.scss';
@@ -13,34 +15,17 @@ import { setState, busState, inState } from 'bus/bus';
 import 'bus/triggers';
 import { join } from 'utils/filepath';
 
-const App = styled.div`
+const Desktop = styled.div`
   height: 100%;
   width: 100%;
   position: fixed;
   color: var(--color);
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto 1fr auto;
+  display: flex;
+  flex-direction: column;
   user-select: element;
   :focus {
     outline: none;
   }
-`;
-const StyledHeader = styled(Header)`
-  background-color: red;
-  grid-column: 1;
-  grid-row: 1;
-  z-index: var(--z-header);
-`;
-const StyledViewDefault = styled(ViewDefault)`
-  grid-column: 1;
-  grid-row: 2;
-  z-index: var(--z-body);
-`;
-const StyledStatusBar = styled(StatusBar)`
-  grid-column: 1;
-  grid-row: 3;
-  z-index: var(--z-footer);
 `;
 
 @inState('windows')
@@ -55,7 +40,7 @@ class component extends React.Component {
 
   render() {
     return (
-      <App
+      <Desktop
         tabIndex="-1"
         onKeyDown={(e) => {
           console.log(e.keyCode, e.metaKey);
@@ -74,9 +59,19 @@ class component extends React.Component {
           && setState({ contextMenu: null, contextMenuForFile: null })}
       >
         {!this.state.loaded && <span>loading...</span>}
-        <StyledHeader />
-        <StyledViewDefault />
-        <StyledStatusBar />
+        <App
+          icon="wangpan"
+          color="#cccccc"
+          elm={ResourceManager}
+          text="资源管理"
+        />
+        <App
+          icon="peizhi"
+          color="#cccccc"
+          elm={ConfigEditor}
+          newWindowOption="true"
+          text="系统配置"
+        />
         {Object.values(this.state.windows).sort((a, b) => a.zIndex - b.zIndex).map(w => {
           const Window = w.elm;
           return (
@@ -94,7 +89,7 @@ class component extends React.Component {
             />
           );
         })}
-      </App>
+      </Desktop>
     );
   }
 }

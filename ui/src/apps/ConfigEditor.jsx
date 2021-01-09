@@ -10,7 +10,7 @@ const Textarea = styled.textarea`
   word-break: break-all;
   position: relative;
   margin: 0;
-  height: calc(100% - 2em);
+  height: calc(100% - 2.5em);
   width: 100%;
   padding: 0;
   background: var(--modal-body-color);

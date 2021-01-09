@@ -10,20 +10,27 @@ const Modal = styled.div`
   position: fixed;
   display: grid;
   grid-template-columns: 3px 1fr 3px ;
-  grid-template-rows: 3px auto 1fr 3px;
+  grid-template-rows: 3px 1fr 3px;
   min-width: ${minWidth}px;
   min-height: ${minHeight}px;
   max-width: 100%;
   max-height: 100%;
-  border-radius: var(--modal-radius);
-  border: 1px solid #717171;
-  background: var(--modal-body-color);
   overflow: hidden;
   z-index: 9999;
-  box-shadow: inset 0 0 1px 0 #000;
 `;
 const Empty = styled.div`
   flex: 1;
+`;
+const App = styled.div`
+  height: 100%;
+  width: 100%;
+  border: 1px solid #717171;
+  border-radius: var(--modal-radius);
+  box-shadow: inset 0 0 1px 0 #000;
+  background: var(--modal-body-color);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
 `;
 const Header = styled.div`
   height: var(--modal-header-height);
@@ -33,7 +40,6 @@ const Header = styled.div`
   padding-left: 0.5em;
 `;
 const Body = styled.div`
-  padding: 4px;
   overflow: hidden;
 `;
 const Text = styled.div`
@@ -248,65 +254,35 @@ export default React.memo(({
       onClick={e => {
         setState({
           windows: (windows => {
-            const cur = windows[id];
-            const vals = Object.values(windows).sort((a, b) => b.zIndex - a.zIndex);
-            if (vals.length === 1) {
-              return;
-            }
-            if (cur === vals[0]) {
-              return;
-            }
-            const maxZIndex = vals[0].zIndex;
-            for (let i = 1; i < vals.length; i++) {
-              vals[i - 1].zIndex = vals[i].zIndex;
-              if (vals[i] === cur) {
-                break;
-              }
-            }
-            cur.zIndex = maxZIndex;
+            fucusWindow(windows, id);
           }),
         });
       }}
       onKeyDown={e => { e.stopPropagation(); }}
     >
-      <NWSEResizeable
-        style={{ backgroundColor: '#3b3c3e' }}
-        onMouseDown={onMouseDown(topLeftResize)}
-      />
-      <RowResizeable
-        style={{ backgroundColor: '#3b3c3e' }}
-        onMouseDown={onMouseDown(topResize)}
-      />
-      <NESWResizeable
-        style={{ backgroundColor: '#3b3c3e' }}
-        onMouseDown={onMouseDown(topRightResize)}
-      />
-      <ColResizeable
-        style={{ backgroundColor: '#3b3c3e' }}
-        onMouseDown={onMouseDown(leftResize)}
-      />
-      <Header onMouseDown={onMouseDown(onMove)}>
-        <Text>
-          {title}
-        </Text>
-        <Empty />
-        <Icon
-          icon="close"
-          color="#cccccc"
-          size="1.5em"
-          hoverColor="white"
-          hoverCursor="pointer"
-          onClick={() => { close(); }}
-        />
-      </Header>
-      <ColResizeable
-        style={{ backgroundColor: '#3b3c3e' }}
-        onMouseDown={onMouseDown(rightResize)}
-      />
+      <NWSEResizeable onMouseDown={onMouseDown(topLeftResize)} />
+      <RowResizeable onMouseDown={onMouseDown(topResize)} />
+      <NESWResizeable onMouseDown={onMouseDown(topRightResize)} />
       <ColResizeable onMouseDown={onMouseDown(leftResize)} />
-      <Body>
-        {children}
-      </Body>
+      <App>
+        <Header onMouseDown={onMouseDown(onMove)}>
+          <Text>
+            {title}
+          </Text>
+          <Empty />
+          <Icon
+            icon="close"
+            color="#cccccc"
+            size="1.5em"
+            hoverColor="white"
+            hoverCursor="pointer"
+            onClick={() => { close(); }}
+          />
+        </Header>
+        <Body>
+          {children}
+        </Body>
+      </App>
       <ColResizeable onMouseDown={onMouseDown(rightResize)} />
       <NESWResizeable onMouseDown={onMouseDown(bottomLeftResize)} />
       <RowResizeable onMouseDown={onMouseDown(bottomResize)} />
@@ -315,12 +291,37 @@ export default React.memo(({
   );
 });
 
+function fucusWindow(windows, id) {
+  const cur = windows[id];
+  const vals = Object.values(windows).sort((a, b) => b.zIndex - a.zIndex);
+  if (vals.length === 1) {
+    return;
+  }
+  if (cur === vals[0]) {
+    return;
+  }
+  const maxZIndex = vals[0].zIndex;
+  for (let i = 1; i < vals.length; i++) {
+    vals[i - 1].zIndex = vals[i].zIndex;
+    if (vals[i] === cur) {
+      break;
+    }
+  }
+  cur.zIndex = maxZIndex;
+}
 let id = 0;
 busState.windows = {};
-export function newWindow(elm) {
-  id++;
+export function newWindow(elm, single = false) {
   setState({
     windows: (windows => {
+      if (single) {
+        const w = Object.values(windows).filter(w => w.elm === elm)[0];
+        if (w) {
+          fucusWindow(windows, w.id);
+          return;
+        }
+      }
+      id++;
       windows[id] = {
         elm,
         id,
