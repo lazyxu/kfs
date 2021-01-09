@@ -47,7 +47,7 @@ export default React.memo(({
   }, [props.isOpen]);
   return (
     <Modal
-      title="配置"
+      title="系统配置"
       {...props}
     >
       <Textarea

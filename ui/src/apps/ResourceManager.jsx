@@ -56,7 +56,7 @@ export default React.memo(({
   }, [props.isOpen]);
   return (
     <Modal
-      title="资源管理器"
+      title="资源管理"
       {...props}
     >
       <App>

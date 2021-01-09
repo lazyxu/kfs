@@ -1,13 +1,13 @@
 import React from 'react';
-
 import styled from 'styled-components';
+import moment from 'moment';
+import 'moment/locale/zh-cn';
 
 import Icon from 'components/Icon';
 import Informations from 'components/Informations';
 import Notifications from 'containers/Notifications';
+
 import { inState } from 'bus/bus';
-import moment from 'moment';
-import 'moment/locale/zh-cn';
 
 const StatusBar = styled.div`
   position: relative;

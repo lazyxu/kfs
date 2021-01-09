@@ -1,11 +1,11 @@
 import React from 'react';
-
 import styled from 'styled-components';
+import map from 'promise.map';
+
 import { upload } from 'bus/fs';
 import { join } from 'utils/filepath';
 import { busState } from 'bus/bus';
 import myFileReader from 'utils/fileReader';
-import map from 'promise.map';
 
 const Div = styled.div`
 `;

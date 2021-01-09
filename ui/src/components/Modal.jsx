@@ -1,8 +1,9 @@
 import React from 'react';
-
 import styled from 'styled-components';
-import { busState, setState } from 'bus/bus';
+
 import Icon from 'components/Icon';
+
+import { busState, setState } from 'bus/bus';
 
 const minWidth = 100;
 const minHeight = 100;

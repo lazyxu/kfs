@@ -1,8 +1,7 @@
 import React from 'react';
-
 import styled from 'styled-components';
-import { cd, mv } from 'bus/fs';
 
+import { cd, mv } from 'bus/fs';
 import { warn } from 'bus/notification';
 
 class component extends React.Component {

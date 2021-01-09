@@ -1,9 +1,9 @@
 import React from 'react';
-
 import styled from 'styled-components';
 
-import { inState } from 'bus/bus';
 import PathArray from 'containers/PathArray';
+
+import { inState } from 'bus/bus';
 
 @inState('pwd')
 class component extends React.Component {

@@ -5,7 +5,7 @@ import Icon from 'components/Icon';
 import App from 'components/App';
 
 import ResourceManager from 'apps/ResourceManager';
-import ConfigEditor from 'apps/ConfigEditor';
+import ConfigEditor from 'apps/SystemConfig';
 
 import './App.css';
 import './_variables.scss';

@@ -1,5 +1,4 @@
 import React from 'react';
-
 import styled from 'styled-components';
 
 const Informations = styled.div`
@@ -15,6 +14,7 @@ const Information = styled.div`
   background-color: #303030;
   display: block;
 `;
+
 export default React.memo(({
   informations,
 }) => {

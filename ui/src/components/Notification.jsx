@@ -1,5 +1,4 @@
 import React from 'react';
-
 import styled from 'styled-components';
 
 import Icon from 'components/Icon';
@@ -30,25 +29,23 @@ const Title = styled.div`
   padding-left: 0.5em;
 `;
 
-class component extends React.Component {
-  render() {
-    return (
-      <Notification>
-        <Header>
-          <Icon icon={this.props.notification.type} color="green" size="1em" />
-          <Title>{this.props.notification.title}</Title>
-          <Icon
-            icon="close"
-            color="white"
-            size="1em"
-            hoverCursor="pointer"
-            onClick={() => this.props.remove()}
-          />
-        </Header>
-        <Body>{this.props.notification.message && this.props.notification.message.split('%0A').join('\n')}</Body>
-      </Notification>
-    );
-  }
-}
-
-export default component;
+export default ({
+  notification, remove,
+}) => {
+  return (
+    <Notification>
+      <Header>
+        <Icon icon={notification.type} color="green" size="1em" />
+        <Title>{notification.title}</Title>
+        <Icon
+          icon="close"
+          color="white"
+          size="1em"
+          hoverCursor="pointer"
+          onClick={() => remove()}
+        />
+      </Header>
+      <Body>{notification.message && notification.message.split('%0A').join('\n')}</Body>
+    </Notification>
+  );
+};
