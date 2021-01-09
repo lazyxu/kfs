@@ -4,7 +4,9 @@ import styled from 'styled-components';
 import FileIconClickable from 'components/FileIconClickable';
 import FileNameClickable from 'components/FileNameClickable';
 
-import { busState, setState, busValue } from 'bus/bus';
+import {
+  busState, setState, busValue, StoreContext,
+} from 'bus/bus';
 import { mv } from 'bus/fs';
 import { warn } from 'bus/notification';
 import { join } from 'utils/filepath';

@@ -1,7 +1,13 @@
 import { basename } from 'utils/filepath';
-import { addTrigger, setState, busState } from './bus';
 
-addTrigger('chosen', (chosen) => {
+import {
+  globalStore,
+  addTrigger,
+  setState,
+  busState,
+} from './bus';
+
+addTrigger('chosen', function (chosen) {
   if (Object.values(chosen).filter((v) => v).length === 0) {
     setState({
       fileSize: null,
@@ -17,7 +23,7 @@ addTrigger('chosen', (chosen) => {
           .map((k) => busState.files.find((f) => f.name === basename(k)).size)
           .reduce((a, b) => a + b, 0),
       });
-    // eslint-disable-next-line no-empty
+      // eslint-disable-next-line no-empty
     } catch (e) {
     }
   }

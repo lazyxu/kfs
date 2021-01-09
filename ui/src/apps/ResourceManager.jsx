@@ -7,6 +7,8 @@ import Header from 'containers/Header';
 import StatusBar from 'containers/StatusBar';
 
 import { getConfig, setConfig } from 'adaptor/config';
+import Store from 'bus/store';
+import { StoreContext } from 'bus/bus';
 
 const App = styled.div`
   height: 100%;
@@ -59,11 +61,23 @@ export default React.memo(({
       title="资源管理"
       {...props}
     >
-      <App>
-        <StyledHeader />
-        <StyledViewDefault />
-        <StyledStatusBar />
-      </App>
+      <StoreContext.Provider value={new Store({
+        pwd: '/',
+        files: [],
+        showNotifications: false,
+        notifications: [],
+        chosen: {},
+        fileSize: null,
+        filesPositions: [],
+        boxChosen: {},
+      })}
+      >
+        <App>
+          <StyledHeader />
+          <StyledViewDefault />
+          <StyledStatusBar />
+        </App>
+      </StoreContext.Provider>
     </Modal>
   );
 });
