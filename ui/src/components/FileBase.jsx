@@ -16,6 +16,7 @@ const File = styled.div`
   height: 8em;
   margin: 0.5em;
   background-color: transparent;
+  z-index: 1;
 `;
 const TextWrapper = styled.div`
   margin-top: 0.2em;
@@ -39,6 +40,7 @@ export default React.memo(({
 }) => {
   const [dragOver, setDragOver] = React.useState(false);
   const fileNameElm = React.useRef();
+  const context = React.useContext(StoreContext);
   React.useMemo(() => {
     // componentWillReceiveProps
     if (fileNameElm.current) {
@@ -98,12 +100,12 @@ export default React.memo(({
       }}
       onContextMenu={(e) => {
         e.preventDefault();
+        console.log('onContextMenu', e.target, e.target.getAttribute('data-tag'));
         if (e.target.getAttribute('data-tag') === 'choose-able') {
           let { clientX, clientY } = e;
-          (clientX > busValue.fileListView.clientWidth - 200)
-            && (clientX = busValue.fileListView.clientWidth - 200);
-          (clientY > busValue.fileListView.clientHeight - 200)
-            && (clientY = busValue.fileListView.clientHeight - 200);
+          const { clientWidth, clientHeight } = context.fileListView;
+          (clientX > clientWidth - 200) && (clientX = clientWidth - 200);
+          (clientY > clientHeight - 200) && (clientY = clientHeight - 200);
           setState({
             contextMenu: null,
             contextMenuForFile: { x: clientX, y: clientY },

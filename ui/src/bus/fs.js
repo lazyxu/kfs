@@ -42,6 +42,7 @@ function invoke(method, request, metadata) {
 
 export async function cd(path) {
   try {
+    path = path || busState.pwd;
     console.log('---grpc cd---', path);
     const message = await invoke(KoalaFS.ls,
       new PathRequest().setPath(path));

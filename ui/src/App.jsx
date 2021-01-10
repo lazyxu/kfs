@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Icon from 'components/Icon';
 import App from 'components/App';
 
-import ResourceManager from 'apps/ResourceManager';
+import ResourceManager from 'apps/ResourceManager/ResourceManager';
 import ConfigEditor from 'apps/SystemConfig';
 
 import './App.css';

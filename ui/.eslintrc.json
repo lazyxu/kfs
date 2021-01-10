@@ -51,6 +51,7 @@
         "react/state-in-constructor": "off",
         "react/prefer-stateless-function": "off",
         "react/no-array-index-key": "warn",
+        "react/static-property-placement": "warn",
         "import/no-mutable-exports": "warn",
         "import/no-extraneous-dependencies": "warn",
         "react/jsx-props-no-spreading": "warn"
