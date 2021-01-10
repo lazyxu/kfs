@@ -3,13 +3,15 @@ import React from 'react';
 import ContextMenu from 'components/ContextMenu';
 
 import {
-  inState, setState,
+  ctxInState,
+  inState, setState, StoreContext,
 } from 'bus/bus';
 import {
   remove, download,
 } from 'bus/fs';
 
-@inState('contextMenuForFile', 'chosen')
+@ctxInState(StoreContext, 'contextMenuForFile')
+@inState('chosen')
 class component extends React.Component {
   render() {
     const {
@@ -51,7 +53,7 @@ class component extends React.Component {
         x={contextMenuForFile.x}
         y={contextMenuForFile.y}
         options={contextMenuForFileOptions}
-        onFinish={() => setState({ contextMenuForFile: null })}
+        onFinish={() => this.context.setState({ contextMenuForFile: null })}
       />
     );
   }

@@ -55,8 +55,6 @@ class component extends React.Component {
             e.preventDefault();
           }
         }}
-        onMouseDown={(e) => e.button !== 2
-          && setState({ contextMenuForFile: null })}
       >
         {!this.state.loaded && <span>loading...</span>}
         <App
