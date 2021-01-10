@@ -35,15 +35,19 @@ class component extends React.Component {
       <View
         onContextMenu={(e) => {
           e.preventDefault();
-          const { fileListView } = busValue;
+          const { fileListView } = this.context.state;
           console.log('onContextMenu', e.target, e.target.getAttribute('data-tag'));
           if (e.target === fileListView || e.target.getAttribute('data-tag') !== 'choose-able') {
-            let { clientX, clientY } = e;
-            (clientX > fileListView.clientWidth - 200) && (clientX = fileListView.clientWidth - 200);
-            (clientY > fileListView.clientHeight - 120) && (clientY = fileListView.clientHeight - 120);
+            const { clientX, clientY } = e;
+            const { x, y } = fileListView.getBoundingClientRect();
             setState({
-              contextMenu: { x: clientX, y: clientY },
               contextMenuForFile: null,
+            });
+            this.context.setState({
+              contextMenu: {
+                x: Math.min(clientX, x + fileListView.clientWidth - 200),
+                y: Math.min(clientY, y + fileListView.clientHeight - 120),
+              },
             });
           }
         }}
@@ -75,7 +79,7 @@ class component extends React.Component {
           }
         }}
         ref={(fileListView) => {
-          this.context.state.fileListView = fileListView;
+          this.context.setState({ fileListView });
         }}
       >
         <DefaultContextMenu />

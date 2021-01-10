@@ -56,28 +56,32 @@ export default React.memo(({
       });
     }
   }, [props.isOpen]);
+  const context = React.useRef();
+  if (!context.current) {
+    // componentWillMount
+    context.current = new Store({
+      pwd: '/',
+      files: [],
+      showNotifications: false,
+      notifications: [],
+      chosen: {},
+      fileSize: null,
+      filesPositions: [],
+      boxChosen: {},
+    });
+  }
   return (
-    <Modal
-      title="资源管理"
-      {...props}
-    >
-      <StoreContext.Provider value={new Store({
-        pwd: '/',
-        files: [],
-        showNotifications: false,
-        notifications: [],
-        chosen: {},
-        fileSize: null,
-        filesPositions: [],
-        boxChosen: {},
-      })}
+    <StoreContext.Provider value={context.current}>
+      <Modal
+        title="资源管理"
+        {...props}
       >
         <App>
           <StyledHeader />
           <StyledViewDefault />
           <StyledStatusBar />
         </App>
-      </StoreContext.Provider>
-    </Modal>
+      </Modal>
+    </StoreContext.Provider>
   );
 });

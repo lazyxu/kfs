@@ -52,6 +52,7 @@
         "react/prefer-stateless-function": "off",
         "react/no-array-index-key": "warn",
         "react/static-property-placement": "warn",
+        "react/jsx-filename-extension": "warn",
         "import/no-mutable-exports": "warn",
         "import/no-extraneous-dependencies": "warn",
         "react/jsx-props-no-spreading": "warn"

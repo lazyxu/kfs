@@ -226,7 +226,6 @@ export default React.memo(({
   listeners.current.push(onMove, topResize, bottomResize, leftResize, rightResize,
     topLeftResize, topRightResize, bottomLeftResize, bottomRightResize);
   const clearListeners = e => {
-    console.log('modal.clearListeners');
     if (cur.current) {
       listeners.current.forEach(l => {
         document.removeEventListener('mousemove', l);
@@ -235,7 +234,6 @@ export default React.memo(({
     }
   };
   React.useEffect(() => {
-    console.log('modal.useEffect');
     document.addEventListener('mouseup', clearListeners);
     return () => {
       document.removeEventListener('mouseup', clearListeners);

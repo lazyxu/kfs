@@ -7,7 +7,7 @@ const Bg = styled.div`
   width: 100%;
 `;
 
-export default ({
+export default React.memo(({
   onPosChange,
 }) => {
   const [pos, setPos] = React.useState(undefined);
@@ -89,4 +89,4 @@ export default ({
       <Selection />
     </Bg>
   );
-};
+});

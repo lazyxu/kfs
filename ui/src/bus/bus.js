@@ -16,7 +16,8 @@ export const globalStore = new Store({
 });
 window.globalStore = globalStore;
 
-export const StoreContext = React.createContext(globalStore);
+export const { ctxInState } = Store;
+export const StoreContext = React.createContext();
 export const busValue = {};
 export const busState = globalStore.state;
 export const addTrigger = globalStore.addTrigger.bind(globalStore);

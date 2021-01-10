@@ -2,12 +2,15 @@ import React from 'react';
 
 import ContextMenu from 'components/ContextMenu';
 
-import { inState, busState, setState } from 'bus/bus';
+import {
+  inState, ctxInState, busState, setState, StoreContext,
+} from 'bus/bus';
 import {
   cd, createFile, mkdir, mv, cp,
 } from 'bus/fs';
 
-@inState('contextMenu', 'cutFiles', 'copyFiles')
+@ctxInState(StoreContext, 'contextMenu')
+@inState('cutFiles', 'copyFiles')
 class component extends React.Component {
   render() {
     const {
@@ -41,7 +44,7 @@ class component extends React.Component {
           },
           历史版本: { enabled: false, fn: () => { } },
         }}
-        onFinish={() => setState({ contextMenu: null })}
+        onFinish={() => this.context.setState({ contextMenu: null })}
       />
     );
   }

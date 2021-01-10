@@ -56,7 +56,7 @@ class component extends React.Component {
           }
         }}
         onMouseDown={(e) => e.button !== 2
-          && setState({ contextMenu: null, contextMenuForFile: null })}
+          && setState({ contextMenuForFile: null })}
       >
         {!this.state.loaded && <span>loading...</span>}
         <App

@@ -103,11 +103,10 @@ export default React.memo(({
         console.log('onContextMenu', e.target, e.target.getAttribute('data-tag'));
         if (e.target.getAttribute('data-tag') === 'choose-able') {
           let { clientX, clientY } = e;
-          const { clientWidth, clientHeight } = context.fileListView;
+          const { clientWidth, clientHeight } = context.state.fileListView;
           (clientX > clientWidth - 200) && (clientX = clientWidth - 200);
           (clientY > clientHeight - 200) && (clientY = clientHeight - 200);
           setState({
-            contextMenu: null,
             contextMenuForFile: { x: clientX, y: clientY },
             chosen: (_chosen) => {
               if (!chosen) {
@@ -117,6 +116,9 @@ export default React.memo(({
               }
               _chosen[path] = 1;
             },
+          });
+          context.setState({
+            contextMenu: null,
           });
         }
       }}

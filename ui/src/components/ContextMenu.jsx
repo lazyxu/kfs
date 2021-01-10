@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 import UploadFile from 'components/UploadFile';
+import { isObject } from 'util';
 
 const Option = styled.div`
   color: #ffffff;
@@ -23,9 +24,25 @@ const DisabledOption = styled.div`
   }
 `;
 
+const onFinishList = {};
+let id = 0;
+
+document.onclick = e => {
+  Object.values(onFinishList).forEach(onFinish => {
+    onFinish();
+  });
+};
+
 export default ({
   x, y, options, onFinish,
 }) => {
+  React.useEffect(() => {
+    id++;
+    onFinishList[id] = onFinish;
+    return () => {
+      delete onFinishList[id];
+    };
+  }, []);
   const Div = styled.div`
       background-color: #322f32;
       border: 1px solid #504d51;
