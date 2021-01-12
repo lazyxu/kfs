@@ -8,7 +8,7 @@ import FileContextMenu from 'apps/ResourceManager/FileContextMenu';
 import BoxSelection from 'components/BoxSelection';
 
 import {
-  inState, StoreContext, ctxInState,
+  StoreContext, ctxInState,
 } from 'bus/bus';
 import { join } from 'utils/filepath';
 
@@ -21,6 +21,10 @@ const View = styled.div`
   flex-flow:row wrap;
   align-content:flex-start;
   background-color: transparent;
+  user-select: element;
+  :focus {
+    outline: none;
+  }
 `;
 
 @ctxInState(StoreContext, 'files', 'chosen', 'boxChosen')
@@ -73,6 +77,20 @@ class component extends React.Component {
               },
               boxChosen: {},
             });
+          }
+        }}
+        tabIndex="-1"
+        onKeyDown={(e) => {
+          console.log(e.keyCode, e.metaKey);
+          if (e.keyCode === 65 && e.metaKey === true) {
+            this.context.setState({
+              chosen: (_chosen) => {
+                this.context.state.files.map((f) => join(this.context.state.pwd, f.name)).forEach((path) => {
+                  _chosen[path] = 1;
+                });
+              },
+            });
+            e.preventDefault();
           }
         }}
         ref={(fileListView) => {

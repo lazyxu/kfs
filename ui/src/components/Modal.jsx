@@ -8,7 +8,7 @@ import { busState, setState } from 'bus/bus';
 const minWidth = 100;
 const minHeight = 100;
 const Modal = styled.div`
-  position: fixed;
+  position: absolute;
   display: grid;
   grid-template-columns: 3px 1fr 3px ;
   grid-template-rows: 3px 1fr 3px;

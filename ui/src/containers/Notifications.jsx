@@ -8,7 +8,7 @@ import { inState } from 'bus/bus';
 const Notifications = styled.div`
   position: fixed;
   right: 0.5em;
-  bottom: 1.5em;
+  top: 1.5em;
   width: 20em;
 `;
 
@@ -21,9 +21,11 @@ class component extends React.Component {
           <Notification
             key={n.id}
             notification={n}
-            remove={() => this.setState((prevState) => ({
-              notifications: prevState.notifications.filter((notification) => n !== notification),
-            }))}
+            remove={() => {
+              this.setState((prevState) => ({
+                notifications: prevState.notifications.filter((notification) => n !== notification),
+              }));
+            }}
           />
         ))}
       </Notifications>

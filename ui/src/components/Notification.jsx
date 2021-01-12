@@ -42,7 +42,10 @@ export default ({
           color="white"
           size="1em"
           hoverCursor="pointer"
-          onClick={() => remove()}
+          onClick={() => {
+            console.log('Notification');
+            remove();
+          }}
         />
       </Header>
       <Body>{notification.message && notification.message.split('%0A').join('\n')}</Body>

@@ -1,7 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import Icon from 'components/Icon';
 import App from 'components/App';
 
 import ResourceManager from 'apps/ResourceManager/ResourceManager';
@@ -10,74 +9,66 @@ import ConfigEditor from 'apps/SystemConfig';
 import './App.css';
 import './_variables.scss';
 
-import { setState, busState, inState } from 'bus/bus';
+import { inState } from 'bus/bus';
 import 'bus/triggers';
-import { join } from 'utils/filepath';
+import TaskBar from 'containers/TaskBar';
 
-const Desktop = styled.div`
+const Index = styled.div`
   height: 100%;
   width: 100%;
   position: fixed;
   color: var(--color);
   display: flex;
   flex-direction: column;
-  user-select: element;
-  :focus {
-    outline: none;
-  }
+`;
+const Desktop = styled.div`
+  height: 100%;
+  width: 100%;
+  position: relative;
+  color: var(--color);
+  display: flex;
+  flex-direction: column;
 `;
 
 @inState('windows')
 class component extends React.Component {
   render() {
     return (
-      <Desktop
-        tabIndex="-1"
-        onKeyDown={(e) => {
-          console.log(e.keyCode, e.metaKey);
-          if (e.keyCode === 65 && e.metaKey === true) {
-            setState({
-              chosen: (_chosen) => {
-                busState.files.map((f) => join(busState.pwd, f.name)).forEach((path) => {
-                  _chosen[path] = 1;
-                });
-              },
-            });
-            e.preventDefault();
-          }
-        }}
-      >
-        <App
-          icon="wangpan"
-          color="#cccccc"
-          elm={ResourceManager}
-          text="资源管理"
-        />
-        <App
-          icon="peizhi"
-          color="#cccccc"
-          elm={ConfigEditor}
-          newWindowOption="true"
-          text="系统配置"
-        />
-        {Object.values(this.state.windows).sort((a, b) => a.zIndex - b.zIndex).map(w => {
-          const Window = w.elm;
-          return (
-            <Window
-              key={w.id}
-              id={w.id}
-              isOpen="true"
-              close={() => {
-                this.setState(prev => {
-                  delete prev.windows[w.id];
-                  return { windows: prev.windows };
-                });
-              }}
-              zIndex={w.zIndex}
-            />
-          );
-        })}
-      </Desktop>
+      <Index>
+        <TaskBar />
+        <Desktop>
+          <App
+            icon="wangpan"
+            color="#cccccc"
+            elm={ResourceManager}
+            text="资源管理"
+          />
+          <App
+            icon="peizhi"
+            color="#cccccc"
+            elm={ConfigEditor}
+            newWindowOption="true"
+            text="系统配置"
+          />
+          {Object.values(this.state.windows).sort((a, b) => a.zIndex - b.zIndex).map(w => {
+            const Window = w.elm;
+            return (
+              <Window
+                key={w.id}
+                id={w.id}
+                isOpen="true"
+                close={() => {
+                  this.setState(prev => {
+                    delete prev.windows[w.id];
+                    return { windows: prev.windows };
+                  });
+                }}
+                zIndex={w.zIndex}
+              />
+            );
+          })}
+        </Desktop>
+      </Index>
     );
   }
 }

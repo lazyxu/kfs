@@ -1,10 +1,13 @@
 :root {
+  --task-bar-height: 1.5em;
+  --task-bar-color: #2b2d30;
   --header-color: #3b3c3e;
   --header-path-color: #646568;
   --footer-color: #0075c4;
   --background-color: #1e1f21;
   --footer-hover-color: #1e84c9;
   --color: white;
+  --z-task-bar: 100000;
   --z-header: 1000;
   --z-body: 100;
   --z-body-select: 101;

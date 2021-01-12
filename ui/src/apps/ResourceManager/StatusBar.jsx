@@ -3,11 +3,9 @@ import styled from 'styled-components';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
 
-import Icon from 'components/Icon';
 import Informations from 'components/Informations';
-import Notifications from 'containers/Notifications';
 
-import { inState } from 'bus/bus';
+import { ctxInState, StoreContext } from 'bus/bus';
 
 const StatusBar = styled.div`
   position: relative;
@@ -19,13 +17,6 @@ const StatusBar = styled.div`
 `;
 const Empty = styled.div`
   flex: 1;
-`;
-const Notification = styled.div`
-  height: 100%;
-  :hover {
-    background-color: var(--footer-hover-color);
-    cursor: pointer;
-  }
 `;
 const Text = styled.div`
   line-height: 1.5em;
@@ -40,15 +31,6 @@ const ClickableText = styled(Text)`
     cursor: pointer;
   }
 `;
-const Triangle = styled.div`
-  position: fixed;
-  right: 1em;
-  bottom: 1.5em;
-  width: 0;
-  height: 0;
-  border: 0.5em solid transparent;
-  border-bottom: 0.5em solid var(--footer-color);
-`;
 
 function toDecimal2NoZero(x) {
   const f = Math.round(x * 100) / 100;
@@ -60,9 +42,11 @@ function formatDate(ms) {
   return moment(ms).locale('zh-cn').format('llll');
 }
 
-@inState('showNotifications', 'showDateInformations', 'files', 'fileSize', 'atimems', 'mtimems', 'ctimems', 'birthtimems',
+@ctxInState(StoreContext, 'showDateInformations', 'files', 'fileSize', 'atimems', 'mtimems', 'ctimems', 'birthtimems',
   'chosen', 'boxChosen')
 class component extends React.Component {
+  static contextType = StoreContext
+
   getFileSize() {
     let { fileSize } = this.state;
     if (typeof fileSize === 'number') {
@@ -99,7 +83,7 @@ class component extends React.Component {
 
   render() {
     const {
-      atimems, mtimems, ctimems, birthtimems, showDateInformations, showNotifications,
+      atimems, mtimems, ctimems, birthtimems, showDateInformations,
     } = this.state;
     const cnt = this.getCnt();
     return (
@@ -137,24 +121,6 @@ class component extends React.Component {
               {formatDate(this.state.mtimems)}
             </ClickableText>
           ) : null}
-        <Notification
-          style={showNotifications ? {
-            backgroundColor: 'var(--footer-hover-color)',
-            cursor: 'pointer',
-          } : {}}
-        >
-          <Icon
-            icon="notice"
-            color="white"
-            size="1em"
-            padding="0.2em 0.5em 0 0.5em"
-            onClick={() => this.setState(
-              (prevState) => ({ showNotifications: !prevState.showNotifications }),
-            )}
-          />
-        </Notification>
-        {showNotifications && <Triangle />}
-        {showNotifications && <Notifications />}
       </StatusBar>
     );
   }

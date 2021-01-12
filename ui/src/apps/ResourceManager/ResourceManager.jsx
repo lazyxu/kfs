@@ -2,9 +2,9 @@ import React from 'react';
 
 import styled from 'styled-components';
 import Modal from 'components/Modal';
-import ViewDefault from 'containers/GridView';
-import Header from 'containers/Header';
-import StatusBar from 'containers/StatusBar';
+import ViewDefault from 'apps/ResourceManager/GridView';
+import Header from 'apps/ResourceManager/Header';
+import StatusBar from 'apps/ResourceManager/StatusBar';
 
 import Store, { StoreContext } from 'bus/bus';
 
@@ -47,7 +47,6 @@ export default React.memo(({
     context.current = new Store({
       pwd: '/',
       files: [],
-      showNotifications: false,
       notifications: [],
       chosen: {},
       fileSize: null,

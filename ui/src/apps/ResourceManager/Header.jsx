@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import Path from 'containers/Path';
+import Path from 'apps/ResourceManager/Path';
 
 const Header = styled.div`
   position: relative;

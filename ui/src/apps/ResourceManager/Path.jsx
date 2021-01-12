@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import PathArray from 'containers/PathArray';
+import PathArray from 'apps/ResourceManager/PathArray';
 
 import { ctxInState, StoreContext } from 'bus/bus';
 
