@@ -3,12 +3,12 @@ import styled from 'styled-components';
 
 import PathArray from 'containers/PathArray';
 
-import { inState } from 'bus/bus';
+import { ctxInState, StoreContext } from 'bus/bus';
 
-@inState('pwd')
+@ctxInState(StoreContext, 'pwd')
 class component extends React.Component {
-  constructor(props) {
-    super(props);
+  constructor(props, ctx) {
+    super(props, ctx);
 
     this.state = {
       type: 'plain',

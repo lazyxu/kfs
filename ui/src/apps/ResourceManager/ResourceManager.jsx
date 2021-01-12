@@ -6,9 +6,7 @@ import ViewDefault from 'containers/GridView';
 import Header from 'containers/Header';
 import StatusBar from 'containers/StatusBar';
 
-import { getConfig, setConfig } from 'adaptor/config';
-import Store from 'bus/store';
-import { StoreContext } from 'bus/bus';
+import Store, { StoreContext } from 'bus/bus';
 
 const App = styled.div`
   height: 100%;
@@ -43,19 +41,6 @@ const StyledStatusBar = styled(StatusBar)`
 export default React.memo(({
   ...props
 }) => {
-  const [textarea, setTextarea] = React.useState({
-    text: '',
-    valid: false,
-  });
-  React.useEffect(() => {
-    if (props.isOpen) {
-      console.log('load config', JSON.stringify(getConfig(), undefined, 2));
-      setTextarea({
-        text: JSON.stringify(getConfig(), undefined, 2),
-        valid: true,
-      });
-    }
-  }, [props.isOpen]);
   const context = React.useRef();
   if (!context.current) {
     // componentWillMount
@@ -68,8 +53,16 @@ export default React.memo(({
       fileSize: null,
       filesPositions: [],
       boxChosen: {},
+      cutFiles: [],
+      copyFiles: [],
     });
   }
+  React.useEffect(() => {
+    if (props.isOpen) {
+      console.log(context.current);
+      context.current.cd(context.current.pwd);
+    }
+  }, [props.isOpen]);
   return (
     <StoreContext.Provider value={context.current}>
       <Modal

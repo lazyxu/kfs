@@ -8,7 +8,7 @@ import FileContextMenu from 'apps/ResourceManager/FileContextMenu';
 import BoxSelection from 'components/BoxSelection';
 
 import {
-  inState, busState, setState, busValue, StoreContext,
+  inState, StoreContext, ctxInState,
 } from 'bus/bus';
 import { join } from 'utils/filepath';
 
@@ -23,7 +23,7 @@ const View = styled.div`
   background-color: transparent;
 `;
 
-@inState('files', 'chosen', 'boxChosen')
+@ctxInState(StoreContext, 'files', 'chosen', 'boxChosen')
 class component extends React.Component {
   static contextType = StoreContext;
 
@@ -54,7 +54,7 @@ class component extends React.Component {
           }
           if (e.target.getAttribute('data-tag') !== 'choose-able') {
             if (!e.metaKey) {
-              setState({
+              this.context.setState({
                 chosen: (_chosen) => {
                   Object.keys(_chosen).forEach((item) => {
                     delete _chosen[item];
@@ -67,7 +67,7 @@ class component extends React.Component {
         onMouseUp={(e) => {
           const keys = Object.keys(this.state.boxChosen);
           if (keys.length !== 0) {
-            setState({
+            this.context.setState({
               chosen: (_chosen) => {
                 keys.forEach((key) => _chosen[key] = 1);
               },
@@ -100,14 +100,15 @@ class component extends React.Component {
                 }
               }
             }
-            setState({ boxChosen });
+            this.context.setState({ boxChosen });
           }}
         />
         {files.map((f) => {
-          const path = join(busState.pwd, f.name);
+          const { pwd } = this.context.state;
+          const path = join(pwd, f.name);
           return f.type === 'file'
-            ? <File key={`${f.type}-${path}`} {...f} chosen={chosen[path] || boxChosen[path]} dir={busState.pwd} path={path} />
-            : <Dir key={`${f.type}-${path}`} {...f} chosen={chosen[path] || boxChosen[path]} dir={busState.pwd} path={path} />;
+            ? <File key={`${f.type}-${path}`} {...f} chosen={chosen[path] || boxChosen[path]} dir={pwd} path={path} />
+            : <Dir key={`${f.type}-${path}`} {...f} chosen={chosen[path] || boxChosen[path]} dir={pwd} path={path} />;
         })}
       </View>
     );

@@ -49,20 +49,18 @@ function getPathArray(path) {
   return array;
 }
 
-class component extends React.Component {
-  render() {
-    const pathArray = getPathArray(this.props.pwd);
-    return (
-      <div>
-        {pathArray.map((s) => (
-          <PathSymbol
-            key={s.path}
-            {...s}
-          />
-        ))}
-      </div>
-    );
-  }
-}
-
-export default component;
+export default React.memo(({
+  pwd,
+}) => {
+  const pathArray = getPathArray(pwd);
+  return (
+    <div>
+      {pathArray.map((s) => (
+        <PathSymbol
+          key={s.path}
+          {...s}
+        />
+      ))}
+    </div>
+  );
+});

@@ -3,16 +3,13 @@ import React from 'react';
 import ContextMenu from 'components/ContextMenu';
 
 import {
-  ctxInState,
-  inState, setState, StoreContext,
+  ctxInState, StoreContext,
 } from 'bus/bus';
-import {
-  remove, download,
-} from 'bus/fs';
 
-@ctxInState(StoreContext, 'contextMenuForFile')
-@inState('chosen')
+@ctxInState(StoreContext, 'contextMenuForFile', 'chosen')
 class component extends React.Component {
+  static contextType = StoreContext
+
   render() {
     const {
       contextMenuForFile, chosen,
@@ -28,11 +25,11 @@ class component extends React.Component {
     if (cnt === 1) {
       contextMenuForFileOptions = {
         打开: { enabled: false, fn: () => { } },
-        下载: () => download(pathList),
-        剪切: () => setState({ cutFiles: pathList, copyFiles: [] }),
-        复制: () => setState({ cutFiles: [], copyFiles: pathList }),
-        删除: () => remove(pathList),
-        重命名: () => setState({ chosen: (_chosen) => _chosen[pathList[0]] = 2 }),
+        下载: () => this.context.download(pathList),
+        剪切: () => this.context.setState({ cutFiles: pathList, copyFiles: [] }),
+        复制: () => this.context.setState({ cutFiles: [], copyFiles: pathList }),
+        删除: () => this.context.remove(pathList),
+        重命名: () => this.context.setState({ chosen: (_chosen) => _chosen[pathList[0]] = 2 }),
         属性: { enabled: false, fn: () => { } },
         历史版本: { enabled: false, fn: () => { } },
       };
@@ -40,9 +37,9 @@ class component extends React.Component {
       contextMenuForFileOptions = {
         打开: { enabled: false, fn: () => { } },
         [`下载${cnt}个文件`]: { enabled: false, fn: () => { } },
-        剪切: () => setState({ cutFiles: pathList, copyFiles: [] }),
-        复制: () => setState({ cutFiles: [], copyFiles: pathList }),
-        删除: () => remove(pathList),
+        剪切: () => this.context.setState({ cutFiles: pathList, copyFiles: [] }),
+        复制: () => this.context.setState({ cutFiles: [], copyFiles: pathList }),
+        删除: () => this.context.remove(pathList),
         属性: { enabled: false, fn: () => { } },
         历史版本: { enabled: false, fn: () => { } },
       };

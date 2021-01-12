@@ -4,10 +4,7 @@ import styled from 'styled-components';
 import FileIconClickable from 'components/FileIconClickable';
 import FileNameClickable from 'components/FileNameClickable';
 
-import {
-  busState, setState, busValue, StoreContext,
-} from 'bus/bus';
-import { mv } from 'bus/fs';
+import { StoreContext } from 'bus/bus';
 import { warn } from 'bus/notification';
 import { join } from 'utils/filepath';
 
@@ -48,7 +45,7 @@ export default React.memo(({
       const src = join(dir, name);
       const dst = join(dir, fileName);
       console.log('---rename---', dir, src, dst);
-      mv([src], dst);
+      context.mv([src], dst);
     }
   }, [chosen]);
   React.useEffect(() => {
@@ -58,14 +55,14 @@ export default React.memo(({
       fileNameElm.current.select();
     }
   });
-  const isDargTargetValid = type === 'dir' && !busState.chosen[path];
+  const isDargTargetValid = type === 'dir' && !context.state.chosen[path];
   return (
     <File
       name="file"
       data-path={path}
       draggable="true"
       onDragStart={e => {
-        const files = Object.keys(busState.chosen).filter((k) => busState.chosen[k] > 0);
+        const files = Object.keys(context.state.chosen).filter((k) => context.state.chosen[k] > 0);
         e.dataTransfer.setData('text/plain', JSON.stringify(files));
         console.log('onDragStart', name, e.dataTransfer.getData('text/plain'));
       }}
@@ -93,7 +90,7 @@ export default React.memo(({
           if (files.includes(path)) {
             warn('移动文件至文件夹', '移动文件夹至本身');
           } else {
-            mv(files, path);
+            context.mv(files, path);
           }
           setDragOver(false);
         }
@@ -123,10 +120,10 @@ export default React.memo(({
           border: `1px dashed ${dragOver ? 'white' : 'transparent'}`,
         }}
         onClick={e => {
-          setState({
+          context.setState({
             atimems, mtimems, ctimems, birthtimems,
           });
-          setState({
+          context.setState({
             chosen: (_chosen) => {
               const v = _chosen[path];
               if (v === 1) {
@@ -167,7 +164,7 @@ export default React.memo(({
                   const fileName = e.target.value;
                   const src = join(dir, name);
                   const dst = join(dir, fileName);
-                  setState({
+                  context.setState({
                     chosen: (_chosen) => {
                       delete _chosen[src];
                       _chosen[dst] = 1;
@@ -183,7 +180,7 @@ export default React.memo(({
               name={name}
               style={{ backgroundColor: chosen === 1 ? '#0e5ccd' : 'transparent' }}
               onClick={e => {
-                setState({
+                context.setState({
                   chosen: (_chosen) => {
                     const v = _chosen[path];
                     console.log('---FileNameClickable._chosen---', _chosen[path]);

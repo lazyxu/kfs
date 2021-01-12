@@ -10,7 +10,6 @@ import ConfigEditor from 'apps/SystemConfig';
 import './App.css';
 import './_variables.scss';
 
-import { cd } from 'bus/fs';
 import { setState, busState, inState } from 'bus/bus';
 import 'bus/triggers';
 import { join } from 'utils/filepath';
@@ -30,14 +29,6 @@ const Desktop = styled.div`
 
 @inState('windows')
 class component extends React.Component {
-  state = {
-    loaded: false,
-  }
-
-  componentDidMount() {
-    cd('/').then(() => this.setState({ loaded: true }));
-  }
-
   render() {
     return (
       <Desktop
@@ -56,7 +47,6 @@ class component extends React.Component {
           }
         }}
       >
-        {!this.state.loaded && <span>loading...</span>}
         <App
           icon="wangpan"
           color="#cccccc"

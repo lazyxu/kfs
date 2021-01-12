@@ -2,10 +2,8 @@ import React from 'react';
 import styled from 'styled-components';
 import map from 'promise.map';
 
-import { upload } from 'bus/fs';
 import { join } from 'utils/filepath';
-import { busState } from 'bus/bus';
-import myFileReader from 'utils/fileReader';
+import { StoreContext } from 'bus/bus';
 
 const Div = styled.div`
 `;
@@ -19,15 +17,17 @@ const Input = styled.input`
 const MAX_BLOCK_BYTES = 20 * 1024 * 1024;
 const PARALLEL_BLOBK_COUNT = 5;
 class component extends React.Component {
+  static contextType = StoreContext
+
   componentDidMount() {
     this.input.addEventListener('change', async (e) => {
       console.log(this.input.files);
       const blob = this.input.files[0];
-      const path = join(busState.pwd, blob.name);
+      const path = join(this.context.state.pwd, blob.name);
       // const total = blob.size;
 
       // const bytes = await myFileReader(blob);
-      upload(path, blob);
+      this.context.upload(path, blob);
       // if (total <= MAX_BLOCK_BYTES) {
       //   const bytes = await myFileReader(blob);
       //   upload(path, bytes);

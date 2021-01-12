@@ -1,4 +1,4 @@
-import { setState } from 'bus/bus';
+import { setState } from 'bus/global';
 
 let id = 0;
 export default async function notification(type, title, message) {

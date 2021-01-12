@@ -1,10 +1,12 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { cd, mv } from 'bus/fs';
 import { warn } from 'bus/notification';
+import { StoreContext } from 'bus/bus';
 
 class component extends React.Component {
+  static contextType = StoreContext
+
   state = {
     dragOver: false,
   }
@@ -29,7 +31,7 @@ class component extends React.Component {
       <Button
         key={path}
         dragable={dragable}
-        onClick={() => cd(path)}
+        onClick={() => this.context.cd(path)}
         onDragEnter={(e) => {
           if (dragable) {
             e.preventDefault();
@@ -68,7 +70,7 @@ class component extends React.Component {
             if (files.includes(dst)) {
               warn('移动文件至文件夹', '移动文件夹至本身');
             } else {
-              mv(files, dst);
+              this.context.mv(files, dst);
             }
             if (this.state.dragOver) {
               this.setState({ dragOver: false });

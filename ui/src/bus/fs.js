@@ -2,28 +2,27 @@ import {
   PathRequest, MoveRequest, PathListRequest, DownloadRequest, UploadRequest,
 } from 'pb/fs_pb';
 import { KoalaFS } from 'pb/fs_pb_service';
-import { setState, busState } from 'bus/bus';
 import { error } from 'bus/notification';
 import { dirname, basename, join } from 'utils/filepath';
 
 import { grpc } from '@improbable-eng/grpc-web';
 import { getConfig } from 'adaptor/config';
+import Store from './store';
 
-function invoke(method, request, metadata) {
+Store.prototype.invoke = async function (method, request, metadata) {
   return new Promise((resolve) => {
     grpc.invoke(method, {
       request,
       host: getConfig().host,
-      metadata: Object.assign(metadata || {}, { 'kfs-pwd': busState.pwd, 'kfs-mount': 'default' }),
+      metadata: Object.assign(metadata || {}, { 'kfs-pwd': this.state.pwd, 'kfs-mount': 'default' }),
       onHeaders: (headers) => {
         // console.log(headers);
       },
       onMessage: (message) => {
         if (message.getFilesList) {
           const files = message.getFilesList().map((f) => f.toObject());
-          window.message = message;
           if (files) {
-            setState({ files });
+            this.setState({ files });
           }
         }
         return resolve(message);
@@ -38,20 +37,20 @@ function invoke(method, request, metadata) {
       },
     });
   });
-}
+};
 
-export async function cd(path) {
+Store.prototype.cd = async function (path) {
   try {
-    path = path || busState.pwd;
+    path = path || this.state.pwd;
     console.log('---grpc cd---', path);
-    const message = await invoke(KoalaFS.ls,
+    const message = await this.invoke(KoalaFS.ls,
       new PathRequest().setPath(path));
     console.log('---grpc cd cb---', message);
     const { path: pwd } = message.toObject();
-    if (pwd !== busState.pwd) {
-      setState({ chosenFiles: {} });
+    if (pwd !== this.state.pwd) {
+      this.setState({ chosenFiles: {} });
     }
-    setState({
+    this.setState({
       pwd,
       chosen: (_chosen) => {
         Object.keys(_chosen).forEach((item) => {
@@ -63,33 +62,33 @@ export async function cd(path) {
     console.error('---grpc cd error---', e);
     error('读取文件夹', e.message);
   }
-}
+};
 
-export async function mv(srcList, dst) {
+Store.prototype.mv = async function (srcList, dst) {
   try {
     if (srcList.length === 1 && srcList[0] === dst) {
       return;
     }
     console.log('---grpc mv---', srcList, dst);
-    const message = await invoke(KoalaFS.mv,
+    const message = await this.invoke(KoalaFS.mv,
       new MoveRequest().setSrcList(srcList).setDst(dst));
     console.log('---grpc mv cb---', message);
     if (srcList.length !== 1 || dirname(srcList[0]) === dirname(dst)) {
-      await cd(busState.pwd);
+      await this.cd(this.state.pwd);
     }
-    setState({
+    this.setState({
       chosen: (_chosen) => {
         Object.keys(_chosen).forEach((item) => {
           delete _chosen[item];
         });
-        console.log(dst, dirname(dst), busState.pwd);
-        if (dirname(dst) === busState.pwd
-          && Object.values(busState.files).find((f) => f.name === basename(dst)).type === 'dir') {
+        console.log(dst, dirname(dst), this.state.pwd);
+        if (dirname(dst) === this.state.pwd
+          && Object.values(this.state.files).find((f) => f.name === basename(dst)).type === 'dir') {
           _chosen[dst] = 1;
           return;
         }
         srcList.forEach((src) => {
-          _chosen[`${busState.pwd}/${basename(src)}`] = 1;
+          _chosen[`${this.state.pwd}/${basename(src)}`] = 1;
         });
       },
     });
@@ -97,27 +96,27 @@ export async function mv(srcList, dst) {
     console.error('---grpc mv error---', e);
     error('移动文件', e.message);
   }
-}
+};
 
-export async function cp(srcList, dst) {
+Store.prototype.cp = async function (srcList, dst) {
   try {
     if (srcList.length === 1 && srcList[0] === dst) {
       return;
     }
     console.log('---grpc cp---', srcList, dst);
-    const message = await invoke(KoalaFS.cp,
+    const message = await this.invoke(KoalaFS.cp,
       new MoveRequest().setSrcList(srcList).setDst(dst));
     console.log('---grpc cp cb---', message);
     if (srcList.length !== 1 || dirname(srcList[0]) === dirname(dst)) {
-      await cd(busState.pwd);
+      await this.cd(this.state.pwd);
     }
-    setState({
+    this.setState({
       chosen: (_chosen) => {
         Object.keys(_chosen).forEach((item) => {
           delete _chosen[item];
         });
         srcList.forEach((src) => {
-          _chosen[`${busState.pwd}/${basename(src)}`] = 1;
+          _chosen[`${this.state.pwd}/${basename(src)}`] = 1;
         });
       },
     });
@@ -125,38 +124,38 @@ export async function cp(srcList, dst) {
     console.error('---grpc cp error---', e);
     error('复制文件', e.message);
   }
-}
+};
 
-export async function createFile(path) {
+Store.prototype.createFile = async function (path) {
   try {
     console.log('---grpc createFile---', path);
-    const message = await invoke(KoalaFS.createFile,
+    const message = await this.invoke(KoalaFS.createFile,
       new PathRequest().setPath(path));
     console.log('---grpc createFile cb---', message);
     const { name } = message.toObject();
-    setState({
+    this.setState({
       chosen: (_chosen) => {
         Object.keys(_chosen).forEach((item) => {
           delete _chosen[item];
         });
-        _chosen[join(busState.pwd, name)] = 2;
+        _chosen[join(this.state.pwd, name)] = 2;
       },
     });
   } catch (e) {
     console.error('---grpc createFile error---', e);
     error('新建文件', e.message);
   }
-}
+};
 
-export async function mkdir(path) {
+Store.prototype.mkdir = async function (path) {
   try {
     console.log('---grpc mkdir---');
-    const { pwd } = busState;
-    const message = await invoke(KoalaFS.mkdir,
+    const { pwd } = this.state;
+    const message = await this.invoke(KoalaFS.mkdir,
       new PathRequest().setPath(path));
     console.log('---grpc mkdir cb---', message);
     const { name } = message.toObject();
-    setState({
+    this.setState({
       chosen: (_chosen) => {
         Object.keys(_chosen).forEach((item) => {
           delete _chosen[item];
@@ -168,17 +167,17 @@ export async function mkdir(path) {
     console.error('---grpc mkdir error---', e);
     error('新建文件夹', e.message);
   }
-}
+};
 
-export async function remove(path) {
+Store.prototype.remove = async function (path) {
   try {
     const pathList = typeof path === 'string' ? [path] : path;
     console.log('---grpc remove---', path);
-    const message = await invoke(KoalaFS.remove,
+    const message = await this.invoke(KoalaFS.remove,
       new PathListRequest().setPathList(pathList));
     console.log('---grpc remove cb---', message);
-    await cd(busState.pwd);
-    setState({
+    await this.cd(this.state.pwd);
+    this.setState({
       chosen: (_chosen) => {
         pathList.forEach((path) => delete _chosen[path]);
       },
@@ -187,21 +186,12 @@ export async function remove(path) {
     console.error('---grpc mv error---', e);
     error('删除文件或文件夹', e.message);
   }
-}
+};
 
-function createAndDownloadFile(fileName, content) {
-  const aTag = document.createElement('a');
-  const blob = new Blob(content);
-  aTag.download = fileName;
-  aTag.href = URL.createObjectURL(blob);
-  aTag.click();
-  URL.revokeObjectURL(blob);
-}
-
-export async function download(pathList) {
+Store.prototype.download = async function (pathList) {
   try {
     console.log('---grpc download---', pathList);
-    const message = await invoke(KoalaFS.download,
+    const message = await this.invoke(KoalaFS.download,
       new DownloadRequest().setPathList(pathList));
     console.log('---grpc download cb---', message);
     for (const hash of message.getHashList()) {
@@ -222,7 +212,7 @@ export async function download(pathList) {
     //   const blobs = await map(hashList, async (hash, i) => {
     //     const hashHex = hash.map((x) => (`00${x.toString(16)}`).slice(-2)).join('');
     //     console.log(`download block ${i}/${blockCount}---`, hashHex);
-    //     const message = await invoke(KoalaFS.download,
+    //     const message = await this.invoke(KoalaFS.download,
     //       new DownloadRequest().setHash(hash));
     //     console.log(`download block ${i}/${blockCount} cb---`, hashHex, message);
     //     return message.getSinglefilecontent();
@@ -235,16 +225,16 @@ export async function download(pathList) {
     console.error('---grpc download error---', e);
     error('下载文件', e.message);
   }
-}
+};
 
-export async function upload(path, data, hashList = []) {
+Store.prototype.upload = async function (path, data, hashList = []) {
   try {
     const hash = await fetch(`${getConfig().host}/api/upload`, {
       method: 'POST',
       body: data,
     }).then(resp => resp.text());
     console.log('---grpc upload---', path, hash, data.size);
-    const message = await invoke(KoalaFS.upload,
+    const message = await this.invoke(KoalaFS.upload,
       new UploadRequest().setPath(path).setHash(hash).setSize(data.size));
     console.log('---grpc upload cb---', message);
     return hash;
@@ -253,4 +243,4 @@ export async function upload(path, data, hashList = []) {
     error('上传文件', e.message);
   }
   return null;
-}
+};

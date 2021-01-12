@@ -1,4 +1,3 @@
-import React from 'react';
 import { EventEmitter } from 'events';
 
 window.stores = [];

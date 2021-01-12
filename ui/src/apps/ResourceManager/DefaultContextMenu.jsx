@@ -3,15 +3,13 @@ import React from 'react';
 import ContextMenu from 'components/ContextMenu';
 
 import {
-  inState, ctxInState, busState, setState, StoreContext,
+  inState, ctxInState, StoreContext,
 } from 'bus/bus';
-import {
-  cd, createFile, mkdir, mv, cp,
-} from 'bus/fs';
 
-@ctxInState(StoreContext, 'contextMenu')
-@inState('cutFiles', 'copyFiles')
+@ctxInState(StoreContext, 'contextMenu', 'cutFiles', 'copyFiles')
 class component extends React.Component {
+  static contextType = StoreContext
+
   render() {
     const {
       contextMenu, copyFiles, cutFiles,
@@ -28,17 +26,17 @@ class component extends React.Component {
         y={contextMenu.y}
         options={{
           上传文件: console.log,
-          新建文件: () => createFile(),
-          新建文件夹: () => mkdir(),
-          刷新: () => cd(),
+          新建文件: () => this.context.createFile(),
+          新建文件夹: () => this.context.mkdir(),
+          刷新: () => this.context.cd(),
           粘贴: {
             enabled: cutFiles.length > 0 || copyFiles.length > 0,
             fn: () => {
               if (cutFiles.length > 0) {
-                mv(cutFiles, busState.pwd);
-                setState({ cutFiles: [] });
+                this.context.mv(cutFiles, this.context.state.pwd);
+                this.context.setState({ cutFiles: [] });
               } else {
-                cp(copyFiles, busState.pwd);
+                this.context.cp(copyFiles, this.context.state.pwd);
               }
             },
           },
