@@ -2,6 +2,7 @@ package rootdirectory
 
 import (
 	"context"
+	"path"
 	"path/filepath"
 
 	"github.com/lazyxu/kfs/kfscore/storage"
@@ -112,22 +113,19 @@ func (g *RootDirectory) Ls(ctx context.Context, req *pb.PathRequest) (resp *pb.F
 	return resp, err
 }
 
-func (g *RootDirectory) Cp(ctx context.Context, req *pb.MoveRequest) (resp *pb.Void, err error) {
-	resp = new(pb.Void)
+func (g *RootDirectory) Cp(ctx context.Context, req *pb.MoveRequest) (resp *pb.PathList, err error) {
+	resp = new(pb.PathList)
 	defer catch(&err)
-	m, err := g.transaction(ctx, func(m *node.Mount) error {
+	_, err = g.transaction(ctx, func(m *node.Mount) error {
 		for _, src := range req.Src {
-			err := m.Cp(src, req.Dst)
+			name, err := m.Cp(src, req.Dst)
+			resp.Path = append(resp.Path, path.Join(req.Dst, name))
 			if err != nil {
 				return err
 			}
 		}
 		return nil
 	})
-	if err != nil {
-		return resp, err
-	}
-	resp.Files, err = getFileList(m, getPathFromMetadata(ctx))
 	return resp, err
 }
 
@@ -150,47 +148,25 @@ func (g *RootDirectory) Mv(ctx context.Context, req *pb.MoveRequest) (resp *pb.V
 	return resp, err
 }
 
-func (g *RootDirectory) CreateFile(ctx context.Context, req *pb.PathRequest) (resp *pb.FileStat, err error) {
-	resp = new(pb.FileStat)
+func (g *RootDirectory) NewFile(ctx context.Context, req *pb.PathRequest) (resp *pb.PathResponse, err error) {
+	resp = new(pb.PathResponse)
 	defer catch(&err)
-	m, err := g.transaction(ctx, func(m *node.Mount) error {
-		parent, leaf := filepath.Split(req.Path)
-		dir, err := m.GetDir(parent)
-		if err != nil {
-			return err
-		}
-		err = dir.AddChild(m.Obj().NewFileMetadata(leaf, object.DefaultFileMode))
-		if err != nil {
-			return err
-		}
-		return nil
+	_, err = g.transaction(ctx, func(m *node.Mount) error {
+		name, err := m.NewFile(req.Path)
+		resp.Path = path.Join(req.Path, name)
+		return err
 	})
-	if err != nil {
-		return resp, err
-	}
-	resp.Files, err = getFileList(m, getPathFromMetadata(ctx))
 	return resp, err
 }
 
-func (g *RootDirectory) Mkdir(ctx context.Context, req *pb.PathRequest) (resp *pb.FileStat, err error) {
-	resp = new(pb.FileStat)
+func (g *RootDirectory) NewDir(ctx context.Context, req *pb.PathRequest) (resp *pb.PathResponse, err error) {
+	resp = new(pb.PathResponse)
 	defer catch(&err)
-	m, err := g.transaction(ctx, func(m *node.Mount) error {
-		parent, leaf := filepath.Split(req.Path)
-		dir, err := m.GetDir(parent)
-		if err != nil {
-			return err
-		}
-		err = dir.AddChild(m.Obj().NewDirMetadata(leaf, object.DefaultDirMode))
-		if err != nil {
-			return err
-		}
-		return nil
+	_, err = g.transaction(ctx, func(m *node.Mount) error {
+		name, err := m.NewDir(req.Path)
+		resp.Path = path.Join(req.Path, name)
+		return err
 	})
-	if err != nil {
-		return resp, err
-	}
-	resp.Files, err = getFileList(m, getPathFromMetadata(ctx))
 	return resp, err
 }
 

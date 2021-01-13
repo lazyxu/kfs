@@ -241,37 +241,63 @@ func move(newDir *Dir, oldMetadata *object.Metadata, name string) error {
 	}
 }
 
-func (m *Mount) Cp(oldPath, newPath string) error {
+func (m *Mount) Cp(oldPath, newPath string) (string, error) {
 	oldParent, oldName := path.Split(oldPath)
 	oldDir, err := m.GetDir(oldParent)
 	if err != nil {
-		return err
+		return "", err
 	}
 	oldMetadata, err := oldDir.GetChild(oldName)
 	if err != nil {
-		return err
+		return "", err
 	}
 	newDir, err := m.GetDir(newPath)
 	if err != nil {
-		return err
+		return "", err
 	}
-	name := oldName
-	_, err = m.GetNode(path.Join(newPath, name))
-	if err == e.ENoSuchFileOrDir {
+	return m.tryName(newPath, oldName, func(name string) error {
 		return move(newDir, oldMetadata, name)
+	})
+}
+
+func (m *Mount) tryName(p string, baseName string, fn func(name string) error) (string, error) {
+	name := baseName
+	_, err := m.GetNode(path.Join(p, name))
+	if err == e.ENoSuchFileOrDir {
+		return name, fn(name)
 	}
 	if err != nil {
-		return err
+		return "", err
 	}
 	for i := 1; i < math.MaxInt64; i++ {
-		name := oldName + "(" + strconv.Itoa(i) + ")"
-		_, err := m.GetNode(path.Join(newPath, name))
+		name = baseName + "(" + strconv.Itoa(i) + ")"
+		_, err := m.GetNode(path.Join(p, name))
 		if err == e.ENoSuchFileOrDir {
-			return move(newDir, oldMetadata, name)
+			return name, fn(name)
 		}
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
-	return e.ErrInvalid
+	return "", e.ErrInvalid
+}
+
+func (m *Mount) NewFile(p string) (string, error) {
+	dir, err := m.GetDir(p)
+	if err != nil {
+		return "", err
+	}
+	return m.tryName(p, "未命名文件", func(name string) error {
+		return dir.AddChild(m.Obj().NewFileMetadata(name, object.DefaultFileMode))
+	})
+}
+
+func (m *Mount) NewDir(p string) (string, error) {
+	dir, err := m.GetDir(p)
+	if err != nil {
+		return "", err
+	}
+	return m.tryName(p, "未命名文件夹", func(name string) error {
+		return dir.AddChild(m.Obj().NewDirMetadata(name, object.DefaultDirMode))
+	})
 }

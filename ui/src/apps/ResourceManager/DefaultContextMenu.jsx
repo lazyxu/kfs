@@ -26,8 +26,8 @@ class component extends React.Component {
         y={contextMenu.y}
         options={{
           上传文件: console.log,
-          新建文件: () => this.context.createFile(),
-          新建文件夹: () => this.context.mkdir(),
+          新建文件: () => this.context.newFile(this.context.state.pwd),
+          新建文件夹: () => this.context.newDir(this.context.state.pwd),
           刷新: () => this.context.cd(),
           粘贴: {
             enabled: cutFiles.length > 0 || copyFiles.length > 0,

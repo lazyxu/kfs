@@ -39,6 +39,12 @@ Store.prototype.invoke = async function (method, request, metadata) {
   });
 };
 
+Store.prototype.refresh = async function () {
+  const message = await this.invoke(KoalaFS.ls,
+    new PathRequest().setPath(this.state.pwd));
+  // TODO: onMessage setState files
+};
+
 Store.prototype.cd = async function (path) {
   try {
     path = path || this.state.pwd;
@@ -47,9 +53,6 @@ Store.prototype.cd = async function (path) {
       new PathRequest().setPath(path));
     console.log('---grpc cd cb---', message);
     const { path: pwd } = message.toObject();
-    if (pwd !== this.state.pwd) {
-      this.setState({ chosenFiles: {} });
-    }
     this.setState({
       pwd,
       chosen: (_chosen) => {
@@ -106,17 +109,16 @@ Store.prototype.cp = async function (srcList, dst) {
     console.log('---grpc cp---', srcList, dst);
     const message = await this.invoke(KoalaFS.cp,
       new MoveRequest().setSrcList(srcList).setDst(dst));
-    console.log('---grpc cp cb---', message);
-    if (srcList.length !== 1 || dirname(srcList[0]) === dirname(dst)) {
-      await this.cd(this.state.pwd);
-    }
+    console.log('---grpc cp cb---', message.toObject());
+    const { pathList } = message.toObject();
+    this.refresh();
     this.setState({
       chosen: (_chosen) => {
         Object.keys(_chosen).forEach((item) => {
           delete _chosen[item];
         });
-        srcList.forEach((src) => {
-          _chosen[`${this.state.pwd}/${basename(src)}`] = 1;
+        pathList.forEach((p) => {
+          _chosen[p] = 1;
         });
       },
     });
@@ -126,45 +128,46 @@ Store.prototype.cp = async function (srcList, dst) {
   }
 };
 
-Store.prototype.createFile = async function (path) {
+Store.prototype.newFile = async function (p) {
   try {
-    console.log('---grpc createFile---', path);
-    const message = await this.invoke(KoalaFS.createFile,
-      new PathRequest().setPath(path));
-    console.log('---grpc createFile cb---', message);
-    const { name } = message.toObject();
+    console.log('---grpc newFile---', p);
+    const message = await this.invoke(KoalaFS.newFile,
+      new PathRequest().setPath(p));
+    console.log('---grpc newFile cb---', message);
+    const { path } = message.toObject();
+    this.refresh();
     this.setState({
       chosen: (_chosen) => {
         Object.keys(_chosen).forEach((item) => {
           delete _chosen[item];
         });
-        _chosen[join(this.state.pwd, name)] = 2;
+        _chosen[path] = 2;
       },
     });
   } catch (e) {
-    console.error('---grpc createFile error---', e);
+    console.error('---grpc newFile error---', e);
     error('新建文件', e.message);
   }
 };
 
-Store.prototype.mkdir = async function (path) {
+Store.prototype.newDir = async function (p) {
   try {
-    console.log('---grpc mkdir---');
-    const { pwd } = this.state;
-    const message = await this.invoke(KoalaFS.mkdir,
-      new PathRequest().setPath(path));
-    console.log('---grpc mkdir cb---', message);
-    const { name } = message.toObject();
+    console.log('---grpc newDir---');
+    const message = await this.invoke(KoalaFS.newDir,
+      new PathRequest().setPath(p));
+    console.log('---grpc newDir cb---', message);
+    const { path } = message.toObject();
+    this.refresh();
     this.setState({
       chosen: (_chosen) => {
         Object.keys(_chosen).forEach((item) => {
           delete _chosen[item];
         });
-        _chosen[join(pwd, name)] = 2;
+        _chosen[path] = 2;
       },
     });
   } catch (e) {
-    console.error('---grpc mkdir error---', e);
+    console.error('---grpc newDir error---', e);
     error('新建文件夹', e.message);
   }
 };
