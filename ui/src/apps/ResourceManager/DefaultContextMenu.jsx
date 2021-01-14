@@ -30,9 +30,9 @@ class component extends React.Component {
           新建文件夹: () => this.context.newDir(this.context.state.pwd),
           刷新: () => this.context.cd(),
           粘贴: {
-            enabled: cutFiles.length > 0 || copyFiles.length > 0,
+            enabled: (cutFiles && cutFiles.length > 0) || (copyFiles && copyFiles.length > 0),
             fn: () => {
-              if (cutFiles.length > 0) {
+              if (cutFiles && cutFiles.length > 0) {
                 this.context.mv(cutFiles, this.context.state.pwd);
                 this.context.setState({ cutFiles: [] });
               } else {

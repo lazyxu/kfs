@@ -5,6 +5,8 @@ import map from 'promise.map';
 import { join } from 'utils/filepath';
 import { StoreContext } from 'bus/bus';
 
+const UploadFile = styled.div`
+`;
 const Div = styled.div`
 `;
 const Input = styled.input`
@@ -20,9 +22,9 @@ class component extends React.Component {
   static contextType = StoreContext
 
   componentDidMount() {
-    this.input.addEventListener('change', async (e) => {
-      console.log(this.input.files);
-      const blob = this.input.files[0];
+    const { input } = this;
+    input.addEventListener('change', async (e) => {
+      const blob = input.files[0];
       const path = join(this.context.state.pwd, blob.name);
       // const total = blob.size;
 
@@ -52,22 +54,22 @@ class component extends React.Component {
   }
 
   render() {
-    return [
-      <Div
-        key="0"
-        onMouseDown={(e) => { e.stopPropagation(); }}
+    return (
+      <UploadFile
+        onMouseDown={(e) => { this.input.click(); e.stopPropagation(); }}
         onMouseUp={(e) => { e.stopPropagation(); }}
-        onClick={(e) => { console.log(e); this.input.click(); }}
+        onClick={(e) => { e.stopPropagation(); }}
       >
-        上传文件
-      </Div>,
-      <Input
-        key="1"
-        onClick={(e) => { console.log('file', e); }}
-        ref={(input) => this.input = input}
-        type="file"
-      />,
-    ];
+        <Div>
+          上传文件
+        </Div>
+        <Input
+          onClick={(e) => { console.log('file', e); }}
+          ref={(input) => this.input = input}
+          type="file"
+        />
+      </UploadFile>
+    );
   }
 }
 

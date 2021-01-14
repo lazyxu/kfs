@@ -1,5 +1,5 @@
 import {
-  PathRequest, MoveRequest, PathListRequest, DownloadRequest, UploadRequest,
+  Path, MoveRequest, PathList, UploadRequest,
 } from 'pb/fs_pb';
 import { KoalaFS } from 'pb/fs_pb_service';
 import { error } from 'bus/notification';
@@ -14,17 +14,11 @@ Store.prototype.invoke = async function (method, request, metadata) {
     grpc.invoke(method, {
       request,
       host: getConfig().host,
-      metadata: Object.assign(metadata || {}, { 'kfs-pwd': this.state.pwd, 'kfs-mount': 'default' }),
+      metadata: Object.assign(metadata || {}, { 'kfs-mount': 'default' }),
       onHeaders: (headers) => {
         // console.log(headers);
       },
       onMessage: (message) => {
-        if (message.getFilesList) {
-          const files = message.getFilesList().map((f) => f.toObject());
-          if (files) {
-            this.setState({ files });
-          }
-        }
         return resolve(message);
       },
       onEnd: (code, msg, trailers) => {
@@ -41,8 +35,13 @@ Store.prototype.invoke = async function (method, request, metadata) {
 
 Store.prototype.refresh = async function () {
   const message = await this.invoke(KoalaFS.ls,
-    new PathRequest().setPath(this.state.pwd));
-  // TODO: onMessage setState files
+    new Path().setPath(this.state.pwd));
+  if (message.getFilesList) {
+    const files = message.getFilesList().map((f) => f.toObject());
+    if (files) {
+      this.setState({ files });
+    }
+  }
 };
 
 Store.prototype.cd = async function (path) {
@@ -50,16 +49,17 @@ Store.prototype.cd = async function (path) {
     path = path || this.state.pwd;
     console.log('---grpc cd---', path);
     const message = await this.invoke(KoalaFS.ls,
-      new PathRequest().setPath(path));
+      new Path().setPath(path));
     console.log('---grpc cd cb---', message);
-    const { path: pwd } = message.toObject();
+    if (message.getFilesList) {
+      const files = message.getFilesList().map((f) => f.toObject());
+      if (files) {
+        this.setState({ files });
+      }
+    }
     this.setState({
-      pwd,
-      chosen: (_chosen) => {
-        Object.keys(_chosen).forEach((item) => {
-          delete _chosen[item];
-        });
-      },
+      pwd: path,
+      chosen: {},
     });
   } catch (e) {
     console.error('---grpc cd error---', e);
@@ -76,19 +76,19 @@ Store.prototype.mv = async function (srcList, dst) {
     const message = await this.invoke(KoalaFS.mv,
       new MoveRequest().setSrcList(srcList).setDst(dst));
     console.log('---grpc mv cb---', message);
-    if (srcList.length !== 1 || dirname(srcList[0]) === dirname(dst)) {
-      await this.cd(this.state.pwd);
-    }
+    await this.refresh();
     this.setState({
       chosen: (_chosen) => {
         Object.keys(_chosen).forEach((item) => {
           delete _chosen[item];
         });
         console.log(dst, dirname(dst), this.state.pwd);
-        if (dirname(dst) === this.state.pwd
-          && Object.values(this.state.files).find((f) => f.name === basename(dst)).type === 'dir') {
-          _chosen[dst] = 1;
-          return;
+        if (dirname(dst) === this.state.pwd) {
+          const f = Object.values(this.state.files).find((f) => f.name === basename(dst));
+          if (f && f.type === 'dir') {
+            _chosen[dst] = 1;
+            return;
+          }
         }
         srcList.forEach((src) => {
           _chosen[`${this.state.pwd}/${basename(src)}`] = 1;
@@ -132,7 +132,7 @@ Store.prototype.newFile = async function (p) {
   try {
     console.log('---grpc newFile---', p);
     const message = await this.invoke(KoalaFS.newFile,
-      new PathRequest().setPath(p));
+      new Path().setPath(p));
     console.log('---grpc newFile cb---', message);
     const { path } = message.toObject();
     this.refresh();
@@ -154,7 +154,7 @@ Store.prototype.newDir = async function (p) {
   try {
     console.log('---grpc newDir---');
     const message = await this.invoke(KoalaFS.newDir,
-      new PathRequest().setPath(p));
+      new Path().setPath(p));
     console.log('---grpc newDir cb---', message);
     const { path } = message.toObject();
     this.refresh();
@@ -177,7 +177,7 @@ Store.prototype.remove = async function (path) {
     const pathList = typeof path === 'string' ? [path] : path;
     console.log('---grpc remove---', path);
     const message = await this.invoke(KoalaFS.remove,
-      new PathListRequest().setPathList(pathList));
+      new PathList().setPathList(pathList));
     console.log('---grpc remove cb---', message);
     await this.cd(this.state.pwd);
     this.setState({
@@ -195,7 +195,7 @@ Store.prototype.download = async function (pathList) {
   try {
     console.log('---grpc download---', pathList);
     const message = await this.invoke(KoalaFS.download,
-      new DownloadRequest().setPathList(pathList));
+      new PathList().setPathList(pathList));
     console.log('---grpc download cb---', message);
     for (const hash of message.getHashList()) {
       const response = await fetch(`${getConfig().host}/api/download/${hash}`);
@@ -240,6 +240,7 @@ Store.prototype.upload = async function (path, data, hashList = []) {
     const message = await this.invoke(KoalaFS.upload,
       new UploadRequest().setPath(path).setHash(hash).setSize(data.size));
     console.log('---grpc upload cb---', message);
+    this.refresh();
     return hash;
   } catch (e) {
     console.error('---grpc upload error---', e);

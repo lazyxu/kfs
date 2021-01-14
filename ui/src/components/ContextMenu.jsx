@@ -27,11 +27,11 @@ const DisabledOption = styled.div`
 const onFinishList = {};
 let id = 0;
 
-document.onclick = e => {
+document.addEventListener('click', function () {
   Object.values(onFinishList).forEach(onFinish => {
     onFinish();
   });
-};
+}, false);
 
 export default ({
   x, y, options, onFinish,
@@ -55,7 +55,10 @@ export default ({
       user-select: none;
     `;
   return (
-    <Div onMouseDown={(e) => e.stopPropagation()}>
+    <Div
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={e => { console.log('ContextMenu'); e.stopPropagation(); }}
+    >
       {Object.keys(options).map((o) => {
         const option = options[o];
         let fn;
@@ -69,7 +72,9 @@ export default ({
         return enabled ? (
           <Option
             key={o}
-            onMouseDown={(e) => { fn(e); onFinish && onFinish(); e.stopPropagation(); }}
+            onMouseDown={(e) => {
+              fn(e); onFinish && onFinish(); e.stopPropagation();
+            }}
           >
             {o === '上传文件'
               ? <UploadFile text={o} />

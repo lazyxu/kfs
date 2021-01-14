@@ -55,16 +55,6 @@ func (g *RootDirectory) transaction(ctx context.Context, f func(m *node.Mount) e
 	return m, nil
 }
 
-func getPathFromMetadata(ctx context.Context) string {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		logrus.Error("failed to read metadata")
-		return ""
-	}
-	values := md.Get("kfs-pwd")
-	return values[0]
-}
-
 func getMountFromMetadata(ctx context.Context) string {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -100,16 +90,11 @@ func getFileList(m *node.Mount, path string) ([]*pb.FileStat, error) {
 	return l, nil
 }
 
-func (g *RootDirectory) Ls(ctx context.Context, req *pb.PathRequest) (resp *pb.FilesResponse, err error) {
+func (g *RootDirectory) Ls(ctx context.Context, req *pb.Path) (resp *pb.FilesResponse, err error) {
 	resp = new(pb.FilesResponse)
 	defer catch(&err)
 	m := g.mount(ctx)
 	resp.Files, err = getFileList(m, req.Path)
-	if err != nil {
-		resp.Path = getPathFromMetadata(ctx)
-		return resp, err
-	}
-	resp.Path = req.Path
 	return resp, err
 }
 
@@ -132,7 +117,7 @@ func (g *RootDirectory) Cp(ctx context.Context, req *pb.MoveRequest) (resp *pb.P
 func (g *RootDirectory) Mv(ctx context.Context, req *pb.MoveRequest) (resp *pb.Void, err error) {
 	resp = new(pb.Void)
 	defer catch(&err)
-	m, err := g.transaction(ctx, func(m *node.Mount) error {
+	_, err = g.transaction(ctx, func(m *node.Mount) error {
 		for _, src := range req.Src {
 			err := m.Mv(src, req.Dst)
 			if err != nil {
@@ -141,15 +126,11 @@ func (g *RootDirectory) Mv(ctx context.Context, req *pb.MoveRequest) (resp *pb.V
 		}
 		return nil
 	})
-	if err != nil {
-		return resp, err
-	}
-	resp.Files, err = getFileList(m, getPathFromMetadata(ctx))
 	return resp, err
 }
 
-func (g *RootDirectory) NewFile(ctx context.Context, req *pb.PathRequest) (resp *pb.PathResponse, err error) {
-	resp = new(pb.PathResponse)
+func (g *RootDirectory) NewFile(ctx context.Context, req *pb.Path) (resp *pb.Path, err error) {
+	resp = new(pb.Path)
 	defer catch(&err)
 	_, err = g.transaction(ctx, func(m *node.Mount) error {
 		name, err := m.NewFile(req.Path)
@@ -159,8 +140,8 @@ func (g *RootDirectory) NewFile(ctx context.Context, req *pb.PathRequest) (resp 
 	return resp, err
 }
 
-func (g *RootDirectory) NewDir(ctx context.Context, req *pb.PathRequest) (resp *pb.PathResponse, err error) {
-	resp = new(pb.PathResponse)
+func (g *RootDirectory) NewDir(ctx context.Context, req *pb.Path) (resp *pb.Path, err error) {
+	resp = new(pb.Path)
 	defer catch(&err)
 	_, err = g.transaction(ctx, func(m *node.Mount) error {
 		name, err := m.NewDir(req.Path)
@@ -170,10 +151,10 @@ func (g *RootDirectory) NewDir(ctx context.Context, req *pb.PathRequest) (resp *
 	return resp, err
 }
 
-func (g *RootDirectory) Remove(ctx context.Context, req *pb.PathListRequest) (resp *pb.Void, err error) {
+func (g *RootDirectory) Remove(ctx context.Context, req *pb.PathList) (resp *pb.Void, err error) {
 	resp = new(pb.Void)
 	defer catch(&err)
-	m, err := g.transaction(ctx, func(m *node.Mount) error {
+	_, err = g.transaction(ctx, func(m *node.Mount) error {
 		for _, p := range req.Path {
 			parent, leaf := filepath.Split(p)
 			dir, err := m.GetDir(parent)
@@ -187,14 +168,10 @@ func (g *RootDirectory) Remove(ctx context.Context, req *pb.PathListRequest) (re
 		}
 		return nil
 	})
-	if err != nil {
-		return resp, err
-	}
-	resp.Files, err = getFileList(m, getPathFromMetadata(ctx))
 	return resp, err
 }
 
-func (g *RootDirectory) Download(ctx context.Context, req *pb.DownloadRequest) (resp *pb.DownloadResponse, err error) {
+func (g *RootDirectory) Download(ctx context.Context, req *pb.PathList) (resp *pb.DownloadResponse, err error) {
 	resp = new(pb.DownloadResponse)
 	defer catch(&err)
 	m := g.mount(ctx)
@@ -212,7 +189,7 @@ func (g *RootDirectory) Download(ctx context.Context, req *pb.DownloadRequest) (
 func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp *pb.UploadResponse, err error) {
 	resp = new(pb.UploadResponse)
 	defer catch(&err)
-	m, err := g.transaction(ctx, func(m *node.Mount) error {
+	_, err = g.transaction(ctx, func(m *node.Mount) error {
 		parent, leaf := filepath.Split(req.Path)
 		dir, err := m.GetDir(parent)
 		if err != nil {
@@ -226,9 +203,5 @@ func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp
 		}
 		return nil
 	})
-	if err != nil {
-		return resp, err
-	}
-	resp.Files, err = getFileList(m, getPathFromMetadata(ctx))
 	return resp, err
 }

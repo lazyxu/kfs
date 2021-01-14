@@ -5,21 +5,17 @@ package pb;
 option go_package = "github.com/lazyxu/kfs/warpper/grppcweb/pb";
 
 service KoalaFS {
-    rpc ls(PathRequest) returns (FilesResponse) {}
+    rpc ls(Path) returns (FilesResponse) {}
     rpc cp(MoveRequest) returns (PathList) {}
     rpc mv(MoveRequest) returns (Void) {}
-    rpc newFile(PathRequest) returns (PathResponse) {}
-    rpc newDir(PathRequest) returns (PathResponse) {}
-    rpc remove(PathListRequest) returns (Void) {}
-    rpc download(DownloadRequest) returns (DownloadResponse) {}
+    rpc newFile(Path) returns (Path) {}
+    rpc newDir(Path) returns (Path) {}
+    rpc remove(PathList) returns (Void) {}
+    rpc download(PathList) returns (DownloadResponse) {}
     rpc upload(UploadRequest) returns (UploadResponse) {}
 }
 
-message PathRequest {
-    string path = 1;
-}
-
-message PathResponse {
+message Path {
     string path = 1;
 }
 
@@ -27,17 +23,8 @@ message PathList {
     repeated string path = 1;
 }
 
-message PathListRequest {
-    repeated string path = 1;
-}
-
-message DownloadRequest {
-    repeated string path = 1;
-}
-
 message FilesResponse {
     repeated FileStat files = 1;
-    string path = 2;
 }
 
 message FileStat {
@@ -57,7 +44,6 @@ message MoveRequest {
 }
 
 message Void {
-    repeated FileStat files = 1;
 }
 
 message DownloadResponse {
