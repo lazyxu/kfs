@@ -9864,6 +9864,11 @@ pretty-bytes@^5.3.0:
   resolved "https://registry.npm.taobao.org/pretty-bytes/download/pretty-bytes-5.5.0.tgz?cache=0&sync_timestamp=1608706281458&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fpretty-bytes%2Fdownload%2Fpretty-bytes-5.5.0.tgz#0cecda50a74a941589498011cf23275aa82b339e"
   integrity sha1-DOzaUKdKlBWJSYARzyMnWqgrM54=
 
+pretty-bytes@^5.5.0:
+  version "5.5.0"
+  resolved "https://registry.npm.taobao.org/pretty-bytes/download/pretty-bytes-5.5.0.tgz?cache=0&sync_timestamp=1608706541117&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fpretty-bytes%2Fdownload%2Fpretty-bytes-5.5.0.tgz#0cecda50a74a941589498011cf23275aa82b339e"
+  integrity sha1-DOzaUKdKlBWJSYARzyMnWqgrM54=
+
 pretty-error@^2.1.1:
   version "2.1.2"
   resolved "https://registry.npm.taobao.org/pretty-error/download/pretty-error-2.1.2.tgz?cache=0&sync_timestamp=1603050569667&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fpretty-error%2Fdownload%2Fpretty-error-2.1.2.tgz#be89f82d81b1c86ec8fdfbc385045882727f93b6"
@@ -10397,6 +10402,11 @@ readdirp@~3.5.0:
   integrity sha1-m6dMAZsV02UnjS6Ru4xI17TULJ4=
   dependencies:
     picomatch "^2.2.1"
+
+reconnecting-websocket@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.npm.taobao.org/reconnecting-websocket/download/reconnecting-websocket-4.4.0.tgz#3b0e5b96ef119e78a03135865b8bb0af1b948783"
+  integrity sha1-Ow5blu8RnnigMTWGW4uwrxuUh4M=
 
 recursive-readdir@2.2.2:
   version "2.2.2"
@@ -12406,7 +12416,7 @@ uuid@^3.3.2, uuid@^3.4.0:
   resolved "https://registry.npm.taobao.org/uuid/download/uuid-3.4.0.tgz?cache=0&sync_timestamp=1607460081656&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fuuid%2Fdownload%2Fuuid-3.4.0.tgz#b23e4358afa8a202fe7a100af1f5f883f02007ee"
   integrity sha1-sj5DWK+oogL+ehAK8fX4g/AgB+4=
 
-uuid@^8.3.0:
+uuid@^8.3.0, uuid@^8.3.2:
   version "8.3.2"
   resolved "https://registry.npm.taobao.org/uuid/download/uuid-8.3.2.tgz?cache=0&sync_timestamp=1607460081656&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fuuid%2Fdownload%2Fuuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
   integrity sha1-gNW1ztJxu5r2xEXyGhoExgbO++I=

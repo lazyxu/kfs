@@ -13,6 +13,9 @@ import { inState } from 'bus/bus';
 import 'bus/triggers';
 import TaskBar from 'containers/TaskBar';
 
+import 'adaptor/ws';
+import MirrorSync from 'apps/MirrorBackup';
+
 const Index = styled.div`
   height: 100%;
   width: 100%;
@@ -50,6 +53,20 @@ class component extends React.Component {
             newWindowOption="true"
             text="系统配置"
           />
+          <App
+            icon="shangchuan"
+            color="#cccccc"
+            elm={MirrorSync}
+            newWindowOption="true"
+            text="镜像备份"
+          />
+          {/* <App
+            icon="yuntongbu"
+            color="#cccccc"
+            elm={MirrorSync}
+            newWindowOption="true"
+            text="同步盘"
+          /> */}
           {Object.values(this.state.windows).sort((a, b) => a.zIndex - b.zIndex).map(w => {
             const Window = w.elm;
             return (

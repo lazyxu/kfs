@@ -1,13 +1,19 @@
+import { targetBrowser } from './target';
+
 let getConfig = null;
 let setConfig = null;
-const defaultConfig = {
+const defaultBrowserConfig = {
   host: 'http://127.0.0.1:9091',
+  wsHost: 'ws://127.0.0.1:1323/ws',
+  filter: [
+  ],
 };
-if (!window.require) {
+const defaultElectronConfig = defaultBrowserConfig;
+if (targetBrowser) {
   // browser
   getConfig = function () {
     const item = localStorage.getItem('kfs-config');
-    return item ? JSON.parse(item) : defaultConfig;
+    return item ? JSON.parse(item) : defaultBrowserConfig;
   };
 
   setConfig = function (str) {
@@ -28,7 +34,7 @@ if (!window.require) {
       console.log('getConfig', config);
       return JSON.parse(config);
     } catch (e) {
-      return defaultConfig;
+      return defaultElectronConfig;
     }
   };
 

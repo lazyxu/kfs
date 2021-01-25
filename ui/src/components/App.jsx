@@ -7,6 +7,8 @@ import { newWindow } from 'components/Modal';
 const App = styled.div`
   margin-top: 1em;
   margin-left: 1em;
+  width: 4em;
+  text-align: center;
 `;
 const Text = styled.div`
   font-size: 1em;
