@@ -56,8 +56,7 @@ func main() {
 				}
 			}
 		}()
-		b.Scan()
-		return nil
+		return b.Scan()
 	})
 	rpc.Start()
 }

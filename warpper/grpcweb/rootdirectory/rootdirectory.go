@@ -216,58 +216,114 @@ func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp
 }
 
 func (g *RootDirectory) UploadStream(s pb.KoalaFS_UploadStreamServer) error {
-	var info pb.FileInfo
 	data, err := s.Recv()
 	if err != nil {
 		return err
 	}
-	err = proto.Unmarshal(data.Data, &info)
-	if err != nil {
-		return err
-	}
+	typ := string(data.Data)
 	ctx := s.Context()
-	if info.Type == "file" {
+	if typ == "file" {
 		_, err = g.transaction(ctx, func(m *node.Mount) error {
-			parent, leaf := filepath.Split(info.Path)
-			dir, err := m.GetDir(parent)
-			if err != nil {
-				return err
-			}
 			hash, err := m.Obj().WriteBlob(bytes.NewReader(data.Data))
 			if err != nil {
 				return err
 			}
-			meta := m.Obj().NewFileMetadata(leaf, object.DefaultFileMode).Builder().
-				Hash(hash).Size(info.Size).Mode(os.FileMode(info.Mode)).
-				ModifyTime(info.MtimeMs).ChangeTime(info.CtimeMs).Build()
-			err = dir.AddChild(meta)
-			if err != nil {
-				return err
-			}
-			return nil
+			return s.SendAndClose(&pb.Hash{Hash: hash})
 		})
 		return err
 	}
-	if info.Type == "dir" {
-		data, err := s.Recv()
-		if err != nil && err != io.EOF {
+	if typ == "dir" {
+		_, err = g.transaction(ctx, func(m *node.Mount) error {
+			t := m.Obj().NewTree()
+			for {
+				data, err := s.Recv()
+				if err == io.EOF {
+					break
+				}
+				if err != nil {
+					return err
+				}
+				var info pb.FileInfo
+				err = proto.Unmarshal(data.Data, &info)
+				if err != nil {
+					return err
+				}
+				var item *object.Metadata
+				if info.Type == "file" {
+					item = m.Obj().NewFileMetadata(info.Name, os.FileMode(info.Mode)).Builder().
+						Hash(info.Hash).ChangeTime(info.CtimeNs).ModifyTime(info.MtimeNs).Build()
+				} else if info.Type == "dir" {
+					item = m.Obj().NewDirMetadata(info.Name, os.FileMode(info.Mode)).Builder().
+						Hash(info.Hash).ChangeTime(info.CtimeNs).ModifyTime(info.MtimeNs).Build()
+				}
+				t.Items = append(t.Items, item)
+			}
+			hash, err := m.Obj().WriteTree(t)
+			if err != nil {
+				return err
+			}
+			return s.SendAndClose(&pb.Hash{Hash: hash})
+		})
+		return err
+	}
+	return fmt.Errorf("invalid type: %s", typ)
+}
+
+func (g *RootDirectory) UploadBlob(s pb.KoalaFS_UploadBlobServer) error {
+	ctx := s.Context()
+	data, err := s.Recv()
+	if err != nil {
+		return err
+	}
+	_, err = g.transaction(ctx, func(m *node.Mount) error {
+		// TODO: size, hash from writeBlob
+		hash, err := m.Obj().WriteBlob(bytes.NewReader(data.Data))
+		if err != nil {
 			return err
 		}
-		filePath := string(data.Data)
-		_, err = g.transaction(ctx, func(m *node.Mount) error {
-			parent, leaf := filepath.Split(filePath)
-			dir, err := m.GetDir(parent)
+		return s.SendAndClose(&pb.Hash{Hash: hash})
+	})
+	return err
+}
+
+func (g *RootDirectory) UploadTree(s pb.KoalaFS_UploadTreeServer) error {
+	_, err := g.transaction(s.Context(), func(m *node.Mount) error {
+		t := m.Obj().NewTree()
+		for {
+			data, err := s.Recv()
+			if err == io.EOF {
+				break
+			}
 			if err != nil {
 				return err
 			}
-			meta := m.Obj().NewDirMetadata(leaf, object.DefaultFileMode)
-			err = dir.AddChild(meta)
+			var info pb.FileInfo
+			err = proto.Unmarshal(data.Data, &info)
 			if err != nil {
 				return err
 			}
-			return nil
-		})
-		return err
-	}
-	return fmt.Errorf("invalid type: %s", info.Type)
+			var item *object.Metadata
+			if info.Type == "file" {
+				item = m.Obj().NewFileMetadata(info.Name, os.FileMode(info.Mode)).Builder().
+					Hash(info.Hash).Size(info.Size).ChangeTime(info.CtimeNs).ModifyTime(info.MtimeNs).Build()
+			} else if info.Type == "dir" {
+				item = m.Obj().NewDirMetadata(info.Name, os.FileMode(info.Mode)).Builder().
+					Hash(info.Hash).ChangeTime(info.CtimeNs).ModifyTime(info.MtimeNs).Build()
+			}
+			t.Items = append(t.Items, item)
+		}
+		hash, err := m.Obj().WriteTree(t)
+		if err != nil {
+			return err
+		}
+		return s.SendAndClose(&pb.Hash{Hash: hash})
+	})
+	return err
+}
+
+func (g *RootDirectory) UpdateRef(ctx context.Context, ref *pb.Ref) (resp *pb.Void, err error) {
+	resp = new(pb.Void)
+	defer catch(&err)
+	err = g.s.UpdateRef(getMountFromMetadata(ctx), "", ref.Ref)
+	return resp, err
 }

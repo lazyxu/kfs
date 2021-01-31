@@ -14,6 +14,13 @@ service KoalaFS {
     rpc download(PathList) returns (DownloadResponse) {}
     rpc upload(UploadRequest) returns (UploadResponse) {}
     rpc uploadStream(stream StreamData) returns (Hash) {}
+    rpc uploadBlob(stream StreamData) returns (Hash) {}
+    rpc uploadTree(stream StreamData) returns (Hash) {}
+    rpc updateRef(Ref) returns (Void) {}
+}
+
+message Ref {
+    string ref = 1;
 }
 
 message StreamData {
@@ -37,14 +44,15 @@ message FilesResponse {
 }
 
 message FileInfo {
-    string path = 1;
+    string name = 1;
     string type = 2;
     int64 size = 3;
     uint32 mode = 4;
-    int64 atimeMs = 5;
-    int64 mtimeMs = 6;
-    int64 ctimeMs = 7;
-    int64 birthtimeMs = 8;
+    int64 atimeNs = 5;
+    int64 mtimeNs = 6;
+    int64 ctimeNs = 7;
+    int64 birthtimeNs = 8;
+    string hash = 10;
 }
 
 message FileStat {
