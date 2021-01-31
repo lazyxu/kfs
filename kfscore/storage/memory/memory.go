@@ -123,3 +123,39 @@ func (s *Storage) GetRefs() ([]string, error) {
 	s.mutex.RUnlock()
 	return branches, nil
 }
+
+func (s *Storage) TotalSize() (uint64, error) {
+	s.mutex.RLock()
+	var total uint64
+	for _, i := range s.objs {
+		for _, j := range i {
+			total += uint64(len(j))
+		}
+	}
+	s.mutex.RUnlock()
+	return total, nil
+}
+
+func (s *Storage) BlobSize() (uint64, error) {
+	s.mutex.RLock()
+	var total uint64
+	for _, i := range s.objs[storage.TypBlob] {
+		total += uint64(len(i))
+	}
+	s.mutex.RUnlock()
+	return total, nil
+}
+
+func (s *Storage) BlobCount() (uint64, error) {
+	s.mutex.RLock()
+	l := len(s.objs[storage.TypBlob])
+	s.mutex.RUnlock()
+	return uint64(l), nil
+}
+
+func (s *Storage) TreeCount() (uint64, error) {
+	s.mutex.RLock()
+	l := len(s.objs[storage.TypTree])
+	s.mutex.RUnlock()
+	return uint64(l), nil
+}

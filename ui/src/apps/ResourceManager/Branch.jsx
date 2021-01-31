@@ -30,7 +30,7 @@ export default function () {
       />
       <select
         onChange={e => {
-          context.setState({ branch: e.target.value });
+          context.setState({ branch: e.target.value, pwd: '/' });
           context.cd(context.state.pwd);
         }}
       >

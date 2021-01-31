@@ -33,3 +33,9 @@ export async function getBranchList() {
   const message = await invoke(KoalaFS.branches, new Void());
   return message.getBranchList();
 }
+
+export async function getStatus() {
+  const message = await invoke(KoalaFS.status, new Void());
+  console.log(message.toObject());
+  return message.toObject();
+}

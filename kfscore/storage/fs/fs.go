@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"sync/atomic"
 
@@ -176,4 +177,41 @@ func (s *Storage) GetRefs() ([]string, error) {
 		branches[i] = info.Name()
 	}
 	return branches, err
+}
+
+func (s *Storage) TotalSize() (uint64, error) {
+	var total uint64
+	err := filepath.Walk(s.root, func(path string, info os.FileInfo, err error) error {
+		total += uint64(info.Size())
+		return nil
+	})
+	return total, err
+}
+
+func (s *Storage) BlobSize() (uint64, error) {
+	infos, err := ioutil.ReadDir(path.Join(s.root, "blob"))
+	if err != nil {
+		return 0, err
+	}
+	var total uint64
+	for _, info := range infos {
+		total += uint64(info.Size())
+	}
+	return total, nil
+}
+
+func (s *Storage) BlobCount() (uint64, error) {
+	infos, err := ioutil.ReadDir(path.Join(s.root, "blob"))
+	if err != nil {
+		return 0, err
+	}
+	return uint64(len(infos)), nil
+}
+
+func (s *Storage) TreeCount() (uint64, error) {
+	infos, err := ioutil.ReadDir(path.Join(s.root, "tree"))
+	if err != nil {
+		return 0, err
+	}
+	return uint64(len(infos)), nil
 }

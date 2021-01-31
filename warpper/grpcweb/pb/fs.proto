@@ -18,6 +18,14 @@ service KoalaFS {
     rpc uploadTree(stream StreamData) returns (Hash) {}
     rpc updateRef(Ref) returns (Void) {}
     rpc branches(Void) returns (Branches) {}
+    rpc status(Void) returns (Status) {}
+}
+
+message Status {
+    string totalSize = 1;
+    string fileSize = 2;
+    uint64 fileCount = 3;
+    uint64 dirCount = 4;
 }
 
 message Branches {

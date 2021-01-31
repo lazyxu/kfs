@@ -15,6 +15,7 @@ import TaskBar from 'containers/TaskBar';
 
 import 'adaptor/ws';
 import MirrorSync from 'apps/MirrorBackup';
+import ResourceMonitor from 'apps/ResourceMonitor';
 
 const Index = styled.div`
   height: 100%;
@@ -41,10 +42,17 @@ class component extends React.Component {
         <TaskBar />
         <Desktop>
           <App
+            icon="system"
+            color="#cccccc"
+            elm={ResourceMonitor}
+            newWindowOption="true"
+            text="资源监控"
+          />
+          <App
             icon="wangpan"
             color="#cccccc"
             elm={ResourceManager}
-            text="资源管理"
+            text="文件管理"
           />
           <App
             icon="peizhi"

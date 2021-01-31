@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/dustin/go-humanize"
+
 	"github.com/golang/protobuf/proto"
 
 	"github.com/lazyxu/kfs/kfscore/storage"
@@ -333,5 +335,29 @@ func (g *RootDirectory) Branches(ctx context.Context, _ *pb.Void) (resp *pb.Bran
 	defer catch(&err)
 	branches, err := g.s.GetRefs()
 	resp.Branch = branches
+	return resp, err
+}
+
+func (g *RootDirectory) Status(ctx context.Context, _ *pb.Void) (resp *pb.Status, err error) {
+	resp = new(pb.Status)
+	defer catch(&err)
+	totalSize, err := g.s.TotalSize()
+	if err != nil {
+		return resp, err
+	}
+	resp.TotalSize = humanize.Bytes(totalSize)
+	blobSize, err := g.s.BlobSize()
+	if err != nil {
+		return resp, err
+	}
+	resp.FileSize = humanize.Bytes(blobSize)
+	resp.FileCount, err = g.s.BlobCount()
+	if err != nil {
+		return resp, err
+	}
+	resp.DirCount, err = g.s.TreeCount()
+	if err != nil {
+		return resp, err
+	}
 	return resp, err
 }

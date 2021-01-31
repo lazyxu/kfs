@@ -3,6 +3,7 @@ module github.com/lazyxu/kfs/warpper/grpcweb
 go 1.15
 
 require (
+	github.com/dustin/go-humanize v1.0.0
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/golang/protobuf v1.4.1
 	github.com/gorilla/websocket v1.4.2 // indirect
