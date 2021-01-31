@@ -13,6 +13,15 @@ service KoalaFS {
     rpc remove(PathList) returns (Void) {}
     rpc download(PathList) returns (DownloadResponse) {}
     rpc upload(UploadRequest) returns (UploadResponse) {}
+    rpc uploadStream(stream StreamData) returns (Hash) {}
+}
+
+message StreamData {
+    bytes data = 1;
+}
+
+message Hash {
+    string hash = 1;
 }
 
 message Path {
@@ -25,6 +34,17 @@ message PathList {
 
 message FilesResponse {
     repeated FileStat files = 1;
+}
+
+message FileInfo {
+    string path = 1;
+    string type = 2;
+    int64 size = 3;
+    uint32 mode = 4;
+    int64 atimeMs = 5;
+    int64 mtimeMs = 6;
+    int64 ctimeMs = 7;
+    int64 birthtimeMs = 8;
 }
 
 message FileStat {

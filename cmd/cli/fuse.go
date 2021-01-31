@@ -12,9 +12,9 @@ import (
 
 func initFuse(s storage.Storage) {
 	lib := viper.GetString("fuse-lib")
-	mountPoint := viper.GetString("fuse-mount-point")
-	fmt.Println("mount by", lib, mountPoint)
 	if lib == "cgofuse" {
+		mountPoint := viper.GetString("fuse-mount-point")
+		fmt.Println("mount by", lib, mountPoint)
 		if s == nil {
 			panic("storage is nil")
 		}

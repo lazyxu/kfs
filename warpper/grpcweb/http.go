@@ -11,9 +11,9 @@ func serverHttp(handler http.Handler, port string) {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		logrus.Fatal("failed to listen", err)
+		return
 	}
 	httpServer := &http.Server{
-		Addr:    httpsPort,
 		Handler: http.DefaultServeMux,
 	}
 	httpServer.Handler = handler

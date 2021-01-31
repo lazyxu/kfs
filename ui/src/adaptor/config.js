@@ -3,7 +3,7 @@ import { targetBrowser } from './target';
 let getConfig = null;
 let setConfig = null;
 const defaultBrowserConfig = {
-  host: 'http://127.0.0.1:9091',
+  host: '127.0.0.1:9091',
   wsHost: 'ws://127.0.0.1:1323/ws',
   filter: [
   ],

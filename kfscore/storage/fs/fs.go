@@ -70,7 +70,7 @@ func New(root string, hashFunc func() kfscrypto.Hash) (*Storage, error) {
 	}
 	return &Storage{
 		BaseStorage: storage.NewBase(hashFunc),
-		root:        "temp",
+		root:        root,
 		tempFileID:  0,
 	}, nil
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"fmt"
+	"os"
 
 	"github.com/lazyxu/kfs/kfscore/kfscrypto"
 	"github.com/lazyxu/kfs/kfscore/storage"
@@ -20,6 +21,10 @@ func initStorage() (s storage.Storage) {
 	}
 	if typ == "fileSystem" {
 		root := viper.GetString("kfs-root")
+		if root == "" {
+			root = os.TempDir()
+		}
+		fmt.Println("root", root)
 		var err error
 		s, err = fs.New(root, hashFunc)
 		if err != nil {

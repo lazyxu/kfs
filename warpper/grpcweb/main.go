@@ -2,6 +2,7 @@ package grpcweb
 
 import (
 	"io"
+	"net"
 	"net/http"
 	"strconv"
 
@@ -66,6 +67,18 @@ func getHandler(fsServer pb.KoalaFSServer, s storage.Storage) http.Handler {
 	mux.Handle("/", e)
 	server := grpc.NewServer()
 	pb.RegisterKoalaFSServer(server, fsServer)
+	go func() {
+		server := grpc.NewServer()
+		pb.RegisterKoalaFSServer(server, fsServer)
+		lis, err := net.Listen("tcp", ":9092")
+		if err != nil {
+			logrus.Fatal("failed to listen", err)
+			return
+		}
+		if err := server.Serve(lis); err != nil {
+			logrus.Fatal("failed to serve", err)
+		}
+	}()
 	wrappedGrpc := grpcweb.WrapServer(server)
 	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		cors.New(cors.Options{

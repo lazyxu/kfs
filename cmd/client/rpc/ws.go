@@ -57,8 +57,8 @@ func wsHandler(handle Handle) func(echo.Context) error {
 
 func startWS(handle Handle) {
 	e := echo.New()
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	//e.Use(middleware.Logger())
+	//e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 	e.GET("/ws", wsHandler(handle))
 	e.Logger.Fatal(e.Start(":1323"))

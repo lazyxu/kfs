@@ -25,7 +25,7 @@ type MetadataBuilder struct {
 }
 
 func (m *MetadataBuilder) Mode(mode os.FileMode) *MetadataBuilder {
-	m.mode = mode
+	m.mode = (m.mode & (^os.ModePerm)) | (mode & os.ModePerm)
 	return m
 }
 

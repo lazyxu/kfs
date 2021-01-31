@@ -1,9 +1,16 @@
 package rootdirectory
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"io"
+	"os"
 	"path"
 	"path/filepath"
+	"time"
+
+	"github.com/golang/protobuf/proto"
 
 	"github.com/lazyxu/kfs/kfscore/storage"
 
@@ -77,13 +84,15 @@ func getFileList(m *node.Mount, path string) ([]*pb.FileStat, error) {
 	l := make([]*pb.FileStat, len(list))
 	for i, m := range list {
 		l[i] = &pb.FileStat{
-			Name:        m.Name(),
-			Type:        cond.String(m.IsFile(), "file", "dir"),
-			Size:        m.Size(),
-			AtimeMs:     cmp.LargeInt64(m.ModifyTime().UnixNano(), m.ChangeTime().UnixNano()),
-			MtimeMs:     m.ModifyTime().UnixNano(),
-			CtimeMs:     m.ChangeTime().UnixNano(),
-			BirthtimeMs: m.BirthTime().UnixNano(),
+			Name: m.Name(),
+			Type: cond.String(m.IsFile(), "file", "dir"),
+			Size: m.Size(),
+			AtimeMs: cmp.LargeInt64(
+				m.ModifyTime().UnixNano()/int64(time.Millisecond),
+				m.ChangeTime().UnixNano()/int64(time.Millisecond)),
+			MtimeMs:     m.ModifyTime().UnixNano() / int64(time.Millisecond),
+			CtimeMs:     m.ChangeTime().UnixNano() / int64(time.Millisecond),
+			BirthtimeMs: m.BirthTime().UnixNano() / int64(time.Millisecond),
 			Files:       nil,
 		}
 	}
@@ -204,4 +213,61 @@ func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp
 		return nil
 	})
 	return resp, err
+}
+
+func (g *RootDirectory) UploadStream(s pb.KoalaFS_UploadStreamServer) error {
+	var info pb.FileInfo
+	data, err := s.Recv()
+	if err != nil {
+		return err
+	}
+	err = proto.Unmarshal(data.Data, &info)
+	if err != nil {
+		return err
+	}
+	ctx := s.Context()
+	if info.Type == "file" {
+		_, err = g.transaction(ctx, func(m *node.Mount) error {
+			parent, leaf := filepath.Split(info.Path)
+			dir, err := m.GetDir(parent)
+			if err != nil {
+				return err
+			}
+			hash, err := m.Obj().WriteBlob(bytes.NewReader(data.Data))
+			if err != nil {
+				return err
+			}
+			meta := m.Obj().NewFileMetadata(leaf, object.DefaultFileMode).Builder().
+				Hash(hash).Size(info.Size).Mode(os.FileMode(info.Mode)).
+				ModifyTime(info.MtimeMs).ChangeTime(info.CtimeMs).Build()
+			err = dir.AddChild(meta)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		return err
+	}
+	if info.Type == "dir" {
+		data, err := s.Recv()
+		if err != nil && err != io.EOF {
+			return err
+		}
+		filePath := string(data.Data)
+		_, err = g.transaction(ctx, func(m *node.Mount) error {
+			parent, leaf := filepath.Split(filePath)
+			dir, err := m.GetDir(parent)
+			if err != nil {
+				return err
+			}
+			meta := m.Obj().NewDirMetadata(leaf, object.DefaultFileMode)
+			err = dir.AddChild(meta)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		return err
+	}
+	return fmt.Errorf("invalid type: %s", info.Type)
 }
