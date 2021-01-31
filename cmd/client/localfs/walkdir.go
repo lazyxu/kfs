@@ -68,6 +68,11 @@ func NewBackUpCtx(ctx context.Context, host string, root string, ignoreRules []I
 }
 
 func (c *BackUpCtx) Scan() error {
+	defer func() {
+		c.mutex.Lock()
+		c.scanDone = true
+		c.mutex.Unlock()
+	}()
 	hash, err := c.walk(c.root)
 	if err != nil {
 		return err
@@ -79,9 +84,6 @@ func (c *BackUpCtx) Scan() error {
 	if err != nil {
 		return err
 	}
-	c.mutex.Lock()
-	c.scanDone = true
-	c.mutex.Unlock()
 	return nil
 }
 
@@ -268,6 +270,6 @@ func (c *BackUpCtx) upload(fn func(context.Context, pb.KoalaFSClient) (string, e
 	}
 	defer conn.Close()
 	client := pb.NewKoalaFSClient(conn)
-	ctx := metadata.AppendToOutgoingContext(context.Background(), "kfs-mount", "default")
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "kfs-mount", "backup")
 	return fn(ctx, client)
 }

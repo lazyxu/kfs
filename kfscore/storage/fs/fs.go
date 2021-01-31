@@ -160,5 +160,20 @@ func (s *Storage) UpdateRef(name string, expect string, desire string) error {
 
 func (s *Storage) GetRef(name string) (string, error) {
 	bytes, err := ioutil.ReadFile(path.Join(s.root, "refs", name))
+	if os.IsNotExist(err) {
+		err = nil
+	}
 	return string(bytes), err
+}
+
+func (s *Storage) GetRefs() ([]string, error) {
+	infos, err := ioutil.ReadDir(path.Join(s.root, "refs"))
+	if err != nil {
+		return nil, err
+	}
+	branches := make([]string, len(infos))
+	for i, info := range infos {
+		branches[i] = info.Name()
+	}
+	return branches, err
 }

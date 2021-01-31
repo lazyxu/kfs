@@ -327,3 +327,11 @@ func (g *RootDirectory) UpdateRef(ctx context.Context, ref *pb.Ref) (resp *pb.Vo
 	err = g.s.UpdateRef(getMountFromMetadata(ctx), "", ref.Ref)
 	return resp, err
 }
+
+func (g *RootDirectory) Branches(ctx context.Context, _ *pb.Void) (resp *pb.Branches, err error) {
+	resp = new(pb.Branches)
+	defer catch(&err)
+	branches, err := g.s.GetRefs()
+	resp.Branch = branches
+	return resp, err
+}

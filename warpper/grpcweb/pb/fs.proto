@@ -17,6 +17,11 @@ service KoalaFS {
     rpc uploadBlob(stream StreamData) returns (Hash) {}
     rpc uploadTree(stream StreamData) returns (Hash) {}
     rpc updateRef(Ref) returns (Void) {}
+    rpc branches(Void) returns (Branches) {}
+}
+
+message Branches {
+    repeated string branch = 1;
 }
 
 message Ref {

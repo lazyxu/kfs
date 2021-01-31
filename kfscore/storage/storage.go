@@ -19,6 +19,7 @@ type Storage interface {
 	//Delete(typ int, key string) error
 	UpdateRef(name string, expect string, desire string) error
 	GetRef(name string) (string, error)
+	GetRefs() ([]string, error)
 	HashFunc() kfscrypto.Hash
 }
 

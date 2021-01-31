@@ -4,6 +4,7 @@ window.stores = [];
 export default class Store {
   constructor(state = {}) {
     this.bus = new EventEmitter();
+    this.values = {};
     this.state = state;
     this.triggers = {};
     window.stores.push(this);

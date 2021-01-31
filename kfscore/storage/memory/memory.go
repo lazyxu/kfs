@@ -113,3 +113,13 @@ func (s *Storage) GetRef(name string) (string, error) {
 	}
 	return hash, nil
 }
+
+func (s *Storage) GetRefs() ([]string, error) {
+	s.mutex.RLock()
+	var branches []string
+	for name := range s.refs {
+		branches = append(branches, name)
+	}
+	s.mutex.RUnlock()
+	return branches, nil
+}

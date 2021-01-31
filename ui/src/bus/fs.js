@@ -14,7 +14,7 @@ Store.prototype.invoke = async function (method, request, metadata) {
     grpc.invoke(method, {
       request,
       host: getConfig().host,
-      metadata: Object.assign(metadata || {}, { 'kfs-mount': 'default' }),
+      metadata: Object.assign(metadata || {}, { 'kfs-mount': this.state.branch }),
       onHeaders: (headers) => {
         // console.log(headers);
       },

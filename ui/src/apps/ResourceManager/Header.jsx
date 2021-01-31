@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 import Path from 'apps/ResourceManager/Path';
+import Branch from 'apps/ResourceManager/Branch';
 
 const Header = styled.div`
   position: relative;
@@ -16,6 +17,7 @@ export default React.memo(({
 }) => {
   return (
     <Header>
+      <Branch />
       <Path />
     </Header>
   );
