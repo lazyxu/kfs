@@ -3,7 +3,6 @@ package rootdirectory
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -217,60 +216,6 @@ func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp
 	return resp, err
 }
 
-func (g *RootDirectory) UploadStream(s pb.KoalaFS_UploadStreamServer) error {
-	data, err := s.Recv()
-	if err != nil {
-		return err
-	}
-	typ := string(data.Data)
-	ctx := s.Context()
-	if typ == "file" {
-		_, err = g.transaction(ctx, func(m *node.Mount) error {
-			hash, err := m.Obj().WriteBlob(bytes.NewReader(data.Data))
-			if err != nil {
-				return err
-			}
-			return s.SendAndClose(&pb.Hash{Hash: hash})
-		})
-		return err
-	}
-	if typ == "dir" {
-		_, err = g.transaction(ctx, func(m *node.Mount) error {
-			t := m.Obj().NewTree()
-			for {
-				data, err := s.Recv()
-				if err == io.EOF {
-					break
-				}
-				if err != nil {
-					return err
-				}
-				var info pb.FileInfo
-				err = proto.Unmarshal(data.Data, &info)
-				if err != nil {
-					return err
-				}
-				var item *object.Metadata
-				if info.Type == "file" {
-					item = m.Obj().NewFileMetadata(info.Name, os.FileMode(info.Mode)).Builder().
-						Hash(info.Hash).ChangeTime(info.CtimeNs).ModifyTime(info.MtimeNs).Build()
-				} else if info.Type == "dir" {
-					item = m.Obj().NewDirMetadata(info.Name, os.FileMode(info.Mode)).Builder().
-						Hash(info.Hash).ChangeTime(info.CtimeNs).ModifyTime(info.MtimeNs).Build()
-				}
-				t.Items = append(t.Items, item)
-			}
-			hash, err := m.Obj().WriteTree(t)
-			if err != nil {
-				return err
-			}
-			return s.SendAndClose(&pb.Hash{Hash: hash})
-		})
-		return err
-	}
-	return fmt.Errorf("invalid type: %s", typ)
-}
-
 func (g *RootDirectory) UploadBlob(s pb.KoalaFS_UploadBlobServer) error {
 	ctx := s.Context()
 	data, err := s.Recv()
@@ -339,25 +284,16 @@ func (g *RootDirectory) Branches(ctx context.Context, _ *pb.Void) (resp *pb.Bran
 }
 
 func (g *RootDirectory) Status(ctx context.Context, _ *pb.Void) (resp *pb.Status, err error) {
-	resp = new(pb.Status)
 	defer catch(&err)
-	totalSize, err := g.s.TotalSize()
+	status, err := g.s.Status()
 	if err != nil {
 		return resp, err
 	}
-	resp.TotalSize = humanize.Bytes(totalSize)
-	blobSize, err := g.s.BlobSize()
-	if err != nil {
-		return resp, err
-	}
-	resp.FileSize = humanize.Bytes(blobSize)
-	resp.FileCount, err = g.s.BlobCount()
-	if err != nil {
-		return resp, err
-	}
-	resp.DirCount, err = g.s.TreeCount()
-	if err != nil {
-		return resp, err
+	resp = &pb.Status{
+		TotalSize: humanize.Bytes(status.TotalPhysicalSize),
+		FileSize:  humanize.Bytes(status.BlobLogicalSize),
+		FileCount: status.BlobCount,
+		DirCount:  status.TreeCount,
 	}
 	return resp, err
 }

@@ -13,7 +13,6 @@ service KoalaFS {
     rpc remove(PathList) returns (Void) {}
     rpc download(PathList) returns (DownloadResponse) {}
     rpc upload(UploadRequest) returns (UploadResponse) {}
-    rpc uploadStream(stream StreamData) returns (Hash) {}
     rpc uploadBlob(stream StreamData) returns (Hash) {}
     rpc uploadTree(stream StreamData) returns (Hash) {}
     rpc updateRef(Ref) returns (Void) {}

@@ -12,6 +12,13 @@ const (
 	TypRef
 )
 
+type Status struct {
+	TotalPhysicalSize uint64
+	BlobLogicalSize   uint64
+	BlobCount         uint64
+	TreeCount         uint64
+}
+
 type Storage interface {
 	Read(typ int, key string, f func(reader io.Reader) error) error
 	Write(typ int, reader io.Reader) (string, error)
@@ -20,10 +27,7 @@ type Storage interface {
 	UpdateRef(name string, expect string, desire string) error
 	GetRef(name string) (string, error)
 	GetRefs() ([]string, error)
-	TotalSize() (uint64, error)
-	BlobSize() (uint64, error)
-	BlobCount() (uint64, error)
-	TreeCount() (uint64, error)
+	Status() (Status, error)
 	HashFunc() kfscrypto.Hash
 }
 
