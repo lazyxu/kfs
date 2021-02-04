@@ -15,8 +15,9 @@ export default function () {
     branches.current = true;
     getBranchList().then(list => {
       setOptions(list);
-      context.setState({ branch: list[0] });
-      context.cd(context.state.pwd);
+      const branch = list[0];
+      context.setState({ branch });
+      context.cd(branch, context.state.pwd);
     });
   }
   return (
@@ -30,8 +31,10 @@ export default function () {
       />
       <select
         onChange={e => {
-          context.setState({ branch: e.target.value, pwd: '/' });
-          context.cd(context.state.pwd);
+          const branch = e.target.value;
+          const pwd = '/';
+          context.setState({ branch, pwd });
+          context.cd(branch, pwd);
         }}
       >
         {options.map(o => <option key={o} value={o}>{o}</option>)}

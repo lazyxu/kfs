@@ -37,8 +37,8 @@ func New(s storage.Storage) pb.KoalaFSServer {
 	return &RootDirectory{s: s}
 }
 
-func (g *RootDirectory) mount(ctx context.Context) *node.Mount {
-	m, err := node.NewMount(getMountFromMetadata(ctx), g.s)
+func (g *RootDirectory) mount(branch string) *node.Mount {
+	m, err := node.NewMount(branch, g.s)
 	if err != nil {
 		panic(err)
 	}
@@ -46,8 +46,12 @@ func (g *RootDirectory) mount(ctx context.Context) *node.Mount {
 }
 
 func (g *RootDirectory) transaction(ctx context.Context, f func(m *node.Mount) error) (m *node.Mount, err error) {
+	return g.trans(getMountFromMetadata(ctx), f)
+}
+
+func (g *RootDirectory) trans(name string, f func(m *node.Mount) error) (m *node.Mount, err error) {
 	for i := 0; i < 100; i++ {
-		m, err = node.NewMount(getMountFromMetadata(ctx), g.s)
+		m, err = node.NewMount(name, g.s)
 		if err != nil {
 			return nil, err
 		}
@@ -100,10 +104,10 @@ func getFileList(m *node.Mount, path string) ([]*pb.FileStat, error) {
 	return l, nil
 }
 
-func (g *RootDirectory) Ls(ctx context.Context, req *pb.Path) (resp *pb.FilesResponse, err error) {
+func (g *RootDirectory) Ls(ctx context.Context, req *pb.PathReq) (resp *pb.FilesResponse, err error) {
 	resp = new(pb.FilesResponse)
 	defer catch(&err)
-	m := g.mount(ctx)
+	m := g.mount(req.Branch)
 	resp.Files, err = getFileList(m, req.Path)
 	return resp, err
 }
@@ -111,38 +115,71 @@ func (g *RootDirectory) Ls(ctx context.Context, req *pb.Path) (resp *pb.FilesRes
 func (g *RootDirectory) Cp(ctx context.Context, req *pb.MoveRequest) (resp *pb.PathList, err error) {
 	resp = new(pb.PathList)
 	defer catch(&err)
-	_, err = g.transaction(ctx, func(m *node.Mount) error {
-		for _, src := range req.Src {
-			name, err := m.Cp(src, req.Dst)
-			resp.Path = append(resp.Path, path.Join(req.Dst, name))
+	if req.SrcBranch == req.DstBranch {
+		_, err = g.trans(req.SrcBranch, func(m *node.Mount) error {
+			for _, src := range req.SrcPath {
+				name, err := node.Cp(m, src, m, req.DstPath)
+				resp.Path = append(resp.Path, path.Join(req.DstPath, name))
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+		return resp, err
+	}
+	mSrc, err := node.NewMount(req.SrcBranch, g.s)
+	if err != nil {
+		return resp, err
+	}
+	_, err = g.trans(req.DstBranch, func(mDst *node.Mount) error {
+		for _, src := range req.SrcPath {
+			name, err := node.Cp(mSrc, src, mDst, req.DstPath)
+			resp.Path = append(resp.Path, path.Join(req.DstPath, name))
 			if err != nil {
 				return err
 			}
 		}
 		return nil
 	})
+
 	return resp, err
 }
 
 func (g *RootDirectory) Mv(ctx context.Context, req *pb.MoveRequest) (resp *pb.Void, err error) {
 	resp = new(pb.Void)
 	defer catch(&err)
-	_, err = g.transaction(ctx, func(m *node.Mount) error {
-		for _, src := range req.Src {
-			err := m.Mv(src, req.Dst)
-			if err != nil {
-				return err
+	if req.SrcBranch == req.DstBranch {
+		_, err = g.trans(req.SrcBranch, func(m *node.Mount) error {
+			for _, src := range req.SrcPath {
+				err := m.Mv(src, req.DstPath)
+				if err != nil {
+					return err
+				}
 			}
-		}
-		return nil
+			return nil
+		})
+		return resp, err
+	}
+	_, err = g.trans(req.SrcBranch, func(mSrc *node.Mount) error {
+		_, err = g.trans(req.DstBranch, func(mDst *node.Mount) error {
+			for _, src := range req.SrcPath {
+				err := node.Mv(mSrc, src, mDst, req.DstPath)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+		return err
 	})
 	return resp, err
 }
 
-func (g *RootDirectory) NewFile(ctx context.Context, req *pb.Path) (resp *pb.Path, err error) {
+func (g *RootDirectory) NewFile(ctx context.Context, req *pb.PathReq) (resp *pb.Path, err error) {
 	resp = new(pb.Path)
 	defer catch(&err)
-	_, err = g.transaction(ctx, func(m *node.Mount) error {
+	_, err = g.trans(req.Branch, func(m *node.Mount) error {
 		name, err := m.NewFile(req.Path)
 		resp.Path = path.Join(req.Path, name)
 		return err
@@ -150,10 +187,10 @@ func (g *RootDirectory) NewFile(ctx context.Context, req *pb.Path) (resp *pb.Pat
 	return resp, err
 }
 
-func (g *RootDirectory) NewDir(ctx context.Context, req *pb.Path) (resp *pb.Path, err error) {
+func (g *RootDirectory) NewDir(ctx context.Context, req *pb.PathReq) (resp *pb.Path, err error) {
 	resp = new(pb.Path)
 	defer catch(&err)
-	_, err = g.transaction(ctx, func(m *node.Mount) error {
+	_, err = g.trans(req.Branch, func(m *node.Mount) error {
 		name, err := m.NewDir(req.Path)
 		resp.Path = path.Join(req.Path, name)
 		return err
@@ -164,7 +201,7 @@ func (g *RootDirectory) NewDir(ctx context.Context, req *pb.Path) (resp *pb.Path
 func (g *RootDirectory) Remove(ctx context.Context, req *pb.PathList) (resp *pb.Void, err error) {
 	resp = new(pb.Void)
 	defer catch(&err)
-	_, err = g.transaction(ctx, func(m *node.Mount) error {
+	_, err = g.trans(req.Branch, func(m *node.Mount) error {
 		for _, p := range req.Path {
 			parent, leaf := filepath.Split(p)
 			dir, err := m.GetDir(parent)
@@ -184,7 +221,7 @@ func (g *RootDirectory) Remove(ctx context.Context, req *pb.PathList) (resp *pb.
 func (g *RootDirectory) Download(ctx context.Context, req *pb.PathList) (resp *pb.DownloadResponse, err error) {
 	resp = new(pb.DownloadResponse)
 	defer catch(&err)
-	m := g.mount(ctx)
+	m := g.mount(req.Branch)
 	resp.Hash = make([]string, len(req.Path))
 	for i, p := range req.Path {
 		n, err := m.GetFile(p)
@@ -199,7 +236,7 @@ func (g *RootDirectory) Download(ctx context.Context, req *pb.PathList) (resp *p
 func (g *RootDirectory) Upload(ctx context.Context, req *pb.UploadRequest) (resp *pb.UploadResponse, err error) {
 	resp = new(pb.UploadResponse)
 	defer catch(&err)
-	_, err = g.transaction(ctx, func(m *node.Mount) error {
+	_, err = g.trans(req.Branch, func(m *node.Mount) error {
 		parent, leaf := filepath.Split(req.Path)
 		dir, err := m.GetDir(parent)
 		if err != nil {

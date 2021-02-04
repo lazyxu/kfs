@@ -9,8 +9,6 @@ export const globalStore = new Store({
   fileSize: null,
   filesPositions: [],
   boxChosen: {},
-  cutFiles: [],
-  copyFiles: [],
   windows: {},
 });
 window.globalStore = globalStore;

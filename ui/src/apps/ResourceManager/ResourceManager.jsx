@@ -52,16 +52,8 @@ export default React.memo(({
       fileSize: null,
       filesPositions: [],
       boxChosen: {},
-      cutFiles: [],
-      copyFiles: [],
     });
   }
-  // React.useEffect(() => {
-  //   if (props.isOpen) {
-  //     console.log(context.current);
-  //     context.current.cd(context.current.pwd);
-  //   }
-  // }, [props.isOpen]);
   return (
     <StoreContext.Provider value={context.current}>
       <Modal

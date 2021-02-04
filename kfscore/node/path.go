@@ -230,6 +230,68 @@ func (m *Mount) Mv(oldPath, newPath string) error {
 	return nil
 }
 
+func Mv(mSrc *Mount, oldPath string, mDst *Mount, newPath string) error {
+	oldParent, oldName := path.Split(oldPath)
+	oldDir, err := mSrc.GetDir(oldParent)
+	if err != nil {
+		return err
+	}
+	oldMetadata, err := oldDir.GetChild(oldName)
+	if err != nil {
+		return err
+	}
+	newParent, newName := path.Split(newPath)
+	newDir, err := mDst.GetDir(newParent)
+	if err != nil {
+		return err
+	}
+	if newName == "" {
+		err = oldDir.RemoveChild(oldName, true)
+		if err != nil {
+			return err
+		}
+		newDir, err := mDst.GetDir(newPath)
+		if err != nil {
+			return err
+		}
+		return move(newDir, oldMetadata, oldName)
+	}
+	newMetadata, err := newDir.GetChild(newName)
+	if err == e.ErrNotExist {
+		err := oldDir.RemoveChild(oldName, true)
+		if err != nil {
+			return err
+		}
+		return move(newDir, oldMetadata, newName)
+	}
+	if err != nil {
+		return err
+	}
+	if oldMetadata.IsFile() && newMetadata.IsFile() {
+		err = oldDir.RemoveChild(oldName, true)
+		if err != nil {
+			return err
+		}
+		err = newDir.RemoveChild(newName, true)
+		if err != nil {
+			return err
+		}
+		return move(newDir, oldMetadata, newName)
+	}
+	if newMetadata.IsDir() {
+		err = oldDir.RemoveChild(oldName, true)
+		if err != nil {
+			return err
+		}
+		newDir, err := mDst.GetDir(newPath)
+		if err != nil {
+			return err
+		}
+		return move(newDir, oldMetadata, oldName)
+	}
+	return nil
+}
+
 func move(newDir *Dir, oldMetadata *object.Metadata, name string) error {
 	metadata := oldMetadata.Builder().Name(name).Build()
 	if metadata.IsFile() {
@@ -241,9 +303,9 @@ func move(newDir *Dir, oldMetadata *object.Metadata, name string) error {
 	}
 }
 
-func (m *Mount) Cp(oldPath, newPath string) (string, error) {
+func Cp(mSrc *Mount, oldPath string, mDst *Mount, newPath string) (string, error) {
 	oldParent, oldName := path.Split(oldPath)
-	oldDir, err := m.GetDir(oldParent)
+	oldDir, err := mSrc.GetDir(oldParent)
 	if err != nil {
 		return "", err
 	}
@@ -251,11 +313,11 @@ func (m *Mount) Cp(oldPath, newPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	newDir, err := m.GetDir(newPath)
+	newDir, err := mDst.GetDir(newPath)
 	if err != nil {
 		return "", err
 	}
-	return m.tryName(newPath, oldName, func(name string) error {
+	return mDst.tryName(newPath, oldName, func(name string) error {
 		return move(newDir, oldMetadata, name)
 	})
 }

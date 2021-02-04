@@ -6,14 +6,18 @@ import {
   inState, ctxInState, StoreContext,
 } from 'bus/bus';
 
-@ctxInState(StoreContext, 'contextMenu', 'cutFiles', 'copyFiles')
+@inState('clipboard')
+@ctxInState(StoreContext, 'contextMenu')
 class component extends React.Component {
   static contextType = StoreContext
 
   render() {
     const {
-      contextMenu, copyFiles, cutFiles,
+      contextMenu, clipboard,
     } = this.state;
+    const {
+      branch, pwd,
+    } = this.context.state;
     if (!contextMenu) {
       return (
         <span />
@@ -26,18 +30,21 @@ class component extends React.Component {
         y={contextMenu.y}
         options={{
           上传文件: console.log,
-          新建文件: () => this.context.newFile(this.context.state.pwd),
-          新建文件夹: () => this.context.newDir(this.context.state.pwd),
-          刷新: () => this.context.cd(),
+          新建文件: () => this.context.newFile(),
+          新建文件夹: () => this.context.newDir(),
+          刷新: () => this.context.cd(branch, pwd),
           粘贴: {
-            enabled: (cutFiles && cutFiles.length > 0) || (copyFiles && copyFiles.length > 0),
+            enabled: clipboard && clipboard.file,
             fn: () => {
-              if (cutFiles && cutFiles.length > 0) {
-                this.context.mv(cutFiles, this.context.state.pwd);
-                this.context.setState({ cutFiles: [] });
-              } else {
-                this.context.cp(copyFiles, this.context.state.pwd);
+              if (clipboard.cut) {
+                const { branch, pathList } = clipboard.file;
+                this.context.mv(branch, pathList, branch, pwd);
+                this.context.setState({ clipboard: undefined });
+                return;
               }
+              const { branch, pathList } = clipboard.file;
+              this.context.cp(branch, pathList, branch, pwd);
+              this.context.setState({ clipboard: undefined });
             },
           },
           历史版本: { enabled: false, fn: () => { } },

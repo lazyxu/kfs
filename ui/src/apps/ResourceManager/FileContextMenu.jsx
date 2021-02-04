@@ -3,7 +3,7 @@ import React from 'react';
 import ContextMenu from 'components/ContextMenu';
 
 import {
-  ctxInState, StoreContext,
+  ctxInState, setState, StoreContext,
 } from 'bus/bus';
 
 @ctxInState(StoreContext, 'contextMenuForFile', 'chosen')
@@ -26,8 +26,24 @@ class component extends React.Component {
       contextMenuForFileOptions = {
         打开: { enabled: false, fn: () => { } },
         下载: () => this.context.download(pathList),
-        剪切: () => this.context.setState({ cutFiles: pathList, copyFiles: [] }),
-        复制: () => this.context.setState({ cutFiles: [], copyFiles: pathList }),
+        剪切: () => setState({
+          clipboard: {
+            cut: true,
+            file: {
+              branch: this.context.state.branch,
+              pathList,
+            },
+          },
+        }),
+        复制: () => setState({
+          clipboard: {
+            copy: true,
+            file: {
+              branch: this.context.state.branch,
+              pathList,
+            },
+          },
+        }),
         删除: () => this.context.remove(pathList),
         重命名: () => this.context.setState({ chosen: (_chosen) => _chosen[pathList[0]] = 2 }),
         属性: { enabled: false, fn: () => { } },
@@ -37,8 +53,24 @@ class component extends React.Component {
       contextMenuForFileOptions = {
         打开: { enabled: false, fn: () => { } },
         [`下载${cnt}个文件`]: { enabled: false, fn: () => { } },
-        剪切: () => this.context.setState({ cutFiles: pathList, copyFiles: [] }),
-        复制: () => this.context.setState({ cutFiles: [], copyFiles: pathList }),
+        剪切: () => setState({
+          clipboard: {
+            cut: true,
+            file: {
+              branch: this.context.state.branch,
+              pathList,
+            },
+          },
+        }),
+        复制: () => setState({
+          clipboard: {
+            copy: true,
+            file: {
+              branch: this.context.state.branch,
+              pathList,
+            },
+          },
+        }),
         删除: () => this.context.remove(pathList),
         属性: { enabled: false, fn: () => { } },
         历史版本: { enabled: false, fn: () => { } },

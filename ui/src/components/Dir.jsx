@@ -12,7 +12,7 @@ export default React.memo(({
     <FileBase
       {...props}
       type="dir"
-      onDoubleClick={() => context.cd(props.path)}
+      onDoubleClick={() => context.cd(context.state.branch, props.path)}
     />
   );
 });

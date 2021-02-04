@@ -31,12 +31,12 @@ class component extends React.Component {
       <Button
         key={path}
         dragable={dragable}
-        onClick={() => this.context.cd(path)}
+        onClick={() => this.context.cd(this.context.state.branch, path)}
         onDragEnter={(e) => {
           if (dragable) {
             e.preventDefault();
             if (!this.state.dragOver) {
-            // console.log('onDragEnter', e.dataTransfer.getData('text/plain'));
+              // console.log('onDragEnter', e.dataTransfer.getData('text/plain'));
               this.setState({ dragOver: true });
             }
           }
@@ -50,15 +50,14 @@ class component extends React.Component {
           if (dragable) {
             e.preventDefault();
             if (this.state.dragOver) {
-            // console.log('onDragLeave', e.dataTransfer.getData('text/plain'));
+              // console.log('onDragLeave', e.dataTransfer.getData('text/plain'));
               this.setState({ dragOver: false });
             }
           }
         }}
         onDrop={(e) => {
           if (dragable) {
-            let files = e.dataTransfer.getData('text/plain');
-            files = JSON.parse(files);
+            const { files, branch } = JSON.parse(e.dataTransfer.getData('text/plain'));
             let i;
             for (i = path.length - 1; i > 0; i--) {
               if (path.charAt(i) !== '/') {
@@ -70,7 +69,7 @@ class component extends React.Component {
             if (files.includes(dst)) {
               warn('移动文件至文件夹', '移动文件夹至本身');
             } else {
-              this.context.mv(files, dst);
+              this.context.mv(branch, files, this.context.state.branch, dst);
             }
             if (this.state.dragOver) {
               this.setState({ dragOver: false });

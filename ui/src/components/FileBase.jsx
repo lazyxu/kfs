@@ -45,7 +45,7 @@ export default React.memo(({
       const src = join(dir, name);
       const dst = join(dir, fileName);
       console.log('---rename---', dir, src, dst);
-      context.mv([src], dst);
+      context.mv(context.state.branch, [src], context.state.branch, dst);
     }
   }, [chosen]);
   React.useEffect(() => {
@@ -63,7 +63,7 @@ export default React.memo(({
       draggable="true"
       onDragStart={e => {
         const files = Object.keys(context.state.chosen).filter((k) => context.state.chosen[k] > 0);
-        e.dataTransfer.setData('text/plain', JSON.stringify(files));
+        e.dataTransfer.setData('text/plain', JSON.stringify({ branch: context.state.branch, files }));
         console.log('onDragStart', name, e.dataTransfer.getData('text/plain'));
       }}
       onDragOver={e => {
@@ -84,13 +84,12 @@ export default React.memo(({
         e.preventDefault();
         console.log('onDrop', e.dataTransfer.getData('text/plain'));
         if (dragOver && isDargTargetValid) {
-          let files = e.dataTransfer.getData('text/plain');
-          files = JSON.parse(files);
+          const { files, branch } = JSON.parse(e.dataTransfer.getData('text/plain'));
           console.log('onDrop', files, path);
           if (files.includes(path)) {
             warn('移动文件至文件夹', '移动文件夹至本身');
           } else {
-            context.mv(files, path);
+            context.mv(branch, files, context.state.branch, path);
           }
           setDragOver(false);
         }
@@ -138,13 +137,8 @@ export default React.memo(({
                   delete _chosen[item];
                 });
               }
-              Object.keys(_chosen)
-                .forEach((path) => _chosen[path] === 2 && (_chosen[path] = 1));
-              if (v === 2) {
-                _chosen[path] = 1;
-              } else {
-                _chosen[path] = v ? 0 : 1;
-              }
+              Object.keys(_chosen).forEach((path) => _chosen[path] === 2 && (_chosen[path] = 1));
+              _chosen[path] = 1;
               return {};
             },
           });
