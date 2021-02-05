@@ -5,19 +5,32 @@ package pb;
 option go_package = "github.com/lazyxu/kfs/warpper/grppcweb/pb";
 
 service KoalaFS {
-    rpc ls(PathReq) returns (FilesResponse) {}
-    rpc cp(MoveRequest) returns (PathList) {}
-    rpc mv(MoveRequest) returns (Void) {}
-    rpc newFile(PathReq) returns (Path) {}
-    rpc newDir(PathReq) returns (Path) {}
-    rpc remove(PathList) returns (Void) {}
-    rpc download(PathList) returns (DownloadResponse) {}
-    rpc upload(UploadRequest) returns (UploadResponse) {}
-    rpc uploadBlob(stream StreamData) returns (Hash) {}
-    rpc uploadTree(stream StreamData) returns (Hash) {}
-    rpc updateRef(Ref) returns (Void) {}
-    rpc branches(Void) returns (Branches) {}
-    rpc status(Void) returns (Status) {}
+    rpc ls (PathReq) returns (FilesResponse) {
+    }
+    rpc cp (MoveRequest) returns (PathList) {
+    }
+    rpc mv (MoveRequest) returns (Void) {
+    }
+    rpc newFile (PathReq) returns (Path) {
+    }
+    rpc newDir (PathReq) returns (Path) {
+    }
+    rpc remove (PathList) returns (Void) {
+    }
+    rpc download (PathList) returns (DownloadResponse) {
+    }
+    rpc upload (UploadRequest) returns (UploadResponse) {
+    }
+    rpc uploadBlob (stream StreamData) returns (Hash) {
+    }
+    rpc uploadTree (stream StreamData) returns (Hash) {
+    }
+    rpc updateRef (Ref) returns (Void) {
+    }
+    rpc branches (Void) returns (Branches) {
+    }
+    rpc status (Void) returns (Status) {
+    }
 }
 
 message Status {
@@ -59,6 +72,10 @@ message PathList {
 
 message FilesResponse {
     repeated FileStat files = 1;
+}
+
+message FileInfos {
+    repeated FileInfo info = 1;
 }
 
 message FileInfo {
@@ -107,4 +124,10 @@ message UploadRequest {
 
 message UploadResponse {
     repeated FileStat files = 1;
+}
+
+message Header {
+    int32 method = 1;
+    bytes hash = 2;
+    uint64 rawSize = 5;
 }

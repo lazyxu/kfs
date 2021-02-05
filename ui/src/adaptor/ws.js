@@ -31,14 +31,4 @@ export function invoke(method, params, cb) {
   rws.send(JSON.stringify({ method, id, params }));
 }
 
-// let fileCnt = 0;
-// let fileSize = 0;
-// invoke('backup', {}, result => {
-//   // const files = result.files.filter(f => f.type === 'file');
-//   // fileCnt += files.length;
-//   // const size = files.reduce((prev, curr) => prev += curr.size, 0);
-//   // fileSize += size;
-//   console.log('backup result', result);
-// });
-
 export default rws;

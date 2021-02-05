@@ -21,7 +21,7 @@ export default React.memo(({
       {...props}
     >
       <Button onClick={() => {
-        invoke('backup', { path: '/Users/xuliang/repos/kfs-network/kfscore/' }, setStatus);
+        invoke('backup', { path: '/Users/xuliang/repos/kfs-network/kfscore' }, setStatus);
       }}
       >
         开始备份
@@ -34,9 +34,8 @@ export default React.memo(({
             <div>目录数量：{status.DirCount}</div>
             {/* <div>大文件大于100M）：{JSON.stringify(status.LargeFiles)}</div> */}
             <div>已排除文件：{JSON.stringify(status.IgnoredFiles)}</div>
-            <div>扫描是否完成：{status.Done ? '是' : '否'}</div>
             <div>是否取消：{status.Canceled ? '是' : '否'}</div>
-            {/* <div>错误：{JSON.stringify(status.Errs)}</div> */}
+            <div>扫描进度：{status.ScanProcess}</div>
           </div>
         )}
       </div>

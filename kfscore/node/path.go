@@ -2,6 +2,7 @@ package node
 
 import (
 	"math"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -24,7 +25,7 @@ type Mount struct {
 func NewMount(name string, s storage.Storage) (*Mount, error) {
 	obj := object.Init(s)
 	head, err := s.GetRef(name)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
 	root := NewDir(s, obj,

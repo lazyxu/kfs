@@ -50,8 +50,12 @@ func (g *RootDirectory) transaction(ctx context.Context, f func(m *node.Mount) e
 }
 
 func (g *RootDirectory) trans(name string, f func(m *node.Mount) error) (m *node.Mount, err error) {
+	return transaction(g.s, name, f)
+}
+
+func transaction(s storage.Storage, name string, f func(m *node.Mount) error) (m *node.Mount, err error) {
 	for i := 0; i < 100; i++ {
-		m, err = node.NewMount(name, g.s)
+		m, err = node.NewMount(name, s)
 		if err != nil {
 			return nil, err
 		}

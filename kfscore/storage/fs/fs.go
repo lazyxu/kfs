@@ -161,9 +161,6 @@ func (s *Storage) UpdateRef(name string, expect string, desire string) error {
 
 func (s *Storage) GetRef(name string) (string, error) {
 	bytes, err := ioutil.ReadFile(path.Join(s.root, "refs", name))
-	if os.IsNotExist(err) {
-		err = nil
-	}
 	return string(bytes), err
 }
 

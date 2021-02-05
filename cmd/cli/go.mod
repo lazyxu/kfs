@@ -7,6 +7,7 @@ require (
 	github.com/lazyxu/kfs/warpper/cgofuse v0.0.0
 	github.com/lazyxu/kfs/warpper/grpcweb v0.0.0
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/pierrec/lz4 v2.6.0+incompatible // indirect
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.1
 )

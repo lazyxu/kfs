@@ -8,12 +8,6 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
-
-	"google.golang.org/grpc/metadata"
-
-	"github.com/sirupsen/logrus"
-
 	"github.com/lazyxu/kfs/warpper/grpcweb/pb"
 
 	"google.golang.org/grpc"
@@ -40,13 +34,14 @@ type BackUpCtx struct {
 	largeFiles   map[string]interface{}
 	ignoredFiles []string
 	ignoreRules  []IgnoreRule
-	uploadDone   bool
-	scanDone     bool
+	done         bool
 	canceled     bool
 	errs         []BackUpErr
 	client       pb.KoalaFSClient
 	conn         *grpc.ClientConn
+	scanProcess  []int
 	uploadChan   chan struct{}
+	concurrent   int
 }
 
 type BackUpErr struct {
@@ -70,7 +65,7 @@ func NewBackUpCtx(ctx context.Context, host string, root string, ignoreRules []I
 func (c *BackUpCtx) Scan() error {
 	defer func() {
 		c.mutex.Lock()
-		c.scanDone = true
+		c.done = true
 		c.mutex.Unlock()
 	}()
 	hash, err := c.walk(c.root)
@@ -85,33 +80,6 @@ func (c *BackUpCtx) Scan() error {
 		return err
 	}
 	return nil
-}
-
-type Status struct {
-	FileSize     string
-	FileCount    uint64
-	DirCount     uint64
-	LargeFiles   map[string]interface{}
-	IgnoredFiles []string
-	Done         bool
-	Canceled     bool
-	Errs         []BackUpErr
-}
-
-func (c *BackUpCtx) GetStatus() Status {
-	c.mutex.RLock()
-	p := Status{
-		FileSize:     humanize.Bytes(c.fileSize),
-		FileCount:    c.fileCount,
-		DirCount:     c.dirCount,
-		LargeFiles:   c.largeFiles,
-		IgnoredFiles: c.ignoredFiles,
-		Done:         c.scanDone,
-		Canceled:     c.canceled,
-		Errs:         c.errs,
-	}
-	c.mutex.RUnlock()
-	return p
 }
 
 func (c *BackUpCtx) ignoreFile(fileName string) bool {
@@ -145,14 +113,14 @@ func (c *BackUpCtx) walk(filePath string) (string, error) {
 		if info.Size() > 100*1024*1024 {
 			c.largeFiles[filePath] = humanize.Bytes(uint64(info.Size()))
 		}
-		hash, err := c.uploadFile(filePath)
+		hash, err := c.uploadFile(filePath, info.Size())
 		c.mutex.Unlock()
 		return hash, err
 	}
 	if modeType&os.ModeSymlink != 0 {
 		c.mutex.Lock()
 		c.fileCount++
-		hash, err := c.uploadFile(filePath)
+		hash, err := c.uploadFile(filePath, info.Size())
 		c.mutex.Unlock()
 		return hash, err
 	}
@@ -165,6 +133,7 @@ func (c *BackUpCtx) walk(filePath string) (string, error) {
 	}
 	c.mutex.Lock()
 	c.dirCount += 1
+	c.scanProcess = append(c.scanProcess, len(infos))
 	c.mutex.Unlock()
 
 	var pbInfos []*pb.FileInfo
@@ -174,12 +143,16 @@ func (c *BackUpCtx) walk(filePath string) (string, error) {
 			// TODO: non-recursive version
 			c.mutex.Lock()
 			c.canceled = true
+			c.scanProcess = nil
 			c.mutex.Unlock()
 			return "", errors.New("context deadline exceed")
 		default:
 			filename := filepath.Join(filePath, info.Name())
 			hash, err := c.walk(filename)
 			if err == filepath.SkipDir {
+				c.mutex.Lock()
+				c.scanProcess[len(c.scanProcess)-1]--
+				c.mutex.Unlock()
 				continue
 			}
 			if err != nil {
@@ -188,6 +161,7 @@ func (c *BackUpCtx) walk(filePath string) (string, error) {
 					Err:      err,
 					FilePath: filePath,
 				})
+				c.scanProcess[len(c.scanProcess)-1]--
 				c.mutex.Unlock()
 				continue
 			}
@@ -207,69 +181,10 @@ func (c *BackUpCtx) walk(filePath string) (string, error) {
 			}
 			pbInfos = append(pbInfos, pbInfo)
 		}
+		c.mutex.Lock()
+		c.scanProcess[len(c.scanProcess)-1]--
+		c.mutex.Unlock()
 	}
+	c.scanProcess = c.scanProcess[0 : len(c.scanProcess)-1]
 	return c.uploadDir(pbInfos)
-}
-
-func (c *BackUpCtx) uploadFile(filePath string) (string, error) {
-	return c.upload(func(ctx context.Context, client pb.KoalaFSClient) (string, error) {
-		bytes, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			return "", err
-		}
-		stream, err := client.UploadBlob(ctx)
-		if err != nil {
-			logrus.WithError(err).Errorf("UploadBlob")
-			return "", err
-		}
-		err = stream.Send(&pb.StreamData{Data: bytes})
-		if err != nil {
-			logrus.WithError(err).Errorf("Send")
-			return "", err
-		}
-		hash, err := stream.CloseAndRecv()
-		if err != nil {
-			logrus.WithError(err).Errorf("RecvMsg2")
-			return "", err
-		}
-		logrus.Debug(hash)
-		return hash.Hash, nil
-	})
-}
-
-func (c *BackUpCtx) uploadDir(infos []*pb.FileInfo) (string, error) {
-	return c.upload(func(ctx context.Context, client pb.KoalaFSClient) (string, error) {
-		stream, err := client.UploadTree(ctx)
-		if err != nil {
-			logrus.WithError(err).Errorf("UploadBlob")
-			return "", err
-		}
-		for _, info := range infos {
-			bytes, err := proto.Marshal(info)
-			err = stream.Send(&pb.StreamData{Data: bytes})
-			if err != nil {
-				logrus.WithError(err).Errorf("Send")
-				return "", err
-			}
-		}
-		hash, err := stream.CloseAndRecv()
-		if err != nil {
-			logrus.WithError(err).Errorf("RecvMsg2")
-			return "", err
-		}
-		logrus.Debug(hash)
-		return hash.Hash, nil
-	})
-}
-
-func (c *BackUpCtx) upload(fn func(context.Context, pb.KoalaFSClient) (string, error)) (string, error) {
-	conn, err := grpc.Dial(c.host, grpc.WithInsecure())
-	if err != nil {
-		logrus.WithError(err).Errorf("Dial")
-		return "", err
-	}
-	defer conn.Close()
-	client := pb.NewKoalaFSClient(conn)
-	ctx := metadata.AppendToOutgoingContext(context.Background(), "kfs-mount", "backup")
-	return fn(ctx, client)
 }

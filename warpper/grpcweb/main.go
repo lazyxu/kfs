@@ -23,6 +23,7 @@ import (
 func Start(httpPort int, s storage.Storage) {
 	logrus.SetLevel(logrus.TraceLevel)
 	Init(s)
+	go rootdirectory.Socket(s, 9877)
 	fsServer := rootdirectory.New(s)
 	serverHttp(getHandler(fsServer, s), ":"+strconv.Itoa(httpPort))
 }
