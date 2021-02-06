@@ -8,15 +8,16 @@ import (
 )
 
 type Status struct {
-	FileSize     string
-	FileCount    uint64
-	DirCount     uint64
-	LargeFiles   map[string]interface{}
-	IgnoredFiles []string
-	Done         bool
-	Canceled     bool
-	Errs         []BackUpErr
-	ScanProcess  string
+	FileSize       string
+	FileCount      uint64
+	DirCount       uint64
+	LargeFiles     map[string]interface{}
+	IgnoredFiles   []string
+	Done           bool
+	Canceled       bool
+	Errs           []BackUpErr
+	ScanProcess    string
+	UploadingCount int
 }
 
 func (c *BackUpCtx) GetStatus() Status {
@@ -35,15 +36,16 @@ func (c *BackUpCtx) GetStatus() Status {
 		scanProcess = process.String()
 	}
 	p := Status{
-		FileSize:     humanize.Bytes(c.fileSize),
-		FileCount:    c.fileCount,
-		DirCount:     c.dirCount,
-		LargeFiles:   c.largeFiles,
-		IgnoredFiles: c.ignoredFiles,
-		Canceled:     c.canceled,
-		Errs:         c.errs,
-		ScanProcess:  scanProcess,
-		Done:         c.done,
+		FileSize:       humanize.Bytes(c.fileSize),
+		FileCount:      c.fileCount,
+		DirCount:       c.dirCount,
+		LargeFiles:     c.largeFiles,
+		IgnoredFiles:   c.ignoredFiles,
+		Canceled:       c.canceled,
+		Errs:           c.errs,
+		ScanProcess:    scanProcess,
+		Done:           c.done,
+		UploadingCount: c.queue.UploadingCount(),
 	}
 	c.mutex.RUnlock()
 	return p

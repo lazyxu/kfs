@@ -36,6 +36,8 @@ export default React.memo(({
             <div>已排除文件：{JSON.stringify(status.IgnoredFiles)}</div>
             <div>是否取消：{status.Canceled ? '是' : '否'}</div>
             <div>扫描进度：{status.ScanProcess}</div>
+            <div>待上传文件：{status.UploadingCount}</div>
+            <div>备份完成：{status.Done ? '是' : '否'}</div>
           </div>
         )}
       </div>

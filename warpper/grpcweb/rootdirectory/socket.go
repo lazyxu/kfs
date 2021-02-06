@@ -105,6 +105,9 @@ func process(conn net.Conn, s storage.Storage) {
 		}
 		t := obj.NewTree()
 		for _, info := range infos.Info {
+			if info == nil || info.Type == "" {
+				continue
+			}
 			var item *object.Metadata
 			if info.Type == "file" {
 				item = obj.NewFileMetadata(info.Name, os.FileMode(info.Mode)).Builder().

@@ -27,11 +27,7 @@ func (w *LenWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func getConn(f func(conn net.Conn) error) {
-
-}
-
-func (c *BackUpCtx) uploadFile(filePath string, size int64) (string, error) {
+func (q *UploadQueue) uploadFile(filePath string, size int64) (string, error) {
 	conn, err := net.Dial("tcp", "127.0.0.1:9877")
 	if err != nil {
 		fmt.Printf("conn server failed, err:%v\n", err)
@@ -96,7 +92,7 @@ func (c *BackUpCtx) uploadFile(filePath string, size int64) (string, error) {
 	return string(hash2), nil
 }
 
-func (c *BackUpCtx) uploadDir(infos []*pb.FileInfo) (string, error) {
+func (q *UploadQueue) uploadDir(infos []*pb.FileInfo) (string, error) {
 	conn, err := net.Dial("tcp", "127.0.0.1:9877")
 	if err != nil {
 		fmt.Printf("conn server failed, err:%v\n", err)
