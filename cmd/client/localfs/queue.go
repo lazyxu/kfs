@@ -118,6 +118,7 @@ func (q *UploadQueue) Handle(ctx context.Context) string {
 					if !e.info.IsDir() {
 						hash, err = q.uploadFile(e.filePath, e.info.Size())
 						if err != nil {
+							// TODO: retry and log error.
 							q.fileList = append(q.fileList, nil)
 							continue
 						}

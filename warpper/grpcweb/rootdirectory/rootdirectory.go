@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -330,11 +331,14 @@ func (g *RootDirectory) Status(ctx context.Context, _ *pb.Void) (resp *pb.Status
 	if err != nil {
 		return resp, err
 	}
+	memStat := new(runtime.MemStats)
+
 	resp = &pb.Status{
 		TotalSize: humanize.Bytes(status.TotalPhysicalSize),
 		FileSize:  humanize.Bytes(status.BlobLogicalSize),
 		FileCount: status.BlobCount,
 		DirCount:  status.TreeCount,
+		MemInfo:   humanize.Bytes(memStat.Alloc),
 	}
 	return resp, err
 }

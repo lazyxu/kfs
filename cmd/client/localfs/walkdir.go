@@ -26,6 +26,7 @@ const (
 type BackUpCtx struct {
 	ctx          context.Context
 	host         string
+	branch       string
 	root         string
 	mutex        sync.RWMutex
 	fileSize     uint64
@@ -50,17 +51,18 @@ type BackUpErr struct {
 	FilePath string
 }
 
-func NewBackUpCtx(ctx context.Context, host string, root string, ignoreRules []IgnoreRule) (*BackUpCtx, error) {
+func NewBackUpCtx(ctx context.Context, host string, branch string, root string, ignoreRules []IgnoreRule) (*BackUpCtx, error) {
 	return &BackUpCtx{
 		ctx:          ctx,
 		host:         host,
+		branch:       branch,
 		root:         root,
 		largeFiles:   make(map[string]interface{}),
 		ignoredFiles: []string{},
 		ignoreRules:  ignoreRules,
 		errs:         []BackUpErr{},
 		uploadChan:   make(chan struct{}, 1),
-		queue:        NewUploadQueue(1024),
+		queue:        NewUploadQueue(16),
 	}, nil
 }
 

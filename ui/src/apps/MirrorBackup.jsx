@@ -5,6 +5,9 @@ import Modal from 'components/Modal';
 
 import { getConfig, setConfig } from 'adaptor/config';
 import { invoke } from 'adaptor/ws';
+import { openDir } from 'adaptor/backup';
+import { StoreContext } from 'bus/bus';
+import { getBranchList } from 'bus/grpcweb';
 
 const Button = styled.button`
   list-style-type: none;
@@ -15,14 +18,60 @@ export default React.memo(({
   ...props
 }) => {
   const [status, setStatus] = React.useState();
+  const [uploadDir, setUploadDir] = React.useState();
+  const [branch, setBranch] = React.useState();
+  const [options, setOptions] = React.useState([]);
+  const context = React.useContext(StoreContext);
+  const branches = React.useRef();
+  if (!branches.current) {
+    // componentWillMount
+    branches.current = true;
+    getBranchList().then(list => {
+      setOptions(list);
+      const branch = list[0];
+      console.log(branch);
+    });
+  }
   return (
     <Modal
       title="镜像备份"
       {...props}
     >
-      <Button onClick={() => {
-        invoke('backup', { path: '/Users/xuliang/repos/kfs-network/kfscore' }, setStatus);
-      }}
+      <div>
+        <button
+          type="button"
+          onClick={async () => {
+            const path = await openDir();
+            setUploadDir(path);
+          }}
+        >
+          选择需要备份的文件夹
+        </button>
+      </div>
+      <div>
+        {uploadDir}
+      </div>
+      <div>
+        <input
+          type="text"
+          name="greeting"
+          list="greetings"
+          onChange={e => {
+            setBranch(e.target.value);
+          }}
+        />
+        <datalist
+          id="greetings"
+          style={{ display: 'none' }}
+        >
+          {options.map(o => <option key={o} value={o}>{o}</option>)}
+        </datalist>
+      </div>
+      <Button
+        onClick={() => {
+          invoke('backup', { path: uploadDir, branch }, setStatus);
+        }}
+        disabled={!branch || !uploadDir}
       >
         开始备份
       </Button>

@@ -38,6 +38,7 @@ message Status {
     string fileSize = 2;
     uint64 fileCount = 3;
     uint64 dirCount = 4;
+    string memInfo = 5;
 }
 
 message Branches {

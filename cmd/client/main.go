@@ -31,9 +31,16 @@ func main() {
 		return localfs.TransInfo(dirname, infos), nil
 	})
 	rpc.Register1ton("backup", func(ctx context.Context, q *rpc.JsonQ, ch chan<- interface{}) error {
-		dirname := q.RFindStringOrDefault("params.path", homeDir)
+		dirname, err := q.RFindString("params.path")
+		if err != nil {
+			return err
+		}
+		branch, err := q.RFindString("params.branch")
+		if err != nil {
+			return err
+		}
 		host := q.RFindStringOrDefault("params.host", "127.0.0.1:9092")
-		b, err := localfs.NewBackUpCtx(ctx, host, dirname, []localfs.IgnoreRule{
+		b, err := localfs.NewBackUpCtx(ctx, host, branch, dirname, []localfs.IgnoreRule{
 			&localfs.FileNameIgnore{FileName: "Docker.raw"},
 		})
 		if err != nil {

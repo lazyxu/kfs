@@ -153,6 +153,6 @@ func (c *BackUpCtx) upload(fn func(context.Context, pb.KoalaFSClient) (string, e
 	}
 	defer conn.Close()
 	client := pb.NewKoalaFSClient(conn)
-	ctx := metadata.AppendToOutgoingContext(context.Background(), "kfs-mount", "backup")
+	ctx := metadata.AppendToOutgoingContext(context.Background(), "kfs-mount", c.branch)
 	return fn(ctx, client)
 }
