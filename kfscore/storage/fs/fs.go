@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"sync/atomic"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/lazyxu/kfs/kfscore/kfscrypto"
 
 	"github.com/lazyxu/kfs/kfscore/storage"
@@ -25,6 +27,13 @@ const (
 	dirPerm  = 0755
 	filePerm = 0644
 )
+
+var tempDir string
+
+func init() {
+	tempDir = os.TempDir()
+	logrus.Info("tempDir ", tempDir)
+}
 
 func typeToString(typ int) string {
 	switch typ {
@@ -57,10 +66,6 @@ func New(root string, hashFunc func() kfscrypto.Hash) (*Storage, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = os.MkdirAll(path.Join(root, "temp"), dirPerm)
-	if err != nil {
-		return nil, err
-	}
 	err = os.MkdirAll(path.Join(root, "stage", "tree"), dirPerm)
 	if err != nil {
 		return nil, err
@@ -87,7 +92,7 @@ func (s *Storage) Read(typ int, key string, f func(reader io.Reader) error) erro
 
 func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
 	id := atomic.AddUint32(&s.tempFileID, 1)
-	pTemp := path.Join(s.root, "temp", strconv.FormatUint(uint64(id), 10))
+	pTemp := path.Join(tempDir, "kfs.object."+strconv.FormatUint(uint64(id), 10))
 	fTemp, err := os.OpenFile(pTemp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filePerm)
 	if err != nil {
 		return "", err
@@ -102,14 +107,19 @@ func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
 	fTemp.Close()
 	key, err := hw.Cal(nil)
 	if err != nil {
+		os.Remove(pTemp)
 		return "", err
 	}
 	p := s.objectPath(typ, key)
 	fCurrent, err := os.OpenFile(p, os.O_RDONLY, filePerm)
 	if err == nil {
-		return key, fCurrent.Close()
+		fCurrent.Close()
+		// file exists
+		os.Remove(pTemp)
+		return key, err
 	}
 	if !os.IsNotExist(err) {
+		os.Remove(pTemp)
 		return "", err
 	}
 	// file not exists
@@ -148,6 +158,18 @@ func (s *Storage) Write(typ int, reader io.Reader) (string, error) {
 //	}
 //	return id, nil
 //}
+
+func (s *Storage) Exist(typ int, key string) (bool, error) {
+	p := s.objectPath(typ, key)
+	_, err := os.Stat(p)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
 
 func (s *Storage) Delete(typ int, key string) error {
 	p := s.objectPath(typ, key)

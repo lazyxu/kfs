@@ -21,7 +21,7 @@ rws.addEventListener('message', ({ data }) => {
   }
   console.log('message', data.id, data.result);
   if (data.id) {
-    emitter.emit(data.id, data.result);
+    emitter.emit(data.id, data);
   }
 });
 
@@ -29,6 +29,7 @@ export function invoke(method, params, cb) {
   const id = uuidv4();
   emitter.addListener(id, cb);
   rws.send(JSON.stringify({ method, id, params }));
+  return id;
 }
 
 export default rws;

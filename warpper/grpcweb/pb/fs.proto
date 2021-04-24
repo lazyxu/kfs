@@ -129,6 +129,6 @@ message UploadResponse {
 
 message Header {
     int32 method = 1;
-    bytes hash = 2;
+    string hash = 2;
     uint64 rawSize = 5;
 }

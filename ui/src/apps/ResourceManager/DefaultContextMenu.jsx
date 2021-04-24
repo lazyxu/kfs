@@ -36,14 +36,13 @@ class component extends React.Component {
           粘贴: {
             enabled: clipboard && clipboard.file,
             fn: () => {
+              const { branch: srcBranch, pathList } = clipboard.file;
               if (clipboard.cut) {
-                const { branch, pathList } = clipboard.file;
-                this.context.mv(branch, pathList, branch, pwd);
+                this.context.mv(srcBranch, pathList, branch, pwd);
                 this.context.setState({ clipboard: undefined });
                 return;
               }
-              const { branch, pathList } = clipboard.file;
-              this.context.cp(branch, pathList, branch, pwd);
+              this.context.cp(srcBranch, pathList, branch, pwd);
               this.context.setState({ clipboard: undefined });
             },
           },

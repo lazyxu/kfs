@@ -1,11 +1,30 @@
 // 引入electron并创建一个Browserwindow
 // eslint-disable-next-line import/no-extraneous-dependencies
-const { app, BrowserWindow } = require('electron');
+const { app, Tray, BrowserWindow } = require('electron');
+const path = require('path');
 
 // 保持window对象的全局引用,避免JavaScript对象被垃圾回收时,窗口被自动关闭.
 let mainWindow;
+let tray;
 
 function createWindow() {
+  const trayMenuTemplate = [
+    {
+      label: '退出企业管家',
+      click: function () {
+        if (appTray) {
+          appTray.destroy()
+        }
+        app.exit(0)
+      }
+    }
+  ]
+  // if (process.platform == 'darwin') {
+  //mac
+  tray = new Tray(path.join(__dirname, "./trayTemplate.png"));
+  console.log(tray);
+  // }
+
   // 创建浏览器窗口,宽高自定义具体大小你开心就好
   mainWindow = new BrowserWindow({
     width: 800,

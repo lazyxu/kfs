@@ -30,6 +30,17 @@ func main() {
 		}
 		return localfs.TransInfo(dirname, infos), nil
 	})
+	rpc.RegisterInvokeMethod("backup.cancel", func(q *rpc.JsonQ) (interface{}, error) {
+		dirname, err := q.RFindString("id")
+		if err != nil {
+			return nil, err
+		}
+		infos, err := ioutil.ReadDir(dirname)
+		if err != nil {
+			return nil, err
+		}
+		return localfs.TransInfo(dirname, infos), nil
+	})
 	rpc.Register1ton("backup", func(ctx context.Context, q *rpc.JsonQ, ch chan<- interface{}) error {
 		dirname, err := q.RFindString("params.path")
 		if err != nil {

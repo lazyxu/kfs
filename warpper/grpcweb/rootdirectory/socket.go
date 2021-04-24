@@ -69,6 +69,22 @@ func process(conn net.Conn, s storage.Storage) {
 
 	if header.Method == MethodUploadBlob {
 		obj := object.Init(s)
+		if len(header.Hash) != 0 {
+			exist, err := obj.S.Exist(storage.TypBlob, header.Hash)
+			if err != nil {
+				logrus.WithError(err).Error("Exist")
+				return
+			}
+			if exist {
+				_, err = conn.Write([]byte{1})
+			} else {
+				_, err = conn.Write([]byte{0})
+			}
+			if err != nil {
+				logrus.WithError(err).Error("Write")
+				return
+			}
+		}
 		r := io.LimitReader(reader, int64(header.RawSize))
 		hash, err := obj.WriteBlob(r)
 		if err != nil {

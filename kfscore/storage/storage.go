@@ -22,8 +22,9 @@ type Status struct {
 type Storage interface {
 	Read(typ int, key string, f func(reader io.Reader) error) error
 	Write(typ int, reader io.Reader) (string, error)
+	Exist(typ int, key string) (bool, error)
 	//Commit(typ int, key string) error
-	//Delete(typ int, key string) error
+	Delete(typ int, key string) error
 	UpdateRef(name string, expect string, desire string) error
 	GetRef(name string) (string, error)
 	GetRefs() ([]string, error)

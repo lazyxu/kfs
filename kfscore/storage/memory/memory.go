@@ -83,6 +83,13 @@ func (s *Storage) Commit(typ int, key string) error {
 	return nil
 }
 
+func (s *Storage) Exist(typ int, key string) (bool, error) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	_, exist := s.objs[typ]
+	return exist, nil
+}
+
 func (s *Storage) Delete(typ int, key string) error {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()

@@ -32,6 +32,15 @@ func (j *JsonQ) RFindStringOrDefault(path string, defaultVal string) string {
 	return defaultVal
 }
 
+func (j *JsonQ) RFindBoolOrDefault(path string, defaultVal bool) bool {
+	j.Reset()
+	i := j.Find(path)
+	if s, ok := i.(bool); ok {
+		return s
+	}
+	return defaultVal
+}
+
 func (j *JsonQ) RFindString(path string) (string, error) {
 	j.Reset()
 	i := j.Find(path)

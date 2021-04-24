@@ -8,7 +8,7 @@ import (
 )
 
 type Obj struct {
-	s             storage.Storage
+	S             storage.Storage
 	EmptyDirHash  string
 	EmptyFileHash string
 	EmptyFile     *Blob
@@ -16,7 +16,7 @@ type Obj struct {
 }
 
 func Init(s storage.Storage) *Obj {
-	o := &Obj{s: s}
+	o := &Obj{S: s}
 	o.EmptyFile = &Blob{
 		base:   o,
 		Reader: bytes.NewReader([]byte{}),
@@ -50,11 +50,11 @@ func (base *Obj) NewTree() *Tree {
 }
 
 func (base *Obj) WriteBlob(r io.Reader) (string, error) {
-	return base.s.Write(storage.TypBlob, r)
+	return base.S.Write(storage.TypBlob, r)
 }
 
 func (base *Obj) ReadBlob(key string, f func(io.Reader) error) error {
-	return base.s.Read(storage.TypBlob, key, f)
+	return base.S.Read(storage.TypBlob, key, f)
 }
 
 func (base *Obj) WriteTree(t *Tree) (string, error) {
@@ -62,12 +62,12 @@ func (base *Obj) WriteTree(t *Tree) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return base.s.Write(storage.TypTree, r)
+	return base.S.Write(storage.TypTree, r)
 }
 
 func (base *Obj) ReadTree(key string) (*Tree, error) {
 	t := base.NewTree()
-	err := base.s.Read(storage.TypTree, key, func(r io.Reader) error {
+	err := base.S.Read(storage.TypTree, key, func(r io.Reader) error {
 		return t.Deserialize(r)
 	})
 	return t, err

@@ -33,43 +33,41 @@ func (q *UploadQueue) uploadFile(filePath string, size int64) (string, error) {
 		fmt.Printf("conn server failed, err:%v\n", err)
 		return "", err
 	}
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	// TODO: slower than no hash?
 	//h := sha256.New()
 	//_, err = io.Copy(h, f)
 	//if err != nil {
 	//	return "", err
 	//}
-	//hash := h.Sum(nil)
-	//logrus.Infoln("1 ", hex.EncodeToString(hash))
-	header := pb.Header{
+	//hash := hex.EncodeToString(h.Sum(nil))
+	header := &pb.Header{
 		Method: rootdirectory.MethodUploadBlob,
 		//Hash:    hash,
 		RawSize: uint64(size),
 	}
-	rawHeader, err := proto.Marshal(&header)
-	if err != nil {
-		fmt.Printf("Marshal err:%v\n", err)
-		return "", err
-	}
-	headerLen := uint64(len(rawHeader))
-	err = binary.Write(conn, binary.LittleEndian, headerLen)
-	if err != nil {
-		fmt.Printf("Write headerLen err:%v\n", err)
-		return "", err
-	}
-	_, err = conn.Write(rawHeader)
+	err = writeHeader(conn, header)
 	if err != nil {
 		fmt.Printf("Write rawHeader err:%v\n", err)
 		return "", err
 	}
-	f, err := os.Open(filePath)
-	if err != nil {
-		return "", err
-	}
+	//var existVal uint8
+	//err = binary.Read(conn, binary.LittleEndian, &existVal)
+	//if err != nil {
+	//	fmt.Printf("Read existVal err:%v\n", err)
+	//	return "", err
+	//}
+	//if existVal != 0 {
+	//	return hash, nil
+	//}
 	//_, err = f.Seek(0, io.SeekStart)
 	//if err != nil {
 	//	return "", err
 	//}
-	defer f.Close()
 	_, err = io.Copy(conn, f)
 	if err != nil {
 		fmt.Printf("Write blob err:%v\n", err)
@@ -103,22 +101,11 @@ func (q *UploadQueue) uploadDir(infos []*pb.FileInfo) (string, error) {
 		fmt.Printf("Marshal err:%v\n", err)
 		return "", err
 	}
-	header := pb.Header{
+	header := &pb.Header{
 		Method:  rootdirectory.MethodUploadTree,
 		RawSize: uint64(len(bytes)),
 	}
-	rawHeader, err := proto.Marshal(&header)
-	if err != nil {
-		fmt.Printf("Marshal err:%v\n", err)
-		return "", err
-	}
-	headerLen := uint64(len(rawHeader))
-	err = binary.Write(conn, binary.LittleEndian, headerLen)
-	if err != nil {
-		fmt.Printf("Write headerLen err:%v\n", err)
-		return "", err
-	}
-	_, err = conn.Write(rawHeader)
+	err = writeHeader(conn, header)
 	if err != nil {
 		fmt.Printf("Write rawHeader err:%v\n", err)
 		return "", err
@@ -155,4 +142,20 @@ func (c *BackUpCtx) upload(fn func(context.Context, pb.KoalaFSClient) (string, e
 	client := pb.NewKoalaFSClient(conn)
 	ctx := metadata.AppendToOutgoingContext(context.Background(), "kfs-mount", c.branch)
 	return fn(ctx, client)
+}
+
+func writeHeader(conn net.Conn, header *pb.Header) error {
+	rawHeader, err := proto.Marshal(header)
+	if err != nil {
+		fmt.Printf("Marshal err:%v\n", err)
+		return err
+	}
+	headerLen := uint64(len(rawHeader))
+	err = binary.Write(conn, binary.LittleEndian, headerLen)
+	if err != nil {
+		fmt.Printf("Write headerLen err:%v\n", err)
+		return err
+	}
+	_, err = conn.Write(rawHeader)
+	return err
 }

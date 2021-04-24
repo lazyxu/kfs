@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Modal from 'components/Modal';
 
 import { getConfig, setConfig } from 'adaptor/config';
-import { invoke } from 'adaptor/ws';
+import rws, { invoke } from 'adaptor/ws';
 import { openDir } from 'adaptor/backup';
 import { StoreContext } from 'bus/bus';
 import { getBranchList } from 'bus/grpcweb';
@@ -14,9 +14,16 @@ const Button = styled.button`
   padding-left: 1em;
 `;
 
+const stateParams = 0;
+const stateReady = 1;
+const stateBackup = 2;
+const stateDone = 3;
+const stateCancel = 4;
+
 export default React.memo(({
   ...props
 }) => {
+  const [backupState, setBackupState] = React.useState();
   const [status, setStatus] = React.useState();
   const [uploadDir, setUploadDir] = React.useState();
   const [branch, setBranch] = React.useState();
@@ -67,14 +74,34 @@ export default React.memo(({
           {options.map(o => <option key={o} value={o}>{o}</option>)}
         </datalist>
       </div>
-      <Button
-        onClick={() => {
-          invoke('backup', { path: uploadDir, branch }, setStatus);
-        }}
-        disabled={!branch || !uploadDir}
-      >
-        开始备份
-      </Button>
+      {backupState === stateBackup
+        ? (
+          <Button
+            onClick={() => {
+              rws.reconnect(); // TODO: 更好的实现方式
+              setBackupState(stateCancel); // TODO: 暂停备份
+            }}
+          >
+            取消备份
+          </Button>
+        )
+        : (
+          <Button
+            onClick={() => {
+              invoke('backup', { path: uploadDir, branch }, ({ id, result }) => {
+                setStatus(result);
+                if (result.Done) {
+                  setBackupState(stateDone);
+                  return;
+                }
+                setBackupState(stateBackup);
+              });
+            }}
+            disabled={!branch || !uploadDir}
+          >
+            开始备份
+          </Button>
+        )}
       <div>
         {status && (
           <div>
