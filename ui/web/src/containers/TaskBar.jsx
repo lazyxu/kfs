@@ -1,5 +1,5 @@
 import { inState, setState } from 'bus/bus';
-import Icon from 'components/Icon';
+import { Icon } from 'kfs-components';
 import React from 'react';
 import styled from 'styled-components';
 import Notifications from 'containers/Notifications';

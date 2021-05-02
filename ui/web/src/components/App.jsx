@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import Icon from 'components/Icon';
+import { Icon } from 'kfs-components';
 import { newWindow } from 'components/Modal';
 
 const App = styled.div`
