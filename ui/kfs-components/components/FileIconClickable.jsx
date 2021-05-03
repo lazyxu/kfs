@@ -1,15 +1,14 @@
 import React from 'react';
 
-import FileIcon from 'components/FileIcon';
+import { FileIcon } from 'kfs-components';
 
-import { useClick } from 'use/use';
+import { useClick } from '../lib/use/index';
 
 export default React.memo(function ({
-  xlinkHref, onClick, onDoubleClick, ...props
+  onClick, onDoubleClick, ...props
 }) {
   return (
     <FileIcon
-      xlinkHref={xlinkHref}
       onMouseDown={useClick(onClick, onDoubleClick)}
       {...props}
     />

@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
 
-import Informations from 'components/Informations';
+import { Informations } from 'kfs-components';
 
 import { ctxInState, StoreContext } from 'bus/bus';
 

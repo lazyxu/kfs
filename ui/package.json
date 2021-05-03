@@ -3,6 +3,7 @@
   "workspaces": [
     "web",
     "desktop",
+    "mobile",
     "kfs-components"
   ]
 }

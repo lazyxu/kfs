@@ -45,6 +45,7 @@
         "prefer-promise-reject-errors": "warn",
         "no-await-in-loop": "off",
         "max-classes-per-file": "off",
+        "object-property-newline": "warn",
         "import/prefer-default-export": "off",
         "react/prop-types": "warn",
         "react/destructuring-assignment": "off",

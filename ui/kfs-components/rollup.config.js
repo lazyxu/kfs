@@ -5,15 +5,16 @@ import del from 'rollup-plugin-delete';
 import pkg from './package.json';
 
 export default {
-    input: pkg.source,
+    input: "components/index.js",
     output: [
-        { file: pkg.main, format: 'cjs' },
-        { file: pkg.module, format: 'esm' }
+        { file: 'dist/index.cjs.js', format: 'cjs' },
+        { file: 'dist/index.esm.js', format: 'esm' }
     ],
     plugins: [
         external(),
         babel({
-            exclude: 'node_modules/**'
+            exclude: 'node_modules/**',
+            babelHelpers: 'bundled',
         }),
         del({ targets: ['dist/*'] }),
     ],

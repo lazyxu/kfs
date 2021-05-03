@@ -1,9 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import UploadFile from 'components/UploadFile';
-import { isObject } from 'util';
-
 const Option = styled.div`
   color: #ffffff;
   padding: 0.2em 5em 0.2em 1.5em;
@@ -57,30 +54,34 @@ export default ({
   return (
     <Div
       onMouseDown={(e) => e.stopPropagation()}
-      onClick={e => { console.log('ContextMenu'); e.stopPropagation(); }}
+      onClick={e => { e.stopPropagation(); }}
     >
       {Object.keys(options).map((o) => {
         const option = options[o];
-        let fn;
-        let enabled = true;
-        if (typeof option === 'function') {
-          fn = option;
-        } else {
-          enabled = option.enabled;
+        let fn = option;
+        if (option.fn) {
           fn = option.fn;
+          if (option.enabled) {
+            return (
+              <DisabledOption key={o}>{o}</DisabledOption>
+            );
+          }
         }
-        return enabled ? (
+        if (option?.type?.name === 'component') {
+          return (
+            <Option key={o}>{option}</Option>
+          );
+        }
+        return (
           <Option
             key={o}
             onMouseDown={(e) => {
               fn(e); onFinish && onFinish(); e.stopPropagation();
             }}
           >
-            {o === '上传文件'
-              ? <UploadFile text={o} />
-              : o}
+            {o}
           </Option>
-        ) : <DisabledOption key={o}>{o}</DisabledOption>;
+        );
       })}
     </Div>
   );

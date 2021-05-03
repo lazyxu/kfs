@@ -16,8 +16,6 @@ const Input = styled.input`
   display: none;
 `;
 
-const MAX_BLOCK_BYTES = 20 * 1024 * 1024;
-const PARALLEL_BLOBK_COUNT = 5;
 class component extends React.Component {
   static contextType = StoreContext
 

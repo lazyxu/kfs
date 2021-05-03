@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import Notification from 'components/Notification';
+import { Notification } from 'kfs-components';
 
 import { inState } from 'bus/bus';
 

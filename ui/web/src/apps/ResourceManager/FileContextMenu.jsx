@@ -1,6 +1,6 @@
 import React from 'react';
 
-import ContextMenu from 'components/ContextMenu';
+import { ContextMenu } from 'kfs-components';
 
 import {
   ctxInState, setState, StoreContext,

@@ -1,6 +1,7 @@
 import React from 'react';
 
-import ContextMenu from 'components/ContextMenu';
+import { ContextMenu } from 'kfs-components';
+import UploadFile from 'apps/ResourceManager/UploadFile';
 
 import {
   inState, ctxInState, StoreContext,
@@ -29,7 +30,7 @@ class component extends React.Component {
         x={contextMenu.x}
         y={contextMenu.y}
         options={{
-          上传文件: console.log,
+          上传文件: <UploadFile />,
           新建文件: () => this.context.newFile(),
           新建文件夹: () => this.context.newDir(),
           刷新: () => this.context.cd(branch, pwd),

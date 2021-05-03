@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 export default function ({
-  hoverCursor, hoverColor, margin, icon, size, color, onClick, padding, style,
+  hoverCursor, hoverColor, margin, icon, size, color, onClick, padding, style, ...props
 }) {
   const Icon = styled.svg`
     :hover {
@@ -22,8 +22,13 @@ export default function ({
       aria-hidden="true"
       onClick={(e) => { onClick && onClick(e); e.stopPropagation(); }}
       style={style}
+      width="100%"
+      height="100%"
+      viewBox="0 0 200 200"
+      preserveAspectRatio="xMinYMin meet"
+      {...props}
     >
-      <use xlinkHref={`#icon-${icon}`} />
+      <use data-tag="choose-able" xlinkHref={`#icon-${icon}`} />
     </Icon>
   );
 }

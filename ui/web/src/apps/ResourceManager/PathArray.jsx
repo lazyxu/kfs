@@ -1,6 +1,6 @@
 import React from 'react';
 
-import PathSymbol from 'components/PathSymbol';
+import PathSymbol from 'apps/ResourceManager/PathSymbol';
 
 function* getParticalPath(path) {
   let lastPos = 0;

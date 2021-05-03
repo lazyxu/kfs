@@ -3,9 +3,8 @@
   "version": "0.1.0",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
-  "source": "src/index.js",
   "scripts": {
-    "build": "rollup -c",
+    "build": "node gen.js && rollup -c",
     "build-watch": "rollup -c -w",
     "start-playground": "cd playground && npm run start",
     "i-all": "npm i && cd playground && npm i",
@@ -38,12 +37,14 @@
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-react": "^7.10.4",
     "@rollup/plugin-babel": "^5.2.0",
+    "fs-extra": "^9.1.0",
     "rollup": "^2.26.4",
     "rollup-plugin-delete": "^2.0.0",
     "rollup-plugin-peer-deps-external": "^2.2.3"
   },
   "peerDependencies": {
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "styled-components": "^4.4.1"
   }
 }

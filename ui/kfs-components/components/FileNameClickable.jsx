@@ -1,8 +1,8 @@
 import React from 'react';
 
-import FileName from 'components/FileName';
+import FileName from './FileName.jsx';
 
-import { useClick } from 'use/use';
+import { useClick } from '../lib/use/index';
 
 export default React.memo(({
   name, onClick, onDoubleClick, ...props
