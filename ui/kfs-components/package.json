@@ -8,7 +8,10 @@
     "build-watch": "rollup -c -w",
     "start-playground": "cd playground && npm run start",
     "i-all": "npm i && cd playground && npm i",
-    "dev": "npm-run-all --parallel build-watch start-playground"
+    "dev": "npm-run-all --parallel build-watch start-playground",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -26,6 +29,8 @@
     ]
   },
   "dependencies": {
+    "react": "^17.0.2",
+    "styled-components": "^4.4.1",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
@@ -37,14 +42,15 @@
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-react": "^7.10.4",
     "@rollup/plugin-babel": "^5.2.0",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.6",
+    "enzyme-to-json": "^3.6.2",
     "fs-extra": "^9.1.0",
+    "jest": "^26.6.3",
+    "mocha": "^8.3.2",
+    "react-test-renderer": "^17.0.2",
     "rollup": "^2.26.4",
     "rollup-plugin-delete": "^2.0.0",
     "rollup-plugin-peer-deps-external": "^2.2.3"
-  },
-  "peerDependencies": {
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "styled-components": "^4.4.1"
   }
 }

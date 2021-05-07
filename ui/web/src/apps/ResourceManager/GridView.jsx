@@ -129,11 +129,10 @@ class component extends React.Component {
           const path = join(pwd, name);
           return (
             <FileIconNameClickable
-              type={f.type}
               key={`${f.type}-${path}`}
-              {...f}
+              type={f.type}
+              name={f.name}
               chosen={chosen[path] || boxChosen[path]}
-              dir={pwd}
               path={path}
               onDoubleClick={() => f.type === 'dir' && this.context.cd(branch, path)}
               onRename={newName => {
