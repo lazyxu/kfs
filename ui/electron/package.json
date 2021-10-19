@@ -1,0 +1,24 @@
+{
+  "name": "koala-drive",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "sh start.sh",
+    "start:electron": "export ELECTRON_START_URL=http://localhost:3005 && electron .",
+    "dist": "cd ../desktop && yarn build && cd ../electron && electron-builder -c electron-builder.yml"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "extends": null,
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^14.0.0",
+    "electron-builder": "22.10.5"
+  },
+  "dependencies": {
+    "@electron/remote": "^2.0.1"
+  }
+}

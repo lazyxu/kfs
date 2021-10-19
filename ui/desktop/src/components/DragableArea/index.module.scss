@@ -1,0 +1,7 @@
+.dragable_area {
+  width: 100%;
+  top: 0;
+  position: fixed;
+  -webkit-app-region: drag;
+  height: 100px;
+}

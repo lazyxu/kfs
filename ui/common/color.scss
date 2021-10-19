@@ -1,0 +1,258 @@
+/* Colors for ADS */
+/* @see https://designdemos.aliyun.test/ADS/language/color/ */
+/* stylelint-disable selector-max-id */
+
+@mixin basic-color {
+  /* basic */
+  --basic_white: rgb(255, 255, 255);
+  --basic_white_secondary: rgba(255,255,255,0.72);
+  --basic_white_tertiary: rgba(255,255,255,0.36);
+  --basic_white_quarternary: rgba(255,255,255,0.18);
+  --basic_black: rgb(0, 0, 0);
+  --basic_elevated: rgb(49, 49, 54); // #313136
+  --basic_elevated_blur: rgba(49, 49, 54, 0.76);
+}
+
+@mixin light-colors {
+  @include basic-color;
+
+  /* Background */
+  --background_primary: rgb(255, 255, 255);
+  --background_primary_blur: var(--background_primary);
+  --background_secondary: rgb(245, 245, 246); // #F5F5F6
+  --background_secondary_blur: var(--background_secondary);
+  --background_tertiary: rgb(255, 255, 255);
+  --background_tertiary_blur: var(--background_tertiary);
+
+  /* Dark Elevated */
+  --dark_elevated_primary: rgb(255, 255, 255);
+  --dark_elevated_secondary: rgb(245, 245, 246); // #F5F5F6
+  --dark_elevated_tertiary: rgb(255, 255, 255);
+
+  /* Group Background */
+  --group_primary: rgb(245, 245, 246);
+  --group_secondary: rgb(255, 255, 255);
+  --group_tertiary: rgb(245, 245, 246);
+
+  /* Context */
+  --context: 37, 38, 43; // #25262B
+  --context_primary: rgb(var(--context));
+  --context_secondary: rgba(var(--context), 0.72);
+  --context_tertiary: rgba(var(--context), 0.36);
+  --context_quarternary: rgba(var(--context), 0.18);
+
+  /* Divider & Overlay */
+  --divider: 132, 133, 141; // #84858D
+  --divider_primary: rgba(var(--divider), 0.2);
+  --divider_secondary: rgba(var(--divider), 0.16);
+  --divider_tertiary: rgba(var(--divider), 0.08);
+  --divider_overlay: rgba(0, 0, 0, 0.24);
+  --divider_tap: rgba(0, 0, 0, 0.08);
+
+  /* Theme */
+  --theme: 99, 125, 255; // #637DFF
+  --theme_primary: rgb(var(--theme));
+  --theme_secondary: rgba(var(--theme), 0.48);
+  --theme_tertiary: rgba(var(--theme), 0.24);
+  --theme_quarternary: rgba(var(--theme), 0.12);
+  --theme_hover: rgb(122, 144, 255); // #7A90FF
+  --theme_active: rgb(82, 110, 250); // #526EFA
+
+  /* Eugenia Red (Error and Danger) 浅绯 */
+  --red: 243, 91, 81; // #F35B51
+  --red_primary: rgb(var(--red));
+  --red_secondary: rgba(var(--red), 0.48);
+  --red_tertiary: rgba(var(--red), 0.24);
+  --red_quarternary: rgba(var(--red), 0.12);
+  --red_hover: rgb(255, 111, 102); // #FF6F66
+  --red_active: rgb(237, 80, 69); // #ED5045
+
+  /* Apricot Orange (Warning) 深支子 */
+  --orange: 255, 163, 26; // #FFA31A
+  --orange_primary: rgb(var(--orange));
+  --orange_secondary: rgba(var(--orange), 0.48);
+  --orange_tertiary: rgba(var(--orange), 0.24);
+  --orange_quarternary: rgba(var(--orange), 0.12);
+
+  /* Cinnamon Buff (Alert) 玉蜀黍 */
+  --yellow: 254, 208, 38; // #FED026
+  --yellow_primary: rgb(var(--yellow));
+  --yellow_secondary: rgba(var(--yellow), 0.48);
+  --yellow_tertiary: rgba(var(--yellow), 0.24);
+  --yellow_quarternary: rgba(var(--yellow), 0.12);
+
+  /* Green (Success) */
+  --green: 19, 203, 54; // #13CB36
+  --green_primary: rgb(var(--green));
+  --green_secondary: rgba(var(--green), 0.48);
+  --green_tertiary: rgba(var(--green), 0.24);
+  --green_quarternary: rgba(var(--green), 0.12);
+
+  /* Sea Green 若竹 */
+  --seagreen: 9, 153, 112; // #099970
+  --seagreen_primary: rgb(var(--seagreen));
+  --seagreen_secondary: rgba(var(--seagreen), 0.48);
+  --seagreen_tertiary: rgba(var(--seagreen), 0.24);
+  --seagreen_quarternary: rgba(var(--seagreen), 0.12);
+
+  /* Teal 水鸭蓝 */
+  --teal: 31, 203, 247; // #1FCBF7
+  --teal_primary: rgb(var(--teal));
+  --teal_secondary: rgba(var(--teal), 0.48);
+  --teal_tertiary: rgba(var(--teal), 0.24);
+  --teal_quarternary: rgba(var(--teal), 0.12);
+
+  /* Blue 青 */
+  --blue: 38, 125, 255; // #267DFF
+  --blue_primary: rgb(var(--blue));
+  --blue_secondary: rgba(var(--blue), 0.48);
+  --blue_tertiary: rgba(var(--blue), 0.24);
+  --blue_quarternary: rgba(var(--blue), 0.12);
+
+  /* Dull Blue Violet 藤纳户 */
+  --indigo: 140, 90, 248; // #8C5AF8
+  --indigo_primary: rgb(var(--indigo));
+  --indigo_secondary: rgba(var(--indigo), 0.48);
+  --indigo_tertiary: rgba(var(--indigo), 0.24);
+  --indigo_quarternary: rgba(var(--indigo), 0.12);
+
+  @supports (backdrop-filter: none) {
+    :root {
+      --background_primary_blur: rgba(255, 255, 255, 0.92);
+      --background_secondary_blur: rgba(245, 245, 246, 0.76);
+      --background_tertiary_blur: rgba(255, 255, 255, 0.88);
+    }
+  }
+}
+
+@mixin dark-colors {
+  @include basic-color;
+
+  /* Background */
+  --background_primary: rgb(17, 17, 19); // #111113
+  --background_primary_blur: var(--background_primary);
+  --background_secondary: rgb(34, 34, 38); // #222226
+  --background_secondary_blur: var(--background_secondary);
+  --background_tertiary: rgb(49, 49, 54); // #313136
+  --background_tertiary_blur: var(--background_tertiary);
+
+  /* Dark Elevated */
+  --dark_elevated_primary: rgb(34, 34, 38); // #222226
+  --dark_elevated_secondary: rgb(49, 49, 54); // #313136
+  --dark_elevated_tertiary: rgb(63, 63, 69); // #3F3F45
+
+  /* Group Background */
+  --group_primary: rgb(17, 17, 19);
+  --group_secondary: rgb(34, 34, 38);
+  --group_tertiary: rgb(49, 49, 54);
+
+  /* Context */
+  --context: 255, 255, 255;
+  --context_primary: rgb(var(--context));
+  --context_secondary: rgba(var(--context), 0.72);
+  --context_tertiary: rgba(var(--context), 0.36);
+  --context_quarternary: rgba(var(--context), 0.18);
+
+  /* Divider & Overlay */
+  --divider: 132, 133, 141; // #84858D
+  --divider_primary: rgba(var(--divider), 0.36);
+  --divider_secondary: rgba(var(--divider), 0.24);
+  --divider_tertiary: rgba(var(--divider), 0.12);
+  --divider_overlay: rgba(136, 136, 136, 0.24);
+  --divider_tap: rgba(255, 255, 255, 0.08);
+
+  /* Theme */
+  --theme: 112, 136, 255; // #7088FF
+  --theme_primary: rgb(var(--theme));
+  --theme_secondary: rgba(var(--theme), 0.48);
+  --theme_tertiary: rgba(var(--theme), 0.24);
+  --theme_quarternary: rgba(var(--theme), 0.12);
+  --theme_hover: rgb(138, 157, 255); // #8A9DFF
+  --theme_active: rgb(97, 122, 250); // #617AFA
+
+  /* Eugenia Red (Error and Danger) 浅绯 */
+  --red: 239, 103, 94; // #EF675E
+  --red_primary: rgb(var(--red));
+  --red_secondary: rgba(var(--red), 0.48);
+  --red_tertiary: rgba(var(--red), 0.24);
+  --red_quarternary: rgba(var(--red), 0.12);
+  --red_hover: rgb(255, 126, 117); // #FF7E75
+  --red_active: rgb(234, 92, 83); // #EA5C53
+
+  /* Apricot Orange (Warning) 深支子 */
+  --orange: 254, 176, 59; // #FEB03B
+  --orange_primary: rgb(var(--orange));
+  --orange_secondary: rgba(var(--orange), 0.48);
+  --orange_tertiary: rgba(var(--orange), 0.24);
+  --orange_quarternary: rgba(var(--orange), 0.12);
+
+  /* Cinnamon Buff (Alert) 玉蜀黍 */
+  --yellow: 248, 214, 45; // #F8D62D
+  --yellow_primary: rgb(var(--yellow));
+  --yellow_secondary: rgba(var(--yellow), 0.48);
+  --yellow_tertiary: rgba(var(--yellow), 0.24);
+  --yellow_quarternary: rgba(var(--yellow), 0.12);
+
+  /* Green (Success) */
+  --green: 39, 205, 71; // #27CD47
+  --green_primary: rgb(var(--green));
+  --green_secondary: rgba(var(--green), 0.48);
+  --green_tertiary: rgba(var(--green), 0.24);
+  --green_quarternary: rgba(var(--green), 0.12);
+
+  /* Sea Green 若竹 */
+  --seagreen: 22, 157, 118; // #169D76
+  --seagreen_primary: rgb(var(--seagreen));
+  --seagreen_secondary: rgba(var(--seagreen), 0.48);
+  --seagreen_tertiary: rgba(var(--seagreen), 0.24);
+  --seagreen_quarternary: rgba(var(--seagreen), 0.12);
+
+  /* Teal 水鸭蓝 */
+  --teal: 49, 209, 245; // #31D1F5
+  --teal_primary: rgb(var(--teal));
+  --teal_secondary: rgba(var(--teal), 0.48);
+  --teal_tertiary: rgba(var(--teal), 0.24);
+  --teal_quarternary: rgba(var(--teal), 0.12);
+
+  /* Blue 青 */
+  --blue: 31, 145, 246; // #1F91F6
+  --blue_primary: rgb(var(--blue));
+  --blue_secondary: rgba(var(--blue), 0.48);
+  --blue_tertiary: rgba(var(--blue), 0.24);
+  --blue_quarternary: rgba(var(--blue), 0.12);
+
+  /* Dull Blue Violet 藤纳户 */
+  --indigo: 147, 101, 245; // #9365F5
+  --indigo_primary: rgb(var(--indigo));
+  --indigo_secondary: rgba(var(--indigo), 0.48);
+  --indigo_tertiary: rgba(var(--indigo), 0.24);
+  --indigo_quarternary: rgba(var(--indigo), 0.12);
+
+  @supports (backdrop-filter: none) {
+    --background_primary_blur: rgba(17, 17, 19, 0.88);
+    --background_secondary_blur: rgba(34 ,34 ,38, 0.76);
+    --background_tertiary_blur: rgb(49 ,49 ,54, 0.88);
+  }
+}
+
+:root {
+  @include dark-colors;
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  @include light-colors;
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  @include dark-colors;
+  color-scheme: dark;
+}
+
+[data-theme='system'] {
+  @media (prefers-color-scheme: dark) {
+    @include dark-colors;
+    color-scheme: dark;
+  }
+}

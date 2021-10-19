@@ -1,0 +1,5 @@
+{
+  "extends": [
+    "../eslint-config-kfs/index.js"
+  ]
+}

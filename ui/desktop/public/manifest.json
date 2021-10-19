@@ -1,0 +1,15 @@
+{
+  "short_name": "考拉网盘",
+  "name": "考拉网盘",
+  "icons": [
+    {
+      "src": "icon512.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

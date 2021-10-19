@@ -1,0 +1,43 @@
+{
+  "name": "kfs-web",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": ".",
+  "dependencies": {
+    "hox": "^1.1.4",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "scripts": {
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "craco eject",
+    "lint": "eslint ./src --fix --ext .js,.jsx"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@craco/craco": "^6.3.0",
+    "babel-eslint": "^10.1.0",
+    "craco-babel-loader": "^0.1.4",
+    "eslint-config-kfs": "../eslint-config-kfs",
+    "node-sass": "^6.0.1",
+    "react-scripts": "^4.0.3"
+  }
+}
