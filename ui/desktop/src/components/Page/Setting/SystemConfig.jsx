@@ -1,6 +1,7 @@
 import useSysConfig from 'hox/sysConfig';
-import { chooseDir } from 'adaptor/file';
+import { chooseDir } from 'remote/file';
 import styles from 'common/components/Page/Setting/index.module.scss';
+import Status from 'common/components/Status/Status';
 
 export default () => {
   const { sysConfig, setSysConfig, resetSysConfig } = useSysConfig();
@@ -31,10 +32,34 @@ export default () => {
             </li>
             <li className={styles.configs_item}>
               <div className={styles.configs_item_key}>
+                <span>本地https服务端口</span>
+              </div>
+              <div className={styles.configs_item_values}>
+                <input
+                  type="text"
+                  value={sysConfig?.backendProcess?.port}
+                  onChange={e => setSysConfig(c => ({
+                    ...c, backendProcess: {
+                      ...sysConfig?.backendProcess, port: e.target.value,
+                    },
+                  }))}
+                />
+                <Status style={{ backgroundColor: sysConfig?.backendProcess?.status }} />
+              </div>
+            </li>
+            <li className={styles.configs_item}>
+              <div className={styles.configs_item_key}>
                 <span>用户名</span>
               </div>
               <div className={styles.configs_item_values}>
-                <input type="text" value={sysConfig.username} onChange={e => setSysConfig(c => ({ ...c, username: e.target.value }))} />
+                <input
+                  type="text"
+                  value={sysConfig?.remotes[0].username}
+                  onChange={e => setSysConfig(c => {
+                    c.remotes[0].username = e.target.value;
+                    return { ...c };
+                  })}
+                />
               </div>
             </li>
             <li className={styles.configs_item}>
@@ -42,7 +67,14 @@ export default () => {
                 <span>refreshToken</span>
               </div>
               <div className={styles.configs_item_values}>
-                <input type="text" value={sysConfig.refreshToken} onChange={e => setSysConfig(c => ({ ...c, refreshToken: e.target.value }))} />
+                <input
+                  type="text"
+                  value={sysConfig?.remotes[0].refreshToken}
+                  onChange={e => setSysConfig(c => {
+                    c.remotes[0].refreshToken = e.target.value;
+                    return { ...c };
+                  })}
+                />
               </div>
             </li>
             <li className={styles.configs_item}>

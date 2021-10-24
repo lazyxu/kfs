@@ -34,6 +34,7 @@ module.exports = {
                 "classes": false
             }
         ],
+        "no-underscore-dangle": "warn",
         "max-len": "warn",
         "no-restricted-syntax": "warn",
         "arrow-parens": "off",

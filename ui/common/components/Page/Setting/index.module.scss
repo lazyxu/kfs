@@ -2,6 +2,12 @@
   header {
     text-align: left;
     font-size: 20px;
+    padding-bottom: 28px;
+  }
+  .box {
+    border: 1px solid var(--divider_primary);
+    margin-bottom: 1em;
+    padding: 1em 1em 0 1em;
   }
   .configs {
     & .configs_item {

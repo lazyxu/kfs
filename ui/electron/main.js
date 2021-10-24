@@ -1,6 +1,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const path = require('path');
+const { getProcesses } = require('./processManager');
 
 let mainWindow;
 
@@ -42,7 +43,6 @@ function createWindow() {
   remoteMain.initialize();
   remoteMain.enable(mainWindow.webContents);
 
-  // mainWindow.webContents.openDevTools();
   const { app, Menu } = require('electron');
 
   const isMac = process.platform === 'darwin';
@@ -157,6 +157,7 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  getProcesses().forEach(p => p.kill());
   app.quit();
 });
 

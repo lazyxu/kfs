@@ -5,9 +5,11 @@
   "homepage": ".",
   "dependencies": {
     "@electron/remote": "^2.0.1",
+    "axios": "^0.23.0",
     "hox": "^1.1.4",
     "react": "^17.0.2",
-    "react-dom": "^17.0.2"
+    "react-dom": "^17.0.2",
+    "uuid": "^8.3.2"
   },
   "scripts": {
     "start": "craco start",

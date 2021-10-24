@@ -4,9 +4,8 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "sh start.sh",
-    "start:electron": "export ELECTRON_START_URL=http://localhost:3005 && electron .",
-    "dist": "cd ../desktop && yarn build && cd ../electron && electron-builder -c electron-builder.yml"
+    "start": "bash scripts.sh start",
+    "dist": "bash scripts.sh dist"
   },
   "eslintConfig": {
     "extends": "react-app"

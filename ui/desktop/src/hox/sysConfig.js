@@ -1,17 +1,31 @@
 import { useState, useEffect } from 'react';
 import { createModel } from 'hox';
+import { v4 } from 'uuid';
 
 import kfsConfig from 'kfsConfig/index';
 
 const defaultConfig = {
+  clientID: v4(),
   theme: 'dark',
-  username: '17161951517',
-  refreshToken: '96246b97eb994fcaa4e8abb553d502bb',
+  backendProcess: {
+    port: '1123',
+    status: 'red',
+  },
+  remotes: [{
+    name: '测试账号',
+    type: '阿里云盘',
+    loginType: 'refreshToken',
+    username: '17161951517',
+    refreshToken: '96246b97eb994fcaa4e8abb553d502bb',
+  }],
   downloadPath: '',
 };
 
 function useSysConfig() {
-  const [sysConfig, setSysConfig] = useState(kfsConfig.get() || defaultConfig);
+  const initConfig = kfsConfig.get() || defaultConfig;
+  window.clientID = initConfig.clientID;
+  console.log(initConfig);
+  const [sysConfig, setSysConfig] = useState(initConfig);
   useEffect(() => {
     kfsConfig.set(sysConfig);
   }, [sysConfig]);

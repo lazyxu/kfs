@@ -1,4 +1,4 @@
-const { dialog } = require('@electron/remote');
+import { dialog } from '@electron/remote';
 
 export function chooseDir() {
   return new Promise((resolve, reject) => {

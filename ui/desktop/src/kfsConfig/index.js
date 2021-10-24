@@ -8,16 +8,19 @@ let remove = null;
 if (isElectron) {
   const fs = window.require('fs');
   const path = window.require('path');
-  console.log(process.cwd(), process.env);
-  const { app } = window.require('@electron/remote');
-  const appPath = app.getPath('userData');
-  const configPath = path.join(appPath, 'kfs-config.json');
-  console.log('Your App Path: ', app.getPath('userData'), app.getPath('appData'));
-
+  const remote = window.require('@electron/remote');
+  let configPath;
+  if (remote.process.env.ELECTRON_START_URL) {
+    const cwd = remote.process.cwd();
+    configPath = path.join(cwd, 'public', 'extraResources', 'kfs-config.json');
+  } else {
+    const cwd = remote.process.resourcesPath;
+    configPath = path.join(cwd, 'app', 'public', 'extraResources', 'kfs-config.json');
+  }
   get = function () {
     try {
       const config = fs.readFileSync(configPath).toString();
-      console.log('getExternalConfig', config);
+      console.log('getExternalConfig', configPath, config);
       const obj = JSON.parse(config);
       return obj;
     } catch (e) {
