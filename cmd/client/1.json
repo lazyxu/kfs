@@ -1,0 +1,20 @@
+{
+  "parent_file_id": "root",
+  "part_info_list": [
+    {
+      "part_number": 1,
+      "upload_url": "https://bj29.cn-beijing.data.alicloudccp.com/Z0oF31G7%2F55165982%2F61758d8a3ec136c20844455596b0f7d20f839594%2F61758d8ae51d0001854a4feb803630ce433e44c3?partNumber=1&uploadId=D4636FBBD6D94795AAE3C969B54BE20F&x-oss-access-key-id=LTAIsE5mAn2F493Q&x-oss-expires=1635097498&x-oss-signature=6JDiV%2B5ig%2B%2FaDK5hLbRZs8%2BC1zJrgT%2BbOu7K2%2BPmkf0%3D&x-oss-signature-version=OSS2",
+      "internal_upload_url": "http://ccp-bj29-bj-1592982087.oss-cn-beijing-internal.aliyuncs.com/Z0oF31G7%2F55165982%2F61758d8a3ec136c20844455596b0f7d20f839594%2F61758d8ae51d0001854a4feb803630ce433e44c3?partNumber=1&uploadId=D4636FBBD6D94795AAE3C969B54BE20F&x-oss-access-key-id=LTAIsE5mAn2F493Q&x-oss-expires=1635097498&x-oss-signature=6JDiV%2B5ig%2B%2FaDK5hLbRZs8%2BC1zJrgT%2BbOu7K2%2BPmkf0%3D&x-oss-signature-version=OSS2",
+      "content_type": ""
+    }
+  ],
+  "upload_id": "D4636FBBD6D94795AAE3C969B54BE20F",
+  "rapid_upload": false,
+  "type": "file",
+  "file_id": "61758d8a3ec136c20844455596b0f7d20f839594",
+  "domain_id": "bj29",
+  "drive_id": "55165982",
+  "file_name": "kfs-config.json",
+  "encrypt_mode": "none",
+  "location": "cn-beijing"
+}

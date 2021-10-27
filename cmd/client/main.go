@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+
+	"github.com/lazyxu/kfs/cmd/client/kfsclient"
+	"github.com/lazyxu/kfs/cmd/client/pb"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -26,6 +31,19 @@ type Config struct {
 	ClientID string
 }
 
+func GetConfig() (*Config, error) {
+	file, err := ioutil.ReadFile("kfs-config.json")
+	if err != nil {
+		return nil, err
+	}
+	data := &Config{}
+	err = json.Unmarshal(file, data)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
 func main() {
 	e := echo.New()
 	e.Use(middleware.CORS())
@@ -33,16 +51,26 @@ func main() {
 		return c.String(http.StatusOK, "hello, this is kfs client!")
 	})
 	e.GET("/api/clientID", func(c echo.Context) error {
-		file, err := ioutil.ReadFile("kfs-config.json")
+		config, err := GetConfig()
 		if err != nil {
 			return err
 		}
-		data := Config{}
-		err = json.Unmarshal(file, &data)
+		return c.String(http.StatusOK, config.ClientID)
+	})
+	e.GET("/api/connect", func(c echo.Context) error {
+		//config, err := GetConfig()
+		//if err != nil {
+		//	return err
+		//}
+		fmt.Println("connect")
+		client := kfsclient.New()
+		status, err := client.Status(context.TODO(), &pb.Void{})
 		if err != nil {
+			fmt.Println(err)
 			return err
 		}
-		return c.String(http.StatusOK, data.ClientID)
+		fmt.Println(status)
+		return c.String(http.StatusOK, "ok")
 	})
 	port := "8000"
 	if len(os.Args) > 1 {

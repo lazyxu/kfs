@@ -15,7 +15,6 @@ const defaultConfig = {
     name: '测试账号',
     type: '阿里云盘',
     loginType: 'refreshToken',
-    username: '17161951517',
     refreshToken: '96246b97eb994fcaa4e8abb553d502bb',
   }],
   downloadPath: '',

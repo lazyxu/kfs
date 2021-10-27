@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/lazyxu/kfs/cmd/server/pb";
+
+service KoalaFS {
+  rpc branches (Void) returns (Branches) {
+  }
+  rpc status (Void) returns (Status) {
+  }
+}
+
+message Void {
+}
+
+message Status {
+  string totalSize = 1;
+  string fileSize = 2;
+  uint64 fileCount = 3;
+  uint64 dirCount = 4;
+  string memInfo = 5;
+}
+
+message Branches {
+  repeated string branch = 1;
+}
