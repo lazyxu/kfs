@@ -15,11 +15,12 @@ const defaultConfig = {
     name: '测试账号',
     type: '阿里云盘',
     loginType: 'refreshToken',
-    username: '17161951517',
     refreshToken: '96246b97eb994fcaa4e8abb553d502bb',
   }],
   downloadPath: '',
 };
+
+window.backendPort = 1123;
 
 function useSysConfig() {
   const initConfig = kfsConfig.get() || defaultConfig;
@@ -27,6 +28,7 @@ function useSysConfig() {
   console.log(initConfig);
   const [sysConfig, setSysConfig] = useState(initConfig);
   useEffect(() => {
+    window.backendPort = sysConfig?.backendProcess?.port;
     kfsConfig.set(sysConfig);
   }, [sysConfig]);
   return {

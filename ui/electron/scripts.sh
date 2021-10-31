@@ -4,6 +4,9 @@ copy_kfs_client () {
   mkdir -p public/extraResources
   cd ../../cmd/client
   go build -o kfs-client
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
   cp kfs-client ../../ui/electron/public/extraResources/
   cp *.pem ../../ui/electron/public/extraResources/
   cd ../../ui/electron

@@ -47,21 +47,6 @@ export default () => {
               </li>
               <li className={styles.configs_item}>
                 <div className={styles.configs_item_key}>
-                  <span>用户名</span>
-                </div>
-                <div className={styles.configs_item_values}>
-                  <input
-                    type="text"
-                    value={remote.username}
-                    onChange={e => setSysConfig(c => {
-                      c.remotes[i].username = e.target.value;
-                      return { ...c };
-                    })}
-                  />
-                </div>
-              </li>
-              <li className={styles.configs_item}>
-                <div className={styles.configs_item_key}>
                   <span>refreshToken</span>
                 </div>
                 <div className={styles.configs_item_values}>
@@ -69,7 +54,7 @@ export default () => {
                     type="text"
                     value={remote.refreshToken}
                     onChange={e => setSysConfig(c => {
-                      c.remotes[i].refreshToken = e.target.value;
+                      c.remotes[i] = { ...c.remotes[i], refreshToken: e.target.value };
                       return { ...c };
                     })}
                   />

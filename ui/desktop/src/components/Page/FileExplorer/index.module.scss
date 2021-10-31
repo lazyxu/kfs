@@ -1,0 +1,21 @@
+.pan {
+  width: 96px;
+  height: 96px;
+  margin: 1em 0 1em 0;
+  border: 1px solid var(--background_primary);
+  &:hover{
+    border: 1px solid var(--divider_primary);
+    cursor: pointer;
+  }
+  li {
+    width: 100%;
+    text-align: center;
+    .icon {
+      width: 64px;
+      height: 64px;
+    }
+    .text {
+      width: 100%;
+    }
+  }
+}

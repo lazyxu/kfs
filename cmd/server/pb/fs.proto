@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/lazyxu/kfs/cmd/server/pb";
+
+service KoalaFS {
+  rpc createBranch (Branch) returns (Void) {
+  }
+  rpc branches (Void) returns (Branches) {
+  }
+  rpc writeObject (stream Chunk) returns (OK) {
+  }
+  rpc readObject (Hash) returns (stream Chunk) {
+  }
+  rpc status (Void) returns (Status) {
+  }
+}
+
+message Hash {
+  bytes hash = 1;
+}
+
+message Branches {
+  repeated Branch branches = 1;
+}
+
+message Branch {
+  string clientID = 1;
+  string branchName = 2;
+}
+
+message Chunk {
+  oneof message {
+    bytes chunk = 1;
+    bytes hash = 2;
+  }
+}
+
+message OK {
+  bool ok = 1;
+}
+
+message Void {
+}
+
+message Status {
+  string totalSize = 1;
+  string fileSize = 2;
+  uint64 fileCount = 3;
+  uint64 dirCount = 4;
+  string memInfo = 5;
+}

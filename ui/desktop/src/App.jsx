@@ -9,6 +9,8 @@ import CloudConnection from 'components/Page/CloudConnection/CloudConnection';
 import useMenu from 'common/hox/menu';
 import useSysConfig from 'hox/sysConfig';
 import { backendProcess } from 'remote/backendProcess';
+import { getBackendInstance } from 'remote/axios';
+import FileExplorer from 'components/Page/FileExplorer/FileExplorer';
 
 function App() {
   const { sysConfig, setSysConfig } = useSysConfig();
@@ -27,6 +29,28 @@ function App() {
       },
     })));
   }, [sysConfig?.backendProcess?.port]);
+  // TODO: listen to remote config changes
+  useEffect(() => {
+    setSysConfig(c => {
+      c.remotes.forEach(remote => {
+        remote.status = 'yellow';
+      });
+      return { ...c };
+    });
+    getBackendInstance().get('/api/connect').then(res => {
+      res.data.map((status, i) => setSysConfig(c => {
+        c.remotes[i].status = status;
+        return { ...c };
+      }));
+    }).catch(() => {
+      setSysConfig(c => {
+        c.remotes.forEach(remote => {
+          remote.status = 'red';
+        });
+        return { ...c };
+      });
+    });
+  }, [sysConfig?.remotes]);
   return (
     <div className="App">
       <DragableArea />
@@ -34,7 +58,7 @@ function App() {
         <Layout>
           <Sider>
             <Menu items={[
-              { icon: 'wangpan', name: '文件' },
+              { icon: 'wangpan', name: '云盘' },
               { icon: 'tongbu', name: '传输列表' },
               { icon: 'peizhi', name: '设置' },
               { icon: 'cloud-connection', name: '远程连接' },
@@ -43,7 +67,7 @@ function App() {
             />
           </Sider>
           <Content>
-            {menu === '文件' && <span>{menu}</span>}
+            {menu === '云盘' && <FileExplorer />}
             {menu === '传输列表' && <span>{menu}</span>}
             {menu === '设置' && <SystemConfig />}
             {menu === '远程连接' && <CloudConnection />}

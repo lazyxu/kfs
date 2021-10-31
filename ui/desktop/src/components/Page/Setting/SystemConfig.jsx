@@ -1,5 +1,5 @@
 import useSysConfig from 'hox/sysConfig';
-import { chooseDir } from 'remote/file';
+import { chooseDir } from 'remote/ui';
 import styles from 'common/components/Page/Setting/index.module.scss';
 import Status from 'common/components/Status/Status';
 
@@ -45,36 +45,6 @@ export default () => {
                   }))}
                 />
                 <Status style={{ backgroundColor: sysConfig?.backendProcess?.status }} />
-              </div>
-            </li>
-            <li className={styles.configs_item}>
-              <div className={styles.configs_item_key}>
-                <span>用户名</span>
-              </div>
-              <div className={styles.configs_item_values}>
-                <input
-                  type="text"
-                  value={sysConfig?.remotes[0].username}
-                  onChange={e => setSysConfig(c => {
-                    c.remotes[0].username = e.target.value;
-                    return { ...c };
-                  })}
-                />
-              </div>
-            </li>
-            <li className={styles.configs_item}>
-              <div className={styles.configs_item_key}>
-                <span>refreshToken</span>
-              </div>
-              <div className={styles.configs_item_values}>
-                <input
-                  type="text"
-                  value={sysConfig?.remotes[0].refreshToken}
-                  onChange={e => setSysConfig(c => {
-                    c.remotes[0].refreshToken = e.target.value;
-                    return { ...c };
-                  })}
-                />
               </div>
             </li>
             <li className={styles.configs_item}>
