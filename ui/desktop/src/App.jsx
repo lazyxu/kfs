@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { SnackbarProvider } from 'notistack';
 
 import Menu from 'common/components/Menu/Menu';
 import { Body, Layout, Sider, Content } from 'common/components/Web/Web';
@@ -52,7 +53,7 @@ function App() {
     });
   }, [sysConfig?.remotes]);
   return (
-    <div className="App">
+    <SnackbarProvider maxSnack={5} className="App">
       <DragableArea />
       <Body>
         <Layout>
@@ -75,7 +76,7 @@ function App() {
           </Content>
         </Layout>
       </Body>
-    </div>
+    </SnackbarProvider>
   );
 }
 

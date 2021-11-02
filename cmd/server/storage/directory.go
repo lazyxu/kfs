@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/lazyxu/kfs/cmd/server/kfsserver/errorutil"
 	"gopkg.in/yaml.v2"
 )
 
@@ -22,8 +23,8 @@ type Metadata struct {
 }
 
 type DirectoryEncoderDecoder interface {
-	Encode(i *Directory, w io.Writer) (err error)
-	Decode(i *Directory, r io.Reader) (err error)
+	Encode(i *Directory, w io.Writer)
+	Decode(i *Directory, r io.Reader)
 }
 
 var (
@@ -33,21 +34,15 @@ var (
 type directoryYamlEncoderDecoder struct {
 }
 
-func (g *directoryYamlEncoderDecoder) Encode(i *Directory, w io.Writer) error {
+func (g *directoryYamlEncoderDecoder) Encode(i *Directory, w io.Writer) {
 	e := yaml.NewEncoder(w)
 	err := e.Encode(i)
 	defer e.Close()
-	if err != nil {
-		return err
-	}
-	return nil
+	errorutil.PanicIfErr(err)
 }
 
-func (g *directoryYamlEncoderDecoder) Decode(d *Directory, r io.Reader) error {
+func (g *directoryYamlEncoderDecoder) Decode(i *Directory, r io.Reader) {
 	e := yaml.NewDecoder(r)
-	err := e.Decode(d)
-	if err != nil {
-		return err
-	}
-	return nil
+	err := e.Decode(i)
+	errorutil.PanicIfErr(err)
 }

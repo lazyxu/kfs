@@ -8,6 +8,8 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/lazyxu/kfs/cmd/server/kfsserver/errorutil"
+
 	"github.com/lazyxu/kfs/cmd/server/kfscrypto"
 )
 
@@ -27,47 +29,28 @@ const (
 	filePerm = 0644
 )
 
-func mkdir(path string) error {
+func mkdir(path string) {
 	err := os.MkdirAll(path, dirPerm)
-	if err != nil {
-		if os.IsExist(err) {
-			return nil
-		}
-		return err
+	if err != nil && !os.IsExist(err) {
+		panic(err)
 	}
-	return nil
 }
 
 func New(rootDir string, hashFunc func() kfscrypto.Hash) (*Storage, error) {
 	s := &Storage{root: rootDir, HashFunc: hashFunc}
 	root, err := filepath.Abs(rootDir)
-	if err != nil {
-		return nil, err
-	}
-	err = mkdir(path.Join(root, "branch"))
-	if err != nil {
-		return nil, err
-	}
-	err = mkdir(path.Join(root, "object"))
-	if err != nil {
-		return nil, err
-	}
+	errorutil.PanicIfErr(err)
+	mkdir(path.Join(root, "branch"))
+	mkdir(path.Join(root, "object"))
+	println(hex.EncodeToString(s.HashFunc().Cal(nil)))
 	buffer := new(bytes.Buffer)
-	err = directoryEncoderDecoder.Encode(&EmptyDir, buffer)
-	if err != nil {
-		panic(err)
-	}
+	directoryEncoderDecoder.Encode(&EmptyDir, buffer)
 	hw := s.HashFunc()
-	hash, err := hw.Cal(buffer)
-	if err != nil {
-		panic(err)
-	}
-	err = s.WriteObject(hash, func(f func(reader io.Reader) error) error {
-		return f(buffer)
+	hash := hw.Cal(buffer)
+	directoryEncoderDecoder.Encode(&EmptyDir, buffer)
+	s.WriteObject(hash, func(f func(reader io.Reader)) {
+		f(buffer)
 	})
 	EmptyDirHash = hex.EncodeToString(hash)
-	if err != nil {
-		panic(err)
-	}
 	return s, nil
 }

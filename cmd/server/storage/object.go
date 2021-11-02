@@ -7,52 +7,35 @@ import (
 	"io"
 	"os"
 	"path"
+
+	"github.com/lazyxu/kfs/cmd/server/kfsserver/errorutil"
 )
 
-func (s *Storage) WriteObject(hash []byte, fn func(func(reader io.Reader) error) error) error {
+func (s *Storage) WriteObject(hash []byte, fn func(func(reader io.Reader))) {
 	p := path.Join(s.root, "object", hex.EncodeToString(hash))
 	_, err := os.Stat(p)
-	if err == nil {
-		return nil
-	}
-	if !os.IsNotExist(err) {
-		return err
+	if err != nil && !os.IsNotExist(err) {
+		panic(err)
 	}
 	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filePerm)
-	if err != nil {
-		f.Close()
-		return err
-	}
+	errorutil.PanicIfErr(err)
+	defer f.Close()
 	hw := s.HashFunc()
-	err = fn(func(reader io.Reader) error {
+	fn(func(reader io.Reader) {
 		rr := io.TeeReader(reader, hw)
 		_, err := io.Copy(f, rr)
-		if err != nil {
-			return err
-		}
-		return nil
+		errorutil.PanicIfErr(err)
 	})
-	if err != nil {
-		return err
+	actual := hw.Cal(nil)
+	if bytes.Compare(hash, actual) != 0 {
+		panic(fmt.Errorf("invalid hash: expected: %s, actual: %s", hex.EncodeToString(hash), hex.EncodeToString(actual)))
 	}
-	f.Close()
-	actual, err := hw.Cal(nil)
-	if err != nil {
-		os.Remove(p)
-		return err
-	}
-	if bytes.Equal(hash, actual) {
-		return fmt.Errorf("invalid hash: expected: %s, actual: %s", hash, actual)
-	}
-	return nil
 }
 
-func (s *Storage) ReadObject(hash []byte, fn func(reader io.Reader) error) error {
+func (s *Storage) ReadObject(hash []byte, fn func(reader io.Reader)) {
 	p := path.Join(s.root, "object", hex.EncodeToString(hash))
 	file, err := os.Open(p)
-	if err != nil {
-		return err
-	}
+	errorutil.PanicIfErr(err)
 	defer file.Close()
-	return fn(file)
+	fn(file)
 }

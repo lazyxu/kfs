@@ -7,7 +7,11 @@ option go_package = "github.com/lazyxu/kfs/cmd/server/pb";
 service KoalaFS {
   rpc createBranch (Branch) returns (Void) {
   }
-  rpc branches (Void) returns (Branches) {
+  rpc deleteBranch (Branch) returns (Void) {
+  }
+  rpc renameBranch (RenameBranch) returns (Void) {
+  }
+  rpc listBranches (Void) returns (Branches) {
   }
   rpc writeObject (stream Chunk) returns (OK) {
   }
@@ -23,6 +27,12 @@ message Hash {
 
 message Branches {
   repeated Branch branches = 1;
+}
+
+message RenameBranch {
+  string clientID = 1;
+  string old = 2;
+  string new = 3;
 }
 
 message Branch {

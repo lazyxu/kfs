@@ -1,6 +1,6 @@
 const remote = require('@electron/remote');
 
-const { Menu, MenuItem } = remote;
+export const { Menu, MenuItem } = remote;
 
 const menu = new Menu();
 menu.append(new MenuItem({

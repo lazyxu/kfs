@@ -3,6 +3,8 @@ package kfscrypto
 import (
 	"hash"
 	"io"
+
+	"github.com/lazyxu/kfs/cmd/server/kfsserver/errorutil"
 )
 
 type Hash interface {
@@ -12,7 +14,7 @@ type Hash interface {
 
 	// Sum appends the current hash to b and returns the resulting slice.
 	// It does not change the underlying hash state.
-	Cal(r io.Reader) ([]byte, error)
+	Cal(r io.Reader) []byte
 
 	// Reset resets the Hash to its initial state.
 	Reset()
@@ -31,18 +33,16 @@ type wrapper struct {
 	hash.Hash
 }
 
-func (h *wrapper) Cal(r io.Reader) ([]byte, error) {
+func (h *wrapper) Cal(r io.Reader) []byte {
 	//b := new(bytes.Buffer)
 	//rr := io.TeeReader(r, b)
 	if r != nil {
 		_, err := io.Copy(h, r)
-		if err != nil {
-			return nil, err
-		}
+		errorutil.PanicIfErr(err)
 	}
 	key := h.Sum(nil)
 	//fmt.Println("---", key, b.String())
-	return key, nil
+	return key
 }
 
 func FromStdHash(h hash.Hash) Hash {

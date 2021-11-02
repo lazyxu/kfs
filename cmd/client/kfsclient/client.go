@@ -3,7 +3,12 @@ package kfsclient
 import (
 	"context"
 	"crypto/sha256"
+	"fmt"
 	"io"
+	"log"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"google.golang.org/grpc/credentials"
 
@@ -12,7 +17,7 @@ import (
 )
 
 type Client struct {
-	client pb.KoalaFSClient
+	PbClient pb.KoalaFSClient
 }
 
 func New(serverAddress string) *Client {
@@ -27,27 +32,42 @@ func New(serverAddress string) *Client {
 		panic("fail to dial: " + err.Error())
 	}
 	client := pb.NewKoalaFSClient(conn)
-	return &Client{client: client}
+	return &Client{PbClient: client}
 }
 
-func (g *Client) CreateBranch(ctx context.Context, clientID string, branchName string) error {
-	_, err := g.client.CreateBranch(ctx, &pb.Branch{
-		ClientID:   clientID,
-		BranchName: branchName,
-	})
+func (g *Client) CreateBranch(ctx context.Context, branch *pb.Branch) error {
+	_, err := g.PbClient.CreateBranch(ctx, branch)
+	if err != nil {
+		errStatus, _ := status.FromError(err)
+		fmt.Println(errStatus.Message())
+		// lets print the error code which is `INVALID_ARGUMENT`
+		fmt.Println(errStatus.Code())
+		// Want its int version for some reason?
+		// you shouldn't actullay do this, but if you need for debugging,
+		// you can do `int(status_code)` which will give you `3`
+		//
+		// Want to take specific action based on specific error?
+		if codes.InvalidArgument == errStatus.Code() {
+			// do your stuff here
+			log.Fatal()
+		}
+	}
 	return err
 }
 
-func (g *Client) Branches(ctx context.Context) ([]*pb.Branch, error) {
-	branches, err := g.client.Branches(ctx, &pb.Void{})
+func (g *Client) ListBranches(ctx context.Context) ([]*pb.Branch, error) {
+	branches, err := g.PbClient.ListBranches(ctx, &pb.Void{})
 	if err != nil {
 		return nil, err
+	}
+	if branches.Branches == nil {
+		return make([]*pb.Branch, 0), nil
 	}
 	return branches.Branches, nil
 }
 
 //func (g *Client) Branches(ctx context.Context, cb func(clientID string, branchName string)) error {
-//	branches, err := g.client.Branches(ctx, &pb.Void{})
+//	branches, err := g.PbClient.Branches(ctx, &pb.Void{})
 //	if err != nil {
 //		return err
 //	}
@@ -65,7 +85,7 @@ func (g *Client) Branches(ctx context.Context) ([]*pb.Branch, error) {
 //}
 
 func (g *Client) WriteObject(ctx context.Context, buf []byte) ([]byte, error) {
-	c, err := g.client.WriteObject(ctx)
+	c, err := g.PbClient.WriteObject(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -83,11 +103,15 @@ func (g *Client) WriteObject(ctx context.Context, buf []byte) ([]byte, error) {
 	if err != nil {
 		return hash, err
 	}
+	_, err = c.CloseAndRecv()
+	if err != nil {
+		return hash, err
+	}
 	return hash, c.CloseSend()
 }
 
 func (g *Client) ReadObject(ctx context.Context, hash []byte, fn func(buf []byte) error) error {
-	c, err := g.client.ReadObject(ctx, &pb.Hash{Hash: hash})
+	c, err := g.PbClient.ReadObject(ctx, &pb.Hash{Hash: hash})
 	if err != nil {
 		return err
 	}
