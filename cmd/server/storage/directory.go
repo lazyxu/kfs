@@ -4,7 +4,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/lazyxu/kfs/cmd/server/kfsserver/errorutil"
 	"gopkg.in/yaml.v2"
 )
 
@@ -38,11 +37,15 @@ func (g *directoryYamlEncoderDecoder) Encode(i *Directory, w io.Writer) {
 	e := yaml.NewEncoder(w)
 	err := e.Encode(i)
 	defer e.Close()
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (g *directoryYamlEncoderDecoder) Decode(i *Directory, r io.Reader) {
 	e := yaml.NewDecoder(r)
 	err := e.Decode(i)
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 }

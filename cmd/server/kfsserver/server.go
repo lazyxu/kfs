@@ -7,8 +7,6 @@ import (
 	"io"
 	"runtime"
 
-	"github.com/lazyxu/kfs/cmd/server/kfsserver/errorutil"
-
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -28,6 +26,19 @@ func New(s *storage.Storage) pb.KoalaFSServer {
 	return &Server{s: s}
 }
 
+func (g *Server) GetBranchHash(ctx context.Context, req *pb.Branch) (resp *pb.Hash, err error) {
+	resp = &pb.Hash{}
+	if req.BranchName == "" {
+		return resp, status.Errorf(codes.InvalidArgument, "分支名不能为空")
+	}
+	if req.ClientID == "" {
+		return resp, status.Errorf(codes.InvalidArgument, "客户端ID不能为空")
+	}
+	defer Catch(&err)
+	resp.Hash = g.s.GetBranchHash(req.BranchName)
+	return resp, err
+}
+
 func (g *Server) CreateBranch(ctx context.Context, req *pb.Branch) (resp *pb.Void, err error) {
 	resp = &pb.Void{}
 	if req.BranchName == "" {
@@ -36,7 +47,7 @@ func (g *Server) CreateBranch(ctx context.Context, req *pb.Branch) (resp *pb.Voi
 	if req.ClientID == "" {
 		return resp, status.Errorf(codes.InvalidArgument, "客户端ID不能为空")
 	}
-	defer errorutil.Catch(&err)
+	defer Catch(&err)
 	err = g.s.CreateBranch(req.ClientID, req.BranchName)
 	return resp, err
 }
@@ -49,7 +60,7 @@ func (g *Server) DeleteBranch(ctx context.Context, req *pb.Branch) (resp *pb.Voi
 	if req.ClientID == "" {
 		return resp, status.Errorf(codes.InvalidArgument, "客户端ID不能为空")
 	}
-	defer errorutil.Catch(&err)
+	defer Catch(&err)
 	err = g.s.DeleteBranch(req.ClientID, req.BranchName)
 	return resp, err
 }
@@ -62,14 +73,14 @@ func (g *Server) RenameBranch(ctx context.Context, req *pb.RenameBranch) (resp *
 	if req.ClientID == "" {
 		return resp, status.Errorf(codes.InvalidArgument, "客户端ID不能为空")
 	}
-	defer errorutil.Catch(&err)
+	defer Catch(&err)
 	err = g.s.RenameBranch(req.ClientID, req.Old, req.New)
 	return resp, err
 }
 
 func (g *Server) ListBranches(ctx context.Context, req *pb.Void) (resp *pb.Branches, err error) {
-	defer errorutil.Catch(&err)
 	resp = &pb.Branches{}
+	defer Catch(&err)
 	g.s.ListBranch(func(branchName string, ClientID string) {
 		resp.Branches = append(resp.Branches, &pb.Branch{
 			ClientID:   ClientID,
@@ -91,7 +102,7 @@ func (g *Server) ListBranches(ctx context.Context, req *pb.Void) (resp *pb.Branc
 //}
 
 func (g *Server) WriteObject(s pb.KoalaFS_WriteObjectServer) (err error) {
-	defer errorutil.Catch(&err)
+	defer Catch(&err)
 	chunk, err := s.Recv()
 	if err != nil {
 		return
@@ -103,7 +114,9 @@ func (g *Server) WriteObject(s pb.KoalaFS_WriteObjectServer) (err error) {
 			if err == io.EOF {
 				break
 			}
-			errorutil.PanicIfErr(err)
+			if err != nil {
+				panic(err)
+			}
 			buf := chunk.GetChunk()
 			f(bytes.NewBuffer(buf))
 		}
@@ -114,7 +127,7 @@ func (g *Server) WriteObject(s pb.KoalaFS_WriteObjectServer) (err error) {
 const chunkSize = 1024
 
 func (g *Server) ReadObject(req *pb.Hash, s pb.KoalaFS_ReadObjectServer) (err error) {
-	defer errorutil.Catch(&err)
+	defer Catch(&err)
 	g.s.ReadObject(req.Hash, func(reader io.Reader) {
 		buf := make([]byte, chunkSize)
 		for {
@@ -122,9 +135,13 @@ func (g *Server) ReadObject(req *pb.Hash, s pb.KoalaFS_ReadObjectServer) (err er
 			if err == io.EOF {
 				break
 			}
-			errorutil.PanicIfErr(err)
+			if err != nil {
+				panic(err)
+			}
 			err = s.Send(&pb.Chunk{Message: &pb.Chunk_Chunk{Chunk: buf[0:n]}})
-			errorutil.PanicIfErr(err)
+			if err != nil {
+				panic(err)
+			}
 			if n < chunkSize {
 				break
 			}
@@ -135,7 +152,7 @@ func (g *Server) ReadObject(req *pb.Hash, s pb.KoalaFS_ReadObjectServer) (err er
 
 func (g *Server) Status(ctx context.Context, _ *pb.Void) (resp *pb.Status, err error) {
 	fmt.Println("status")
-	defer errorutil.Catch(&err)
+	defer Catch(&err)
 	memStat := new(runtime.MemStats)
 	resp = &pb.Status{
 		TotalSize: "95827",

@@ -7,8 +7,6 @@ import (
 	"io"
 	"os"
 	"path"
-
-	"github.com/lazyxu/kfs/cmd/server/kfsserver/errorutil"
 )
 
 func (s *Storage) WriteObject(hash []byte, fn func(func(reader io.Reader))) {
@@ -18,13 +16,17 @@ func (s *Storage) WriteObject(hash []byte, fn func(func(reader io.Reader))) {
 		panic(err)
 	}
 	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filePerm)
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 	defer f.Close()
 	hw := s.HashFunc()
 	fn(func(reader io.Reader) {
 		rr := io.TeeReader(reader, hw)
 		_, err := io.Copy(f, rr)
-		errorutil.PanicIfErr(err)
+		if err != nil {
+			panic(err)
+		}
 	})
 	actual := hw.Cal(nil)
 	if bytes.Compare(hash, actual) != 0 {
@@ -32,10 +34,12 @@ func (s *Storage) WriteObject(hash []byte, fn func(func(reader io.Reader))) {
 	}
 }
 
-func (s *Storage) ReadObject(hash []byte, fn func(reader io.Reader)) {
-	p := path.Join(s.root, "object", hex.EncodeToString(hash))
+func (s *Storage) ReadObject(hash string, fn func(reader io.Reader)) {
+	p := path.Join(s.root, "object", hash)
 	file, err := os.Open(p)
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 	defer file.Close()
 	fn(file)
 }

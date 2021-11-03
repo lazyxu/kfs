@@ -1,4 +1,4 @@
-package errorutil
+package kfsserver
 
 import (
 	"bytes"
@@ -37,19 +37,11 @@ func Catch(err *error) {
 	}
 }
 
-func Max(x int, y int) (max int) {
-	if x > y {
-		return x
-	}
-	return y
-}
-
 func trimStack(s string) string {
 	line := []byte("\n")
 	stack := debug.Stack()
-	start1 := bytes.Index(stack, []byte("errorutil/error.go"))
-	start2 := bytes.Index(stack, []byte(s))
-	stack = stack[Max(start1, start2):]
+	start := bytes.Index(stack, []byte(s))
+	stack = stack[start:]
 	end := bytes.Index(stack, []byte("pb.go"))
 	if end != -1 {
 		stack = stack[:end]

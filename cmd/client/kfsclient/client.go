@@ -110,7 +110,7 @@ func (g *Client) WriteObject(ctx context.Context, buf []byte) ([]byte, error) {
 	return hash, c.CloseSend()
 }
 
-func (g *Client) ReadObject(ctx context.Context, hash []byte, fn func(buf []byte) error) error {
+func (g *Client) ReadObject(ctx context.Context, hash string, fn func(buf []byte) error) error {
 	c, err := g.PbClient.ReadObject(ctx, &pb.Hash{Hash: hash})
 	if err != nil {
 		return err

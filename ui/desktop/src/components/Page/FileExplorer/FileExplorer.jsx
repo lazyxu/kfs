@@ -8,14 +8,15 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Icon from 'common/components/Icon/Icon';
 import useNotification from 'common/components/Notification/Notification';
-import { Menu, MenuItem } from 'remote/menu';
-import { createBranch, deleteBranch, listBranches, renameBranch } from 'remote/branch';
 import useSysConfig from 'hox/sysConfig';
+import { Menu, MenuItem } from 'remote/menu';
+import { createBranch, deleteBranch, getBranchHash, listBranches, renameBranch } from 'remote/branch';
+import { readObject } from 'remote/object';
 
 import styles from './index.module.scss';
 
 export default () => {
-  const [_, sendNotification] = useNotification();
+  const [_, __, sendError] = useNotification();
   const [branches, setBranches] = useState([]);
   const [showCreateBranch, setShowCreateBranch] = useState(false);
   const [createBranchName, setCreateBranchName] = useState('');
@@ -23,7 +24,7 @@ export default () => {
   const [renameBranchName, setRenameBranchName] = useState('');
   const { sysConfig } = useSysConfig();
   const refresh = () => {
-    listBranches().then(setBranches).catch(e => sendNotification({ msg: '请求失败', variant: 'error' }));
+    listBranches().then(setBranches).catch(sendError);
   };
   useEffect(refresh, []);
   return (
@@ -53,7 +54,11 @@ export default () => {
               const menu = new Menu();
               menu.append(new MenuItem({
                 label: '打开',
-                enabled: false,
+                click: () => {
+                  getBranchHash(sysConfig.clientID, branch.branchName).then(readObject).then(data => {
+                    console.log(data);
+                  }).catch(sendError);
+                },
               }));
               menu.append(new MenuItem({
                 label: '重命名',
@@ -69,16 +74,10 @@ export default () => {
               menu.append(new MenuItem({
                 label: '删除',
                 click: () => {
-                  deleteBranch(sysConfig.clientID, branch.branchName).then(json => {
-                    if (json.code) {
-                      sendNotification({ msg: json.message, variant: 'warning' });
-                    } else {
-                      setShowCreateBranch(false);
-                      refresh();
-                    }
-                  }).catch(e => {
-                    sendNotification({ msg: '请求失败', variant: 'error' });
-                  });
+                  deleteBranch(sysConfig.clientID, branch.branchName).then(data => {
+                    setShowCreateBranch(false);
+                    refresh();
+                  }).catch(sendError);
                 },
               }));
               menu.append(new MenuItem({
@@ -114,16 +113,10 @@ export default () => {
         <DialogActions>
           <Button onClick={() => setShowCreateBranch(false)}>取消</Button>
           <Button onClick={() => {
-            createBranch(sysConfig.clientID, createBranchName).then(json => {
-              if (json.code) {
-                sendNotification({ msg: json.message, variant: 'warning' });
-              } else {
-                setShowCreateBranch(false);
-                refresh();
-              }
-            }).catch(e => {
-              sendNotification({ msg: '请求失败', variant: 'error' });
-            });
+            createBranch(sysConfig.clientID, createBranchName).then(data => {
+              setShowCreateBranch(false);
+              refresh();
+            }).catch(sendError);
           }}
           >
             确定
@@ -148,16 +141,10 @@ export default () => {
         <DialogActions>
           <Button onClick={() => setShowRenameBranch(undefined)}>取消</Button>
           <Button onClick={() => {
-            renameBranch(sysConfig.clientID, showRenameBranch, renameBranchName).then(json => {
-              if (json.code) {
-                sendNotification({ msg: json.message, variant: 'warning' });
-              } else {
-                setShowRenameBranch(undefined);
-                refresh();
-              }
-            }).catch(e => {
-              sendNotification({ msg: '请求失败', variant: 'error' });
-            });
+            renameBranch(sysConfig.clientID, showRenameBranch, renameBranchName).then(data => {
+              setShowRenameBranch(undefined);
+              refresh();
+            }).catch(sendError);
           }}
           >
             确定

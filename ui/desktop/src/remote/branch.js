@@ -1,27 +1,29 @@
-import { getBackendInstance } from './axios';
+import { post } from './axios';
+
+export async function getBranchHash(clientID, branchName) {
+  return post('/api/getBranchHash', {
+    clientID, branchName,
+  });
+}
 
 export async function listBranches() {
-  const res = await getBackendInstance().get('/api/listBranches');
-  return res.data;
+  return post('/api/listBranches');
 }
 
 export async function createBranch(clientID, branchName) {
-  const res = await getBackendInstance().post('/api/createBranch', {
+  return post('/api/createBranch', {
     clientID, branchName,
   });
-  return res.data;
 }
 
 export async function deleteBranch(clientID, branchName) {
-  const res = await getBackendInstance().post('/api/deleteBranch', {
+  return post('/api/deleteBranch', {
     clientID, branchName,
   });
-  return res.data;
 }
 
 export async function renameBranch(clientID, old, _new) {
-  const res = await getBackendInstance().post('/api/renameBranch', {
+  return post('/api/renameBranch', {
     clientID, old, new: _new,
   });
-  return res.data;
 }

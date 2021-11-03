@@ -8,8 +8,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/lazyxu/kfs/cmd/server/kfsserver/errorutil"
-
 	"github.com/lazyxu/kfs/cmd/server/kfscrypto"
 )
 
@@ -39,7 +37,9 @@ func mkdir(path string) {
 func New(rootDir string, hashFunc func() kfscrypto.Hash) (*Storage, error) {
 	s := &Storage{root: rootDir, HashFunc: hashFunc}
 	root, err := filepath.Abs(rootDir)
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 	mkdir(path.Join(root, "branch"))
 	mkdir(path.Join(root, "object"))
 	println(hex.EncodeToString(s.HashFunc().Cal(nil)))

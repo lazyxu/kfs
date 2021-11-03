@@ -7,8 +7,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/lazyxu/kfs/cmd/server/kfsserver/errorutil"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -33,13 +31,29 @@ func (g *branchYamlEncoderDecoder) Encode(i *Branch, w io.Writer) {
 	e := yaml.NewEncoder(w)
 	err := e.Encode(i)
 	defer e.Close()
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (g *branchYamlEncoderDecoder) Decode(i *Branch, r io.Reader) {
 	e := yaml.NewDecoder(r)
 	err := e.Decode(i)
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *Storage) GetBranchHash(branchName string) string {
+	p := path.Join(s.root, "branch", branchName)
+	f, err := os.OpenFile(p, os.O_RDONLY, filePerm)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	b := &Branch{}
+	branchEncoderDecoder.Decode(b, f)
+	return b.BranchHash
 }
 
 func (s *Storage) CreateBranch(clientID string, branchName string) error {
@@ -48,7 +62,9 @@ func (s *Storage) CreateBranch(clientID string, branchName string) error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filePerm)
-			errorutil.PanicIfErr(err)
+			if err != nil {
+				panic(err)
+			}
 			branch := &Branch{
 				ClientID:   clientID,
 				BranchHash: EmptyDirHash,
@@ -56,7 +72,9 @@ func (s *Storage) CreateBranch(clientID string, branchName string) error {
 			branchEncoderDecoder.Encode(branch, f)
 			return nil
 		}
-		errorutil.PanicIfErr(err)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return errors.New("该分支已存在")
 }
@@ -71,7 +89,9 @@ func (s *Storage) DeleteBranch(clientID string, branchName string) error {
 		panic(err)
 	}
 	f, err := os.OpenFile(p, os.O_RDONLY, filePerm)
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 	b := &Branch{}
 	branchEncoderDecoder.Decode(b, f)
 	if b.ClientID != clientID {
@@ -81,9 +101,11 @@ func (s *Storage) DeleteBranch(clientID string, branchName string) error {
 	return os.Remove(p)
 }
 
-func readFile(p string, cb func(b *Branch) error) error {
+func readBranch(p string, cb func(b *Branch) error) error {
 	f, err := os.OpenFile(p, os.O_RDONLY, filePerm)
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 	defer f.Close()
 	b := &Branch{}
 	branchEncoderDecoder.Decode(b, f)
@@ -108,7 +130,9 @@ func (s *Storage) RenameBranch(clientID string, old string, new string) error {
 		panic(err)
 	}
 	f, err := os.OpenFile(oldPath, os.O_RDONLY, filePerm)
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 	b := &Branch{}
 	branchEncoderDecoder.Decode(b, f)
 	if b.ClientID != clientID {
@@ -116,18 +140,24 @@ func (s *Storage) RenameBranch(clientID string, old string, new string) error {
 	}
 	f.Close()
 	err = os.Rename(oldPath, newPath)
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 	return nil
 }
 
 func (s *Storage) ListBranch(cb func(branchName string, ClientID string)) {
 	p := path.Join(s.root, "branch")
 	files, err := ioutil.ReadDir(p)
-	errorutil.PanicIfErr(err)
+	if err != nil {
+		panic(err)
+	}
 	for _, file := range files {
 		filePath := path.Join(p, file.Name())
 		f, err := os.OpenFile(filePath, os.O_RDONLY, filePerm)
-		errorutil.PanicIfErr(err)
+		if err != nil {
+			panic(err)
+		}
 		b := &Branch{}
 		branchEncoderDecoder.Decode(b, f)
 		cb(file.Name(), b.ClientID)

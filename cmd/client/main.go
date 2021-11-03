@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"sync"
 
-	"google.golang.org/grpc/status"
+	"github.com/sirupsen/logrus"
 
 	"github.com/lazyxu/kfs/cmd/client/pb"
 
@@ -17,18 +19,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/lazyxu/kfs/cmd/client/kfsclient"
 )
-
-// {
-//   "clientID": "3fb2f545-a11e-409f-ad8e-f3bcc35bfcd0",
-//   "theme": "dark",
-//   "backendProcess": {
-//     "port": "1123",
-//     "status": "运行中"
-//   },
-//   "username": "17161951517",
-//   "refreshToken": "96246b97eb994fcaa4e8abb553d502bb",
-//   "downloadPath": ""
-// }
 
 type Config struct {
 	ClientID string
@@ -57,26 +47,6 @@ func GetClient() *kfsclient.Client {
 	return gClient
 }
 
-type Response struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message,omitempty"`
-	Data    interface{} `json:"data,omitempty"`
-}
-
-func Error(c echo.Context, code int, message string) error {
-	return c.JSON(http.StatusOK, &Response{
-		Code:    code,
-		Message: message,
-	})
-}
-
-func Success(c echo.Context, data interface{}) error {
-	return c.JSON(http.StatusOK, &Response{
-		Code: 0,
-		Data: data,
-	})
-}
-
 func main() {
 	e := echo.New()
 	e.Use(middleware.CORS())
@@ -86,14 +56,27 @@ func main() {
 	e.GET("/api/clientID", func(c echo.Context) error {
 		config, err := GetConfig()
 		if err != nil {
-			return err
+			logrus.Error(err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "读取配置失败")
 		}
 		return c.String(http.StatusOK, config.ClientID)
 	})
-	e.GET("/api/listBranches", func(c echo.Context) error {
-		branches, err := GetClient().ListBranches(context.TODO())
+	e.POST("/api/getBranchHash", func(c echo.Context) error {
+		branch := &pb.Branch{}
+		err := c.Bind(branch)
 		if err != nil {
 			return err
+		}
+		hash, err := GetClient().PbClient.GetBranchHash(context.TODO(), branch)
+		if err != nil {
+			return FromGrpcError(c, err)
+		}
+		return c.JSON(http.StatusOK, hash.Hash)
+	})
+	e.POST("/api/listBranches", func(c echo.Context) error {
+		branches, err := GetClient().ListBranches(context.TODO())
+		if err != nil {
+			return FromGrpcError(c, err)
 		}
 		return c.JSON(http.StatusOK, branches)
 	})
@@ -105,10 +88,9 @@ func main() {
 		}
 		_, err = GetClient().PbClient.CreateBranch(context.TODO(), branch)
 		if err != nil {
-			errStatus, _ := status.FromError(err)
-			return Error(c, int(errStatus.Code()), errStatus.Message())
+			return FromGrpcError(c, err)
 		}
-		return Success(c, nil)
+		return c.NoContent(http.StatusOK)
 	})
 	e.POST("/api/deleteBranch", func(c echo.Context) error {
 		branch := &pb.Branch{}
@@ -118,10 +100,9 @@ func main() {
 		}
 		_, err = GetClient().PbClient.DeleteBranch(context.TODO(), branch)
 		if err != nil {
-			errStatus, _ := status.FromError(err)
-			return Error(c, int(errStatus.Code()), errStatus.Message())
+			return FromGrpcError(c, err)
 		}
-		return Success(c, nil)
+		return c.NoContent(http.StatusOK)
 	})
 	e.POST("/api/renameBranch", func(c echo.Context) error {
 		branch := &pb.RenameBranch{}
@@ -131,28 +112,51 @@ func main() {
 		}
 		_, err = GetClient().PbClient.RenameBranch(context.TODO(), branch)
 		if err != nil {
-			errStatus, _ := status.FromError(err)
-			return Error(c, int(errStatus.Code()), errStatus.Message())
+			return FromGrpcError(c, err)
 		}
-		return Success(c, nil)
+		return c.NoContent(http.StatusOK)
+	})
+	e.POST("/api/readObject", func(c echo.Context) error {
+		req := &pb.Hash{}
+		err := c.Bind(req)
+		if err != nil {
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+		client, err := GetClient().PbClient.ReadObject(context.TODO(), req)
+		if err != nil {
+			return FromGrpcError(c, err)
+		}
+		for {
+			chunk, err := client.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return FromGrpcError(c, err)
+			}
+			_, err = c.Response().Write(chunk.GetChunk())
+			if err != nil {
+				return err
+			}
+		}
+		c.Response().Flush()
+		return nil
 	})
 	e.GET("/api/connect", func(c echo.Context) error {
 		fmt.Println("connect")
 		client := GetClient()
 		hash, err := client.WriteObject(context.TODO(), []byte("111"))
 		if err != nil {
-			fmt.Println(err)
-			return err
+			return FromGrpcError(c, err)
 		}
-		err = client.ReadObject(context.TODO(), hash, func(buf []byte) error {
+		err = client.ReadObject(context.TODO(), hex.EncodeToString(hash), func(buf []byte) error {
 			fmt.Println("ReadObject", string(buf))
 			return nil
 		})
 		if err != nil {
-			fmt.Println(err)
-			return err
+			return FromGrpcError(c, err)
 		}
-		return c.String(http.StatusOK, "ok")
+		return c.NoContent(http.StatusOK)
 	})
 	port := "8000"
 	if len(os.Args) > 1 {

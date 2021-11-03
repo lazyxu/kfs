@@ -5,6 +5,8 @@ package pb;
 option go_package = "github.com/lazyxu/kfs/cmd/server/pb";
 
 service KoalaFS {
+  rpc getBranchHash (Branch) returns (Hash) {
+  }
   rpc createBranch (Branch) returns (Void) {
   }
   rpc deleteBranch (Branch) returns (Void) {
@@ -22,7 +24,7 @@ service KoalaFS {
 }
 
 message Hash {
-  bytes hash = 1;
+  string hash = 1;
 }
 
 message Branches {

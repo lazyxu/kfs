@@ -37,7 +37,8 @@ const useNotification = () => {
             });
         }
     }, [conf]);
-    return [conf, setConf];
+    const sendError = (e) => setConf({ msg: e.message, variant: 'error' })
+    return [conf, setConf, sendError];
 };
 
 export default useNotification;

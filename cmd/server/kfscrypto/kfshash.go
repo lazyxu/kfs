@@ -3,8 +3,6 @@ package kfscrypto
 import (
 	"hash"
 	"io"
-
-	"github.com/lazyxu/kfs/cmd/server/kfsserver/errorutil"
 )
 
 type Hash interface {
@@ -38,7 +36,9 @@ func (h *wrapper) Cal(r io.Reader) []byte {
 	//rr := io.TeeReader(r, b)
 	if r != nil {
 		_, err := io.Copy(h, r)
-		errorutil.PanicIfErr(err)
+		if err != nil {
+			panic(err)
+		}
 	}
 	key := h.Sum(nil)
 	//fmt.Println("---", key, b.String())
