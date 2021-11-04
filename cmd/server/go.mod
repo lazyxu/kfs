@@ -1,6 +1,6 @@
 module github.com/lazyxu/kfs/cmd/server
 
-go 1.15
+go 1.17
 
 require (
 	github.com/dustin/go-humanize v1.0.0

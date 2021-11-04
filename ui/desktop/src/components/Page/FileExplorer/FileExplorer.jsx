@@ -56,7 +56,7 @@ export default () => {
                 label: '打开',
                 click: () => {
                   getBranchHash(sysConfig.clientID, branch.branchName).then(readObject).then(data => {
-                    console.log(data);
+                    console.log(typeof data, data);
                   }).catch(sendError);
                 },
               }));

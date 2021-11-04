@@ -126,6 +126,7 @@ func main() {
 		if err != nil {
 			return FromGrpcError(c, err)
 		}
+		c.Response().Header().Add("Content-Type", "application/octet-stream")
 		for {
 			chunk, err := client.Recv()
 			if err == io.EOF {
