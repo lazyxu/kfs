@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -44,8 +45,27 @@ func (g *branchYamlEncoderDecoder) Decode(i *Branch, r io.Reader) {
 	}
 }
 
-func (s *Storage) GetBranchHash(branchName string) string {
-	p := path.Join(s.root, "branch", branchName)
+type branchJsonEncoderDecoder struct {
+}
+
+func (g *branchJsonEncoderDecoder) Encode(i *Branch, w io.Writer) {
+	e := json.NewEncoder(w)
+	err := e.Encode(i)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (g *branchJsonEncoderDecoder) Decode(i *Branch, r io.Reader) {
+	e := json.NewDecoder(r)
+	err := e.Decode(i)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *Storage) readBranch(branch string, cb func(b *Branch)) {
+	p := path.Join(s.root, "branch", branch)
 	f, err := os.OpenFile(p, os.O_RDONLY, filePerm)
 	if err != nil {
 		panic(err)
@@ -53,7 +73,15 @@ func (s *Storage) GetBranchHash(branchName string) string {
 	defer f.Close()
 	b := &Branch{}
 	branchEncoderDecoder.Decode(b, f)
-	return b.BranchHash
+	cb(b)
+}
+
+func (s *Storage) GetBranchHash(branch string) string {
+	var hash string
+	s.readBranch(branch, func(b *Branch) {
+		hash = b.BranchHash
+	})
+	return hash
 }
 
 func (s *Storage) CreateBranch(clientID string, branchName string) error {
@@ -99,17 +127,6 @@ func (s *Storage) DeleteBranch(clientID string, branchName string) error {
 	}
 	f.Close()
 	return os.Remove(p)
-}
-
-func readBranch(p string, cb func(b *Branch) error) error {
-	f, err := os.OpenFile(p, os.O_RDONLY, filePerm)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	b := &Branch{}
-	branchEncoderDecoder.Decode(b, f)
-	return cb(b)
 }
 
 func (s *Storage) RenameBranch(clientID string, old string, new string) error {

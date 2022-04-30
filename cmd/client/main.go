@@ -1,15 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"sync"
+
+	"github.com/lazyxu/kfs/kfscore/storage"
 
 	"github.com/sirupsen/logrus"
 
@@ -116,47 +117,49 @@ func main() {
 		}
 		return c.NoContent(http.StatusOK)
 	})
-	e.POST("/api/readObject", func(c echo.Context) error {
+	e.POST("/api/readDirectory", func(c echo.Context) error {
 		req := &pb.Hash{}
 		err := c.Bind(req)
 		if err != nil {
 			return c.String(http.StatusBadRequest, err.Error())
 		}
-		client, err := GetClient().PbClient.ReadObject(context.TODO(), req)
+		resp, err := GetClient().PbClient.ReadObject(context.TODO(), req)
 		if err != nil {
 			return FromGrpcError(c, err)
 		}
-		c.Response().Header().Add("Content-Type", "application/octet-stream")
-		for {
-			chunk, err := client.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return FromGrpcError(c, err)
-			}
-			_, err = c.Response().Write(chunk.GetChunk())
-			if err != nil {
-				return err
-			}
-		}
-		c.Response().Flush()
+		i := &storage.Directory{}
+		storage.DefaultDirectoryEncoderDecoder.Decode(i, bytes.NewReader(resp.Data))
+		return c.JSON(http.StatusOK, i)
+	})
+	e.POST("/api/createDirectory", func(c echo.Context) error {
+		//req := &pb.Hash{}
+		//err := c.Bind(req)
+		//if err != nil {
+		//	return c.String(http.StatusBadRequest, err.Error())
+		//}
+		//resp, err := GetClient().PbClient.ReadObject(context.TODO(), req)
+		//if err != nil {
+		//	return FromGrpcError(c, err)
+		//}
+		//i := &storage.Directory{}
+		//storage.DefaultDirectoryEncoderDecoder.Decode(i, bytes.NewReader(resp.Data))
+		//return c.JSON(http.StatusOK, i)
 		return nil
 	})
 	e.GET("/api/connect", func(c echo.Context) error {
 		fmt.Println("connect")
-		client := GetClient()
-		hash, err := client.WriteObject(context.TODO(), []byte("111"))
-		if err != nil {
-			return FromGrpcError(c, err)
-		}
-		err = client.ReadObject(context.TODO(), hex.EncodeToString(hash), func(buf []byte) error {
-			fmt.Println("ReadObject", string(buf))
-			return nil
-		})
-		if err != nil {
-			return FromGrpcError(c, err)
-		}
+		//client := GetClient()
+		//hash, err := client.WriteObject(context.TODO(), []byte("111"))
+		//if err != nil {
+		//	return FromGrpcError(c, err)
+		//}
+		//err = client.ReadObject(context.TODO(), hex.EncodeToString(hash), func(buf []byte) error {
+		//	fmt.Println("ReadObject", string(buf))
+		//	return nil
+		//})
+		//if err != nil {
+		//	return FromGrpcError(c, err)
+		//}
 		return c.NoContent(http.StatusOK)
 	})
 	port := "8000"

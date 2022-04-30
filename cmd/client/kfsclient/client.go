@@ -2,9 +2,7 @@ package kfsclient
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
-	"io"
 	"log"
 
 	"google.golang.org/grpc/codes"
@@ -84,49 +82,28 @@ func (g *Client) ListBranches(ctx context.Context) ([]*pb.Branch, error) {
 //	return err
 //}
 
-func (g *Client) WriteObject(ctx context.Context, buf []byte) ([]byte, error) {
-	c, err := g.PbClient.WriteObject(ctx)
-	if err != nil {
-		return nil, err
-	}
-	hasher := sha256.New()
-	_, err = hasher.Write(buf)
-	if err != nil {
-		return nil, err
-	}
-	hash := hasher.Sum(nil)
-	err = c.Send(&pb.Chunk{Message: &pb.Chunk_Hash{Hash: hash}})
-	if err != nil {
-		return hash, err
-	}
-	err = c.Send(&pb.Chunk{Message: &pb.Chunk_Chunk{Chunk: buf}})
-	if err != nil {
-		return hash, err
-	}
-	_, err = c.CloseAndRecv()
-	if err != nil {
-		return hash, err
-	}
-	return hash, c.CloseSend()
-}
-
-func (g *Client) ReadObject(ctx context.Context, hash string, fn func(buf []byte) error) error {
-	c, err := g.PbClient.ReadObject(ctx, &pb.Hash{Hash: hash})
-	if err != nil {
-		return err
-	}
-	for {
-		chunk, err := c.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		err = fn(chunk.GetChunk())
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+//func (g *Client) WriteObject(ctx context.Context, buf []byte) ([]byte, error) {
+//	c, err := g.PbClient.WriteObject(ctx)
+//	if err != nil {
+//		return nil, err
+//	}
+//	hasher := sha256.New()
+//	_, err = hasher.Write(buf)
+//	if err != nil {
+//		return nil, err
+//	}
+//	hash := hasher.Sum(nil)
+//	err = c.Send(&pb.Chunk{Message: &pb.Chunk_Hash{Hash: hash}})
+//	if err != nil {
+//		return hash, err
+//	}
+//	err = c.Send(&pb.Chunk{Message: &pb.Chunk_Chunk{Chunk: buf}})
+//	if err != nil {
+//		return hash, err
+//	}
+//	_, err = c.CloseAndRecv()
+//	if err != nil {
+//		return hash, err
+//	}
+//	return hash, c.CloseSend()
+//}

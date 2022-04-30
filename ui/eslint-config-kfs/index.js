@@ -34,6 +34,8 @@ module.exports = {
                 "classes": false
             }
         ],
+        "one-var": "off",
+        "one-var-declaration-per-line": "off",
         "no-underscore-dangle": "warn",
         "max-len": "warn",
         "no-restricted-syntax": "warn",

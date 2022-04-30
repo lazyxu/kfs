@@ -2,6 +2,10 @@
   height: 100%;
   width: 100%;
   overflow: scroll;
+  > div {
+    height: 100%;
+    width: 100%;
+  }
   ul {
     margin: 1em 0 1em 0;
     display: flex;

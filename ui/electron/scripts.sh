@@ -1,5 +1,16 @@
 #!/bin/bash
 
+copy_kfs_wasm () {
+  pushd ../../cmd/wasm
+  GOARCH=wasm GOOS=js go build -o lib.wasm *.go
+  if [ $? -ne 0 ]; then
+    exit $?
+  fi
+  cp *.wasm ../../ui/electron/public/extraResources/
+  cp *.wasm ../../ui/desktop/public/extraResources/
+  popd
+}
+
 copy_kfs_client () {
   mkdir -p public/extraResources
   cd ../../cmd/client
@@ -31,11 +42,13 @@ electron_dist () {
 
 case $1 in
   start)
+    copy_kfs_wasm
     copy_kfs_client
     electron_dev
     ;;
 
   dist)
+    copy_kfs_wasm
     react_dist
     copy_kfs_client
     electron_dist

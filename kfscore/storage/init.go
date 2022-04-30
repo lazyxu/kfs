@@ -8,7 +8,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/lazyxu/kfs/cmd/server/kfscrypto"
+	"github.com/lazyxu/kfs/kfscore/kfscrypto"
 )
 
 type Storage struct {
@@ -17,7 +17,7 @@ type Storage struct {
 }
 
 var (
-	EmptyDir      = Directory{Items: make([]*Metadata, 0)}
+	EmptyDir      = Directory(make([]*Metadata, 0))
 	EmptyDirHash  string
 	EmptyFileHash string
 )
@@ -42,12 +42,12 @@ func New(rootDir string, hashFunc func() kfscrypto.Hash) (*Storage, error) {
 	}
 	mkdir(path.Join(root, "branch"))
 	mkdir(path.Join(root, "object"))
-	println(hex.EncodeToString(s.HashFunc().Cal(nil)))
+	println("kfs-root-dir", hex.EncodeToString(s.HashFunc().Cal(nil)))
 	buffer := new(bytes.Buffer)
-	directoryEncoderDecoder.Encode(&EmptyDir, buffer)
+	DefaultDirectoryEncoderDecoder.Encode(&EmptyDir, buffer)
 	hw := s.HashFunc()
 	hash := hw.Cal(buffer)
-	directoryEncoderDecoder.Encode(&EmptyDir, buffer)
+	DefaultDirectoryEncoderDecoder.Encode(&EmptyDir, buffer)
 	s.WriteObject(hash, func(f func(reader io.Reader)) {
 		f(buffer)
 	})

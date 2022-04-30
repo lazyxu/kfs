@@ -15,9 +15,9 @@ service KoalaFS {
   }
   rpc listBranches (Void) returns (Branches) {
   }
-  rpc writeObject (stream Chunk) returns (OK) {
+  rpc readObject (Hash) returns (Object) {
   }
-  rpc readObject (Hash) returns (stream Chunk) {
+  rpc writeObject (ObjectReq) returns (Void) {
   }
   rpc status (Void) returns (Status) {
   }
@@ -39,18 +39,18 @@ message RenameBranch {
 
 message Branch {
   string clientID = 1;
-  string branchName = 2;
+  string branch = 2;
 }
 
-message Chunk {
-  oneof message {
-    bytes chunk = 1;
-    bytes hash = 2;
-  }
+message ObjectReq {
+  string branch = 1;
+  string path = 2;
+  string hash = 3;
+  bytes data = 4;
 }
 
-message OK {
-  bool ok = 1;
+message Object {
+  bytes data = 1;
 }
 
 message Void {

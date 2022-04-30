@@ -8,9 +8,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/lazyxu/kfs/cmd/server/kfscrypto"
-
-	"github.com/lazyxu/kfs/cmd/server/storage"
+	"github.com/lazyxu/kfs/kfscore/kfscrypto"
+	"github.com/lazyxu/kfs/kfscore/storage"
 
 	"google.golang.org/grpc/credentials"
 
