@@ -15,7 +15,7 @@
     "fs-extra": "^8.1.0",
     "google-protobuf": "^3.11.2",
     "grpc-web": "^1.0.7",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "mv": "^2.1.1",
     "node-sass": "^4.13.0",
     "pretty-bytes": "^5.5.0",
