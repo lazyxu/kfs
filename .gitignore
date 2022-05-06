@@ -1,3 +1,10 @@
+.DS_Store
+*.db
+
+# IDE
+.vscode
+.idea
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
