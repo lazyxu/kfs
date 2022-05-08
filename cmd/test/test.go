@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"time"
 
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
+	storage "github.com/lazyxu/kfs/storage/local"
 )
 
 func main() {
@@ -30,8 +32,25 @@ func test() error {
 
 	ctx := context.Background()
 
-	file1 := sqlite.NewFileFromBytes([]byte(nil), "")
-	file2 := sqlite.NewFileFromBytes([]byte("abc"), "txt")
+	s, err := storage.New("tmp")
+	if err != nil {
+		return err
+	}
+
+	hash1, content1 := storage.NewContent("")
+	_, err = s.Write(hash1, bytes.NewReader(content1))
+	if err != nil {
+		return err
+	}
+
+	hash2, content2 := storage.NewContent("abc")
+	_, err = s.Write(hash2, bytes.NewReader(content2))
+	if err != nil {
+		return err
+	}
+
+	file1 := sqlite.NewFileFromBytes(content1, "")
+	file2 := sqlite.NewFileFromBytes(content2, "txt")
 	err = db.WriteFile(ctx, file1)
 	if err != nil {
 		return err
