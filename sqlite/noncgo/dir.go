@@ -18,6 +18,10 @@ func (i Dir) Count() uint64 {
 	return i.count
 }
 
+func NewDir(hash string, size uint64, count uint64) Dir {
+	return Dir{fileOrDir{hash, size}, count}
+}
+
 // https://zhuanlan.zhihu.com/p/343682839
 type DirItem struct {
 	Hash        string
@@ -89,10 +93,14 @@ func (db *SqliteNonCgoDB) WriteDir(ctx context.Context, dirItems []DirItem) (dir
 			err = tx.Commit()
 		}
 	}()
+	// TODO: error if size or count is not equal
 	_, err = tx.ExecContext(ctx, `
 	INSERT INTO dir VALUES (?, ?, ?);
 	`, dir.hash, dir.size, dir.count)
 	if err != nil {
+		if isUniqueConstraintError(err) {
+			err = nil
+		}
 		return
 	}
 	stmt, err := tx.PrepareContext(ctx, `
@@ -119,6 +127,7 @@ func (db *SqliteNonCgoDB) WriteDir(ctx context.Context, dirItems []DirItem) (dir
 		}
 	}()
 	for _, dirItem := range dirItems {
+		// TODO: override if duplicated
 		_, err = stmt.ExecContext(ctx,
 			dir.hash,
 			dirItem.Hash,
@@ -132,6 +141,9 @@ func (db *SqliteNonCgoDB) WriteDir(ctx context.Context, dirItems []DirItem) (dir
 			dirItem.AccessTime,
 			dirItem.OldItemHash)
 		if err != nil {
+			if isUniqueConstraintError(err) {
+				err = nil
+			}
 			return
 		}
 	}
