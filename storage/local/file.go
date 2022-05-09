@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"path"
+
+	"github.com/gofrs/flock"
 )
 
 type Storage struct {
@@ -14,14 +16,56 @@ type Storage struct {
 }
 
 const (
-	dirPerm  = 0o700
-	filePerm = 0o600
+	dirPerm      = 0o700
+	filePerm     = 0o600
+	lockFileName = "index.lock"
 )
 
-func New(root string) (*Storage, error) {
-	err := os.MkdirAll(root, dirPerm)
+func createLockFile(root string) error {
+	lockFile, err := os.Create(path.Join(root, lockFileName))
 	if err != nil {
-		return nil, err
+		return err
+	}
+	defer lockFile.Close()
+	return nil
+}
+
+func New(root string) (*Storage, error) {
+	info, err := os.Stat(root)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			panic(err)
+		} // else IsNotExist
+		// create root
+		err = os.MkdirAll(root, dirPerm)
+		if err != nil {
+			return nil, err
+		}
+		err = createLockFile(root)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		if !info.IsDir() {
+			return nil, fmt.Errorf("invalid file format: %s", root)
+		}
+		lockFilePath := path.Join(root, lockFileName)
+		lockFileInfo, err := os.Stat(lockFilePath)
+		if err != nil {
+			if !os.IsNotExist(err) {
+				panic(err)
+			} // else IsNotExist
+			// create root/index.lock
+			err = createLockFile(root)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			if lockFileInfo.IsDir() {
+				return nil, fmt.Errorf("invalid file format: %s", lockFilePath)
+			}
+			// already exist root/index.lock
+		}
 	}
 	return &Storage{root: root}, nil
 }
@@ -38,6 +82,9 @@ func NewContent(str string) (string, []byte) {
 }
 
 func (s *Storage) Write(hash string, reader io.Reader) (bool, error) {
+	lock := flock.New(path.Join(s.root, lockFileName))
+	lock.Lock()
+	defer lock.Unlock()
 	p := path.Join(s.root, hash)
 	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE, 0o200)
 	if err != nil {
