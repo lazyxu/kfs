@@ -11,7 +11,7 @@ import (
 func TestBackup(t *testing.T) {
 	os.RemoveAll(testDir)
 	ctx := context.Background()
-	Visitors := []Visitor{
+	Visitors := []Visitor[any]{
 		&FileSizeVisitor{MaxFileSize: 10},
 		&CountVisitor{},
 	}

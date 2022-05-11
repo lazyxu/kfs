@@ -30,42 +30,18 @@ func createLockFile(root string) error {
 	return nil
 }
 
+const (
+	files = "files"
+)
+
 func New(root string) (*Storage, error) {
-	info, err := os.Stat(root)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			panic(err)
-		} // else IsNotExist
-		// create root
-		err = os.MkdirAll(root, dirPerm)
-		if err != nil {
-			return nil, err
-		}
-		err = createLockFile(root)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		if !info.IsDir() {
-			return nil, fmt.Errorf("invalid file format: %s", root)
-		}
-		lockFilePath := path.Join(root, lockFileName)
-		lockFileInfo, err := os.Stat(lockFilePath)
-		if err != nil {
-			if !os.IsNotExist(err) {
-				panic(err)
-			} // else IsNotExist
-			// create root/index.lock
-			err = createLockFile(root)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			if lockFileInfo.IsDir() {
-				return nil, fmt.Errorf("invalid file format: %s", lockFilePath)
-			}
-			// already exist root/index.lock
-		}
+	err := os.MkdirAll(path.Join(root, files), dirPerm)
+	if err != nil && !os.IsExist(err) {
+		return nil, err
+	}
+	err = createLockFile(root)
+	if err != nil && !os.IsExist(err) {
+		return nil, err
 	}
 	return &Storage{root: root}, nil
 }
@@ -85,7 +61,7 @@ func (s *Storage) Write(hash string, reader io.Reader) (bool, error) {
 	lock := flock.New(path.Join(s.root, lockFileName))
 	lock.Lock()
 	defer lock.Unlock()
-	p := path.Join(s.root, hash)
+	p := path.Join(s.root, files, hash)
 	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE, 0o200)
 	if err != nil {
 		if os.IsPermission(err) {

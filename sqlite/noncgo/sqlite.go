@@ -43,15 +43,22 @@ func (db *SqliteNonCgoDB) Reset() error {
 		itemModifyTime TIMESTAMP NOT NULL,
 		itemChangeTime TIMESTAMP NOT NULL,
 		itemAccessTime TIMESTAMP NOT NULL,
-		oldItemHash    CHAR(64)  NOT NULL DEFAULT "",
 		PRIMARY KEY(hash, itemName)
+	);
+
+	DROP TABLE IF EXISTS [commit];
+	CREATE TABLE [commit] (
+		id          INTEGER   NOT NULL PRIMARY KEY AUTOINCREMENT,
+		createTime  TIMESTAMP NOT NULL,
+		hash        CHAR(64)  NOT NULL,
+		lastId      INTEGER   NOT NULL
 	);
 
 	DROP TABLE IF EXISTS branch;
 	CREATE TABLE branch (
 		name        TEXT     NOT NULL PRIMARY KEY,
 		description TEXT     NOT NULL DEFAULT "",
-		hash        CHAR(64) NOT NULL,
+		commitId    INTEGER  NOT NULL,
 		size        INTEGER  NOT NULL,
 		count       INTEGER  NOT NULL
 	);

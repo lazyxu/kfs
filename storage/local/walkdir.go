@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 )
 
 const (
@@ -18,7 +17,7 @@ const (
 	StateStop
 )
 
-type BackupCtx struct {
+type BackupCtx[T any] struct {
 	ctx            context.Context
 	root           string
 	mutex          sync.RWMutex
@@ -28,7 +27,7 @@ type BackupCtx struct {
 	scanProcess    []int
 	scanMaxProcess []int
 	curFilename    []int
-	visitors       []Visitor
+	visitors       []Visitor[T]
 }
 
 type BackupErr struct {
@@ -36,8 +35,8 @@ type BackupErr struct {
 	FilePath string
 }
 
-func NewBackupCtx(ctx context.Context, root string, visitors ...Visitor) *BackupCtx {
-	return &BackupCtx{
+func NewBackupCtx[T any](ctx context.Context, root string, visitors ...Visitor[T]) *BackupCtx[T] {
+	return &BackupCtx[T]{
 		ctx:      ctx,
 		root:     root,
 		errs:     []BackupErr{},
@@ -45,7 +44,7 @@ func NewBackupCtx(ctx context.Context, root string, visitors ...Visitor) *Backup
 	}
 }
 
-func (c *BackupCtx) Scan() (any, error) {
+func (c *BackupCtx[T]) Scan() (any, error) {
 	defer func() {
 		c.mutex.Lock()
 		c.done = true
@@ -59,7 +58,7 @@ func (c *BackupCtx) Scan() (any, error) {
 	return ret, err
 }
 
-func (c *BackupCtx) visitorsEnter(filename string, info os.FileInfo) bool {
+func (c *BackupCtx[T]) visitorsEnter(filename string, info os.FileInfo) bool {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	for _, visitor := range c.visitors {
@@ -70,7 +69,7 @@ func (c *BackupCtx) visitorsEnter(filename string, info os.FileInfo) bool {
 	return true
 }
 
-func (c *BackupCtx) visitorsExit(ctx context.Context, filename string, info os.FileInfo, infos []os.FileInfo, rets []any) (any, error) {
+func (c *BackupCtx[T]) visitorsExit(ctx context.Context, filename string, info os.FileInfo, infos []os.FileInfo, rets []T) (T, error) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 	for _, visitor := range c.visitors {
@@ -78,31 +77,31 @@ func (c *BackupCtx) visitorsExit(ctx context.Context, filename string, info os.F
 			return visitor.Exit(ctx, filename, info, infos, rets)
 		}
 	}
-	return nil, nil
+	var t T
+	return t, nil
 }
 
-func (c *BackupCtx) walk(filename string) (ret any, err error) {
-
+func (c *BackupCtx[T]) walk(filename string) (ret T, err error) {
 	info, err := os.Lstat(filename)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	var infos []os.FileInfo
-	var rets []any
+	var rets []T
 	defer func() {
 		ret, err = c.visitorsExit(c.ctx, filename, info, infos, rets)
 	}()
 	if !c.visitorsEnter(filename, info) {
-		return nil, nil
+		return
 	}
 
 	if !info.IsDir() {
-		return nil, filepath.SkipDir
+		return ret, filepath.SkipDir
 	}
 	infos, err = ioutil.ReadDir(filename)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	c.mutex.Lock()
@@ -121,7 +120,6 @@ func (c *BackupCtx) walk(filename string) (ret any, err error) {
 	}()
 
 	for _, info := range infos {
-		time.Sleep(time.Millisecond * 9)
 		select {
 		case <-c.ctx.Done():
 			// TODO: non-recursive version
@@ -129,7 +127,7 @@ func (c *BackupCtx) walk(filename string) (ret any, err error) {
 			c.canceled = true
 			c.scanProcess = nil
 			c.mutex.Unlock()
-			return nil, errors.New("context deadline exceed")
+			return ret, errors.New("context deadline exceed")
 		default:
 			filename := filepath.Join(filename, info.Name())
 			ret, err := c.walk(filename)
@@ -157,5 +155,5 @@ func (c *BackupCtx) walk(filename string) (ret any, err error) {
 		c.scanProcess[len(c.scanProcess)-1]++
 		c.mutex.Unlock()
 	}
-	return nil, nil
+	return
 }

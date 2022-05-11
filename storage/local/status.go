@@ -12,7 +12,7 @@ type Status struct {
 	ScanProcess string
 }
 
-func (c *BackupCtx) GetStatus() Status {
+func (c *BackupCtx[T]) GetStatus() Status {
 	c.mutex.RLock()
 	var scanProcess string
 	if len(c.scanProcess) == 0 {

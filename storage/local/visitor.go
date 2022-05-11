@@ -5,29 +5,30 @@ import (
 	"os"
 )
 
-type Visitor interface {
+type Visitor[T any] interface {
 	Enter(filename string, info os.FileInfo) bool
 	HasExit() bool
-	Exit(ctx context.Context, filename string, info os.FileInfo, infos []os.FileInfo, rets []any) (any, error)
+	Exit(ctx context.Context, filename string, info os.FileInfo, infos []os.FileInfo, rets []T) (T, error)
 }
 
-type EmptyVisitor struct {
+type EmptyVisitor[T any] struct {
 }
 
-func (v *EmptyVisitor) Enter(filename string, info os.FileInfo) bool {
+func (v *EmptyVisitor[T]) Enter(filename string, info os.FileInfo) bool {
 	return true
 }
 
-func (v *EmptyVisitor) HasExit() bool {
+func (v *EmptyVisitor[T]) HasExit() bool {
 	return false
 }
 
-func (v *EmptyVisitor) Exit(ctx context.Context, filename string, info os.FileInfo, infos []os.FileInfo, rets []any) (any, error) {
-	return nil, nil
+func (v *EmptyVisitor[T]) Exit(ctx context.Context, filename string, info os.FileInfo, infos []os.FileInfo, rets []T) (T, error) {
+	var t T
+	return t, nil
 }
 
 type FileSizeVisitor struct {
-	EmptyVisitor
+	EmptyVisitor[any]
 	MaxFileSize  int64
 	IgnoredCount uint64
 }
@@ -42,7 +43,7 @@ func (v *FileSizeVisitor) Enter(filename string, info os.FileInfo) bool {
 }
 
 type CountVisitor struct {
-	EmptyVisitor
+	EmptyVisitor[any]
 	File     uint64
 	Dir      uint64
 	Symlink  uint64

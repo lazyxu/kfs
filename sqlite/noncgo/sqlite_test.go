@@ -63,23 +63,31 @@ func TestSqlite(t *testing.T) {
 
 	now := uint64(time.Now().Nanosecond())
 	dir, err := db.WriteDir(ctx, []DirItem{
-		NewDirItem(file1, "emptyFile", 0o700, now, now, now, now, ""),
-		NewDirItem(file2, "aaa.txt", 0o555, now, now, now, now, ""),
+		NewDirItem(file1, "emptyFile", 0o700, now, now, now, now),
+		NewDirItem(file2, "aaa.txt", 0o555, now, now, now, now),
 	})
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	root, err := db.WriteDir(ctx, []DirItem{
-		NewDirItem(dir, "data", 0o777, now, now, now, now, ""),
-		NewDirItem(file2, "bbb.txt", 0o555, now, now, now, now, ""),
+		NewDirItem(dir, "data", 0o777, now, now, now, now),
+		NewDirItem(file2, "bbb.txt", 0o555, now, now, now, now),
 	})
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	err = db.WriteBranch(ctx, NewBranch("default", "no description", root))
+	branchName := "default"
+	commit := NewCommit(root, branchName)
+	err = db.WriteCommit(ctx, &commit)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	err = db.WriteBranch(ctx, NewBranch(branchName, "no description", commit, root))
 	if err != nil {
 		t.Error(err)
 		return

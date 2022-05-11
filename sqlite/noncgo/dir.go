@@ -24,20 +24,19 @@ func NewDir(hash string, size uint64, count uint64) Dir {
 
 // https://zhuanlan.zhihu.com/p/343682839
 type DirItem struct {
-	Hash        string
-	Name        string
-	Mode        uint64
-	Size        uint64
-	Count       uint64
-	CreateTime  uint64 // linux does not support it.
-	ModifyTime  uint64
-	ChangeTime  uint64 // windows does not support it.
-	AccessTime  uint64
-	OldItemHash string
+	Hash       string
+	Name       string
+	Mode       uint64
+	Size       uint64
+	Count      uint64
+	CreateTime uint64 // linux does not support it.
+	ModifyTime uint64
+	ChangeTime uint64 // windows does not support it.
+	AccessTime uint64
 }
 
-func NewDirItem(fileOrDir FileOrDir, name string, mode uint64, createTime uint64, modifyTime uint64, changeTime uint64, accessTime uint64, oldItemHash string) DirItem {
-	return DirItem{fileOrDir.Hash(), name, mode, fileOrDir.Size(), fileOrDir.Count(), createTime, modifyTime, changeTime, accessTime, oldItemHash}
+func NewDirItem(fileOrDir FileOrDir, name string, mode uint64, createTime uint64, modifyTime uint64, changeTime uint64, accessTime uint64) DirItem {
+	return DirItem{fileOrDir.Hash(), name, mode, fileOrDir.Size(), fileOrDir.Count(), createTime, modifyTime, changeTime, accessTime}
 }
 
 func writeMutil(w io.Writer, order binary.ByteOrder, data []any) {
@@ -114,9 +113,8 @@ func (db *SqliteNonCgoDB) WriteDir(ctx context.Context, dirItems []DirItem) (dir
 		itemCreateTime,
 		itemModifyTime,
 		itemChangeTime,
-		itemAccessTime,
-		oldItemHash
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+		itemAccessTime
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 	`)
 	if err != nil {
 		return
@@ -138,12 +136,8 @@ func (db *SqliteNonCgoDB) WriteDir(ctx context.Context, dirItems []DirItem) (dir
 			dirItem.CreateTime,
 			dirItem.ModifyTime,
 			dirItem.ChangeTime,
-			dirItem.AccessTime,
-			dirItem.OldItemHash)
+			dirItem.AccessTime)
 		if err != nil {
-			if isUniqueConstraintError(err) {
-				err = nil
-			}
 			return
 		}
 	}

@@ -6,7 +6,6 @@ import (
 	"os"
 
 	backup "github.com/lazyxu/kfs/backup/local"
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 )
 
 func main() {
@@ -17,23 +16,12 @@ func main() {
 }
 
 func test() error {
-	dbFileName := "kfs.db"
-	os.Remove(dbFileName)
-	db, err := sqlite.Open(dbFileName)
-	if err != nil {
-		return err
-	}
-
-	err = db.Reset()
-	if err != nil {
-		return err
-	}
-
-	b, err := backup.New(dbFileName)
+	//os.RemoveAll("tmp")
+	b, err := backup.New("tmp")
 	if err != nil {
 		return err
 	}
 	defer b.Close()
 	ctx := context.Background()
-	return b.Upload(ctx, "../..")
+	return b.Upload(ctx, "../..", "default")
 }
