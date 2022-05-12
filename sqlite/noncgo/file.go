@@ -43,7 +43,7 @@ func NewFileByName(filename string) (File, error) {
 	return NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(info.Size()), ext), nil
 }
 
-func (db *SqliteNonCgoDB) WriteFile(ctx context.Context, file File) error {
+func (db *DB) WriteFile(ctx context.Context, file File) error {
 	// TODO: update ext if duplicated
 	_, err := db._db.ExecContext(ctx, `
 	INSERT INTO file VALUES (?, ?, ?);

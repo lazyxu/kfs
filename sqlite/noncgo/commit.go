@@ -17,10 +17,14 @@ func NewCommit(dir Dir, branchName string) Commit {
 	return Commit{0, uint64(time.Now().UnixNano()), dir.hash, 0, branchName}
 }
 
-func (db *SqliteNonCgoDB) WriteCommit(ctx context.Context, commit *Commit) error {
-	res, err := db._db.ExecContext(ctx, `
+func (db *DB) WriteCommit(ctx context.Context, commit *Commit) error {
+	return db.writeCommit(ctx, db._db, commit)
+}
+
+func (db *DB) writeCommit(ctx context.Context, txOrDb TxOrDb, commit *Commit) error {
+	res, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO [commit] (createTime, hash, lastId)
-	SELECT ?, ?, commitId FROM branch WHERE branch.name=?;
+	VALUES (?, ?, ifnull((SELECT commitId FROM branch WHERE branch.name=?), 0));;
 	`, commit.createTime, commit.hash, commit.branchName)
 	if err != nil {
 		return err

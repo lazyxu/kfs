@@ -11,40 +11,40 @@ import (
 	storage "github.com/lazyxu/kfs/storage/local"
 )
 
-type Backup struct {
-	db *sqlite.SqliteNonCgoDB
+type KFS struct {
+	db *sqlite.DB
 	s  *storage.Storage
 }
 
-func New(root string) (*Backup, error) {
+func New(root string) (*KFS, bool, error) {
 	s, err := storage.New(root)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	exist := true
 	dbFileName := path.Join(root, "kfs.db")
 	_, err = os.Stat(dbFileName)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			return nil, err
+			return nil, false, err
 		}
 		exist = false
 	}
 	db, err := sqlite.Open(dbFileName)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	if !exist {
 		err = db.Reset()
 		if err != nil {
-			return nil, err
+			return nil, exist, err
 		}
 	}
-	return &Backup{db: db, s: s}, nil
+	return &KFS{db: db, s: s}, exist, nil
 }
 
-func (b *Backup) Upload(ctx context.Context, root string, branchName string) error {
-	backupCtx := storage.NewBackupCtx[sqlite.FileOrDir](ctx, root, &uploadVisitor{b: b})
+func (fs *KFS) Backup(ctx context.Context, root string, branchName string) error {
+	backupCtx := storage.NewBackupCtx[sqlite.FileOrDir](ctx, root, &uploadVisitor{fs: fs})
 	ret, err := backupCtx.Scan()
 	if err != nil {
 		return err
@@ -53,21 +53,31 @@ func (b *Backup) Upload(ctx context.Context, root string, branchName string) err
 		status := backupCtx.GetStatus()
 		fmt.Printf("%+v\n", status)
 		commit := sqlite.NewCommit(dir, branchName)
-		err = b.db.WriteCommit(ctx, &commit)
+		err = fs.db.WriteCommit(ctx, &commit)
 		if err != nil {
 			return err
 		}
+		fmt.Printf("%+v\n", commit)
 		branch := sqlite.NewBranch(branchName, fmt.Sprintf("%+v\n", status), commit, dir)
-		err = b.db.WriteBranch(ctx, branch)
+		err = fs.db.WriteBranch(ctx, branch)
 		if err != nil {
 			return err
 		}
+		fmt.Printf("%+v\n", branch)
 	} else {
 		return errors.New("expected a directory ")
 	}
 	return nil
 }
 
-func (b *Backup) Close() error {
-	return b.db.Close()
+func (fs *KFS) Ls(ctx context.Context, branchName string, splitPath ...string) ([]sqlite.DirItem, error) {
+	return fs.db.Ls(ctx, branchName, splitPath)
+}
+
+func (fs *KFS) Delete(ctx context.Context, branchName string, splitPath ...string) (err error) {
+	return fs.db.Delete(ctx, branchName, splitPath)
+}
+
+func (fs *KFS) Close() error {
+	return fs.db.Close()
 }

@@ -6,7 +6,9 @@ import (
 	"database/sql"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"io"
+	"strings"
 )
 
 type Dir struct {
@@ -72,8 +74,7 @@ func (dir *Dir) Cal(dirItems []DirItem) {
 	dir.hash = hex.EncodeToString(hash.Sum(nil))
 }
 
-func (db *SqliteNonCgoDB) WriteDir(ctx context.Context, dirItems []DirItem) (dir Dir, err error) {
-	dir.Cal(dirItems)
+func (db *DB) WriteDir(ctx context.Context, dirItems []DirItem) (dir Dir, err error) {
 	tx, err := db._db.Begin()
 	if err != nil {
 		return
@@ -92,6 +93,16 @@ func (db *SqliteNonCgoDB) WriteDir(ctx context.Context, dirItems []DirItem) (dir
 			err = tx.Commit()
 		}
 	}()
+	return db.writeDir(ctx, tx, dirItems)
+}
+
+type TxOrDb interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
+}
+
+func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir Dir, err error) {
+	dir.Cal(dirItems)
 	// TODO: error if size or count is not equal
 	_, err = tx.ExecContext(ctx, `
 	INSERT INTO dir VALUES (?, ?, ?);
@@ -141,5 +152,204 @@ func (db *SqliteNonCgoDB) WriteDir(ctx context.Context, dirItems []DirItem) (dir
 			return
 		}
 	}
+	return
+}
+
+func (db *DB) Ls(ctx context.Context, branchName string, splitPath []string) (dirItems []DirItem, err error) {
+	tx, err := db._db.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if err != nil {
+			println(err.Error())
+			err = tx.Rollback()
+			if err != sql.ErrTxDone {
+				return
+			}
+		}
+	}()
+	defer func() {
+		if err == nil {
+			err = tx.Commit()
+		}
+	}()
+	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
+	if err != nil {
+		return
+	}
+	for i := range splitPath {
+		hash, err = db.getDirItemHash(ctx, tx, hash, splitPath, i)
+		if err != nil {
+			return
+		}
+	}
+	dirItems, err = db.getDirItems(ctx, tx, hash)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (db *DB) getBranchCommitHash(ctx context.Context, tx *sql.Tx, branchName string) (hash string, err error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT [commit].hash FROM branch INNER JOIN [commit] WHERE branch.name=? and [commit].id=branch.commitId
+	`, branchName)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return "", errors.New("no such branch " + branchName)
+	}
+	err = rows.Scan(&hash)
+	return
+}
+
+func (db *DB) getDirItemHash(ctx context.Context, tx *sql.Tx, hash string, splitPath []string, i int) (itemHash string, err error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT itemHash FROM dirItem WHERE hash=? and itemName=?
+	`, hash, splitPath[i])
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return "", errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
+	}
+	err = rows.Scan(&itemHash)
+	return
+}
+
+func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItems []DirItem, err error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT
+			itemHash,
+			itemName,
+			itemMode,
+			itemSize,
+			itemCount,
+			itemCreateTime,
+			itemModifyTime,
+			itemChangeTime,
+			itemAccessTime
+		FROM dirItem WHERE hash=?
+	`, hash)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var dirItem DirItem
+		err = rows.Scan(
+			&dirItem.Hash,
+			&dirItem.Name,
+			&dirItem.Mode,
+			&dirItem.Size,
+			&dirItem.Count,
+			&dirItem.CreateTime,
+			&dirItem.ModifyTime,
+			&dirItem.ChangeTime,
+			&dirItem.AccessTime)
+		if err != nil {
+			return
+		}
+		dirItems = append(dirItems, dirItem)
+	}
+	return
+}
+
+func (db *DB) Delete(ctx context.Context, branchName string, splitPath []string) (err error) {
+	tx, err := db._db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			println(err.Error())
+			err = tx.Rollback()
+			if err != sql.ErrTxDone {
+				return
+			}
+		}
+	}()
+	defer func() {
+		if err == nil {
+			err = tx.Commit()
+		}
+	}()
+	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
+	if err != nil {
+		return
+	}
+	if len(splitPath) == 0 {
+		var dir Dir
+		dir, err = db.WriteDir(ctx, nil)
+		if err != nil {
+			return
+		}
+		commit := NewCommit(dir, branchName)
+		err = db.writeCommit(ctx, tx, &commit)
+		if err != nil {
+			return
+		}
+		branch := NewBranch(branchName, "", commit, dir)
+		err = db.writeBranch(ctx, tx, branch)
+		return err
+	}
+	dirItems, err := db.getDirItems(ctx, tx, hash)
+	if err != nil {
+		return
+	}
+	dirItemsList := [][]DirItem{dirItems}
+	for i := range splitPath[:len(splitPath)-1] {
+		hash, err = db.getDirItemHash(ctx, tx, hash, splitPath, i)
+		if err != nil {
+			return
+		}
+		dirItems, err = db.getDirItems(ctx, tx, hash)
+		if err != nil {
+			return
+		}
+		dirItemsList = append(dirItemsList, dirItems)
+	}
+	i := len(dirItemsList) - 1
+	find := false
+	for j, dirItem := range dirItemsList[i] {
+		if dirItem.Name == splitPath[i] {
+			dirItemsList[i][j] = dirItemsList[i][len(dirItemsList[i])-1]
+			dirItemsList[i] = dirItemsList[i][:len(dirItemsList[i])-1]
+			find = true
+			break
+		}
+	}
+	if !find {
+		return errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
+	}
+	dir, err := db.writeDir(ctx, tx, dirItemsList[i])
+	if err != nil {
+		return
+	}
+	for i--; i >= 0; i-- {
+		for j := range dirItemsList[i] {
+			if dirItemsList[i][j].Name == splitPath[i] {
+				dirItemsList[i][j].Hash = dir.hash
+				dirItemsList[i][j].Size = dir.size
+				dirItemsList[i][j].Count = dir.count
+				break
+			}
+		}
+		dir, err = db.writeDir(ctx, tx, dirItemsList[i])
+		if err != nil {
+			return
+		}
+	}
+	commit := NewCommit(dir, branchName)
+	err = db.writeCommit(ctx, tx, &commit)
+	if err != nil {
+		return
+	}
+	branch := NewBranch(branchName, "", commit, dir)
+	err = db.writeBranch(ctx, tx, branch)
 	return
 }

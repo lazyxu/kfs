@@ -6,16 +6,16 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-type SqliteNonCgoDB struct {
+type DB struct {
 	_db *sql.DB
 }
 
-func Open(dataSourceName string) (*SqliteNonCgoDB, error) {
+func Open(dataSourceName string) (*DB, error) {
 	db, err := sql.Open("sqlite", dataSourceName)
-	return &SqliteNonCgoDB{db}, err
+	return &DB{db}, err
 }
 
-func (db *SqliteNonCgoDB) Reset() error {
+func (db *DB) Reset() error {
 	_, err := db._db.Exec(`
 	DROP TABLE IF EXISTS file;
 	CREATE TABLE file (
@@ -66,6 +66,6 @@ func (db *SqliteNonCgoDB) Reset() error {
 	return err
 }
 
-func (db *SqliteNonCgoDB) Close() error {
+func (db *DB) Close() error {
 	return db._db.Close()
 }

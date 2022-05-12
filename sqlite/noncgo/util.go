@@ -25,7 +25,7 @@ func (i fileOrDir) Count() uint64 {
 	return 1
 }
 
-func (db *SqliteNonCgoDB) count(ctx context.Context, tableName string) (int, error) {
+func (db *DB) count(ctx context.Context, tableName string) (int, error) {
 	rows, err := db._db.QueryContext(ctx, "SELECT COUNT(1) FROM "+tableName+";")
 	if err != nil {
 		return 0, err
@@ -44,18 +44,18 @@ func (db *SqliteNonCgoDB) count(ctx context.Context, tableName string) (int, err
 	panic("internal error when get " + tableName + " count")
 }
 
-func (db *SqliteNonCgoDB) FileCount(ctx context.Context) (int, error) {
+func (db *DB) FileCount(ctx context.Context) (int, error) {
 	return db.count(ctx, "file")
 }
 
-func (db *SqliteNonCgoDB) DirCount(ctx context.Context) (int, error) {
+func (db *DB) DirCount(ctx context.Context) (int, error) {
 	return db.count(ctx, "dir")
 }
 
-func (db *SqliteNonCgoDB) DirItemCount(ctx context.Context) (int, error) {
+func (db *DB) DirItemCount(ctx context.Context) (int, error) {
 	return db.count(ctx, "dirItem")
 }
 
-func (db *SqliteNonCgoDB) BranchCount(ctx context.Context) (int, error) {
+func (db *DB) BranchCount(ctx context.Context) (int, error) {
 	return db.count(ctx, "branch")
 }

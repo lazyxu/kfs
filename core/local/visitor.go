@@ -13,7 +13,7 @@ import (
 
 type uploadVisitor struct {
 	storage.EmptyVisitor[sqlite.FileOrDir]
-	b *Backup
+	fs *KFS
 }
 
 func (v *uploadVisitor) HasExit() bool {
@@ -31,22 +31,25 @@ func (v *uploadVisitor) Exit(ctx context.Context, filename string, info os.FileI
 			return nil, err
 		}
 		defer f.Close()
-		_, err = v.b.s.Write(file.Hash(), f)
+		_, err = v.fs.s.Write(file.Hash(), f)
 		if err != nil {
 			return nil, err
 		}
-		err = v.b.db.WriteFile(ctx, file)
+		err = v.fs.db.WriteFile(ctx, file)
 		fmt.Printf("upload file %s %+v\n", filename, file)
 		return file, err
 	} else if info.IsDir() {
 		dirItems := make([]sqlite.DirItem, len(infos))
 		for i, info := range infos {
+			if rets[i] == nil {
+				continue
+			}
 			name := info.Name()
 			now := uint64(time.Now().UnixNano())
 			modifyTime := uint64(info.ModTime().UnixNano())
 			dirItems[i] = sqlite.NewDirItem(rets[i], name, uint64(info.Mode()), now, modifyTime, now, now)
 		}
-		dir, err := v.b.db.WriteDir(ctx, dirItems)
+		dir, err := v.fs.db.WriteDir(ctx, dirItems)
 		if err != nil {
 			return nil, err
 		}

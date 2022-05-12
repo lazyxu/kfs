@@ -3,6 +3,6 @@ go 1.18
 use (
   ./sqlite/noncgo
   ./storage/local
-  ./backup/local
+  ./core/local
   ./cmd/test
 )
