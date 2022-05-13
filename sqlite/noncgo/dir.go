@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -199,6 +200,45 @@ func (db *DB) List(ctx context.Context, branchName string, splitPath []string) (
 	return
 }
 
+func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []string) (hash string, err error) {
+	tx, err := db._db.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if err != nil {
+			println(err.Error())
+			err = tx.Rollback()
+			if err != sql.ErrTxDone {
+				return
+			}
+		}
+	}()
+	defer func() {
+		if err == nil {
+			err = tx.Commit()
+		}
+	}()
+	hash, err = db.getBranchCommitHash(ctx, tx, branchName)
+	if err != nil {
+		return
+	}
+	for i := range splitPath[:len(splitPath)-1] {
+		hash, err = db.getDirItemHash(ctx, tx, hash, splitPath, i)
+		if err != nil {
+			return
+		}
+	}
+	hash, mode, err := db.getDirItemHashMode(ctx, tx, hash, splitPath, len(splitPath)-1)
+	if err != nil {
+		return
+	}
+	if os.FileMode(mode).IsDir() {
+		return "", errors.New("/" + strings.Join(splitPath, "/") + ": Is a directory")
+	}
+	return
+}
+
 func (db *DB) getBranchCommitHash(ctx context.Context, tx *sql.Tx, branchName string) (hash string, err error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT [commit].hash FROM branch INNER JOIN [commit] WHERE branch.name=? and [commit].id=branch.commitId
@@ -226,6 +266,21 @@ func (db *DB) getDirItemHash(ctx context.Context, tx *sql.Tx, hash string, split
 		return "", errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
 	}
 	err = rows.Scan(&itemHash)
+	return
+}
+
+func (db *DB) getDirItemHashMode(ctx context.Context, tx *sql.Tx, hash string, splitPath []string, i int) (itemHash string, itemMode uint64, err error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT itemHash, itemMode  FROM dirItem WHERE hash=? and itemName=?
+	`, hash, splitPath[i])
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return "", 0, errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
+	}
+	err = rows.Scan(&itemHash, &itemMode)
 	return
 }
 

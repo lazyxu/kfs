@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -41,17 +40,16 @@ func runList(cmd *cobra.Command, args []string) {
 	}
 	defer kfsCore.Close()
 	ctx := context.Background()
-	splitPath := strings.Split(p, "/")
-	if splitPath[0] == "" {
-		splitPath = splitPath[1:]
-	}
-	dirItems, err := kfsCore.List(ctx, branchName, splitPath...)
+	dirItems, err := kfsCore.List(ctx, branchName, formatPath(p)...)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("kfsRoot=%s\n", kfsRoot)
 	fmt.Printf("branch=%s\n", branchName)
-	fmt.Printf("mode      \tcount\ttotalCount\thash\tsize\tmodifyTime         \tname\n")
+	fmt.Printf("total %d\n", len(dirItems))
+	if len(dirItems) != 0 {
+		fmt.Printf("mode      \tcount\ttotalCount\thash\tsize\tmodifyTime         \tname\n")
+	}
 	for _, dirItem := range dirItems {
 		modifyTime := time.Unix(0, int64(dirItem.ModifyTime)).Format("2006-01-02 15:04:05")
 		fmt.Printf("%s\t%5d\t%10d\t%s\t%s\t%s\t%s\n",

@@ -17,10 +17,6 @@ func main() {
 
 func test() error {
 	//os.RemoveAll("tmp")
-	// new
-	// delete
-	// move
-	// cp
 	kfsCore, exist, err := core.New("tmp")
 	if err != nil {
 		return err

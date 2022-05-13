@@ -90,3 +90,12 @@ func (s *Storage) Write(hash string, reader io.Reader) (bool, error) {
 	}
 	return false, nil
 }
+
+func (s *Storage) Read(hash string) (io.ReadCloser, error) {
+	p := path.Join(s.root, files, hash)
+	f, err := os.OpenFile(p, os.O_RDONLY, 0o200)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}

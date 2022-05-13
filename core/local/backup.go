@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 
@@ -71,8 +72,16 @@ func (fs *KFS) List(ctx context.Context, branchName string, splitPath ...string)
 	return fs.db.List(ctx, branchName, splitPath)
 }
 
-func (fs *KFS) Remove(ctx context.Context, branchName string, splitPath ...string) (err error) {
+func (fs *KFS) Remove(ctx context.Context, branchName string, splitPath ...string) error {
 	return fs.db.Remove(ctx, branchName, splitPath)
+}
+
+func (fs *KFS) Cat(ctx context.Context, branchName string, splitPath ...string) (io.ReadCloser, error) {
+	hash, err := fs.db.GetFileHash(ctx, branchName, splitPath)
+	if err != nil {
+		return nil, err
+	}
+	return fs.s.Read(hash)
 }
 
 func (fs *KFS) Close() error {
