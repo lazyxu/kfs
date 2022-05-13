@@ -13,15 +13,20 @@ import (
 
 type Dir struct {
 	fileOrDir
-	count uint64
+	count      uint64
+	totalCount uint64
 }
 
-func (i Dir) Count() uint64 {
-	return i.count
+func (dir Dir) Count() uint64 {
+	return dir.count
 }
 
-func NewDir(hash string, size uint64, count uint64) Dir {
-	return Dir{fileOrDir{hash, size}, count}
+func (dir Dir) TotalCount() uint64 {
+	return dir.totalCount
+}
+
+func NewDir(hash string, size uint64, count uint64, totalCount uint64) Dir {
+	return Dir{fileOrDir{hash, size}, count, totalCount}
 }
 
 // https://zhuanlan.zhihu.com/p/343682839
@@ -31,6 +36,7 @@ type DirItem struct {
 	Mode       uint64
 	Size       uint64
 	Count      uint64
+	TotalCount uint64
 	CreateTime uint64 // linux does not support it.
 	ModifyTime uint64
 	ChangeTime uint64 // windows does not support it.
@@ -38,7 +44,7 @@ type DirItem struct {
 }
 
 func NewDirItem(fileOrDir FileOrDir, name string, mode uint64, createTime uint64, modifyTime uint64, changeTime uint64, accessTime uint64) DirItem {
-	return DirItem{fileOrDir.Hash(), name, mode, fileOrDir.Size(), fileOrDir.Count(), createTime, modifyTime, changeTime, accessTime}
+	return DirItem{fileOrDir.Hash(), name, mode, fileOrDir.Size(), fileOrDir.Count(), fileOrDir.TotalCount(), createTime, modifyTime, changeTime, accessTime}
 }
 
 func writeMutil(w io.Writer, order binary.ByteOrder, data []any) {
@@ -57,7 +63,7 @@ func (dir *Dir) Cal(dirItems []DirItem) {
 		panic(err)
 	}
 	dir.size = 0
-	dir.count = 0
+	dir.count = uint64(len(dirItems))
 	for _, dirItem := range dirItems {
 		writeMutil(hash, binary.LittleEndian, []any{
 			[]byte(dirItem.Hash),
@@ -69,7 +75,7 @@ func (dir *Dir) Cal(dirItems []DirItem) {
 			dirItem.AccessTime,
 		})
 		dir.size += dirItem.Size
-		dir.count += dirItem.Count
+		dir.totalCount += dirItem.TotalCount
 	}
 	dir.hash = hex.EncodeToString(hash.Sum(nil))
 }
@@ -105,8 +111,8 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir 
 	dir.Cal(dirItems)
 	// TODO: error if size or count is not equal
 	_, err = tx.ExecContext(ctx, `
-	INSERT INTO dir VALUES (?, ?, ?);
-	`, dir.hash, dir.size, dir.count)
+	INSERT INTO dir VALUES (?, ?, ?, ?);
+	`, dir.hash, dir.size, dir.count, dir.totalCount)
 	if err != nil {
 		if isUniqueConstraintError(err) {
 			err = nil
@@ -121,11 +127,12 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir 
 		itemMode,
 		itemSize,
 		itemCount,
+		itemTotalCount,
 		itemCreateTime,
 		itemModifyTime,
 		itemChangeTime,
 		itemAccessTime
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 	`)
 	if err != nil {
 		return
@@ -144,6 +151,7 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir 
 			dirItem.Mode,
 			dirItem.Size,
 			dirItem.Count,
+			dirItem.TotalCount,
 			dirItem.CreateTime,
 			dirItem.ModifyTime,
 			dirItem.ChangeTime,
@@ -155,7 +163,7 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir 
 	return
 }
 
-func (db *DB) Ls(ctx context.Context, branchName string, splitPath []string) (dirItems []DirItem, err error) {
+func (db *DB) List(ctx context.Context, branchName string, splitPath []string) (dirItems []DirItem, err error) {
 	tx, err := db._db.Begin()
 	if err != nil {
 		return
@@ -229,6 +237,7 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 			itemMode,
 			itemSize,
 			itemCount,
+			itemTotalCount,
 			itemCreateTime,
 			itemModifyTime,
 			itemChangeTime,
@@ -247,6 +256,7 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 			&dirItem.Mode,
 			&dirItem.Size,
 			&dirItem.Count,
+			&dirItem.TotalCount,
 			&dirItem.CreateTime,
 			&dirItem.ModifyTime,
 			&dirItem.ChangeTime,
@@ -259,7 +269,7 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 	return
 }
 
-func (db *DB) Delete(ctx context.Context, branchName string, splitPath []string) (err error) {
+func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string) (err error) {
 	tx, err := db._db.Begin()
 	if err != nil {
 		return err

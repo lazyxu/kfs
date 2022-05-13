@@ -51,31 +51,28 @@ func (fs *KFS) Backup(ctx context.Context, root string, branchName string) error
 	}
 	if dir, ok := ret.(sqlite.Dir); ok {
 		status := backupCtx.GetStatus()
-		fmt.Printf("%+v\n", status)
 		commit := sqlite.NewCommit(dir, branchName)
 		err = fs.db.WriteCommit(ctx, &commit)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%+v\n", commit)
 		branch := sqlite.NewBranch(branchName, fmt.Sprintf("%+v\n", status), commit, dir)
 		err = fs.db.WriteBranch(ctx, branch)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%+v\n", branch)
 	} else {
 		return errors.New("expected a directory ")
 	}
 	return nil
 }
 
-func (fs *KFS) Ls(ctx context.Context, branchName string, splitPath ...string) ([]sqlite.DirItem, error) {
-	return fs.db.Ls(ctx, branchName, splitPath)
+func (fs *KFS) List(ctx context.Context, branchName string, splitPath ...string) ([]sqlite.DirItem, error) {
+	return fs.db.List(ctx, branchName, splitPath)
 }
 
-func (fs *KFS) Delete(ctx context.Context, branchName string, splitPath ...string) (err error) {
-	return fs.db.Delete(ctx, branchName, splitPath)
+func (fs *KFS) Remove(ctx context.Context, branchName string, splitPath ...string) (err error) {
+	return fs.db.Remove(ctx, branchName, splitPath)
 }
 
 func (fs *KFS) Close() error {

@@ -21,32 +21,32 @@ func test() error {
 	// delete
 	// move
 	// cp
-	kfs, exist, err := core.New("tmp")
+	kfsCore, exist, err := core.New("tmp")
 	if err != nil {
 		return err
 	}
-	defer kfs.Close()
+	defer kfsCore.Close()
 	ctx := context.Background()
 	branchName := "default"
 	if !exist {
-		err = kfs.Backup(ctx, "../..", branchName)
+		err = kfsCore.Backup(ctx, "../..", branchName)
 		if err != nil {
 			return err
 		}
 	}
-	dirItems, err := kfs.Ls(ctx, branchName, ".git")
+	dirItems, err := kfsCore.List(ctx, branchName, ".git")
 	if err != nil {
 		return err
 	}
 	for _, dirItem := range dirItems {
 		fmt.Printf("%+v\n", dirItem.Name)
 	}
-	err = kfs.Delete(ctx, branchName, ".git", "refs")
+	err = kfsCore.Remove(ctx, branchName, ".git", "refs")
 	if err != nil {
 		return err
 	}
 	println("------delete /.git/refs")
-	dirItems, err = kfs.Ls(ctx, branchName, ".git")
+	dirItems, err = kfsCore.List(ctx, branchName, ".git")
 	if err != nil {
 		return err
 	}

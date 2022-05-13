@@ -6,6 +6,7 @@ type FileOrDir interface {
 	Hash() string
 	Size() uint64
 	Count() uint64
+	TotalCount() uint64
 }
 
 type fileOrDir struct {
@@ -22,6 +23,10 @@ func (i fileOrDir) Size() uint64 {
 }
 
 func (i fileOrDir) Count() uint64 {
+	return 1
+}
+
+func (i fileOrDir) TotalCount() uint64 {
 	return 1
 }
 

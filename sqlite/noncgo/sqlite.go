@@ -26,9 +26,10 @@ func (db *DB) Reset() error {
 
 	DROP TABLE IF EXISTS dir;
 	CREATE TABLE dir (
-		hash      CHAR(64) NOT NULL PRIMARY KEY,
-		size      INTEGER  NOT NULL,
-		count INTEGER  NOT NULL
+		hash       CHAR(64) NOT NULL PRIMARY KEY,
+		size       INTEGER  NOT NULL,
+		count      INTEGER  NOT NULL,
+		totalCount INTEGER  NOT NULL
 	);
 
 	DROP TABLE IF EXISTS dirItem;
@@ -39,6 +40,7 @@ func (db *DB) Reset() error {
 		itemMode       INTEGER   NOT NULL,
 		itemSize       INTEGER   NOT NULL,
 		itemCount      INTEGER   NOT NULL,
+		itemTotalCount INTEGER   NOT NULL,
 		itemCreateTime TIMESTAMP NOT NULL,
 		itemModifyTime TIMESTAMP NOT NULL,
 		itemChangeTime TIMESTAMP NOT NULL,

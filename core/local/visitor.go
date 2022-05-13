@@ -2,7 +2,6 @@ package local
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -36,7 +35,6 @@ func (v *uploadVisitor) Exit(ctx context.Context, filename string, info os.FileI
 			return nil, err
 		}
 		err = v.fs.db.WriteFile(ctx, file)
-		fmt.Printf("upload file %s %+v\n", filename, file)
 		return file, err
 	} else if info.IsDir() {
 		dirItems := make([]sqlite.DirItem, len(infos))
@@ -53,7 +51,6 @@ func (v *uploadVisitor) Exit(ctx context.Context, filename string, info os.FileI
 		if err != nil {
 			return nil, err
 		}
-		fmt.Printf("upload dir %s %+v\n", filename, dir)
 		return dir, nil
 	}
 	return nil, nil
