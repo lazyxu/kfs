@@ -6,4 +6,6 @@ use (
   ./core/local
   ./cmd/test
   ./cmd/kfs-cli
+  ./cmd/kfs-server
+  ./pb
 )

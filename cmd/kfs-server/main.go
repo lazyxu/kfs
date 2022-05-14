@@ -6,16 +6,8 @@ import (
 	"path"
 
 	"github.com/mitchellh/go-homedir"
-	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-const remoteAddrStr = "remoteAddr"
-
-var rootCmd = &cobra.Command{
-	Use:   "kfs",
-	Short: "Kfs is file system used to backup files.",
-}
 
 func main() {
 	err := rootCmd.Execute()
@@ -31,11 +23,11 @@ func init() {
 		panic(err)
 	}
 	viper.AddConfigPath(home)
-	viper.SetConfigName(".kfs")
+	viper.SetConfigName(".kfs-server")
 	viper.SetConfigType("json")
 	viper.AutomaticEnv()
 
-	configFile := path.Join(home, ".kfs.json")
+	configFile := path.Join(home, ".kfs-server.json")
 	_, err = os.Stat(configFile)
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -55,9 +47,4 @@ func init() {
 	if err != nil {
 		fmt.Errorf("Can not read config: %s\n", viper.ConfigFileUsed())
 	}
-	rootCmd.AddCommand(initCmd)
-	rootCmd.AddCommand(remoteCmd)
-	rootCmd.AddCommand(backupCmd)
-	rootCmd.AddCommand(listCmd)
-	rootCmd.AddCommand(catCmd)
 }

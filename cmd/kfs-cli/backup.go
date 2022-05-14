@@ -31,5 +31,4 @@ func runBackup(cmd *cobra.Command, args []string) {
 	if err != nil {
 		panic(err)
 	}
-	runList(cmd, []string{})
 }

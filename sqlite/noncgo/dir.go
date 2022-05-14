@@ -170,17 +170,15 @@ func (db *DB) List(ctx context.Context, branchName string, splitPath []string) (
 		return
 	}
 	defer func() {
-		if err != nil {
-			println(err.Error())
-			err = tx.Rollback()
-			if err != sql.ErrTxDone {
-				return
-			}
-		}
-	}()
-	defer func() {
 		if err == nil {
 			err = tx.Commit()
+			if err != nil {
+				err1 := tx.Rollback()
+				if err1 != nil {
+					panic(err1) // should not happen
+				}
+				return
+			}
 		}
 	}()
 	hash, err := db.getBranchCommitHash(ctx, tx, branchName)

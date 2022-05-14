@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"strings"
 
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 	storage "github.com/lazyxu/kfs/storage/local"
@@ -68,8 +69,16 @@ func (fs *KFS) Backup(ctx context.Context, root string, branchName string) error
 	return nil
 }
 
-func (fs *KFS) List(ctx context.Context, branchName string, splitPath ...string) ([]sqlite.DirItem, error) {
-	return fs.db.List(ctx, branchName, splitPath)
+func formatPath(p string) []string {
+	splitPath := strings.Split(p, "/")
+	if splitPath[0] == "" {
+		splitPath = splitPath[1:]
+	}
+	return splitPath
+}
+
+func (fs *KFS) List(ctx context.Context, branchName string, p string) ([]sqlite.DirItem, error) {
+	return fs.db.List(ctx, branchName, formatPath(p))
 }
 
 func (fs *KFS) Remove(ctx context.Context, branchName string, splitPath ...string) error {
