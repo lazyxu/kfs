@@ -5,5 +5,5 @@ use (
   ./storage/local
   ./core/local
   ./cmd/test
-  ./cmd/cli
+  ./cmd/kfs-cli
 )

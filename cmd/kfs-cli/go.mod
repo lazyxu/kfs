@@ -1,4 +1,4 @@
-module github.com/lazyxu/kfs/cmd/cli
+module github.com/lazyxu/kfs/cmd/kfs-cli
 
 go 1.18
 

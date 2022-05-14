@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -23,7 +22,8 @@ func runCat(cmd *cobra.Command, args []string) {
 	kfsRoot := viper.GetString(kfsRootStr)
 	branchName := viper.GetString(branchNameStr)
 	if len(args) == 0 {
-		panic(errors.New("expected file path"))
+		fmt.Fprintln(os.Stderr, "expected file path")
+		return
 	}
 	p := args[0]
 	kfsCore, _, err := core.New(kfsRoot)
