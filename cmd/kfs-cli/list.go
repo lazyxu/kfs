@@ -78,6 +78,7 @@ func runList(cmd *cobra.Command, args []string) {
 		isEOF := false
 		if err == io.EOF {
 			isEOF = true
+			err = nil
 		}
 		if isFirst {
 			var md metadata.MD

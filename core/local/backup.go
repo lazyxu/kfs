@@ -77,6 +77,14 @@ func formatPath(p string) []string {
 	return splitPath
 }
 
+func (fs *KFS) BranchNew(ctx context.Context, branchName string, description string) (bool, error) {
+	return fs.db.NewBranch(ctx, branchName, description)
+}
+
+func (fs *KFS) BranchInfo(ctx context.Context, branchName string) (branch sqlite.Branch, err error) {
+	return fs.db.BranchInfo(ctx, branchName)
+}
+
 func (fs *KFS) List(ctx context.Context, branchName string, p string) ([]sqlite.DirItem, error) {
 	return fs.db.List(ctx, branchName, formatPath(p))
 }

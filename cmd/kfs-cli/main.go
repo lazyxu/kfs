@@ -57,6 +57,7 @@ func init() {
 	}
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(remoteCmd)
+	rootCmd.AddCommand(branchCmd)
 	rootCmd.AddCommand(backupCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(catCmd)

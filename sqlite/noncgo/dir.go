@@ -87,17 +87,15 @@ func (db *DB) WriteDir(ctx context.Context, dirItems []DirItem) (dir Dir, err er
 		return
 	}
 	defer func() {
-		if err != nil {
-			println(err.Error())
-			err = tx.Rollback()
-			if err != sql.ErrTxDone {
-				return
-			}
-		}
-	}()
-	defer func() {
 		if err == nil {
 			err = tx.Commit()
+			if err != nil {
+				err1 := tx.Rollback()
+				if err1 != nil {
+					panic(err1) // should not happen
+				}
+				return
+			}
 		}
 	}()
 	return db.writeDir(ctx, tx, dirItems)
@@ -164,7 +162,7 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir 
 	return
 }
 
-func (db *DB) List(ctx context.Context, branchName string, splitPath []string) (dirItems []DirItem, err error) {
+func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []string) (hash string, err error) {
 	tx, err := db._db.Begin()
 	if err != nil {
 		return
@@ -179,42 +177,6 @@ func (db *DB) List(ctx context.Context, branchName string, splitPath []string) (
 				}
 				return
 			}
-		}
-	}()
-	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
-	if err != nil {
-		return
-	}
-	for i := range splitPath {
-		hash, err = db.getDirItemHash(ctx, tx, hash, splitPath, i)
-		if err != nil {
-			return
-		}
-	}
-	dirItems, err = db.getDirItems(ctx, tx, hash)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []string) (hash string, err error) {
-	tx, err := db._db.Begin()
-	if err != nil {
-		return
-	}
-	defer func() {
-		if err != nil {
-			println(err.Error())
-			err = tx.Rollback()
-			if err != sql.ErrTxDone {
-				return
-			}
-		}
-	}()
-	defer func() {
-		if err == nil {
-			err = tx.Commit()
 		}
 	}()
 	hash, err = db.getBranchCommitHash(ctx, tx, branchName)
@@ -328,17 +290,15 @@ func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string)
 		return err
 	}
 	defer func() {
-		if err != nil {
-			println(err.Error())
-			err = tx.Rollback()
-			if err != sql.ErrTxDone {
-				return
-			}
-		}
-	}()
-	defer func() {
 		if err == nil {
 			err = tx.Commit()
+			if err != nil {
+				err1 := tx.Rollback()
+				if err1 != nil {
+					panic(err1) // should not happen
+				}
+				return
+			}
 		}
 	}()
 	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
