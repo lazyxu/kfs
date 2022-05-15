@@ -11,17 +11,31 @@ service KoalaFS {
   }
   rpc list (PathReq) returns (stream FileInfo) {
   }
-  rpc upload (stream UploadReq) returns (UploadResp) { // path, hash
+  rpc upload (stream UploadReq) returns (UploadResp) {
   }
   rpc backup (stream BackupReq) returns (stream BackupResponse) {
   }
 }
 
 message UploadReq {
-  bytes bytes = 1;
+  UploadReqHeader header = 1;
+  bytes bytes = 2;
+}
+
+message UploadReqHeader {
+  string branchName = 1;
+  string path = 2;
+  string Hash = 3;
+  uint64 Mode = 4;
+  uint64 Size = 5;
+  uint64 CreateTime = 7;
+  uint64 ModifyTime = 8;
+  uint64 ChangeTime = 9;
+  uint64 AccessTime = 10;
 }
 
 message UploadResp {
+  bool exist = 1;
 }
 
 message BranchInfoReq {

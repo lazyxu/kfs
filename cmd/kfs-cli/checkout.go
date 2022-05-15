@@ -10,5 +10,5 @@ var checkoutCmd = &cobra.Command{
 }
 
 func init() {
-	branchCheckoutCmd.PersistentFlags().String(descriptionStr, "", "branch description")
+	checkoutCmd.PersistentFlags().String(descriptionStr, "", "branch description")
 }

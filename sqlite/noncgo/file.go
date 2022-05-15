@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 )
 
@@ -44,8 +45,12 @@ func NewFileByName(filename string) (File, error) {
 }
 
 func (db *DB) WriteFile(ctx context.Context, file File) error {
+	return db.writeFile(ctx, db._db, file)
+}
+
+func (db *DB) writeFile(ctx context.Context, txOrDb TxOrDb, file File) error {
 	// TODO: update ext if duplicated
-	_, err := db._db.ExecContext(ctx, `
+	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO file VALUES (?, ?, ?);
 	`, file.hash, file.size, file.Ext)
 	if err != nil {
@@ -55,4 +60,47 @@ func (db *DB) WriteFile(ctx context.Context, file File) error {
 		return err
 	}
 	return err
+}
+
+func (db *DB) UploadFile(ctx context.Context, branchName string, splitPath []string, hash string, size uint64,
+	mode uint64, createTime uint64, modifyTime uint64, changeTime uint64, accessTime uint64) (err error) {
+	tx, err := db._db.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if err == nil {
+			err = tx.Commit()
+			if err != nil {
+				err1 := tx.Rollback()
+				if err1 != nil {
+					panic(err1) // should not happen
+				}
+				return
+			}
+		}
+	}()
+	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]DirItem) error {
+		i := len(dirItemsList) - 1
+		find := false
+		name := splitPath[len(splitPath)-1]
+		ext := path.Ext(name)
+		file := NewFile(hash, size, ext)
+		err = db.writeFile(ctx, tx, file)
+		if err != nil {
+			return err
+		}
+		newItem := NewDirItem(file, name, mode, createTime, modifyTime, changeTime, accessTime)
+		for j, dirItem := range dirItemsList[i] {
+			if dirItem.Name == splitPath[i] {
+				dirItemsList[i][j] = newItem
+				find = true
+				break
+			}
+		}
+		if !find {
+			dirItemsList[i] = append(dirItemsList[i], newItem)
+		}
+		return nil
+	})
 }

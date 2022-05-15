@@ -58,6 +58,14 @@ func NewContent(str string) (string, []byte) {
 }
 
 func (s *Storage) Write(hash string, reader io.Reader) (bool, error) {
+	return s.WriteFn(hash, func(f io.Writer, hasher io.Writer) error {
+		rr := io.TeeReader(reader, hasher)
+		_, err := io.Copy(f, rr)
+		return err
+	})
+}
+
+func (s *Storage) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
 	lock := flock.New(path.Join(s.root, lockFileName))
 	lock.Lock()
 	defer lock.Unlock()
@@ -72,8 +80,7 @@ func (s *Storage) Write(hash string, reader io.Reader) (bool, error) {
 	}
 	defer f.Close()
 	hasher := sha256.New()
-	rr := io.TeeReader(reader, hasher)
-	_, err = io.Copy(f, rr)
+	err = fn(f, hasher)
 	if err != nil {
 		os.Remove(p)
 		return false, err

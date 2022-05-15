@@ -85,6 +85,16 @@ func (fs *KFS) BranchInfo(ctx context.Context, branchName string) (branch sqlite
 	return fs.db.BranchInfo(ctx, branchName)
 }
 
+func (fs *KFS) Upload(ctx context.Context, fn func(f io.Writer, hasher io.Writer) error, branchName string, p string, hash string,
+	size uint64, mode uint64, createTime uint64, modifyTime uint64, changeTime uint64, accessTime uint64) (bool, error) {
+	exist, err := fs.s.WriteFn(hash, fn)
+	if err != nil {
+		return exist, err
+	}
+	return exist, fs.db.UploadFile(ctx, branchName, formatPath(p), hash,
+		size, mode, createTime, modifyTime, changeTime, accessTime)
+}
+
 func (fs *KFS) List(ctx context.Context, branchName string, p string) ([]sqlite.DirItem, error) {
 	return fs.db.List(ctx, branchName, formatPath(p))
 }

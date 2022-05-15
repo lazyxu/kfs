@@ -301,24 +301,29 @@ func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string)
 			}
 		}
 	}()
+	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]DirItem) error {
+		i := len(dirItemsList) - 1
+		find := false
+		for j, dirItem := range dirItemsList[i] {
+			if dirItem.Name == splitPath[i] {
+				dirItemsList[i][j] = dirItemsList[i][len(dirItemsList[i])-1]
+				dirItemsList[i] = dirItemsList[i][:len(dirItemsList[i])-1]
+				find = true
+				break
+			}
+		}
+		if !find {
+			return errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
+		}
+		return nil
+	})
+}
+
+func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string,
+	fn func([][]DirItem) error) (err error) {
 	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
 		return
-	}
-	if len(splitPath) == 0 {
-		var dir Dir
-		dir, err = db.WriteDir(ctx, nil)
-		if err != nil {
-			return
-		}
-		commit := NewCommit(dir, branchName)
-		err = db.writeCommit(ctx, tx, &commit)
-		if err != nil {
-			return
-		}
-		branch := NewBranch(branchName, "", commit, dir)
-		err = db.writeBranch(ctx, tx, branch)
-		return err
 	}
 	dirItems, err := db.getDirItems(ctx, tx, hash)
 	if err != nil {
@@ -336,19 +341,11 @@ func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string)
 		}
 		dirItemsList = append(dirItemsList, dirItems)
 	}
+	err = fn(dirItemsList)
+	if err != nil {
+		return
+	}
 	i := len(dirItemsList) - 1
-	find := false
-	for j, dirItem := range dirItemsList[i] {
-		if dirItem.Name == splitPath[i] {
-			dirItemsList[i][j] = dirItemsList[i][len(dirItemsList[i])-1]
-			dirItemsList[i] = dirItemsList[i][:len(dirItemsList[i])-1]
-			find = true
-			break
-		}
-	}
-	if !find {
-		return errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
-	}
 	dir, err := db.writeDir(ctx, tx, dirItemsList[i])
 	if err != nil {
 		return

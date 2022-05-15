@@ -38,6 +38,10 @@ const (
 	pathStr       = "path"
 )
 
+func init() {
+	listCmd.PersistentFlags().Bool("h", false, "")
+}
+
 func runList(cmd *cobra.Command, args []string) {
 	var err error
 	defer func() {
@@ -48,6 +52,7 @@ func runList(cmd *cobra.Command, args []string) {
 	}()
 	remoteAddr := viper.GetString(remoteAddrStr)
 	branchName := viper.GetString(branchNameStr)
+	human := cmd.Flag("h").Value.String()
 	fmt.Printf("remoteAddr=%s\n", remoteAddr)
 	fmt.Printf("branch=%s\n", branchName)
 	p := ""
@@ -100,10 +105,17 @@ func runList(cmd *cobra.Command, args []string) {
 			return
 		}
 		modifyTime := time.Unix(0, int64(dirItem.ModifyTime)).Format("2006-01-02 15:04:05")
-		fmt.Printf("%s\t%s\t     %s\t%s\t%s\t%s\t%s\n",
-			os.FileMode(dirItem.Mode).String(),
-			formatCount(dirItem.Mode, dirItem.Count), formatCount(dirItem.Mode, dirItem.TotalCount), dirItem.Hash[:4],
-			humanize.Bytes(dirItem.Size), modifyTime, dirItem.Name)
+		if human == "true" {
+			fmt.Printf("%s\t%s\t     %s\t%s\t%s\t%s\t%s\n",
+				os.FileMode(dirItem.Mode).String(),
+				formatCount(dirItem.Mode, dirItem.Count), formatCount(dirItem.Mode, dirItem.TotalCount), dirItem.Hash[:4],
+				humanize.Bytes(dirItem.Size), modifyTime, dirItem.Name)
+		} else {
+			fmt.Printf("%s\t%s\t     %s\t%s\t%d\t%s\t%s\n",
+				os.FileMode(dirItem.Mode).String(),
+				formatCount(dirItem.Mode, dirItem.Count), formatCount(dirItem.Mode, dirItem.TotalCount), dirItem.Hash[:4],
+				dirItem.Size, modifyTime, dirItem.Name)
+		}
 	}
 }
 
