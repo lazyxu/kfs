@@ -63,7 +63,7 @@ func (db *DB) writeFile(ctx context.Context, txOrDb TxOrDb, file File) error {
 }
 
 func (db *DB) UploadFile(ctx context.Context, branchName string, splitPath []string, hash string, size uint64,
-	mode uint64, createTime uint64, modifyTime uint64, changeTime uint64, accessTime uint64) (err error) {
+	mode uint64, createTime uint64, modifyTime uint64, changeTime uint64, accessTime uint64) (commit Commit, err error) {
 	tx, err := db._db.Begin()
 	if err != nil {
 		return

@@ -3,18 +3,20 @@ package noncgo
 import (
 	"context"
 	"errors"
+
+	"modernc.org/sqlite"
 )
 
 type Branch struct {
 	Name        string
 	Description string
-	CommitId    int64
+	CommitId    uint64
 	Size        uint64
 	Count       uint64
 }
 
 func NewBranch(name string, description string, commit Commit, dir Dir) Branch {
-	return Branch{name, description, commit.id, dir.size, dir.count}
+	return Branch{name, description, commit.Id, dir.size, dir.count}
 }
 
 func (db *DB) WriteBranch(ctx context.Context, branch Branch) error {
@@ -41,16 +43,22 @@ func (db *DB) NewBranch(ctx context.Context, branchName string, description stri
 		return
 	}
 	defer func() {
-		if err == nil {
-			err = tx.Commit()
-			if err != nil {
-				err1 := tx.Rollback()
-				if err1 != nil {
-					panic(err1) // should not happen
-				}
-				return
-			}
+		if err != nil {
+			return
 		}
+		err = tx.Commit()
+		if err == nil {
+			return
+		}
+		e, ok := err.(*sqlite.Error)
+		if ok && e.Code() == 5 {
+			return
+		}
+		err1 := tx.Rollback()
+		if err1 != nil {
+			panic(err1) // should not happen
+		}
+		return
 	}()
 	dir, err := db.writeDir(ctx, tx, nil)
 	if err != nil {

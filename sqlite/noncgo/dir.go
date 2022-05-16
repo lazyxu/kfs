@@ -284,10 +284,10 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 	return
 }
 
-func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string) (err error) {
+func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string) (commit Commit, err error) {
 	tx, err := db._db.Begin()
 	if err != nil {
-		return err
+		return
 	}
 	defer func() {
 		if err == nil {
@@ -319,8 +319,7 @@ func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string)
 	})
 }
 
-func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string,
-	fn func([][]DirItem) error) (err error) {
+func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func([][]DirItem) error) (commit Commit, err error) {
 	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
 		return
@@ -364,7 +363,7 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 			return
 		}
 	}
-	commit := NewCommit(dir, branchName)
+	commit = NewCommit(dir, branchName)
 	err = db.writeCommit(ctx, tx, &commit)
 	if err != nil {
 		return

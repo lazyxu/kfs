@@ -21,7 +21,7 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 	}
 	h := req.Header
 	fmt.Println("Upload", h)
-	exist, err := kfsCore.Upload(server.Context(), func(f io.Writer, hasher io.Writer) error {
+	exist, commit, err := kfsCore.Upload(server.Context(), func(f io.Writer, hasher io.Writer) error {
 		for {
 			req, err = server.Recv()
 			if req != nil {
@@ -47,6 +47,10 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 	if err != nil {
 		return
 	}
-	err = server.SendAndClose(&pb.UploadResp{Exist: exist})
+	err = server.SendAndClose(&pb.UploadResp{
+		Exist:    exist,
+		CommitId: commit.Id,
+		Hash:     commit.Hash,
+	})
 	return
 }

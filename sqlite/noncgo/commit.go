@@ -6,9 +6,9 @@ import (
 )
 
 type Commit struct {
-	id         int64
+	Id         uint64
 	createTime uint64
-	hash       string
+	Hash       string
 	lastId     uint64
 	branchName string
 }
@@ -22,10 +22,11 @@ func (db *DB) WriteCommit(ctx context.Context, commit *Commit) error {
 }
 
 func (db *DB) writeCommit(ctx context.Context, txOrDb TxOrDb, commit *Commit) error {
+	// TODO: if hash not changed.
 	res, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO [commit] (createTime, hash, lastId)
 	VALUES (?, ?, ifnull((SELECT commitId FROM branch WHERE branch.name=?), 0));;
-	`, commit.createTime, commit.hash, commit.branchName)
+	`, commit.createTime, commit.Hash, commit.branchName)
 	if err != nil {
 		return err
 	}
@@ -33,6 +34,6 @@ func (db *DB) writeCommit(ctx context.Context, txOrDb TxOrDb, commit *Commit) er
 	if err != nil {
 		return err
 	}
-	commit.id = id
+	commit.Id = uint64(id)
 	return err
 }

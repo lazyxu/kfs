@@ -36,6 +36,8 @@ message UploadReqHeader {
 
 message UploadResp {
   bool exist = 1;
+  uint64 commitId = 2;
+  string hash = 3;
 }
 
 message BranchInfoReq {
@@ -45,7 +47,7 @@ message BranchInfoReq {
 message BranchInfoResp {
   string name = 1;
   string description = 2;
-  int64 commitId = 3;
+  uint64 commitId = 3;
   uint64 size = 4;
   uint64 count = 5;
 }

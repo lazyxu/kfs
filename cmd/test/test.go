@@ -37,7 +37,7 @@ func test() error {
 	for _, dirItem := range dirItems {
 		fmt.Printf("%+v\n", dirItem.Name)
 	}
-	err = kfsCore.Remove(ctx, branchName, ".git", "refs")
+	_, err = kfsCore.Remove(ctx, branchName, ".git", "refs")
 	if err != nil {
 		return err
 	}

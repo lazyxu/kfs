@@ -3,7 +3,6 @@ package local
 import (
 	"context"
 	"os"
-	"time"
 
 	storage "github.com/lazyxu/kfs/storage/local"
 
@@ -43,9 +42,8 @@ func (v *uploadVisitor) Exit(ctx context.Context, filename string, info os.FileI
 				continue
 			}
 			name := info.Name()
-			now := uint64(time.Now().UnixNano())
 			modifyTime := uint64(info.ModTime().UnixNano())
-			dirItems[i] = sqlite.NewDirItem(rets[i], name, uint64(info.Mode()), now, modifyTime, now, now)
+			dirItems[i] = sqlite.NewDirItem(rets[i], name, uint64(info.Mode()), modifyTime, modifyTime, modifyTime, modifyTime)
 		}
 		dir, err := v.fs.db.WriteDir(ctx, dirItems)
 		if err != nil {

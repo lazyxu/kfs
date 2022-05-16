@@ -1,13 +1,18 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
+	"path"
+	"strconv"
 	"time"
+
+	"github.com/schollz/progressbar/v3"
 
 	"github.com/lazyxu/kfs/pb"
 	"github.com/spf13/cobra"
@@ -58,21 +63,41 @@ func runUpload(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
-	hash, err := getFileHash(filename)
+	bar := progressbar.NewOptions(int(info.Size()),
+		progressbar.OptionSetPredictTime(true),
+		progressbar.OptionSetRenderBlankState(true),
+		progressbar.OptionSetWriter(os.Stderr),
+		progressbar.OptionShowBytes(true),
+		progressbar.OptionShowCount(),
+		progressbar.OptionEnableColorCodes(true),
+		progressbar.OptionFullWidth(),
+		progressbar.OptionThrottle(20*time.Millisecond),
+		progressbar.OptionOnCompletion(func() {
+			fmt.Println()
+		}),
+		progressbar.OptionSetDescription("[1/2][hash] "+formatFilename(filename)),
+		progressbar.OptionSetTheme(progressbar.Theme{
+			Saucer:        "[green]#[reset]",
+			SaucerPadding: "-",
+			BarStart:      "[",
+			BarEnd:        "]",
+		}),
+	)
+	hash, err := getFileHash(bar, filename)
 	if err != nil {
 		return
 	}
-	now := uint64(time.Now().UnixNano())
+	modifyTime := uint64(info.ModTime().UnixNano())
 	err = client.Send(&pb.UploadReq{Header: &pb.UploadReqHeader{
 		BranchName: branchName,
 		Path:       p,
 		Hash:       hash,
 		Mode:       uint64(info.Mode()),
 		Size:       uint64(info.Size()),
-		CreateTime: now,
-		ModifyTime: uint64(info.ModTime().UnixNano()),
-		ChangeTime: now,
-		AccessTime: now,
+		CreateTime: modifyTime,
+		ModifyTime: modifyTime,
+		ChangeTime: modifyTime,
+		AccessTime: modifyTime,
 	}})
 	if err != nil {
 		return
@@ -82,17 +107,19 @@ func runUpload(cmd *cobra.Command, args []string) {
 		return
 	}
 	defer f.Close()
-	chunk := make([]byte, fileChunkSize)
+	bar.Reset()
+	bar.Describe("[2/2][" + hash[0:4] + "] " + formatFilename(filename))
+	chunk := make([]byte, 0, fileChunkSize)
 	for {
-		var n int
-		n, err = f.Read(chunk)
+		var n int64
+		w := io.MultiWriter(bytes.NewBuffer(chunk), bar)
+		n, err = io.Copy(w, io.LimitReader(f, fileChunkSize))
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			return
 		}
-		fmt.Printf("upload %d/%d\n", n, info.Size())
 		err = client.Send(&pb.UploadReq{Bytes: chunk[:n]})
 		if err == io.EOF {
 			break
@@ -104,23 +131,35 @@ func runUpload(cmd *cobra.Command, args []string) {
 			break
 		}
 	}
+	_ = bar.Close()
 	resp, err := client.CloseAndRecv()
 	if err == io.EOF {
 		err = nil
 	}
-	if resp.Exist {
-		fmt.Printf("the file already exists and does not need to be uploaded again\n")
+	if err != nil {
+		return
 	}
+	fmt.Println("branch updated with commit " + strconv.Itoa(int(resp.CommitId)) +
+		" and hash " + resp.Hash[:4])
 }
 
-func getFileHash(filename string) (string, error) {
+func formatFilename(filename string) string {
+	var name = []rune(path.Base(filename))
+	if len(name) > 10 {
+		name = append(name[:10], []rune("..")...)
+	}
+	return fmt.Sprintf("%-12s", string(name))
+}
+
+func getFileHash(bar io.Writer, filename string) (string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
 	hash := sha256.New()
-	_, err = io.Copy(hash, f)
+	w := io.MultiWriter(hash, bar)
+	_, err = io.Copy(w, f)
 	if err != nil {
 		return "", err
 	}

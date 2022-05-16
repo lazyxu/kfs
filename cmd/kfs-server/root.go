@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	core "github.com/lazyxu/kfs/core/local"
 
 	"github.com/lazyxu/kfs/pb"
 
@@ -53,6 +56,15 @@ var rootCmd = &cobra.Command{
 		}
 		if port != 0 && port < 1024 || port > 65535 {
 			err = errors.New("port should be between 1024 and 15535, actual " + portString)
+			return
+		}
+		kfsCore, _, err := core.New(kfsRoot)
+		if err != nil {
+			return
+		}
+		defer kfsCore.Close()
+		_, err = kfsCore.BranchNew(context.Background(), "master", "")
+		if err != nil {
 			return
 		}
 		viper.Set(kfsRootStr, kfsRoot)
