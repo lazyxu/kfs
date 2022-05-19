@@ -1,4 +1,4 @@
-package main
+package upload
 
 import (
 	"bytes"
@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/lazyxu/kfs/cmd/kfs-cli/utils"
+
 	"github.com/schollz/progressbar/v3"
 
 	"github.com/lazyxu/kfs/pb"
@@ -21,7 +23,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var uploadCmd = &cobra.Command{
+var Cmd = &cobra.Command{
 	Use:     "upload",
 	Example: "kfs-cli upload -b branchName -p path filePath",
 	Args:    cobra.RangeArgs(1, 1),
@@ -29,7 +31,7 @@ var uploadCmd = &cobra.Command{
 }
 
 func init() {
-	uploadCmd.PersistentFlags().StringP(pathStr, "p", "", "")
+	Cmd.PersistentFlags().StringP(utils.PathStr, "p", "", "")
 }
 
 const fileChunkSize = 1024 * 1024
@@ -42,9 +44,9 @@ func runUpload(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 	}()
-	remoteAddr := viper.GetString(remoteAddrStr)
-	branchName := viper.GetString(branchNameStr)
-	p := cmd.Flag(pathStr).Value.String()
+	remoteAddr := viper.GetString(utils.ServerAddrStr)
+	branchName := viper.GetString(utils.BranchNameStr)
+	p := cmd.Flag(utils.PathStr).Value.String()
 	filename := args[0]
 	fmt.Printf("remoteAddr=%s\n", remoteAddr)
 	fmt.Printf("branch=%s\n", branchName)

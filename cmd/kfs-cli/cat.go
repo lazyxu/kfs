@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/lazyxu/kfs/cmd/kfs-cli/utils"
+
 	core "github.com/lazyxu/kfs/core/local"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -19,8 +21,8 @@ var catCmd = &cobra.Command{
 }
 
 func runCat(cmd *cobra.Command, args []string) {
-	kfsRoot := viper.GetString(kfsRootStr)
-	branchName := viper.GetString(branchNameStr)
+	kfsRoot := viper.GetString(utils.ServerAddrStr)
+	branchName := viper.GetString(utils.BranchNameStr)
 	if len(args) == 0 {
 		fmt.Fprintln(os.Stderr, "expected file path")
 		return

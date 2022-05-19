@@ -1,9 +1,11 @@
-package main
+package branch
 
 import (
 	"context"
 	"fmt"
 	"os"
+
+	. "github.com/lazyxu/kfs/cmd/kfs-cli/utils"
 
 	"github.com/lazyxu/kfs/pb"
 	"github.com/spf13/cobra"
@@ -12,44 +14,44 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var branchCmd = &cobra.Command{
+var Cmd = &cobra.Command{
 	Use: "branch",
 }
 
-const (
-	descriptionStr = "description"
-)
-
 func init() {
-	branchCheckoutCmd.PersistentFlags().String(descriptionStr, "", "branch description")
-	branchCmd.AddCommand(branchCheckoutCmd)
-	branchCmd.AddCommand(branchInfoCmd)
+	branchCheckoutCmd.PersistentFlags().String(DescriptionStr, "", "branch description")
+	Cmd.AddCommand(branchCheckoutCmd)
+	Cmd.AddCommand(branchInfoCmd)
 }
 
 var branchCheckoutCmd = &cobra.Command{
 	Use:     "checkout",
 	Example: "kfs-cli branch checkout branchName",
 	Args:    cobra.RangeArgs(1, 1),
-	Run:     runCheckoutBranch,
+	Run:     RunCheckoutBranch,
 }
 
-func runCheckoutBranch(cmd *cobra.Command, args []string) {
+func RunCheckoutBranch(cmd *cobra.Command, args []string) {
 	var err error
-	defer func() {
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-	}()
-	remoteAddr := viper.GetString(remoteAddrStr)
-	oldBranchName := viper.GetString(branchNameStr)
-	description := cmd.Flag(descriptionStr).Value.String()
+	defer ExitWithError(err)
+	remoteAddr := viper.GetString(ServerAddrStr)
+	oldBranchName := viper.GetString(BranchNameStr)
+	description := cmd.Flag(DescriptionStr).Value.String()
 	branchName := args[0]
 	fmt.Printf("remoteAddr=%s\n", remoteAddr)
 	fmt.Printf("branch=%s\n", oldBranchName)
+	exist, err := Checkout(remoteAddr, branchName, description)
+	if exist {
+		return
+	}
+	viper.Set(BranchNameStr, branchName)
+	err = viper.WriteConfig()
+}
+
+func Checkout(remoteAddr string, branchName string, description string) (bool, error) {
 	conn, err := grpc.Dial(remoteAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return
+		return true, nil
 	}
 	defer conn.Close()
 	c := pb.NewKoalaFSClient(conn)
@@ -59,11 +61,10 @@ func runCheckoutBranch(cmd *cobra.Command, args []string) {
 		Description: description,
 	})
 	if err != nil {
-		return
+		return true, nil
 	}
 	fmt.Printf("switch to branch '%s'\n", branchName)
-	viper.Set(branchNameStr, branchName)
-	err = viper.WriteConfig()
+	return false, err
 }
 
 var branchInfoCmd = &cobra.Command{
@@ -81,12 +82,12 @@ func runBranchInfo(cmd *cobra.Command, args []string) {
 			os.Exit(1)
 		}
 	}()
-	remoteAddr := viper.GetString(remoteAddrStr)
+	remoteAddr := viper.GetString(ServerAddrStr)
 	var branchName string
 	if len(args) != 0 {
 		branchName = args[0]
 	} else {
-		branchName = viper.GetString(branchNameStr)
+		branchName = viper.GetString(BranchNameStr)
 	}
 	fmt.Printf("remoteAddr=%s\n", remoteAddr)
 	fmt.Printf("branch=%s\n", branchName)

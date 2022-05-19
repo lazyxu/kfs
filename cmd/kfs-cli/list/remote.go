@@ -1,4 +1,4 @@
-package main
+package list
 
 import (
 	"context"
@@ -9,59 +9,16 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/grpc/metadata"
-
-	"github.com/lazyxu/kfs/pb"
-
-	"google.golang.org/grpc/credentials/insecure"
-
-	"google.golang.org/grpc"
-
 	"github.com/dustin/go-humanize"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/lazyxu/kfs/pb"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-var listCmd = &cobra.Command{
-	Use:     "ls",
-	Short:   "ls list files",
-	Example: "kfs-cli ls .",
-	Args:    cobra.RangeArgs(0, 1),
-	Run:     runList,
-}
-
-const (
-	kfsRootStr    = "kfs-root"
-	backupPathStr = "backup-path"
-	branchNameStr = "branch-name"
-	pathStr       = "path"
-)
-
-func init() {
-	listCmd.PersistentFlags().Bool("h", false, "")
-}
-
-func runList(cmd *cobra.Command, args []string) {
-	var err error
-	defer func() {
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-	}()
-	remoteAddr := viper.GetString(remoteAddrStr)
-	branchName := viper.GetString(branchNameStr)
-	human := cmd.Flag("h").Value.String()
-	fmt.Printf("remoteAddr=%s\n", remoteAddr)
-	fmt.Printf("branch=%s\n", branchName)
-	p := ""
-	if len(args) != 0 {
-		p = args[0]
-	}
-	conn, err := grpc.Dial(remoteAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func remote(addr string, branchName string, p string, human string) error {
+	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return
+		return err
 	}
 	defer conn.Close()
 	c := pb.NewKoalaFSClient(conn)
@@ -71,14 +28,14 @@ func runList(cmd *cobra.Command, args []string) {
 		Path:       p,
 	})
 	if err != nil {
-		return
+		return err
 	}
 	isFirst := true
 	for {
 		dirItem := &pb.FileInfo{}
 		dirItem, err = client.Recv()
 		if err != nil && err != io.EOF {
-			return
+			return err
 		}
 		isEOF := false
 		if err == io.EOF {
@@ -86,23 +43,19 @@ func runList(cmd *cobra.Command, args []string) {
 			err = nil
 		}
 		if isFirst {
-			var md metadata.MD
-			md, err = client.Header()
+			md, err := client.Header()
 			if err != nil {
-				return
+				return err
 			}
 			length, err := strconv.Atoi(md.Get("length")[0])
 			if err != nil {
-				return
+				return err
 			}
-			fmt.Printf("total %d\n", length)
-			if length != 0 {
-				fmt.Printf("mode      \tcount\ttotalCount\thash\tsize\tmodifyTime         \tname\n")
-			}
+			printHeader(length)
 			isFirst = false
 		}
 		if isEOF {
-			return
+			return nil
 		}
 		modifyTime := time.Unix(0, int64(dirItem.ModifyTime)).Format("2006-01-02 15:04:05")
 		if human == "true" {
