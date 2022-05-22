@@ -25,7 +25,7 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 		for {
 			req, err = server.Recv()
 			if req != nil {
-				println("upload", len(req.Bytes))
+				println("upload", req.IsLast, len(req.Bytes))
 			}
 			if err != nil && err != io.EOF {
 				return err
@@ -42,8 +42,8 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 				return nil
 			}
 		}
-	}, h.BranchName, h.Path, h.Hash,
-		h.Size, h.Mode, h.CreateTime, h.ModifyTime, h.ChangeTime, h.AccessTime)
+	}, h.BranchName, h.Metadata.Path, h.Metadata.Hash,
+		h.Metadata.Size, h.Metadata.Mode, h.Metadata.CreateTime, h.Metadata.ModifyTime, h.Metadata.ChangeTime, h.Metadata.AccessTime)
 	if err != nil {
 		return
 	}

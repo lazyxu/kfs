@@ -13,25 +13,41 @@ service KoalaFS {
   }
   rpc upload (stream UploadReq) returns (UploadResp) {
   }
-  rpc backup (stream BackupReq) returns (stream BackupResponse) {
+  rpc download (DownloadReq) returns (stream DownloadResp) {
+  }
+  rpc backup (stream BackupReq) returns (stream BackupResp) {
   }
 }
 
+message DownloadReq {
+  string branchName = 1;
+  string path = 2;
+}
+
+message DownloadResp {
+  bytes bytes = 1;
+}
+
 message UploadReq {
-  UploadReqHeader header = 1;
-  bytes bytes = 2;
+  bool isLast = 1;
+  UploadReqHeader header = 2;
+  bytes bytes = 3;
 }
 
 message UploadReqHeader {
-  string branchName = 1;
-  string path = 2;
-  string Hash = 3;
-  uint64 Mode = 4;
-  uint64 Size = 5;
-  uint64 CreateTime = 7;
-  uint64 ModifyTime = 8;
-  uint64 ChangeTime = 9;
-  uint64 AccessTime = 10;
+  UploadReqMetadata metadata = 1;
+  string branchName = 2;
+}
+
+message UploadReqMetadata {
+  string path = 1;
+  string Hash = 2;
+  uint64 Mode = 3;
+  uint64 Size = 4;
+  uint64 CreateTime = 5;
+  uint64 ModifyTime = 6;
+  uint64 ChangeTime = 7;
+  uint64 AccessTime = 8;
 }
 
 message UploadResp {
@@ -60,13 +76,20 @@ message BranchResp {
   bool exist = 1;
 }
 
+message BackupReqHeader {
+  string branchName = 2;
+  string base = 3;
+}
+
 message BackupReq {
-  uint64 id = 1;
-  string path = 2;
-  bool isDir = 3;
-  bytes fileContent = 4;
-  repeated FileInfo infos = 5;
-  bool largeFile = 6;
+  // enter
+  BackupReqHeader header = 2;
+  UploadReqMetadata metadata = 3;
+  bytes bytes = 4;
+  // exit
+  bool isLast = 5;
+  // final
+  bool done = 1;
 }
 
 message FileOrDir {
@@ -77,12 +100,12 @@ message FileOrDir {
   uint64 totalCount = 5;
 }
 
-message BackupResponse {
+message BackupResp {
   bool done = 1;
   bool canceled = 2;
-  BackupErrResp err = 3;
-  string process = 4;
-  FileOrDir fileOrDir = 5;
+  UploadResp uploadResp = 3;
+  BackupErrResp err = 4;
+  string process = 5;
 }
 
 message BackupErrResp {

@@ -15,7 +15,7 @@ import (
 
 type KFS struct {
 	db *sqlite.DB
-	s  *storage.Storage
+	S  *storage.Storage
 }
 
 func New(root string) (*KFS, bool, error) {
@@ -42,11 +42,11 @@ func New(root string) (*KFS, bool, error) {
 			return nil, exist, err
 		}
 	}
-	return &KFS{db: db, s: s}, exist, nil
+	return &KFS{db: db, S: s}, exist, nil
 }
 
 func (fs *KFS) Backup(ctx context.Context, root string, branchName string) error {
-	backupCtx := storage.NewBackupCtx[sqlite.FileOrDir](ctx, root, &uploadVisitor{fs: fs})
+	backupCtx := storage.NewWalkerCtx[sqlite.FileOrDir](ctx, root, &uploadVisitor{fs: fs})
 	ret, err := backupCtx.Scan()
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (fs *KFS) Backup(ctx context.Context, root string, branchName string) error
 			return err
 		}
 	} else {
-		return errors.New("expected a directory ")
+		return errors.New("expected a directory")
 	}
 	return nil
 }
@@ -88,7 +88,7 @@ func (fs *KFS) BranchInfo(ctx context.Context, branchName string) (branch sqlite
 func (fs *KFS) Upload(ctx context.Context, fn func(f io.Writer, hasher io.Writer) error, branchName string, p string,
 	hash string, size uint64, mode uint64, createTime uint64,
 	modifyTime uint64, changeTime uint64, accessTime uint64) (exist bool, commit sqlite.Commit, err error) {
-	exist, err = fs.s.WriteFn(hash, fn)
+	exist, err = fs.S.WriteFn(hash, fn)
 	if err != nil {
 		return
 	}
@@ -110,7 +110,7 @@ func (fs *KFS) Cat(ctx context.Context, branchName string, p string) (io.ReadClo
 	if err != nil {
 		return nil, err
 	}
-	return fs.s.Read(hash)
+	return fs.S.Read(hash)
 }
 
 func (fs *KFS) Close() error {

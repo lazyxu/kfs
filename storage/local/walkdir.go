@@ -23,23 +23,23 @@ type BackupCtx[T any] struct {
 	mutex          sync.RWMutex
 	done           bool
 	canceled       bool
-	errs           []BackupErr
+	errs           []WalkerErr
 	scanProcess    []int
 	scanMaxProcess []int
 	curFilename    []int
 	visitors       []Visitor[T]
 }
 
-type BackupErr struct {
+type WalkerErr struct {
 	Err      error
 	FilePath string
 }
 
-func NewBackupCtx[T any](ctx context.Context, root string, visitors ...Visitor[T]) *BackupCtx[T] {
+func NewWalkerCtx[T any](ctx context.Context, root string, visitors ...Visitor[T]) *BackupCtx[T] {
 	return &BackupCtx[T]{
 		ctx:      ctx,
 		root:     root,
-		errs:     []BackupErr{},
+		errs:     []WalkerErr{},
 		visitors: visitors,
 	}
 }
@@ -142,7 +142,7 @@ func (c *BackupCtx[T]) walk(filename string) (ret T, err error) {
 			}
 			if err != nil {
 				c.mutex.Lock()
-				c.errs = append(c.errs, BackupErr{
+				c.errs = append(c.errs, WalkerErr{
 					Err:      err,
 					FilePath: filename,
 				})

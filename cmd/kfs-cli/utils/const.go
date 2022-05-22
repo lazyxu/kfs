@@ -12,6 +12,7 @@ const (
 	BackupPathStr  = "backup-path"
 	BranchNameStr  = "branch-name"
 	PathStr        = "path"
+	ChunkSizeStr   = "block-bytes"
 	DescriptionStr = "description"
 )
 

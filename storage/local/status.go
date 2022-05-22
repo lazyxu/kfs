@@ -8,7 +8,7 @@ import (
 type Status struct {
 	Done        bool
 	Canceled    bool
-	Errs        []BackupErr
+	Errs        []WalkerErr
 	ScanProcess string
 }
 

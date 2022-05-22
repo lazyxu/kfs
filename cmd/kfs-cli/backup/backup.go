@@ -1,29 +1,25 @@
-package upload
+package backup
 
 import (
 	"fmt"
 
 	. "github.com/lazyxu/kfs/cmd/kfs-cli/utils"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var Cmd = &cobra.Command{
-	Use:     "upload",
-	Example: "kfs-cli upload -p path filePath",
+	Use:     "backup",
+	Example: "kfs-cli backup . -p /test",
 	Args:    cobra.RangeArgs(1, 1),
-	Run:     runUpload,
+	Run:     runBackup,
 }
 
 func init() {
-	Cmd.PersistentFlags().StringP(PathStr, "p", "", "")
-	Cmd.PersistentFlags().StringP(ChunkSizeStr, "b", "1 MiB", "[1 KiB, 1 GiB]")
+	Cmd.PersistentFlags().String(PathStr, "p", "branch description")
 }
 
-const fileChunkSize = 1024 * 1024
-
-func runUpload(cmd *cobra.Command, args []string) {
+func runBackup(cmd *cobra.Command, args []string) {
 	var err error
 	defer func() {
 		ExitWithError(err)
@@ -35,17 +31,14 @@ func runUpload(cmd *cobra.Command, args []string) {
 	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
 	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
 
-	// TODO: SET chunk bytes.
-	//fileChunkSize := cmd.Flag(ChunkSizeStr)
-	//humanize.ParseBytes()
-	p := cmd.Flag(PathStr).Value.String()
-	filename := args[0]
+	backupPath := args[0]
+	dstPath := cmd.Flag(PathStr).Value.String()
 
 	switch serverType {
 	case ServerTypeLocal:
-		// TODO
+		err = local(cmd.Context(), serverAddr, branchName, dstPath, backupPath)
 	case ServerTypeRemote:
-		err = remote(cmd.Context(), serverAddr, filename, branchName, p)
+		err = remote(cmd.Context(), serverAddr, branchName, dstPath, backupPath)
 	default:
 		err = InvalidServerType
 	}

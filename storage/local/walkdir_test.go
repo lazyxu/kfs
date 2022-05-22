@@ -15,7 +15,7 @@ func TestBackup(t *testing.T) {
 		&FileSizeVisitor{MaxFileSize: 10},
 		&CountVisitor{},
 	}
-	backupCtx := NewBackupCtx(ctx, "../..", Visitors...)
+	backupCtx := NewWalkerCtx(ctx, "../..", Visitors...)
 	done := make(chan struct{})
 	tick := time.Tick(time.Second / 2)
 	go func() {

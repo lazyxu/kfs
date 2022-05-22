@@ -29,7 +29,7 @@ func (v *uploadVisitor) Exit(ctx context.Context, filename string, info os.FileI
 			return nil, err
 		}
 		defer f.Close()
-		_, err = v.fs.s.Write(file.Hash(), f)
+		_, err = v.fs.S.Write(file.Hash(), f)
 		if err != nil {
 			return nil, err
 		}
