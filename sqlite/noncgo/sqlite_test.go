@@ -80,14 +80,14 @@ func TestSqlite(t *testing.T) {
 	}
 
 	branchName := "default"
-	commit := NewCommit(root, branchName)
+	commit := NewCommit(root, branchName, "")
 	err = db.WriteCommit(ctx, &commit)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	err = db.WriteBranch(ctx, NewBranch(branchName, "no description", commit, root))
+	err = db.WriteBranch(ctx, NewBranch(branchName, commit, root))
 	if err != nil {
 		t.Error(err)
 		return

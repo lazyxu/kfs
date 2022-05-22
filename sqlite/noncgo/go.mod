@@ -3,6 +3,7 @@ module github.com/lazyxu/kfs/sqlite/noncgo
 go 1.18
 
 require (
+	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect

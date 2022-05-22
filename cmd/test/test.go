@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	core "github.com/lazyxu/kfs/core/local"
+	"github.com/lazyxu/kfs/core"
 )
 
 func main() {

@@ -54,7 +54,6 @@ message BranchInfoResp {
 
 message BranchReq {
   string branchName = 1;
-  string description = 2;
 }
 
 message BranchResp {

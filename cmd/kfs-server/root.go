@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"path/filepath"
 	"strconv"
 
-	core "github.com/lazyxu/kfs/core/local"
+	"github.com/lazyxu/kfs/core"
 
 	"github.com/lazyxu/kfs/pb"
 
@@ -45,10 +44,6 @@ var rootCmd = &cobra.Command{
 			}
 		}()
 		kfsRoot := args[0]
-		kfsRoot, err = filepath.Abs(kfsRoot)
-		if err != nil {
-			return
-		}
 		portString := cmd.Flag(portStr).Value.String()
 		port, err := strconv.Atoi(portString)
 		if err != nil {
@@ -63,7 +58,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		defer kfsCore.Close()
-		_, err = kfsCore.BranchNew(context.Background(), "master", "")
+		_, err = kfsCore.BranchNew(context.Background(), "master")
 		if err != nil {
 			return
 		}

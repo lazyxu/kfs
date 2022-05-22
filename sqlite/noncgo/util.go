@@ -1,6 +1,30 @@
 package noncgo
 
-import "context"
+import (
+	"context"
+	"database/sql"
+
+	"modernc.org/sqlite"
+)
+
+func commitAndRollback(tx *sql.Tx, err error) error {
+	if err != nil {
+		return err
+	}
+	err = tx.Commit()
+	if err == nil {
+		return nil
+	}
+	e, ok := err.(*sqlite.Error)
+	if ok && e.Code() == 5 {
+		return err
+	}
+	err1 := tx.Rollback()
+	if err1 != nil {
+		panic(err1) // should not happen
+	}
+	return err
+}
 
 type FileOrDir interface {
 	Hash() string

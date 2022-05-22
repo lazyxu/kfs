@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	core "github.com/lazyxu/kfs/core/local"
+	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/pb"
 )
 

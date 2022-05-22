@@ -19,14 +19,14 @@ func (db *DB) Reset() error {
 	_, err := db._db.Exec(`
 	DROP TABLE IF EXISTS file;
 	CREATE TABLE file (
-		hash CHAR(64) NOT NULL PRIMARY KEY,
+		Hash CHAR(64) NOT NULL PRIMARY KEY,
 		size INTEGER  NOT NULL,
 		ext  TEXT     NOT NULL
 	);
 
 	DROP TABLE IF EXISTS dir;
 	CREATE TABLE dir (
-		hash       CHAR(64) NOT NULL PRIMARY KEY,
+		Hash       CHAR(64) NOT NULL PRIMARY KEY,
 		size       INTEGER  NOT NULL,
 		count      INTEGER  NOT NULL,
 		totalCount INTEGER  NOT NULL
@@ -34,7 +34,7 @@ func (db *DB) Reset() error {
 
 	DROP TABLE IF EXISTS dirItem;
 	CREATE TABLE dirItem (
-		hash           CHAR(64)  NOT NULL,
+		Hash           CHAR(64)  NOT NULL,
 		itemHash       CHAR(64)  NOT NULL,
 		itemName       TEXT      NOT NULL,
 		itemMode       INTEGER   NOT NULL,
@@ -45,14 +45,14 @@ func (db *DB) Reset() error {
 		itemModifyTime TIMESTAMP NOT NULL,
 		itemChangeTime TIMESTAMP NOT NULL,
 		itemAccessTime TIMESTAMP NOT NULL,
-		PRIMARY KEY(hash, itemName)
+		PRIMARY KEY(Hash, itemName)
 	);
 
 	DROP TABLE IF EXISTS [commit];
 	CREATE TABLE [commit] (
 		id          INTEGER   NOT NULL PRIMARY KEY AUTOINCREMENT,
 		createTime  TIMESTAMP NOT NULL,
-		hash        CHAR(64)  NOT NULL,
+		Hash        CHAR(64)  NOT NULL,
 		lastId      INTEGER   NOT NULL
 	);
 

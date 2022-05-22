@@ -1,4 +1,4 @@
-package local
+package core
 
 import (
 	"context"
@@ -53,12 +53,12 @@ func (fs *KFS) Backup(ctx context.Context, root string, branchName string) error
 	}
 	if dir, ok := ret.(sqlite.Dir); ok {
 		status := backupCtx.GetStatus()
-		commit := sqlite.NewCommit(dir, branchName)
+		commit := sqlite.NewCommit(dir, branchName, fmt.Sprintf("%+v\n", status))
 		err = fs.db.WriteCommit(ctx, &commit)
 		if err != nil {
 			return err
 		}
-		branch := sqlite.NewBranch(branchName, fmt.Sprintf("%+v\n", status), commit, dir)
+		branch := sqlite.NewBranch(branchName, commit, dir)
 		err = fs.db.WriteBranch(ctx, branch)
 		if err != nil {
 			return err
@@ -77,8 +77,8 @@ func formatPath(p string) []string {
 	return splitPath
 }
 
-func (fs *KFS) BranchNew(ctx context.Context, branchName string, description string) (bool, error) {
-	return fs.db.NewBranch(ctx, branchName, description)
+func (fs *KFS) BranchNew(ctx context.Context, branchName string) (bool, error) {
+	return fs.db.NewBranch(ctx, branchName)
 }
 
 func (fs *KFS) BranchInfo(ctx context.Context, branchName string) (branch sqlite.Branch, err error) {
@@ -105,8 +105,8 @@ func (fs *KFS) Remove(ctx context.Context, branchName string, splitPath ...strin
 	return fs.db.Remove(ctx, branchName, splitPath)
 }
 
-func (fs *KFS) Cat(ctx context.Context, branchName string, splitPath ...string) (io.ReadCloser, error) {
-	hash, err := fs.db.GetFileHash(ctx, branchName, splitPath)
+func (fs *KFS) Cat(ctx context.Context, branchName string, p string) (io.ReadCloser, error) {
+	hash, err := fs.db.GetFileHash(ctx, branchName, formatPath(p))
 	if err != nil {
 		return nil, err
 	}

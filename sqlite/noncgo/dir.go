@@ -44,6 +44,46 @@ type DirItem struct {
 	AccessTime uint64
 }
 
+func (d DirItem) GetHash() string {
+	return d.Hash
+}
+
+func (d DirItem) GetName() string {
+	return d.Name
+}
+
+func (d DirItem) GetMode() uint64 {
+	return d.Mode
+}
+
+func (d DirItem) GetSize() uint64 {
+	return d.Size
+}
+
+func (d DirItem) GetCount() uint64 {
+	return d.Count
+}
+
+func (d DirItem) GetTotalCount() uint64 {
+	return d.TotalCount
+}
+
+func (d DirItem) GetCreateTime() uint64 {
+	return d.CreateTime
+}
+
+func (d DirItem) GetModifyTime() uint64 {
+	return d.ModifyTime
+}
+
+func (d DirItem) GetChangeTime() uint64 {
+	return d.ChangeTime
+}
+
+func (d DirItem) GetAccessTime() uint64 {
+	return d.AccessTime
+}
+
 func NewDirItem(fileOrDir FileOrDir, name string, mode uint64, createTime uint64, modifyTime uint64, changeTime uint64, accessTime uint64) DirItem {
 	return DirItem{fileOrDir.Hash(), name, mode, fileOrDir.Size(), fileOrDir.Count(), fileOrDir.TotalCount(), createTime, modifyTime, changeTime, accessTime}
 }
@@ -120,7 +160,7 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir 
 	}
 	stmt, err := tx.PrepareContext(ctx, `
 	INSERT INTO dirItem (
-		hash,
+		Hash,
 		itemHash,
 		itemName,
 		itemMode,
@@ -201,7 +241,7 @@ func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []st
 
 func (db *DB) getBranchCommitHash(ctx context.Context, tx *sql.Tx, branchName string) (hash string, err error) {
 	rows, err := tx.QueryContext(ctx, `
-		SELECT [commit].hash FROM branch INNER JOIN [commit] WHERE branch.name=? and [commit].id=branch.commitId
+		SELECT [commit].Hash FROM branch INNER JOIN [commit] WHERE branch.name=? and [commit].id=branch.commitId
 	`, branchName)
 	if err != nil {
 		return
@@ -216,7 +256,7 @@ func (db *DB) getBranchCommitHash(ctx context.Context, tx *sql.Tx, branchName st
 
 func (db *DB) getDirItemHash(ctx context.Context, tx *sql.Tx, hash string, splitPath []string, i int) (itemHash string, err error) {
 	rows, err := tx.QueryContext(ctx, `
-		SELECT itemHash FROM dirItem WHERE hash=? and itemName=?
+		SELECT itemHash FROM dirItem WHERE Hash=? and itemName=?
 	`, hash, splitPath[i])
 	if err != nil {
 		return
@@ -231,7 +271,7 @@ func (db *DB) getDirItemHash(ctx context.Context, tx *sql.Tx, hash string, split
 
 func (db *DB) getDirItemHashMode(ctx context.Context, tx *sql.Tx, hash string, splitPath []string, i int) (itemHash string, itemMode uint64, err error) {
 	rows, err := tx.QueryContext(ctx, `
-		SELECT itemHash, itemMode  FROM dirItem WHERE hash=? and itemName=?
+		SELECT itemHash, itemMode  FROM dirItem WHERE Hash=? and itemName=?
 	`, hash, splitPath[i])
 	if err != nil {
 		return
@@ -257,7 +297,7 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 			itemModifyTime,
 			itemChangeTime,
 			itemAccessTime
-		FROM dirItem WHERE hash=?
+		FROM dirItem WHERE Hash=?
 	`, hash)
 	if err != nil {
 		return
@@ -363,12 +403,25 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 			return
 		}
 	}
-	commit = NewCommit(dir, branchName)
+	commit = NewCommit(dir, branchName, "")
 	err = db.writeCommit(ctx, tx, &commit)
 	if err != nil {
 		return
 	}
-	branch := NewBranch(branchName, "", commit, dir)
+	branch := NewBranch(branchName, commit, dir)
 	err = db.writeBranch(ctx, tx, branch)
 	return
+}
+
+type IDirItem interface {
+	GetHash() string
+	GetName() string
+	GetMode() uint64
+	GetSize() uint64
+	GetCount() uint64
+	GetTotalCount() uint64
+	GetCreateTime() uint64
+	GetModifyTime() uint64
+	GetChangeTime() uint64
+	GetAccessTime() uint64
 }

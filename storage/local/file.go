@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/gofrs/flock"
 )
@@ -35,7 +36,11 @@ const (
 )
 
 func New(root string) (*Storage, error) {
-	err := os.MkdirAll(path.Join(root, files), dirPerm)
+	root, err := filepath.Abs(root)
+	if err != nil {
+		return nil, err
+	}
+	err = os.MkdirAll(path.Join(root, files), dirPerm)
 	if err != nil && !os.IsExist(err) {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ type Commit struct {
 	branchName string
 }
 
-func NewCommit(dir Dir, branchName string) Commit {
+func NewCommit(dir Dir, branchName string, message string) Commit {
 	return Commit{0, uint64(time.Now().UnixNano()), dir.hash, 0, branchName}
 }
 
@@ -22,9 +22,9 @@ func (db *DB) WriteCommit(ctx context.Context, commit *Commit) error {
 }
 
 func (db *DB) writeCommit(ctx context.Context, txOrDb TxOrDb, commit *Commit) error {
-	// TODO: if hash not changed.
+	// TODO: if Hash not changed.
 	res, err := txOrDb.ExecContext(ctx, `
-	INSERT INTO [commit] (createTime, hash, lastId)
+	INSERT INTO [commit] (createTime, Hash, lastId)
 	VALUES (?, ?, ifnull((SELECT commitId FROM branch WHERE branch.name=?), 0));;
 	`, commit.createTime, commit.Hash, commit.branchName)
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	core "github.com/lazyxu/kfs/core/local"
+	"github.com/lazyxu/kfs/core"
 	"github.com/spf13/cobra"
 )
 

@@ -3,7 +3,7 @@ go 1.18
 use (
   ./sqlite/noncgo
   ./storage/local
-  ./core/local
+  ./core
   ./cmd/test
   ./cmd/kfs-cli
   ./cmd/kfs-server

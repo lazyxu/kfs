@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	core "github.com/lazyxu/kfs/core/local"
+	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/pb"
 	"google.golang.org/grpc/metadata"
 )
