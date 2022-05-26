@@ -9,7 +9,7 @@ service KoalaFS {
   }
   rpc branchInfo (BranchInfoReq) returns (BranchInfoResp) {
   }
-  rpc list (PathReq) returns (stream FileInfo) {
+  rpc list (PathReq) returns (stream DirItem) {
   }
   rpc upload (stream UploadReq) returns (UploadResp) {
   }
@@ -29,31 +29,31 @@ message DownloadResp {
 }
 
 message UploadReq {
-  bool isLast = 1;
-  UploadReqHeader header = 2;
-  bytes bytes = 3;
+  BackupReqFile file = 1;
+  BackupReqRoot root = 2;
 }
 
 message UploadReqHeader {
-  UploadReqMetadata metadata = 1;
+  DirItem dirItem = 1;
   string branchName = 2;
 }
 
-message UploadReqMetadata {
-  string path = 1;
-  string Hash = 2;
+message DirItem {
+  string Hash = 1;
+  string Name = 2;
   uint64 Mode = 3;
   uint64 Size = 4;
-  uint64 CreateTime = 5;
-  uint64 ModifyTime = 6;
-  uint64 ChangeTime = 7;
-  uint64 AccessTime = 8;
+  uint64 Count = 5;
+  uint64 TotalCount = 6;
+  uint64 CreateTime = 7;
+  uint64 ModifyTime = 8;
+  uint64 ChangeTime = 9;
+  uint64 AccessTime = 10;
 }
 
 message UploadResp {
   bool exist = 1;
-  uint64 commitId = 2;
-  string hash = 3;
+  BranchCommitResp branch = 2;
 }
 
 message BranchInfoReq {
@@ -76,20 +76,28 @@ message BranchResp {
   bool exist = 1;
 }
 
-message BackupReqHeader {
-  string branchName = 2;
-  string base = 3;
+message BackupReqFile {
+  string hash = 1;
+  uint64 size = 2;
+  string ext = 3;
+  bytes bytes = 4;
+  bool isLastChunk = 5;
+}
+
+message BackupReqDir {
+  repeated DirItem dirItem = 1;
+}
+
+message BackupReqRoot {
+  string branchName = 1;
+  string path = 2;
+  DirItem dirItem = 3;
 }
 
 message BackupReq {
-  // enter
-  BackupReqHeader header = 2;
-  UploadReqMetadata metadata = 3;
-  bytes bytes = 4;
-  // exit
-  bool isLast = 5;
-  // final
-  bool done = 1;
+  BackupReqFile file = 1;
+  BackupReqDir dir = 2;
+  BackupReqRoot root = 3;
 }
 
 message FileOrDir {
@@ -101,11 +109,23 @@ message FileOrDir {
 }
 
 message BackupResp {
-  bool done = 1;
-  bool canceled = 2;
-  UploadResp uploadResp = 3;
-  BackupErrResp err = 4;
-  string process = 5;
+  bool exist = 1;
+  DirResp dir = 2;
+  BranchCommitResp branch = 3;
+}
+
+message BranchCommitResp {
+  string hash = 1;
+  uint64 commitId = 2;
+  uint64 size = 3;
+  uint64 count = 4;
+}
+
+message DirResp {
+  string hash = 1;
+  uint64 size = 2;
+  uint64 count = 3;
+  uint64 totalCount = 4;
 }
 
 message BackupErrResp {
@@ -116,17 +136,4 @@ message BackupErrResp {
 message PathReq {
   string branchName = 1;
   string path = 2;
-}
-
-message FileInfo {
-  string Hash = 1;
-  string Name = 2;
-  uint64 Mode = 3;
-  uint64 Size = 4;
-  uint64 Count = 5;
-  uint64 TotalCount = 6;
-  uint64 CreateTime = 7;
-  uint64 ModifyTime = 8;
-  uint64 ChangeTime = 9;
-  uint64 AccessTime = 10;
 }

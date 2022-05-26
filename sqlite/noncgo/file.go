@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 )
 
@@ -62,44 +61,42 @@ func (db *DB) writeFile(ctx context.Context, txOrDb TxOrDb, file File) error {
 	return err
 }
 
-func (db *DB) UploadFile(ctx context.Context, branchName string, splitPath []string, hash string, size uint64,
-	mode uint64, createTime uint64, modifyTime uint64, changeTime uint64, accessTime uint64) (commit Commit, err error) {
+func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []string, item DirItem) (commit Commit, branch Branch, err error) {
 	tx, err := db._db.Begin()
 	if err != nil {
 		return
 	}
 	defer func() {
-		if err == nil {
-			err = tx.Commit()
-			if err != nil {
-				err1 := tx.Rollback()
-				if err1 != nil {
-					panic(err1) // should not happen
-				}
-				return
-			}
-		}
+		err = commitAndRollback(tx, err)
 	}()
+	if len(splitPath) == 0 {
+		var dir Dir
+		dir, err = NewDirFromDirItem(item)
+		if err != nil {
+			return
+		}
+		commit = NewCommit(dir, branchName, "")
+		err = db.writeCommit(ctx, tx, &commit)
+		if err != nil {
+			return
+		}
+		branch = NewBranch(branchName, commit, dir)
+		err = db.writeBranch(ctx, tx, branch)
+		return
+	}
 	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]DirItem) error {
 		i := len(dirItemsList) - 1
+		item.Name = splitPath[i]
 		find := false
-		name := splitPath[len(splitPath)-1]
-		ext := path.Ext(name)
-		file := NewFile(hash, size, ext)
-		err = db.writeFile(ctx, tx, file)
-		if err != nil {
-			return err
-		}
-		newItem := NewDirItem(file, name, mode, createTime, modifyTime, changeTime, accessTime)
 		for j, dirItem := range dirItemsList[i] {
 			if dirItem.Name == splitPath[i] {
-				dirItemsList[i][j] = newItem
+				dirItemsList[i][j] = item // update
 				find = true
 				break
 			}
 		}
 		if !find {
-			dirItemsList[i] = append(dirItemsList[i], newItem)
+			dirItemsList[i] = append(dirItemsList[i], item) // insert
 		}
 		return nil
 	})

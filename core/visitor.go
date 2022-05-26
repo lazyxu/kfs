@@ -33,7 +33,7 @@ func (v *uploadVisitor) Exit(ctx context.Context, filename string, info os.FileI
 		if err != nil {
 			return nil, err
 		}
-		err = v.fs.db.WriteFile(ctx, file)
+		err = v.fs.Db.WriteFile(ctx, file)
 		return file, err
 	} else if info.IsDir() {
 		dirItems := make([]sqlite.DirItem, len(infos))
@@ -45,7 +45,7 @@ func (v *uploadVisitor) Exit(ctx context.Context, filename string, info os.FileI
 			modifyTime := uint64(info.ModTime().UnixNano())
 			dirItems[i] = sqlite.NewDirItem(rets[i], name, uint64(info.Mode()), modifyTime, modifyTime, modifyTime, modifyTime)
 		}
-		dir, err := v.fs.db.WriteDir(ctx, dirItems)
+		dir, err := v.fs.Db.WriteDir(ctx, dirItems)
 		if err != nil {
 			return nil, err
 		}

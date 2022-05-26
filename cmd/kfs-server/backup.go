@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"io"
-	"os"
+
+	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/pb"
@@ -16,78 +17,109 @@ func (s *KoalaFSServer) Backup(server pb.KoalaFS_BackupServer) (err error) {
 	}
 	defer kfsCore.Close()
 	req := &pb.BackupReq{}
-	var h *pb.BackupReqHeader
-	var m *pb.UploadReqMetadata
 	var exist bool
 	fmt.Println("-----------")
 	for {
 		req, err = server.Recv()
-		if err == io.EOF {
-			err = nil
-			break
-		}
 		if err != nil {
 			return err
 		}
-		if req.Done {
+		if req.Root != nil {
 			break
 		}
-		fmt.Println("Backup", req.Header, req.Metadata)
-		if req.Header != nil {
-			h = req.Header
-		}
-		if req.Metadata == nil {
-			continue
-		}
-		m = req.Metadata
-		if os.FileMode(m.Mode).IsRegular() {
-			exist, err = kfsCore.S.WriteFn(m.Hash, func(f io.Writer, hasher io.Writer) error {
+		if req.File != nil {
+			if req.File.Hash == "" {
+				continue // file already exists, ignored
+			}
+			firstFileChunk := req.File
+			exist, err = kfsCore.S.WriteFn(firstFileChunk.Hash, func(f io.Writer, hasher io.Writer) error {
 				for {
-					fmt.Println("server.Recv")
-					req, err = server.Recv()
-					if req != nil {
-						fmt.Println("Backup", h.Base, req.IsLast, len(req.Bytes))
-					}
-					if err != nil && err != io.EOF {
+					_, err = hasher.Write(req.File.Bytes)
+					if err != nil {
 						return err
 					}
-					if err == io.EOF {
-						return nil
-					}
-					_, err = hasher.Write(req.Bytes)
+					_, err = f.Write(req.File.Bytes)
 					if err != nil {
+						return err
+					}
+					if req.File.IsLastChunk {
 						return nil
 					}
-					_, err = f.Write(req.Bytes)
+					req, err = server.Recv()
 					if err != nil {
-						return nil
-					}
-					if req.IsLast {
-						return nil
+						return err
 					}
 				}
 			})
 			if err != nil {
 				return
 			}
-			fmt.Println("Backup", m, exist)
-			err = server.Send(&pb.BackupResp{
-				UploadResp: &pb.UploadResp{
-					Exist: exist,
-				},
-			})
+			f := sqlite.NewFile(firstFileChunk.Hash, firstFileChunk.Size, firstFileChunk.Ext)
+			err = kfsCore.Db.WriteFile(server.Context(), f)
+			if err != nil {
+				return
+			}
+			fmt.Println("Backup", f, exist)
+			err = server.Send(&pb.BackupResp{Exist: exist})
 			if err != nil {
 				return
 			}
 		} else {
 			// TODO: upload dir
+			pbDirItems := req.Dir.DirItem
+			fmt.Println(pbDirItems)
+			dirItems := make([]sqlite.DirItem, len(pbDirItems))
+			for i, dirItem := range pbDirItems {
+				dirItems[i] = sqlite.DirItem{
+					Hash:       dirItem.Hash,
+					Name:       dirItem.Name,
+					Mode:       dirItem.Mode,
+					Size:       dirItem.Size,
+					Count:      dirItem.Count,
+					TotalCount: dirItem.TotalCount,
+					CreateTime: dirItem.CreateTime,
+					ModifyTime: dirItem.ModifyTime,
+					ChangeTime: dirItem.ChangeTime,
+					AccessTime: dirItem.AccessTime,
+				}
+			}
+			var dir sqlite.Dir
+			dir, err = kfsCore.Db.WriteDir(server.Context(), dirItems)
+			fmt.Println("Backup", dir)
+			err = server.Send(&pb.BackupResp{Dir: &pb.DirResp{
+				Hash:       dir.Hash(),
+				Size:       dir.Size(),
+				Count:      dir.Count(),
+				TotalCount: dir.TotalCount(),
+			},
+			})
 		}
 	}
-	fmt.Println("Backup finish")
+	root := req.Root
+	dirItem := root.DirItem
+	commit, branch, err := kfsCore.Db.UpsertDirItem(server.Context(), root.BranchName, core.FormatPath(root.Path), sqlite.DirItem{
+		Hash:       dirItem.Hash,
+		Name:       dirItem.Name,
+		Mode:       dirItem.Mode,
+		Size:       dirItem.Size,
+		Count:      dirItem.Count,
+		TotalCount: dirItem.TotalCount,
+		CreateTime: dirItem.CreateTime,
+		ModifyTime: dirItem.ModifyTime,
+		ChangeTime: dirItem.ChangeTime,
+		AccessTime: dirItem.AccessTime,
+	})
+	if err != nil {
+		return
+	}
+	fmt.Println("Backup finish", root.Path)
 	err = server.Send(&pb.BackupResp{
-		Done:    true,
-		Err:     nil,
-		Process: "",
+		Branch: &pb.BranchCommitResp{
+			Hash:     commit.Hash,
+			CommitId: commit.Id,
+			Size:     branch.Size,
+			Count:    branch.Count,
+		},
 	})
 	return
 }

@@ -5,8 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/lazyxu/kfs/cmd/kfs-cli/backup"
-
 	"github.com/lazyxu/kfs/cmd/kfs-cli/cat"
 
 	"github.com/lazyxu/kfs/cmd/kfs-cli/list"
@@ -69,7 +67,6 @@ func init() {
 	rootCmd.AddCommand(branch.Cmd)
 	rootCmd.AddCommand(branch.CheckoutCmd)
 	rootCmd.AddCommand(upload.Cmd)
-	rootCmd.AddCommand(backup.Cmd)
 	rootCmd.AddCommand(list.Cmd)
 	rootCmd.AddCommand(cat.Cmd)
 }

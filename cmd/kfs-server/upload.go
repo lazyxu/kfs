@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"io"
+	"path/filepath"
+
+	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/pb"
@@ -14,43 +17,72 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 		return
 	}
 	defer kfsCore.Close()
-	req := &pb.UploadReq{}
-	req, err = server.Recv()
+	req, err := server.Recv()
 	if err != nil {
 		return
 	}
-	h := req.Header
-	fmt.Println("Upload", h)
-	exist, commit, err := kfsCore.Upload(server.Context(), func(f io.Writer, hasher io.Writer) error {
+	exist, err := kfsCore.S.WriteFn(req.File.Hash, func(f io.Writer, hasher io.Writer) error {
 		for {
-			req, err = server.Recv()
-			if req != nil {
-				println("upload", req.IsLast, len(req.Bytes))
-			}
-			if err != nil && err != io.EOF {
+			file := req.File
+			println("Upload", len(file.Hash), len(file.Bytes), file.IsLastChunk)
+			_, err = hasher.Write(file.Bytes)
+			if err != nil {
 				return err
 			}
-			if err == io.EOF {
+			_, err = f.Write(file.Bytes)
+			if err != nil {
+				return err
+			}
+			if file.IsLastChunk {
 				return nil
 			}
-			_, err = hasher.Write(req.Bytes)
+			req, err = server.Recv()
 			if err != nil {
-				return nil
-			}
-			_, err = f.Write(req.Bytes)
-			if err != nil {
-				return nil
+				return err
 			}
 		}
-	}, h.BranchName, h.Metadata.Path, h.Metadata.Hash,
-		h.Metadata.Size, h.Metadata.Mode, h.Metadata.CreateTime, h.Metadata.ModifyTime, h.Metadata.ChangeTime, h.Metadata.AccessTime)
+	})
 	if err != nil {
 		return
 	}
+	for req.File != nil { // skip if file exists
+		req, err = server.Recv()
+		if err != nil {
+			return err
+		}
+	}
+	root := req.Root
+	dirItem := root.DirItem
+	fmt.Println("Upload", req)
+	ext := filepath.Ext(dirItem.Name)
+	f := sqlite.NewFile(dirItem.Hash, dirItem.Size, ext)
+	err = kfsCore.Db.WriteFile(server.Context(), f)
+	if err != nil {
+		return err
+	}
+	commit, branch, err := kfsCore.Db.UpsertDirItem(server.Context(), root.BranchName, core.FormatPath(root.Path), sqlite.DirItem{
+		Hash:       dirItem.Hash,
+		Name:       dirItem.Name,
+		Mode:       dirItem.Mode,
+		Size:       dirItem.Size,
+		Count:      dirItem.Count,
+		TotalCount: dirItem.TotalCount,
+		CreateTime: dirItem.CreateTime,
+		ModifyTime: dirItem.ModifyTime,
+		ChangeTime: dirItem.ChangeTime,
+		AccessTime: dirItem.AccessTime,
+	})
+	if err != nil {
+		return err
+	}
 	err = server.SendAndClose(&pb.UploadResp{
-		Exist:    exist,
-		CommitId: commit.Id,
-		Hash:     commit.Hash,
+		Exist: exist,
+		Branch: &pb.BranchCommitResp{
+			Hash:     commit.Hash,
+			CommitId: commit.Id,
+			Size:     branch.Size,
+			Count:    branch.Count,
+		},
 	})
 	return
 }

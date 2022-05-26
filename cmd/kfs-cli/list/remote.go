@@ -26,15 +26,13 @@ func remote(ctx context.Context, addr string, branchName string, p string, isHum
 	}
 	isFirst := true
 	for {
-		dirItem := &pb.FileInfo{}
+		dirItem := &pb.DirItem{}
 		dirItem, err = client.Recv()
 		if err != nil && err != io.EOF {
 			return err
 		}
-		isEOF := false
 		if err == io.EOF {
-			isEOF = true
-			err = nil
+			return nil
 		}
 		if isFirst {
 			md, err := client.Header()
@@ -47,10 +45,7 @@ func remote(ctx context.Context, addr string, branchName string, p string, isHum
 			}
 			printHeader(length)
 			isFirst = false
-			printBody(dirItem, isHumanize)
 		}
-		if isEOF {
-			return nil
-		}
+		printBody(dirItem, isHumanize)
 	}
 }

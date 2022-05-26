@@ -9,15 +9,24 @@ import (
 
 func commitAndRollback(tx *sql.Tx, err error) error {
 	if err != nil {
+		err1 := tx.Rollback()
+		if err1 != nil {
+			panic(err1) // should not happen
+		}
+		if e, ok := err.(*sqlite.Error); ok {
+			if e.Code() == 5 {
+				return nil
+			}
+			// constraint failed: UNIQUE constraint failed: hash.hashval (1555)
+			if e.Code() == 1555 {
+				return nil
+			}
+		}
 		return err
 	}
 	err = tx.Commit()
 	if err == nil {
 		return nil
-	}
-	e, ok := err.(*sqlite.Error)
-	if ok && e.Code() == 5 {
-		return err
 	}
 	err1 := tx.Rollback()
 	if err1 != nil {

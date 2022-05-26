@@ -14,7 +14,7 @@ import (
 )
 
 type KFS struct {
-	db *sqlite.DB
+	Db *sqlite.DB
 	S  *storage.Storage
 }
 
@@ -42,7 +42,7 @@ func New(root string) (*KFS, bool, error) {
 			return nil, exist, err
 		}
 	}
-	return &KFS{db: db, S: s}, exist, nil
+	return &KFS{Db: db, S: s}, exist, nil
 }
 
 func (fs *KFS) Backup(ctx context.Context, root string, branchName string) error {
@@ -54,12 +54,12 @@ func (fs *KFS) Backup(ctx context.Context, root string, branchName string) error
 	if dir, ok := ret.(sqlite.Dir); ok {
 		status := backupCtx.GetStatus()
 		commit := sqlite.NewCommit(dir, branchName, fmt.Sprintf("%+v\n", status))
-		err = fs.db.WriteCommit(ctx, &commit)
+		err = fs.Db.WriteCommit(ctx, &commit)
 		if err != nil {
 			return err
 		}
 		branch := sqlite.NewBranch(branchName, commit, dir)
-		err = fs.db.WriteBranch(ctx, branch)
+		err = fs.Db.WriteBranch(ctx, branch)
 		if err != nil {
 			return err
 		}
@@ -69,7 +69,7 @@ func (fs *KFS) Backup(ctx context.Context, root string, branchName string) error
 	return nil
 }
 
-func formatPath(p string) []string {
+func FormatPath(p string) []string {
 	splitPath := strings.Split(p, "/")
 	if splitPath[0] == "" {
 		splitPath = splitPath[1:]
@@ -78,35 +78,23 @@ func formatPath(p string) []string {
 }
 
 func (fs *KFS) BranchNew(ctx context.Context, branchName string) (bool, error) {
-	return fs.db.NewBranch(ctx, branchName)
+	return fs.Db.NewBranch(ctx, branchName)
 }
 
 func (fs *KFS) BranchInfo(ctx context.Context, branchName string) (branch sqlite.Branch, err error) {
-	return fs.db.BranchInfo(ctx, branchName)
-}
-
-func (fs *KFS) Upload(ctx context.Context, fn func(f io.Writer, hasher io.Writer) error, branchName string, p string,
-	hash string, size uint64, mode uint64, createTime uint64,
-	modifyTime uint64, changeTime uint64, accessTime uint64) (exist bool, commit sqlite.Commit, err error) {
-	exist, err = fs.S.WriteFn(hash, fn)
-	if err != nil {
-		return
-	}
-	commit, err = fs.db.UploadFile(ctx, branchName, formatPath(p), hash,
-		size, mode, createTime, modifyTime, changeTime, accessTime)
-	return
+	return fs.Db.BranchInfo(ctx, branchName)
 }
 
 func (fs *KFS) List(ctx context.Context, branchName string, p string) ([]sqlite.DirItem, error) {
-	return fs.db.List(ctx, branchName, formatPath(p))
+	return fs.Db.List(ctx, branchName, FormatPath(p))
 }
 
-func (fs *KFS) Remove(ctx context.Context, branchName string, splitPath ...string) (sqlite.Commit, error) {
-	return fs.db.Remove(ctx, branchName, splitPath)
+func (fs *KFS) Remove(ctx context.Context, branchName string, splitPath ...string) (sqlite.Commit, sqlite.Branch, error) {
+	return fs.Db.Remove(ctx, branchName, splitPath)
 }
 
 func (fs *KFS) Cat(ctx context.Context, branchName string, p string) (io.ReadCloser, error) {
-	hash, err := fs.db.GetFileHash(ctx, branchName, formatPath(p))
+	hash, err := fs.Db.GetFileHash(ctx, branchName, FormatPath(p))
 	if err != nil {
 		return nil, err
 	}
@@ -114,5 +102,5 @@ func (fs *KFS) Cat(ctx context.Context, branchName string, p string) (io.ReadClo
 }
 
 func (fs *KFS) Close() error {
-	return fs.db.Close()
+	return fs.Db.Close()
 }

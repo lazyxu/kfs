@@ -27,7 +27,7 @@ func (s *KoalaFSServer) List(req *pb.PathReq, server pb.KoalaFS_ListServer) erro
 		return err
 	}
 	for _, dirItem := range dirItems {
-		err := server.Send(&pb.FileInfo{
+		err = server.Send(&pb.DirItem{
 			Hash:       dirItem.Hash,
 			Name:       dirItem.Name,
 			Mode:       dirItem.Mode,

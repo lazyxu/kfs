@@ -30,6 +30,13 @@ func NewDir(hash string, size uint64, count uint64, totalCount uint64) Dir {
 	return Dir{fileOrDir{hash, size}, count, totalCount}
 }
 
+func NewDirFromDirItem(item IDirItem) (Dir, error) {
+	if !os.FileMode(item.GetMode()).IsDir() {
+		return Dir{}, errors.New("expected dir")
+	}
+	return Dir{fileOrDir{item.GetHash(), item.GetSize()}, item.GetCount(), item.GetTotalCount()}, nil
+}
+
 // https://zhuanlan.zhihu.com/p/343682839
 type DirItem struct {
 	Hash       string
@@ -127,16 +134,7 @@ func (db *DB) WriteDir(ctx context.Context, dirItems []DirItem) (dir Dir, err er
 		return
 	}
 	defer func() {
-		if err == nil {
-			err = tx.Commit()
-			if err != nil {
-				err1 := tx.Rollback()
-				if err1 != nil {
-					panic(err1) // should not happen
-				}
-				return
-			}
-		}
+		err = commitAndRollback(tx, err)
 	}()
 	return db.writeDir(ctx, tx, dirItems)
 }
@@ -324,22 +322,13 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 	return
 }
 
-func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string) (commit Commit, err error) {
+func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string) (commit Commit, branch Branch, err error) {
 	tx, err := db._db.Begin()
 	if err != nil {
 		return
 	}
 	defer func() {
-		if err == nil {
-			err = tx.Commit()
-			if err != nil {
-				err1 := tx.Rollback()
-				if err1 != nil {
-					panic(err1) // should not happen
-				}
-				return
-			}
-		}
+		err = commitAndRollback(tx, err)
 	}()
 	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]DirItem) error {
 		i := len(dirItemsList) - 1
@@ -359,7 +348,7 @@ func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string)
 	})
 }
 
-func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func([][]DirItem) error) (commit Commit, err error) {
+func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func([][]DirItem) error) (commit Commit, branch Branch, err error) {
 	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
 		return
@@ -408,7 +397,7 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 	if err != nil {
 		return
 	}
-	branch := NewBranch(branchName, commit, dir)
+	branch = NewBranch(branchName, commit, dir)
 	err = db.writeBranch(ctx, tx, branch)
 	return
 }

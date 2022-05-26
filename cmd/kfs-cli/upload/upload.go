@@ -17,7 +17,8 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.PersistentFlags().StringP(PathStr, "p", "", "")
+	Cmd.PersistentFlags().StringP(PathStr, "p", "", "override the path")
+	Cmd.PersistentFlags().String(DirPathStr, "", "move into dir")
 	Cmd.PersistentFlags().StringP(ChunkSizeStr, "b", "1 MiB", "[1 KiB, 1 GiB]")
 }
 
@@ -38,14 +39,14 @@ func runUpload(cmd *cobra.Command, args []string) {
 	// TODO: SET chunk bytes.
 	//fileChunkSize := cmd.Flag(ChunkSizeStr)
 	//humanize.ParseBytes()
-	p := cmd.Flag(PathStr).Value.String()
-	filename := args[0]
+	dstPath := cmd.Flag(PathStr).Value.String()
+	srcPath := args[0]
 
 	switch serverType {
 	case ServerTypeLocal:
-		// TODO
+		err = local(cmd.Context(), serverAddr, branchName, srcPath, dstPath)
 	case ServerTypeRemote:
-		err = remote(cmd.Context(), serverAddr, filename, branchName, p)
+		err = remote(cmd.Context(), serverAddr, branchName, srcPath, dstPath)
 	default:
 		err = InvalidServerType
 	}
