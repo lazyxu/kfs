@@ -5,16 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/lazyxu/kfs/cmd/kfs-cli/cat"
-
-	"github.com/lazyxu/kfs/cmd/kfs-cli/list"
-
-	"github.com/lazyxu/kfs/cmd/kfs-cli/upload"
-
-	"github.com/lazyxu/kfs/cmd/kfs-cli/branch"
-
-	"github.com/lazyxu/kfs/cmd/kfs-cli/initialization"
-
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -63,10 +53,10 @@ func init() {
 	if err != nil {
 		fmt.Errorf("Can not read config: %s\n", viper.ConfigFileUsed())
 	}
-	rootCmd.AddCommand(initialization.Cmd)
-	rootCmd.AddCommand(branch.Cmd)
-	rootCmd.AddCommand(branch.CheckoutCmd)
-	rootCmd.AddCommand(upload.Cmd)
-	rootCmd.AddCommand(list.Cmd)
-	rootCmd.AddCommand(cat.Cmd)
+	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(branchCmd)
+	rootCmd.AddCommand(checkoutCmd)
+	rootCmd.AddCommand(uploadCmd)
+	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(catCmd)
 }

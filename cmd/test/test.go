@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
+
 	"github.com/lazyxu/kfs/core"
 )
 
@@ -25,29 +27,29 @@ func test() error {
 	ctx := context.Background()
 	branchName := "default"
 	if !exist {
-		err = kfsCore.Backup(ctx, "../..", branchName)
+		err = kfsCore.Upload(ctx, branchName, "", "../..")
 		if err != nil {
 			return err
 		}
 	}
-	dirItems, err := kfsCore.List(ctx, branchName, ".git")
+	err = kfsCore.List(ctx, branchName, ".git", nil, func(item sqlite.IDirItem) error {
+		fmt.Printf("%+v\n", item.GetName())
+		return nil
+	})
 	if err != nil {
 		return err
-	}
-	for _, dirItem := range dirItems {
-		fmt.Printf("%+v\n", dirItem.Name)
 	}
 	_, _, err = kfsCore.Remove(ctx, branchName, ".git", "refs")
 	if err != nil {
 		return err
 	}
 	println("------delete /.git/refs")
-	dirItems, err = kfsCore.List(ctx, branchName, ".git")
+	err = kfsCore.List(ctx, branchName, ".git", nil, func(item sqlite.IDirItem) error {
+		fmt.Printf("%+v\n", item.GetName())
+		return nil
+	})
 	if err != nil {
 		return err
-	}
-	for _, dirItem := range dirItems {
-		fmt.Printf("%+v\n", dirItem.Name)
 	}
 	return nil
 }

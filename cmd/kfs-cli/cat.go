@@ -1,17 +1,16 @@
-package cat
+package main
 
 import (
 	"fmt"
 	"io"
 	"os"
 
-	. "github.com/lazyxu/kfs/cmd/kfs-cli/utils"
 	"github.com/lazyxu/kfs/core"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var Cmd = &cobra.Command{
+var catCmd = &cobra.Command{
 	Use:     "cat",
 	Example: "kfs-cli cat test.txt",
 	Args:    cobra.RangeArgs(1, 1),

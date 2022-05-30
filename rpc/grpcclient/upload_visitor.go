@@ -1,10 +1,11 @@
-package upload
+package grpcclient
 
 import (
 	"context"
 	"os"
 	"path/filepath"
-	"sync"
+
+	"github.com/lazyxu/kfs/core"
 
 	"github.com/lazyxu/kfs/pb"
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
@@ -13,47 +14,36 @@ import (
 
 type uploadVisitor struct {
 	storage.EmptyVisitor[sqlite.FileOrDir]
-	client     pb.KoalaFS_BackupClient
-	branchName string
-	backupPath string
-	bars       sync.Map
+	client        pb.KoalaFS_UploadClient
+	uploadProcess core.UploadProcess
 }
 
 func (v *uploadVisitor) HasExit() bool {
 	return true
 }
 
-func (v *uploadVisitor) Exit(ctx context.Context, filename string, info os.FileInfo, infos []os.FileInfo, rets []sqlite.FileOrDir) (sqlite.FileOrDir, error) {
+func (v *uploadVisitor) Exit(ctx context.Context, filePath string, info os.FileInfo, infos []os.FileInfo, rets []sqlite.FileOrDir) (sqlite.FileOrDir, error) {
 	if info.Mode().IsRegular() {
-		file, err := sqlite.NewFileByName(filename)
+		v.uploadProcess = v.uploadProcess.New(int(info.Size()), filepath.Base(filePath))
+		defer v.uploadProcess.Close()
+		file, err := core.NewFileByName(v.uploadProcess, filePath)
 		if err != nil {
 			return nil, err
 		}
-		f, err := os.Open(filename)
-		if err != nil {
-			return nil, err
-		}
-		defer f.Close()
-		bar := NewProcessBar(info, filename)
-		defer bar.Close()
-		hash, err := GetFileHash(bar, filename)
-		if err != nil {
-			return nil, err
-		}
-		err = SendContent(bar, hash, filename, func(data []byte, isFirst bool, isLast bool) error {
+		err = SendContent(v.uploadProcess, file.Hash(), filePath, func(data []byte, isFirst bool, isLast bool) error {
 			if isFirst {
-				return v.client.Send(&pb.BackupReq{
-					File: &pb.BackupReqFile{
-						Hash:        hash,
+				return v.client.Send(&pb.UploadReq{
+					File: &pb.UploadReqFile{
+						Hash:        file.Hash(),
 						Size:        uint64(info.Size()),
-						Ext:         filepath.Ext(filename),
+						Ext:         filepath.Ext(filePath),
 						Bytes:       data,
 						IsLastChunk: isLast,
 					},
 				})
 			}
-			return v.client.Send(&pb.BackupReq{
-				File: &pb.BackupReqFile{
+			return v.client.Send(&pb.UploadReq{
+				File: &pb.UploadReqFile{
 					Bytes:       data,
 					IsLastChunk: isLast,
 				},
@@ -87,8 +77,8 @@ func (v *uploadVisitor) Exit(ctx context.Context, filename string, info os.FileI
 				AccessTime: modifyTime,
 			}
 		}
-		err := v.client.Send(&pb.BackupReq{
-			Dir: &pb.BackupReqDir{DirItem: dirItems},
+		err := v.client.Send(&pb.UploadReq{
+			Dir: &pb.UploadReqDir{DirItem: dirItems},
 		})
 		resp, err := v.client.Recv()
 		if err != nil {

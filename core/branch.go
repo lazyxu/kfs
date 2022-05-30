@@ -6,13 +6,21 @@ import (
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 )
 
+func (fs *KFS) Checkout(ctx context.Context, branchName string) (bool, error) {
+	return fs.Db.NewBranch(ctx, branchName)
+}
+
+func (fs *KFS) BranchInfo(ctx context.Context, branchName string) (branch sqlite.IBranch, err error) {
+	return fs.Db.BranchInfo(ctx, branchName)
+}
+
 func Checkout(ctx context.Context, addr string, branchName string) (bool, error) {
 	kfsCore, _, err := New(addr)
 	if err != nil {
 		return false, err
 	}
 	defer kfsCore.Close()
-	return kfsCore.BranchNew(ctx, branchName)
+	return kfsCore.Checkout(ctx, branchName)
 }
 
 func BranchInfo(ctx context.Context, addr string, branchName string) (sqlite.IBranch, error) {

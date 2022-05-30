@@ -4,15 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"os"
 	"strconv"
 
+	"github.com/lazyxu/kfs/rpc/grpcserver"
+
 	"github.com/lazyxu/kfs/core"
-
-	"github.com/lazyxu/kfs/pb"
-
-	"google.golang.org/grpc"
 
 	"github.com/spf13/viper"
 
@@ -58,7 +55,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		defer kfsCore.Close()
-		_, err = kfsCore.BranchNew(context.Background(), "master")
+		_, err = kfsCore.Checkout(context.Background(), "master")
 		if err != nil {
 			return
 		}
@@ -67,17 +64,6 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return
 		}
-		server := NewKoalaFSServer(kfsRoot)
-		lis, err := net.Listen("tcp", "0.0.0.0:"+portString)
-		if err != nil {
-			return
-		}
-		s := grpc.NewServer()
-		pb.RegisterKoalaFSServer(s, server)
-		println("Listening on", lis.Addr().String())
-		err = s.Serve(lis)
-		if err != nil {
-			return
-		}
+		grpcserver.ListenAndServe(kfsRoot, portString)
 	},
 }

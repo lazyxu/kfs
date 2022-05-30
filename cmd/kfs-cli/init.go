@@ -1,18 +1,15 @@
-package initialization
+package main
 
 import (
 	"fmt"
 
 	"github.com/lazyxu/kfs/core"
 
-	"github.com/lazyxu/kfs/cmd/kfs-cli/branch"
-
-	. "github.com/lazyxu/kfs/cmd/kfs-cli/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var Cmd = &cobra.Command{
+var initCmd = &cobra.Command{
 	Use: "init",
 	Example: `
 kfs-cli init -t local -b master ./tmp
@@ -23,8 +20,8 @@ kfs-cli init -t remote -b master localhost:1123
 }
 
 func init() {
-	Cmd.PersistentFlags().StringP(ServerTypeStr, "t", "remote", "local/remote")
-	Cmd.PersistentFlags().StringP(BranchNameStr, "b", "master", "")
+	initCmd.PersistentFlags().StringP(ServerTypeStr, "t", "remote", "local/remote")
+	initCmd.PersistentFlags().StringP(BranchNameStr, "b", "master", "")
 }
 
 func runInit(cmd *cobra.Command, args []string) {
@@ -46,12 +43,8 @@ func runInit(cmd *cobra.Command, args []string) {
 		ExitWithError(err)
 	}()
 
-	switch serverType {
-	case ServerTypeLocal:
-		_, err = core.Checkout(cmd.Context(), serverAddr, branchName)
-	case ServerTypeRemote:
-		_, err = branch.RemoteCheckout(cmd.Context(), serverAddr, branchName)
-	default:
-		err = InvalidServerType
-	}
+	err = withFS(serverType, serverAddr, func(fs core.FS) error {
+		_, err = fs.Checkout(cmd.Context(), branchName)
+		return err
+	})
 }

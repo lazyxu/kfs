@@ -4,6 +4,8 @@ use (
   ./sqlite/noncgo
   ./storage/local
   ./core
+  ./rpc/grpcserver
+  ./rpc/grpcclient
   ./cmd/test
   ./cmd/kfs-cli
   ./cmd/kfs-server

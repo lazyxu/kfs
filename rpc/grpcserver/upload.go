@@ -1,4 +1,4 @@
-package main
+package grpcserver
 
 import (
 	"fmt"
@@ -10,13 +10,13 @@ import (
 	"github.com/lazyxu/kfs/pb"
 )
 
-func (s *KoalaFSServer) Backup(server pb.KoalaFS_BackupServer) (err error) {
+func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 	kfsCore, _, err := core.New(s.kfsRoot)
 	if err != nil {
 		return
 	}
 	defer kfsCore.Close()
-	req := &pb.BackupReq{}
+	req := &pb.UploadReq{}
 	var exist bool
 	fmt.Println("-----------")
 	for {
@@ -59,8 +59,8 @@ func (s *KoalaFSServer) Backup(server pb.KoalaFS_BackupServer) (err error) {
 			if err != nil {
 				return
 			}
-			fmt.Println("Backup", f, exist)
-			err = server.Send(&pb.BackupResp{Exist: exist})
+			fmt.Println("Upload", f, exist)
+			err = server.Send(&pb.UploadResp{Exist: exist})
 			if err != nil {
 				return
 			}
@@ -85,8 +85,8 @@ func (s *KoalaFSServer) Backup(server pb.KoalaFS_BackupServer) (err error) {
 			}
 			var dir sqlite.Dir
 			dir, err = kfsCore.Db.WriteDir(server.Context(), dirItems)
-			fmt.Println("Backup", dir)
-			err = server.Send(&pb.BackupResp{Dir: &pb.DirResp{
+			fmt.Println("Upload", dir)
+			err = server.Send(&pb.UploadResp{Dir: &pb.DirResp{
 				Hash:       dir.Hash(),
 				Size:       dir.Size(),
 				Count:      dir.Count(),
@@ -112,8 +112,8 @@ func (s *KoalaFSServer) Backup(server pb.KoalaFS_BackupServer) (err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println("Backup finish", root.Path)
-	err = server.Send(&pb.BackupResp{
+	fmt.Println("Upload finish", root.Path)
+	err = server.Send(&pb.UploadResp{
 		Branch: &pb.BranchCommitResp{
 			Hash:     commit.Hash,
 			CommitId: commit.Id,

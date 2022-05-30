@@ -11,11 +11,9 @@ service KoalaFS {
   }
   rpc list (PathReq) returns (stream DirItem) {
   }
-  rpc upload (stream UploadReq) returns (UploadResp) {
-  }
   rpc download (DownloadReq) returns (stream DownloadResp) {
   }
-  rpc backup (stream BackupReq) returns (stream BackupResp) {
+  rpc upload (stream UploadReq) returns (stream UploadResp) {
   }
 }
 
@@ -26,16 +24,6 @@ message DownloadReq {
 
 message DownloadResp {
   bytes bytes = 1;
-}
-
-message UploadReq {
-  BackupReqFile file = 1;
-  BackupReqRoot root = 2;
-}
-
-message UploadReqHeader {
-  DirItem dirItem = 1;
-  string branchName = 2;
 }
 
 message DirItem {
@@ -49,11 +37,6 @@ message DirItem {
   uint64 ModifyTime = 8;
   uint64 ChangeTime = 9;
   uint64 AccessTime = 10;
-}
-
-message UploadResp {
-  bool exist = 1;
-  BranchCommitResp branch = 2;
 }
 
 message BranchInfoReq {
@@ -76,7 +59,7 @@ message BranchResp {
   bool exist = 1;
 }
 
-message BackupReqFile {
+message UploadReqFile {
   string hash = 1;
   uint64 size = 2;
   string ext = 3;
@@ -84,20 +67,20 @@ message BackupReqFile {
   bool isLastChunk = 5;
 }
 
-message BackupReqDir {
+message UploadReqDir {
   repeated DirItem dirItem = 1;
 }
 
-message BackupReqRoot {
+message UploadReqRoot {
   string branchName = 1;
   string path = 2;
   DirItem dirItem = 3;
 }
 
-message BackupReq {
-  BackupReqFile file = 1;
-  BackupReqDir dir = 2;
-  BackupReqRoot root = 3;
+message UploadReq {
+  UploadReqFile file = 1;
+  UploadReqDir dir = 2;
+  UploadReqRoot root = 3;
 }
 
 message FileOrDir {
@@ -108,7 +91,7 @@ message FileOrDir {
   uint64 totalCount = 5;
 }
 
-message BackupResp {
+message UploadResp {
   bool exist = 1;
   DirResp dir = 2;
   BranchCommitResp branch = 3;
@@ -128,7 +111,7 @@ message DirResp {
   uint64 totalCount = 4;
 }
 
-message BackupErrResp {
+message UploadErrResp {
   string err = 1;
   string path = 2;
 }

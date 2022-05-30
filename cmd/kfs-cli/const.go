@@ -1,4 +1,4 @@
-package utils
+package main
 
 import "errors"
 
@@ -15,6 +15,8 @@ const (
 	DirPathStr     = "dir-path"
 	ChunkSizeStr   = "block-bytes"
 	DescriptionStr = "description"
+
+	VerboseStr = "verbose"
 )
 
 var (

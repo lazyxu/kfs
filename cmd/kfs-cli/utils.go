@@ -1,6 +1,11 @@
 package main
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/rpc/grpcclient"
+)
 
 func formatPath(p string) []string {
 	splitPath := strings.Split(p, "/")
@@ -8,4 +13,21 @@ func formatPath(p string) []string {
 		splitPath = splitPath[1:]
 	}
 	return splitPath
+}
+
+func withFS(serverType string, serverAddr string, fn func(fs core.FS) error) error {
+	switch serverType {
+	case ServerTypeLocal:
+		fs, _, err := core.New(serverAddr)
+		if err != nil {
+			return err
+		}
+		defer fs.Close()
+		return fn(fs)
+	case ServerTypeRemote:
+		fs := grpcclient.New(serverAddr)
+		return fn(fs)
+	default:
+		return InvalidServerType
+	}
 }

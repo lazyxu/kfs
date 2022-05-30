@@ -1,4 +1,4 @@
-package list
+package main
 
 import (
 	"fmt"
@@ -6,20 +6,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lazyxu/kfs/core"
+
 	"github.com/dustin/go-humanize"
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
-
-	. "github.com/lazyxu/kfs/cmd/kfs-cli/utils"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func printHeader(total int) {
+func printHeader(total int) error {
 	fmt.Printf("total %d\n", total)
 	if total != 0 {
 		fmt.Printf("mode      \tcount\ttotalCount\thash\tsize\tmodifyTime         \tname\n")
 	}
+	return nil
 }
 
 func formatCount(mode uint64, count uint64) string {
@@ -44,7 +45,7 @@ func printBody(dirItem sqlite.IDirItem, isHumanize bool) {
 	}
 }
 
-var Cmd = &cobra.Command{
+var listCmd = &cobra.Command{
 	Use:     "ls",
 	Example: "kfs-cli ls .",
 	Args:    cobra.RangeArgs(0, 1),
@@ -52,7 +53,7 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.PersistentFlags().Bool(HumanizeStr, true, "")
+	listCmd.PersistentFlags().Bool(HumanizeStr, true, "")
 }
 
 func runList(cmd *cobra.Command, args []string) {
@@ -67,19 +68,16 @@ func runList(cmd *cobra.Command, args []string) {
 	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
 	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
 
-	humanize := cmd.Flag(HumanizeStr).Value.String()
 	p := ""
 	if len(args) != 0 {
 		p = args[0]
 	}
-	isHumanize := humanize == "true"
+	isHumanize := cmd.Flag(HumanizeStr).Value.String() == "true"
 
-	switch serverType {
-	case ServerTypeLocal:
-		err = local(cmd.Context(), serverAddr, branchName, p, isHumanize)
-	case ServerTypeRemote:
-		err = remote(cmd.Context(), serverAddr, branchName, p, isHumanize)
-	default:
-		err = InvalidServerType
-	}
+	err = withFS(serverType, serverAddr, func(fs core.FS) error {
+		return fs.List(cmd.Context(), branchName, p, printHeader, func(item sqlite.IDirItem) error {
+			printBody(item, isHumanize)
+			return nil
+		})
+	})
 }
