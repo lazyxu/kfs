@@ -15,8 +15,7 @@ import (
 	"github.com/lazyxu/kfs/pb"
 )
 
-func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string,
-	srcPath string, uploadProcess core.UploadProcess) (commit sqlite.Commit, branch sqlite.Branch, err error) {
+func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, srcPath string, uploadProcess core.UploadProcess, concurrent bool) (commit sqlite.Commit, branch sqlite.Branch, err error) {
 	return withFS2[sqlite.Commit, sqlite.Branch](fs,
 		func(c pb.KoalaFSClient) (commit sqlite.Commit, branch sqlite.Branch, err error) {
 			client, err := c.Upload(ctx)
@@ -28,11 +27,11 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string,
 				return
 			}
 
-			uploadCtx := storage.NewWalkerCtx[sqlite.FileOrDir](ctx, srcPath, &uploadVisitor{
+			walker := storage.NewWalker[sqlite.FileOrDir](ctx, srcPath, &uploadVisitor{
 				client:        client,
 				uploadProcess: uploadProcess,
 			})
-			scanResp, err := uploadCtx.Scan()
+			scanResp, err := walker.Walk(false)
 			if err != nil {
 				return
 			}

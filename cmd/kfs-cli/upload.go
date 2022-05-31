@@ -20,6 +20,7 @@ func init() {
 	uploadCmd.PersistentFlags().StringP(PathStr, "p", "", "override the path")
 	uploadCmd.PersistentFlags().String(DirPathStr, "", "move into dir")
 	uploadCmd.PersistentFlags().BoolP(VerboseStr, "v", false, "verbose")
+	uploadCmd.PersistentFlags().BoolP(ConcurrentStr, "c", false, "concurrent")
 	uploadCmd.PersistentFlags().StringP(ChunkSizeStr, "b", "1 MiB", "[1 KiB, 1 GiB]")
 }
 
@@ -39,18 +40,19 @@ func runUpload(cmd *cobra.Command, args []string) {
 	//fileChunkSize := cmd.Flag(ChunkSizeStr)
 	//humanize.ParseBytes()
 	dstPath := cmd.Flag(PathStr).Value.String()
-	flag := cmd.Flag(VerboseStr).Value.String()
-	verbose := flag != "false"
+	verbose := cmd.Flag(VerboseStr).Value.String() != "false"
+	concurrent := cmd.Flag(ConcurrentStr).Value.String() != "false"
 	srcPath := args[0]
 
+	var uploadProcess core.UploadProcess
+	if verbose {
+		uploadProcess = &UploadProcessBar{}
+	} else {
+		uploadProcess = &core.EmptyUploadProcess{}
+	}
+
 	err = withFS(serverType, serverAddr, func(fs core.FS) error {
-		var uploadProcess core.UploadProcess
-		if verbose {
-			uploadProcess = &UploadProcessBar{}
-		} else {
-			uploadProcess = &core.EmptyUploadProcess{}
-		}
-		branch, commit, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, uploadProcess)
+		branch, commit, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, uploadProcess, concurrent)
 		if err != nil {
 			return err
 		}

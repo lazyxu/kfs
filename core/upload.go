@@ -9,13 +9,12 @@ import (
 	storage "github.com/lazyxu/kfs/storage/local"
 )
 
-func (fs *KFS) Upload(ctx context.Context, branchName string, dstPath string,
-	srcPath string, uploadProcess UploadProcess) (commit sqlite.Commit, branch sqlite.Branch, err error) {
-	backupCtx := storage.NewWalkerCtx[sqlite.FileOrDir](ctx, srcPath, &uploadVisitor{
+func (fs *KFS) Upload(ctx context.Context, branchName string, dstPath string, srcPath string, uploadProcess UploadProcess, concurrent bool) (commit sqlite.Commit, branch sqlite.Branch, err error) {
+	walker := storage.NewWalker[sqlite.FileOrDir](ctx, srcPath, &uploadVisitor{
 		fs:            fs,
 		uploadProcess: uploadProcess,
 	})
-	scanResp, err := backupCtx.Scan()
+	scanResp, err := walker.Walk(false)
 	if err != nil {
 		return
 	}

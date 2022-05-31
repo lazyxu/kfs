@@ -16,7 +16,8 @@ const (
 	ChunkSizeStr   = "block-bytes"
 	DescriptionStr = "description"
 
-	VerboseStr = "verbose"
+	VerboseStr    = "verbose"
+	ConcurrentStr = "concurrent"
 )
 
 var (

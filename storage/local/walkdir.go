@@ -6,28 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sync"
 )
 
-const (
-	StateNew = iota
-	StateScan
-	StateUpload
-	StateDone
-	StateStop
-)
-
-type BackupCtx[T any] struct {
-	ctx            context.Context
-	root           string
-	mutex          sync.RWMutex
-	done           bool
-	canceled       bool
-	errs           []WalkerErr
-	scanProcess    []int
-	scanMaxProcess []int
-	curFilename    []int
-	visitors       []Visitor[T]
+type Walker[T any] struct {
+	ctx      context.Context
+	root     string
+	visitors []Visitor[T]
 }
 
 type WalkerErr struct {
@@ -35,32 +19,24 @@ type WalkerErr struct {
 	FilePath string
 }
 
-func NewWalkerCtx[T any](ctx context.Context, root string, visitors ...Visitor[T]) *BackupCtx[T] {
-	return &BackupCtx[T]{
+func NewWalker[T any](ctx context.Context, root string, visitors ...Visitor[T]) *Walker[T] {
+	return &Walker[T]{
 		ctx:      ctx,
 		root:     root,
-		errs:     []WalkerErr{},
 		visitors: visitors,
 	}
 }
 
-func (c *BackupCtx[T]) Scan() (any, error) {
-	defer func() {
-		c.mutex.Lock()
-		c.done = true
-		c.mutex.Unlock()
-	}()
+func (c *Walker[T]) Walk(concurrent bool) (any, error) {
 	root, err := filepath.Abs(c.root)
 	if err != nil {
 		return nil, err
 	}
-	ret, err := c.walk(root)
+	ret, err := c.walk(root, concurrent)
 	return ret, err
 }
 
-func (c *BackupCtx[T]) visitorsEnter(filename string, info os.FileInfo) bool {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
+func (c *Walker[T]) visitorsEnter(filename string, info os.FileInfo) bool {
 	for _, visitor := range c.visitors {
 		if !visitor.Enter(filename, info) {
 			return false
@@ -69,9 +45,7 @@ func (c *BackupCtx[T]) visitorsEnter(filename string, info os.FileInfo) bool {
 	return true
 }
 
-func (c *BackupCtx[T]) visitorsExit(ctx context.Context, filename string, info os.FileInfo, infos []os.FileInfo, rets []T) (T, error) {
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
+func (c *Walker[T]) visitorsExit(ctx context.Context, filename string, info os.FileInfo, infos []os.FileInfo, rets []T) (T, error) {
 	for _, visitor := range c.visitors {
 		if visitor.HasExit() {
 			return visitor.Exit(ctx, filename, info, infos, rets)
@@ -81,8 +55,8 @@ func (c *BackupCtx[T]) visitorsExit(ctx context.Context, filename string, info o
 	return t, nil
 }
 
-func (c *BackupCtx[T]) walk(filename string) (ret T, err error) {
-	info, err := os.Lstat(filename)
+func (c *Walker[T]) walk(filePath string, concurrent bool) (ret T, err error) {
+	fileInfo, err := os.Lstat(filePath)
 	if err != nil {
 		return
 	}
@@ -90,70 +64,47 @@ func (c *BackupCtx[T]) walk(filename string) (ret T, err error) {
 	var infos []os.FileInfo
 	var rets []T
 	defer func() {
-		ret, err = c.visitorsExit(c.ctx, filename, info, infos, rets)
+		ret, err = c.visitorsExit(c.ctx, filePath, fileInfo, infos, rets)
 	}()
-	if !c.visitorsEnter(filename, info) {
+	if !c.visitorsEnter(filePath, fileInfo) {
 		return
 	}
 
-	if !info.IsDir() {
+	if !fileInfo.IsDir() {
 		return ret, filepath.SkipDir
 	}
-	infos, err = ioutil.ReadDir(filename)
+	infos, err = ioutil.ReadDir(filePath)
 	if err != nil {
 		return
 	}
 
-	c.mutex.Lock()
-	if len(infos) != 0 {
-		c.scanProcess = append(c.scanProcess, 0)
-		c.scanMaxProcess = append(c.scanMaxProcess, len(infos))
-	}
-	c.mutex.Unlock()
-	defer func() {
-		c.mutex.Lock()
-		if len(infos) != 0 {
-			c.scanProcess = c.scanProcess[0 : len(c.scanProcess)-1]
-			c.scanMaxProcess = c.scanMaxProcess[0 : len(c.scanMaxProcess)-1]
-		}
-		c.mutex.Unlock()
-	}()
-
+	ch := make(chan T)
 	for _, info := range infos {
 		select {
 		case <-c.ctx.Done():
-			// TODO: non-recursive version
-			c.mutex.Lock()
-			c.canceled = true
-			c.scanProcess = nil
-			c.mutex.Unlock()
 			return ret, errors.New("context deadline exceed")
 		default:
-			filename := filepath.Join(filename, info.Name())
-			ret, err := c.walk(filename)
-			c.mutex.Lock()
-			rets = append(rets, ret)
-			c.mutex.Unlock()
-			if err == filepath.SkipDir {
-				c.mutex.Lock()
-				c.scanProcess[len(c.scanProcess)-1]++
-				c.mutex.Unlock()
+			if !concurrent {
+				itemFilePath := filepath.Join(filePath, info.Name())
+				itemRet, _ := c.walk(itemFilePath, concurrent)
+				rets = append(rets, itemRet)
 				continue
 			}
-			if err != nil {
-				c.mutex.Lock()
-				c.errs = append(c.errs, WalkerErr{
-					Err:      err,
-					FilePath: filename,
-				})
-				c.scanProcess[len(c.scanProcess)-1]++
-				c.mutex.Unlock()
-				continue
-			}
+			go func(info os.FileInfo, concurrent bool) {
+				itemFilePath := filepath.Join(filePath, info.Name())
+				itemRet, err := c.walk(itemFilePath, concurrent)
+				if err != nil {
+					println(err)
+				}
+				ch <- itemRet
+			}(info, concurrent)
 		}
-		c.mutex.Lock()
-		c.scanProcess[len(c.scanProcess)-1]++
-		c.mutex.Unlock()
+	}
+	if !concurrent {
+		return
+	}
+	for i := 0; i < len(infos); i++ {
+		rets = append(rets, <-ch)
 	}
 	return
 }
