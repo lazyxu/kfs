@@ -129,7 +129,9 @@ func (dir *Dir) Cal(dirItems []DirItem) {
 }
 
 func (db *DB) WriteDir(ctx context.Context, dirItems []DirItem) (dir Dir, err error) {
-	tx, err := db._db.Begin()
+	conn := db.getConn()
+	defer db.putConn(conn)
+	tx, err := conn.Begin()
 	if err != nil {
 		return
 	}
@@ -201,7 +203,9 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir 
 }
 
 func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []string) (hash string, err error) {
-	tx, err := db._db.Begin()
+	conn := db.getConn()
+	defer db.putConn(conn)
+	tx, err := conn.Begin()
 	if err != nil {
 		return
 	}
@@ -323,7 +327,9 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 }
 
 func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string) (commit Commit, branch Branch, err error) {
-	tx, err := db._db.Begin()
+	conn := db.getConn()
+	defer db.putConn(conn)
+	tx, err := conn.Begin()
 	if err != nil {
 		return
 	}

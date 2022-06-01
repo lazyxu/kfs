@@ -3,7 +3,9 @@ package noncgo
 import "context"
 
 func (db *DB) List(ctx context.Context, branchName string, splitPath []string) (dirItems []DirItem, err error) {
-	tx, err := db._db.Begin()
+	conn := db.getConn()
+	defer db.putConn(conn)
+	tx, err := conn.Begin()
 	if err != nil {
 		return
 	}

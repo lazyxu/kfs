@@ -18,7 +18,9 @@ func NewCommit(dir Dir, branchName string, message string) Commit {
 }
 
 func (db *DB) WriteCommit(ctx context.Context, commit *Commit) error {
-	return db.writeCommit(ctx, db._db, commit)
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return db.writeCommit(ctx, conn, commit)
 }
 
 func (db *DB) writeCommit(ctx context.Context, txOrDb TxOrDb, commit *Commit) error {

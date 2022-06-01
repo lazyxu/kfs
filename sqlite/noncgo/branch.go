@@ -46,7 +46,9 @@ func NewBranch(name string, commit Commit, dir Dir) Branch {
 }
 
 func (db *DB) WriteBranch(ctx context.Context, branch Branch) error {
-	return db.writeBranch(ctx, db._db, branch)
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return db.writeBranch(ctx, conn, branch)
 }
 
 func (db *DB) writeBranch(ctx context.Context, txOrDb TxOrDb, branch Branch) error {
@@ -69,7 +71,9 @@ func (db *DB) insertBranch(ctx context.Context, txOrDb TxOrDb, branch Branch) er
 }
 
 func (db *DB) NewBranch(ctx context.Context, branchName string) (exist bool, err error) {
-	tx, err := db._db.Begin()
+	conn := db.getConn()
+	defer db.putConn(conn)
+	tx, err := conn.Begin()
 	if err != nil {
 		return
 	}
@@ -95,7 +99,9 @@ func (db *DB) NewBranch(ctx context.Context, branchName string) (exist bool, err
 }
 
 func (db *DB) BranchInfo(ctx context.Context, branchName string) (branch Branch, err error) {
-	rows, err := db._db.QueryContext(ctx, `
+	conn := db.getConn()
+	defer db.putConn(conn)
+	rows, err := conn.QueryContext(ctx, `
 	SELECT * FROM branch WHERE name=?;
 	`, branchName)
 	if err != nil {

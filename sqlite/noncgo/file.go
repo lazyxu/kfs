@@ -21,7 +21,9 @@ func NewFileByBytes(bytes []byte) File {
 }
 
 func (db *DB) WriteFile(ctx context.Context, file File) error {
-	return db.writeFile(ctx, db._db, file)
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return db.writeFile(ctx, conn, file)
 }
 
 func (db *DB) writeFile(ctx context.Context, txOrDb TxOrDb, file File) error {
@@ -38,7 +40,9 @@ func (db *DB) writeFile(ctx context.Context, txOrDb TxOrDb, file File) error {
 }
 
 func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []string, item DirItem) (commit Commit, branch Branch, err error) {
-	tx, err := db._db.Begin()
+	conn := db.getConn()
+	defer db.putConn(conn)
+	tx, err := conn.Begin()
 	if err != nil {
 		return
 	}

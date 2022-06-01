@@ -64,7 +64,9 @@ func (i fileOrDir) TotalCount() uint64 {
 }
 
 func (db *DB) count(ctx context.Context, tableName string) (int, error) {
-	rows, err := db._db.QueryContext(ctx, "SELECT COUNT(1) FROM "+tableName+";")
+	conn := db.getConn()
+	defer db.putConn(conn)
+	rows, err := conn.QueryContext(ctx, "SELECT COUNT(1) FROM "+tableName+";")
 	if err != nil {
 		return 0, err
 	}

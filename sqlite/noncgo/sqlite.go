@@ -7,16 +7,33 @@ import (
 )
 
 type DB struct {
-	_db *sql.DB
+	ch chan *sql.DB
 }
 
 func Open(dataSourceName string) (*DB, error) {
-	db, err := sql.Open("sqlite", dataSourceName)
-	return &DB{db}, err
+	conn, err := sql.Open("sqlite", dataSourceName)
+	if err != nil {
+		return nil, err
+	}
+	db := &DB{
+		ch: make(chan *sql.DB, 1),
+	}
+	db.ch <- conn
+	return db, err
+}
+
+func (db *DB) getConn() *sql.DB {
+	return <-db.ch
+}
+
+func (db *DB) putConn(conn *sql.DB) {
+	db.ch <- conn
 }
 
 func (db *DB) Reset() error {
-	_, err := db._db.Exec(`
+	conn := db.getConn()
+	defer db.putConn(conn)
+	_, err := conn.Exec(`
 	DROP TABLE IF EXISTS file;
 	CREATE TABLE file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
@@ -68,5 +85,6 @@ func (db *DB) Reset() error {
 }
 
 func (db *DB) Close() error {
-	return db._db.Close()
+	conn := db.getConn()
+	return conn.Close()
 }
