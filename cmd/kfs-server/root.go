@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/lazyxu/kfs/rpc/grpcserver"
+	"github.com/lazyxu/kfs/rpc/server"
 
 	"github.com/lazyxu/kfs/core"
 
@@ -64,6 +64,15 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return
 		}
-		grpcserver.ListenAndServe(kfsRoot, portString)
+		go func() {
+			err = server.SocketServer(kfsRoot, "1124")
+			if err != nil {
+				return
+			}
+		}()
+		err = server.GrpcServer(kfsRoot, portString)
+		if err != nil {
+			return
+		}
 	},
 }

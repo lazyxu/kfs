@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/lazyxu/kfs/rpc/grpcclient"
+	"github.com/lazyxu/kfs/rpc/client"
 
 	"github.com/schollz/progressbar/v3"
 
@@ -30,7 +30,7 @@ func (process *UploadProcessBar) New(max int, filename string) core.UploadProces
 		progressbar.OptionOnCompletion(func() {
 			fmt.Println()
 		}),
-		progressbar.OptionSetDescription("[1/2][hash] "+grpcclient.FormatFilename(filename)),
+		progressbar.OptionSetDescription("[1/2][hash] "+client.FormatFilename(filename)),
 		progressbar.OptionSetTheme(progressbar.Theme{
 			Saucer:        "[green]#[reset]",
 			SaucerPadding: "-",
@@ -47,7 +47,7 @@ func (process *UploadProcessBar) Close() error {
 
 func (process *UploadProcessBar) BeforeContent(hash string, filename string) {
 	process.bar.Reset()
-	process.bar.Describe("[2/2][" + hash[0:4] + "] " + grpcclient.FormatFilename(filename))
+	process.bar.Describe("[2/2][" + hash[0:4] + "] " + client.FormatFilename(filename))
 }
 
 func (process *UploadProcessBar) MultiWriter(w io.Writer) io.Writer {

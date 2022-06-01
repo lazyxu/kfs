@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/lazyxu/kfs/core"
-	"github.com/lazyxu/kfs/rpc/grpcclient"
+	"github.com/lazyxu/kfs/rpc/client"
 )
 
 func formatPath(p string) []string {
@@ -25,7 +25,7 @@ func withFS(serverType string, serverAddr string, fn func(fs core.FS) error) err
 		defer fs.Close()
 		return fn(fs)
 	case ServerTypeRemote:
-		fs := grpcclient.New(serverAddr)
+		fs := client.New(serverAddr)
 		return fn(fs)
 	default:
 		return InvalidServerType

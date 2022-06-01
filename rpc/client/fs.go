@@ -1,4 +1,4 @@
-package grpcclient
+package client
 
 type GRPCFS struct {
 	RemoteAddr string

@@ -1,4 +1,4 @@
-package grpcserver
+package server
 
 import (
 	"net"
@@ -12,17 +12,14 @@ type KoalaFSServer struct {
 	kfsRoot string
 }
 
-func ListenAndServe(kfsRoot string, portString string) {
+func GrpcServer(kfsRoot string, portString string) error {
 	server := &KoalaFSServer{kfsRoot: kfsRoot}
 	lis, err := net.Listen("tcp", "0.0.0.0:"+portString)
 	if err != nil {
-		return
+		return err
 	}
 	s := grpc.NewServer()
 	pb.RegisterKoalaFSServer(s, server)
-	println("Listening on", lis.Addr().String())
-	err = s.Serve(lis)
-	if err != nil {
-		return
-	}
+	println("GRPC listening on", lis.Addr().String())
+	return s.Serve(lis)
 }

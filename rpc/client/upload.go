@@ -1,4 +1,4 @@
-package grpcclient
+package client
 
 import (
 	"context"
@@ -30,8 +30,9 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 			walker := storage.NewWalker[sqlite.FileOrDir](ctx, srcPath, &uploadVisitor{
 				client:        client,
 				uploadProcess: uploadProcess,
+				concurrent:    concurrent,
 			})
-			scanResp, err := walker.Walk(false)
+			scanResp, err := walker.Walk(concurrent)
 			if err != nil {
 				return
 			}

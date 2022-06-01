@@ -1,4 +1,4 @@
-package grpcclient
+package client
 
 import (
 	"context"
@@ -16,6 +16,7 @@ type uploadVisitor struct {
 	storage.EmptyVisitor[sqlite.FileOrDir]
 	client        pb.KoalaFS_UploadClient
 	uploadProcess core.UploadProcess
+	concurrent    bool
 }
 
 func (v *uploadVisitor) HasExit() bool {
@@ -29,6 +30,13 @@ func (v *uploadVisitor) Exit(ctx context.Context, filePath string, info os.FileI
 		file, err := core.NewFileByName(v.uploadProcess, filePath)
 		if err != nil {
 			return nil, err
+		}
+		if v.concurrent {
+			err = uploadFile(filePath, file.Hash(), file.Size())
+			if err != nil {
+				return nil, err
+			}
+			return file, nil
 		}
 		err = SendContent(v.uploadProcess, file.Hash(), filePath, func(data []byte, isFirst bool, isLast bool) error {
 			if isFirst {
