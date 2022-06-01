@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"io"
 	"os"
-	"path/filepath"
 
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 )
@@ -29,7 +28,6 @@ func (process *EmptyUploadProcess) Close() error {
 }
 
 func NewFileByName(process UploadProcess, filename string) (sqlite.File, error) {
-	ext := filepath.Ext(filename)
 	f, err := os.Open(filename)
 	if err != nil {
 		return sqlite.File{}, err
@@ -45,7 +43,7 @@ func NewFileByName(process UploadProcess, filename string) (sqlite.File, error) 
 	if err != nil {
 		return sqlite.File{}, err
 	}
-	return sqlite.NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(info.Size()), ext), nil
+	return sqlite.NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(info.Size())), nil
 }
 
 func (process *EmptyUploadProcess) BeforeContent(hash string, filename string) {

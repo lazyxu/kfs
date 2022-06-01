@@ -36,7 +36,6 @@ func (v *uploadVisitor) Exit(ctx context.Context, filePath string, info os.FileI
 					File: &pb.UploadReqFile{
 						Hash:        file.Hash(),
 						Size:        uint64(info.Size()),
-						Ext:         filepath.Ext(filePath),
 						Bytes:       data,
 						IsLastChunk: isLast,
 					},

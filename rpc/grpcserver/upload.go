@@ -54,7 +54,7 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 			if err != nil {
 				return
 			}
-			f := sqlite.NewFile(firstFileChunk.Hash, firstFileChunk.Size, firstFileChunk.Ext)
+			f := sqlite.NewFile(firstFileChunk.Hash, firstFileChunk.Size)
 			err = kfsCore.Db.WriteFile(server.Context(), f)
 			if err != nil {
 				return

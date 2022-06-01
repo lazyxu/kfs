@@ -47,8 +47,8 @@ func TestSqlite(t *testing.T) {
 		return
 	}
 
-	file1 := NewFileByBytes(content1, "")
-	file2 := NewFileByBytes(content2, "txt")
+	file1 := NewFileByBytes(content1)
+	file2 := NewFileByBytes(content2)
 	err = db.WriteFile(ctx, file1)
 	if err != nil {
 		t.Error(err)

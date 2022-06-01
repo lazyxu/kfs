@@ -62,9 +62,8 @@ message BranchResp {
 message UploadReqFile {
   string hash = 1;
   uint64 size = 2;
-  string ext = 3;
-  bytes bytes = 4;
-  bool isLastChunk = 5;
+  bytes bytes = 3;
+  bool isLastChunk = 4;
 }
 
 message UploadReqDir {

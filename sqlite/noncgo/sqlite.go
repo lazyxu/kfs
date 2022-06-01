@@ -19,14 +19,13 @@ func (db *DB) Reset() error {
 	_, err := db._db.Exec(`
 	DROP TABLE IF EXISTS file;
 	CREATE TABLE file (
-		Hash CHAR(64) NOT NULL PRIMARY KEY,
-		size INTEGER  NOT NULL,
-		ext  TEXT     NOT NULL
+		hash CHAR(64) NOT NULL PRIMARY KEY,
+		size INTEGER  NOT NULL
 	);
 
 	DROP TABLE IF EXISTS dir;
 	CREATE TABLE dir (
-		Hash       CHAR(64) NOT NULL PRIMARY KEY,
+		hash       CHAR(64) NOT NULL PRIMARY KEY,
 		size       INTEGER  NOT NULL,
 		count      INTEGER  NOT NULL,
 		totalCount INTEGER  NOT NULL
@@ -34,7 +33,7 @@ func (db *DB) Reset() error {
 
 	DROP TABLE IF EXISTS dirItem;
 	CREATE TABLE dirItem (
-		Hash           CHAR(64)  NOT NULL,
+		hash           CHAR(64)  NOT NULL,
 		itemHash       CHAR(64)  NOT NULL,
 		itemName       TEXT      NOT NULL,
 		itemMode       INTEGER   NOT NULL,

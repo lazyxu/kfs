@@ -8,17 +8,16 @@ import (
 
 type File struct {
 	fileOrDir
-	Ext string
 }
 
-func NewFile(hash string, size uint64, ext string) File {
-	return File{fileOrDir{hash, size}, ext}
+func NewFile(hash string, size uint64) File {
+	return File{fileOrDir{hash, size}}
 }
 
-func NewFileByBytes(bytes []byte, ext string) File {
+func NewFileByBytes(bytes []byte) File {
 	hash := sha256.New()
 	hash.Write(bytes)
-	return NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(len(bytes)), ext)
+	return NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(len(bytes)))
 }
 
 func (db *DB) WriteFile(ctx context.Context, file File) error {
@@ -26,10 +25,9 @@ func (db *DB) WriteFile(ctx context.Context, file File) error {
 }
 
 func (db *DB) writeFile(ctx context.Context, txOrDb TxOrDb, file File) error {
-	// TODO: update ext if duplicated
 	_, err := txOrDb.ExecContext(ctx, `
-	INSERT INTO file VALUES (?, ?, ?);
-	`, file.hash, file.size, file.Ext)
+	INSERT INTO file VALUES (?, ?);
+	`, file.hash, file.size)
 	if err != nil {
 		if isUniqueConstraintError(err) {
 			return nil

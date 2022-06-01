@@ -158,7 +158,7 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir 
 	}
 	stmt, err := tx.PrepareContext(ctx, `
 	INSERT INTO dirItem (
-		Hash,
+		hash,
 		itemHash,
 		itemName,
 		itemMode,
