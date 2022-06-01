@@ -68,16 +68,12 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 	}
 }
 
-func SocketServer(kfsRoot string, portString string) error {
-	kfsCore, _, err := core.New(kfsRoot)
+func SocketServer(kfsCore *core.KFS, portString string) error {
+	lis, err := net.Listen("tcp", "0.0.0.0:"+portString)
 	if err != nil {
 		return err
 	}
-	lis, err := net.Listen("tcp", "127.0.0.1:"+portString)
-	if err != nil {
-		return err
-	}
-	println("GRPC listening on", lis.Addr().String())
+	println("Socket listening on", lis.Addr().String())
 	for {
 		conn, err := lis.Accept()
 		if err != nil {

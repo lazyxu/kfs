@@ -3,17 +3,19 @@ package server
 import (
 	"net"
 
+	"github.com/lazyxu/kfs/core"
+
 	"github.com/lazyxu/kfs/pb"
 	"google.golang.org/grpc"
 )
 
 type KoalaFSServer struct {
 	pb.UnimplementedKoalaFSServer
-	kfsRoot string
+	kfsCore *core.KFS
 }
 
-func GrpcServer(kfsRoot string, portString string) error {
-	server := &KoalaFSServer{kfsRoot: kfsRoot}
+func GrpcServer(kfsCore *core.KFS, portString string) error {
+	server := &KoalaFSServer{kfsCore: kfsCore}
 	lis, err := net.Listen("tcp", "0.0.0.0:"+portString)
 	if err != nil {
 		return err

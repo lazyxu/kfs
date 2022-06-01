@@ -11,11 +11,6 @@ import (
 )
 
 func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
-	kfsCore, _, err := core.New(s.kfsRoot)
-	if err != nil {
-		return
-	}
-	defer kfsCore.Close()
 	req := &pb.UploadReq{}
 	var exist bool
 	fmt.Println("-----------")
@@ -32,7 +27,7 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 				continue // file already exists, ignored
 			}
 			firstFileChunk := req.File
-			exist, err = kfsCore.S.WriteFn(firstFileChunk.Hash, func(f io.Writer, hasher io.Writer) error {
+			exist, err = s.kfsCore.S.WriteFn(firstFileChunk.Hash, func(f io.Writer, hasher io.Writer) error {
 				for {
 					_, err = hasher.Write(req.File.Bytes)
 					if err != nil {
@@ -55,7 +50,7 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 				return
 			}
 			f := sqlite.NewFile(firstFileChunk.Hash, firstFileChunk.Size)
-			err = kfsCore.Db.WriteFile(server.Context(), f)
+			err = s.kfsCore.Db.WriteFile(server.Context(), f)
 			if err != nil {
 				return
 			}
@@ -84,7 +79,7 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 				}
 			}
 			var dir sqlite.Dir
-			dir, err = kfsCore.Db.WriteDir(server.Context(), dirItems)
+			dir, err = s.kfsCore.Db.WriteDir(server.Context(), dirItems)
 			fmt.Println("Upload", dir)
 			err = server.Send(&pb.UploadResp{Dir: &pb.DirResp{
 				Hash:       dir.Hash(),
@@ -97,7 +92,7 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 	}
 	root := req.Root
 	dirItem := root.DirItem
-	commit, branch, err := kfsCore.Db.UpsertDirItem(server.Context(), root.BranchName, core.FormatPath(root.Path), sqlite.DirItem{
+	commit, branch, err := s.kfsCore.Db.UpsertDirItem(server.Context(), root.BranchName, core.FormatPath(root.Path), sqlite.DirItem{
 		Hash:       dirItem.Hash,
 		Name:       dirItem.Name,
 		Mode:       dirItem.Mode,

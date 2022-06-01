@@ -65,12 +65,12 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		go func() {
-			err = server.SocketServer(kfsRoot, "1124")
+			err = server.SocketServer(kfsCore, "1124")
 			if err != nil {
 				return
 			}
 		}()
-		err = server.GrpcServer(kfsRoot, portString)
+		err = server.GrpcServer(kfsCore, portString)
 		if err != nil {
 			return
 		}
