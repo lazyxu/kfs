@@ -60,7 +60,6 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 				return
 			}
 		} else {
-			// TODO: upload dir
 			pbDirItems := req.Dir.DirItem
 			fmt.Println(pbDirItems)
 			dirItems := make([]sqlite.DirItem, len(pbDirItems))
@@ -80,7 +79,7 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 			}
 			var dir sqlite.Dir
 			dir, err = s.kfsCore.Db.WriteDir(server.Context(), dirItems)
-			fmt.Println("Upload", dir)
+			fmt.Println("UploadDir", dir)
 			err = server.Send(&pb.UploadResp{Dir: &pb.DirResp{
 				Hash:       dir.Hash(),
 				Size:       dir.Size(),

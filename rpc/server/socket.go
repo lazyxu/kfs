@@ -14,6 +14,7 @@ import (
 )
 
 func process(kfsCore *core.KFS, conn net.Conn) {
+	println(conn, "process")
 	reader := bufio.NewReader(conn)
 
 	hashBytes := make([]byte, 256/8)
@@ -51,6 +52,7 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 		if err != nil {
 			println("exist", err)
 		}
+		println("exist")
 		return
 	}
 
@@ -66,6 +68,7 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 		println("code", err)
 		return
 	}
+	println(conn, "code", 0)
 }
 
 func SocketServer(kfsCore *core.KFS, portString string) error {

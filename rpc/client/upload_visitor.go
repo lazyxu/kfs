@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"net"
 	"os"
 	"path/filepath"
 
@@ -16,7 +17,8 @@ type uploadVisitor struct {
 	storage.EmptyVisitor[sqlite.FileOrDir]
 	client        pb.KoalaFS_UploadClient
 	uploadProcess core.UploadProcess
-	concurrent    bool
+	concurrent    int
+	connCh        chan net.Conn
 }
 
 func (v *uploadVisitor) HasExit() bool {
@@ -31,8 +33,8 @@ func (v *uploadVisitor) Exit(ctx context.Context, filePath string, info os.FileI
 		if err != nil {
 			return nil, err
 		}
-		if v.concurrent {
-			err = uploadFile(filePath, file.Hash(), file.Size())
+		if v.concurrent > 1 {
+			err = v.uploadFile(filePath, file.Hash(), file.Size())
 			if err != nil {
 				return nil, err
 			}

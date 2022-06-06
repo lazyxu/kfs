@@ -30,7 +30,7 @@ func (db *DB) putConn(conn *sql.DB) {
 	db.ch <- conn
 }
 
-func (db *DB) Reset() error {
+func (db *DB) Create() error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	_, err := conn.Exec(`
@@ -85,6 +85,10 @@ func (db *DB) Reset() error {
 }
 
 func (db *DB) Close() error {
-	conn := db.getConn()
-	return conn.Close()
+	select {
+	case conn := <-db.ch:
+		return conn.Close()
+	default:
+		return nil
+	}
 }

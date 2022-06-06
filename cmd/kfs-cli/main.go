@@ -58,5 +58,6 @@ func init() {
 	rootCmd.AddCommand(checkoutCmd)
 	rootCmd.AddCommand(uploadCmd)
 	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(resetCmd)
 	rootCmd.AddCommand(catCmd)
 }

@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 
@@ -15,7 +16,7 @@ import (
 	"github.com/lazyxu/kfs/pb"
 )
 
-func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, srcPath string, uploadProcess core.UploadProcess, concurrent bool) (commit sqlite.Commit, branch sqlite.Branch, err error) {
+func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, srcPath string, uploadProcess core.UploadProcess, concurrent int) (commit sqlite.Commit, branch sqlite.Branch, err error) {
 	return withFS2[sqlite.Commit, sqlite.Branch](fs,
 		func(c pb.KoalaFSClient) (commit sqlite.Commit, branch sqlite.Branch, err error) {
 			client, err := c.Upload(ctx)
@@ -27,12 +28,22 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 				return
 			}
 
-			walker := storage.NewWalker[sqlite.FileOrDir](ctx, srcPath, &uploadVisitor{
+			v := &uploadVisitor{
 				client:        client,
 				uploadProcess: uploadProcess,
 				concurrent:    concurrent,
-			})
-			scanResp, err := walker.Walk(concurrent)
+			}
+			v.connCh = make(chan net.Conn, concurrent)
+			for i := 0; i < concurrent; i++ {
+				var conn net.Conn
+				conn, err = net.Dial("tcp", "127.0.0.1:1124")
+				if err != nil {
+					return
+				}
+				v.connCh <- conn
+			}
+			walker := storage.NewWalker[sqlite.FileOrDir](ctx, srcPath, v)
+			scanResp, err := walker.Walk(concurrent > 1)
 			if err != nil {
 				return
 			}

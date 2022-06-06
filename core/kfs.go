@@ -9,8 +9,9 @@ import (
 )
 
 type KFS struct {
-	Db *sqlite.DB
-	S  *storage.Storage
+	Db   *sqlite.DB
+	S    *storage.Storage
+	root string
 }
 
 func New(root string) (*KFS, bool, error) {
@@ -32,12 +33,12 @@ func New(root string) (*KFS, bool, error) {
 		return nil, false, err
 	}
 	if !exist {
-		err = db.Reset()
+		err = db.Create()
 		if err != nil {
 			return nil, exist, err
 		}
 	}
-	return &KFS{Db: db, S: s}, exist, nil
+	return &KFS{Db: db, S: s, root: root}, exist, nil
 }
 
 func (fs *KFS) Close() error {

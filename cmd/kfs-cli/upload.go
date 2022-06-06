@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/lazyxu/kfs/core"
 
@@ -20,7 +21,7 @@ func init() {
 	uploadCmd.PersistentFlags().StringP(PathStr, "p", "", "override the path")
 	uploadCmd.PersistentFlags().String(DirPathStr, "", "move into dir")
 	uploadCmd.PersistentFlags().BoolP(VerboseStr, "v", false, "verbose")
-	uploadCmd.PersistentFlags().BoolP(ConcurrentStr, "c", false, "concurrent")
+	uploadCmd.PersistentFlags().IntP(ConcurrentStr, "c", 1, "concurrent")
 	uploadCmd.PersistentFlags().StringP(ChunkSizeStr, "b", "1 MiB", "[1 KiB, 1 GiB]")
 }
 
@@ -41,7 +42,10 @@ func runUpload(cmd *cobra.Command, args []string) {
 	//humanize.ParseBytes()
 	dstPath := cmd.Flag(PathStr).Value.String()
 	verbose := cmd.Flag(VerboseStr).Value.String() != "false"
-	concurrent := cmd.Flag(ConcurrentStr).Value.String() != "false"
+	concurrent, err := strconv.Atoi(cmd.Flag(ConcurrentStr).Value.String())
+	if err != nil {
+		return
+	}
 	srcPath := args[0]
 
 	var uploadProcess core.UploadProcess

@@ -8,7 +8,23 @@ import (
 	"os"
 )
 
-func uploadFile(filePath string, hash string, size uint64) error {
+func (v *uploadVisitor) getConn() {
+}
+
+func (v *uploadVisitor) uploadFile(filePath string, hash string, size uint64) error {
+	//conn, err := net.Dial("tcp", "127.0.0.1:1124")
+	//if err != nil {
+	//	println(err.Error())
+	//	return nil
+	//}
+	//defer conn.Close()
+	c := <-v.connCh
+	defer func() {
+		println("conn 2", filePath, hash, c)
+		v.connCh <- c
+	}()
+	println("conn 1", filePath, hash, c)
+
 	conn, err := net.Dial("tcp", "127.0.0.1:1124")
 	if err != nil {
 		return err
@@ -34,7 +50,6 @@ func uploadFile(filePath string, hash string, size uint64) error {
 	if err != nil {
 		return err
 	}
-	println("exist", exist)
 	if exist {
 		return nil
 	}
@@ -55,6 +70,5 @@ func uploadFile(filePath string, hash string, size uint64) error {
 	if err != nil {
 		return err
 	}
-	println("code", code)
 	return nil
 }
