@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/silenceper/pool"
+
 	"github.com/lazyxu/kfs/core"
 
 	"github.com/lazyxu/kfs/pb"
@@ -15,7 +17,8 @@ import (
 
 type uploadVisitor struct {
 	storage.EmptyVisitor[sqlite.FileOrDir]
-	client        pb.KoalaFS_UploadClient
+	c             pb.KoalaFSClient
+	p             pool.Pool
 	uploadProcess core.UploadProcess
 	concurrent    int
 	connCh        chan net.Conn
@@ -40,9 +43,13 @@ func (v *uploadVisitor) Exit(ctx context.Context, filePath string, info os.FileI
 			}
 			return file, nil
 		}
+		client, err := v.c.Upload(ctx)
+		if err != nil {
+			return nil, err
+		}
 		err = SendContent(v.uploadProcess, file.Hash(), filePath, func(data []byte, isFirst bool, isLast bool) error {
 			if isFirst {
-				return v.client.Send(&pb.UploadReq{
+				return client.Send(&pb.UploadReq{
 					File: &pb.UploadReqFile{
 						Hash:        file.Hash(),
 						Size:        uint64(info.Size()),
@@ -51,7 +58,7 @@ func (v *uploadVisitor) Exit(ctx context.Context, filePath string, info os.FileI
 					},
 				})
 			}
-			return v.client.Send(&pb.UploadReq{
+			return client.Send(&pb.UploadReq{
 				File: &pb.UploadReqFile{
 					Bytes:       data,
 					IsLastChunk: isLast,
@@ -61,7 +68,7 @@ func (v *uploadVisitor) Exit(ctx context.Context, filePath string, info os.FileI
 		if err != nil {
 			return nil, err
 		}
-		_, err = v.client.Recv()
+		_, err = client.Recv()
 		if err != nil {
 			return nil, err
 		}
@@ -86,10 +93,18 @@ func (v *uploadVisitor) Exit(ctx context.Context, filePath string, info os.FileI
 				AccessTime: modifyTime,
 			}
 		}
-		err := v.client.Send(&pb.UploadReq{
+		client, err := v.c.Upload(ctx)
+		if err != nil {
+			return nil, err
+		}
+		err = client.Send(&pb.UploadReq{
 			Dir: &pb.UploadReqDir{DirItem: dirItems},
 		})
-		resp, err := v.client.Recv()
+		resp, err := client.Recv()
+		if err != nil {
+			return nil, err
+		}
+		err = client.CloseSend()
 		if err != nil {
 			return nil, err
 		}

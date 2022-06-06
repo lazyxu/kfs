@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net"
 
@@ -14,13 +15,47 @@ import (
 )
 
 func process(kfsCore *core.KFS, conn net.Conn) {
-	println(conn, "process")
+	println(conn.RemoteAddr().String(), "process")
+
+	for {
+		var command uint8
+		err := binary.Read(conn, binary.LittleEndian, &command)
+		if err != nil {
+			println("command", err.Error())
+			return
+		}
+		switch command {
+		case 0:
+			pong(conn)
+		case 1:
+			handleUploadFile(kfsCore, conn)
+		default:
+			panic(fmt.Errorf("no such command %d", command))
+		}
+	}
+}
+
+func pong(conn net.Conn) {
+	_, err := conn.Write([]byte{0})
+	if err != nil {
+		println(conn.RemoteAddr().String(), "pong", err)
+		return
+	}
+}
+
+func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
+	var err error
+	defer func() {
+		if err != nil {
+			_, err = conn.Write([]byte{1})
+		}
+	}()
 	reader := bufio.NewReader(conn)
 
 	hashBytes := make([]byte, 256/8)
-	err := binary.Read(reader, binary.LittleEndian, hashBytes)
+	err = binary.Read(reader, binary.LittleEndian, hashBytes)
 	if err != nil {
-		println("hashBytes", err)
+		println(conn.RemoteAddr().String(), "hashBytes", err.Error())
 		return
 	}
 	hash := hex.EncodeToString(hashBytes)
@@ -29,10 +64,10 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 	var size int64
 	err = binary.Read(reader, binary.LittleEndian, &size)
 	if err != nil {
-		println("size", err)
+		println(conn.RemoteAddr().String(), "size", err.Error())
 		return
 	}
-	println("size", size)
+	println(conn.RemoteAddr().String(), "size", size)
 
 	exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) error {
 		_, err = conn.Write([]byte{0}) // not exist
@@ -44,31 +79,31 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 		return err
 	})
 	if err != nil {
-		println("WriteFn", err)
+		println(conn.RemoteAddr().String(), "WriteFn", err.Error())
 		return
 	}
 	if exist {
 		_, err = conn.Write([]byte{1})
 		if err != nil {
-			println("exist", err)
+			println(conn.RemoteAddr().String(), "exist", err.Error())
 		}
-		println("exist")
+		println(conn.RemoteAddr().String(), "exist")
 		return
 	}
 
 	f := sqlite.NewFile(hash, uint64(size))
 	err = kfsCore.Db.WriteFile(context.Background(), f)
 	if err != nil {
-		println("Db.WriteFile", err)
+		println(conn.RemoteAddr().String(), "Db.WriteFile", err.Error())
 		return
 	}
 
 	_, err = conn.Write([]byte{0})
 	if err != nil {
-		println("code", err)
+		println(conn.RemoteAddr().String(), "code", err.Error())
 		return
 	}
-	println(conn, "code", 0)
+	println(conn.RemoteAddr().String(), "code", 0)
 }
 
 func SocketServer(kfsCore *core.KFS, portString string) error {

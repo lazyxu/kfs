@@ -86,7 +86,10 @@ func (c *Walker[T]) walk(filePath string, concurrent bool) (ret T, err error) {
 		default:
 			if !concurrent {
 				itemFilePath := filepath.Join(filePath, info.Name())
-				itemRet, _ := c.walk(itemFilePath, concurrent)
+				itemRet, err := c.walk(itemFilePath, concurrent)
+				if err != nil {
+					println(err.Error())
+				}
 				rets = append(rets, itemRet)
 				continue
 			}

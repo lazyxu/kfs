@@ -13,7 +13,6 @@ import (
 func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 	req := &pb.UploadReq{}
 	var exist bool
-	fmt.Println("-----------")
 	for {
 		req, err = server.Recv()
 		if err != nil {

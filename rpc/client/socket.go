@@ -8,28 +8,25 @@ import (
 	"os"
 )
 
-func (v *uploadVisitor) getConn() {
-}
-
-func (v *uploadVisitor) uploadFile(filePath string, hash string, size uint64) error {
-	//conn, err := net.Dial("tcp", "127.0.0.1:1124")
-	//if err != nil {
-	//	println(err.Error())
-	//	return nil
-	//}
-	//defer conn.Close()
-	c := <-v.connCh
-	defer func() {
-		println("conn 2", filePath, hash, c)
-		v.connCh <- c
-	}()
-	println("conn 1", filePath, hash, c)
-
-	conn, err := net.Dial("tcp", "127.0.0.1:1124")
+func (v *uploadVisitor) uploadFile(filePath string, hash string, size uint64) (err error) {
+	c, err := v.p.Get()
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() {
+		if err != nil {
+			v.p.Close(c)
+			return
+		}
+		err = v.p.Put(c)
+	}()
+	conn := c.(net.Conn)
+
+	//println(conn.LocalAddr().String(), 1)
+	_, err = conn.Write([]byte{1})
+	if err != nil {
+		return err
+	}
 
 	hashBytes, err := hex.DecodeString(hash)
 	if err != nil {
@@ -39,17 +36,20 @@ func (v *uploadVisitor) uploadFile(filePath string, hash string, size uint64) er
 	if err != nil {
 		return err
 	}
+	//println(conn.LocalAddr().String(), filePath, "hash", hash)
 
 	err = binary.Write(conn, binary.LittleEndian, size)
 	if err != nil {
 		return err
 	}
+	//println(conn.LocalAddr().String(), filePath, "size", size)
 
 	var exist bool
 	err = binary.Read(conn, binary.LittleEndian, &exist)
 	if err != nil {
 		return err
 	}
+	//println(conn.LocalAddr().String(), filePath, "exist", exist)
 	if exist {
 		return nil
 	}
@@ -65,10 +65,12 @@ func (v *uploadVisitor) uploadFile(filePath string, hash string, size uint64) er
 		return err
 	}
 
+	//println(conn.LocalAddr().String(), filePath, "CopyN")
 	var code int8
 	err = binary.Read(conn, binary.LittleEndian, &code)
 	if err != nil {
 		return err
 	}
+	//println(conn.LocalAddr().String(), filePath, "code", code)
 	return nil
 }

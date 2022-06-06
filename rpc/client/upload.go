@@ -2,10 +2,15 @@ package client
 
 import (
 	"context"
+	"encoding/binary"
+	"fmt"
 	"io"
 	"net"
 	"os"
 	"path/filepath"
+	"time"
+
+	"github.com/silenceper/pool"
 
 	"github.com/lazyxu/kfs/core"
 
@@ -19,17 +24,42 @@ import (
 func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, srcPath string, uploadProcess core.UploadProcess, concurrent int) (commit sqlite.Commit, branch sqlite.Branch, err error) {
 	return withFS2[sqlite.Commit, sqlite.Branch](fs,
 		func(c pb.KoalaFSClient) (commit sqlite.Commit, branch sqlite.Branch, err error) {
-			client, err := c.Upload(ctx)
-			if err != nil {
-				return
-			}
 			srcPath, err = filepath.Abs(srcPath)
 			if err != nil {
 				return
 			}
-
+			idleTimeout := time.Second * 10
+			p, err := pool.NewChannelPool(&pool.Config{
+				InitialCap: 0,
+				MaxCap:     concurrent,
+				MaxIdle:    concurrent,
+				Factory: func() (interface{}, error) {
+					return net.Dial("tcp", "127.0.0.1:1124")
+				},
+				Close: func(i interface{}) error {
+					return i.(net.Conn).Close()
+				},
+				Ping: func(i interface{}) error {
+					conn := i.(net.Conn)
+					_, err := conn.Write([]byte{0})
+					if err != nil {
+						return err
+					}
+					var pong uint8
+					err = binary.Read(conn, binary.LittleEndian, &pong)
+					if err != nil {
+						return err
+					}
+					if pong != 0 {
+						return fmt.Errorf("pong is %d, expected 0", pong)
+					}
+					return nil
+				},
+				IdleTimeout: idleTimeout,
+			})
 			v := &uploadVisitor{
-				client:        client,
+				c:             c,
+				p:             p,
 				uploadProcess: uploadProcess,
 				concurrent:    concurrent,
 			}
@@ -53,6 +83,10 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 			}
 			fileOrDir := scanResp.(sqlite.FileOrDir)
 			modifyTime := uint64(info.ModTime().UnixNano())
+			client, err := c.Upload(ctx)
+			if err != nil {
+				return
+			}
 			err = client.Send(&pb.UploadReq{
 				Root: &pb.UploadReqRoot{
 					BranchName: branchName,
@@ -78,6 +112,10 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 				return
 			}
 			resp, err := client.Recv()
+			if err != nil {
+				return
+			}
+			err = client.CloseSend()
 			if err != nil {
 				return
 			}
