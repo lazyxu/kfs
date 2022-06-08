@@ -14,11 +14,6 @@ type Walker[T any] struct {
 	visitors []Visitor[T]
 }
 
-type WalkerErr struct {
-	Err      error
-	FilePath string
-}
-
 func NewWalker[T any](ctx context.Context, root string, visitors ...Visitor[T]) *Walker[T] {
 	return &Walker[T]{
 		ctx:      ctx,

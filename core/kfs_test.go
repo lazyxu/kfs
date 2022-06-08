@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
@@ -17,7 +16,7 @@ func TestKFS(t *testing.T) {
 	defer kfsCore.Close()
 	ctx := context.Background()
 	branchName := "default"
-	_, _, err = kfsCore.Upload(ctx, branchName, "", ".", &EmptyUploadProcess{}, false)
+	_, _, err = kfsCore.Upload(ctx, branchName, "", ".", &EmptyUploadProcess{}, 1)
 	if err != nil {
 		t.Error(err)
 		return
@@ -25,7 +24,7 @@ func TestKFS(t *testing.T) {
 	count := 0
 	err = kfsCore.List(ctx, branchName, "", nil, func(item sqlite.IDirItem) error {
 		count++
-		fmt.Printf("%+v\n", item.GetName())
+		// fmt.Printf("%+v\n", item.GetName())
 		return nil
 	})
 	if err != nil {
@@ -37,10 +36,10 @@ func TestKFS(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	println("------delete /kfs_test.go")
+	//println("------delete /kfs_test.go")
 	err = kfsCore.List(ctx, branchName, "", nil, func(item sqlite.IDirItem) error {
 		count--
-		fmt.Printf("%+v\n", item.GetName())
+		// fmt.Printf("%+v\n", item.GetName())
 		return nil
 	})
 	if err != nil {
