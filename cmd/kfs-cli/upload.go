@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/dustin/go-humanize"
+
 	"github.com/lazyxu/kfs/core"
 
 	"github.com/spf13/cobra"
@@ -60,7 +62,7 @@ func runUpload(cmd *cobra.Command, args []string) {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("hash=%s, commitId=%d, size=%d, count=%d\n", branch.Hash[:4], commit.CommitId, commit.Size, commit.Count)
+		fmt.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", branch.Hash[:4], commit.CommitId, humanize.Bytes(commit.Size), commit.Count)
 		return nil
 	})
 }

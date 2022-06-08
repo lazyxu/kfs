@@ -42,7 +42,7 @@ func (b Branch) GetCount() uint64 {
 }
 
 func NewBranch(name string, commit Commit, dir Dir) Branch {
-	return Branch{name, "", commit.Id, dir.size, dir.count}
+	return Branch{name, "", commit.Id, dir.size, dir.totalCount}
 }
 
 func (db *DB) WriteBranch(ctx context.Context, branch Branch) error {

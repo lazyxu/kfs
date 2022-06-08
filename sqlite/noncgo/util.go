@@ -11,7 +11,7 @@ func commitAndRollback(tx *sql.Tx, err error) error {
 	if err != nil {
 		err1 := tx.Rollback()
 		if err1 != nil {
-			panic(err1) // should not happen
+			return err1
 		}
 		if e, ok := err.(*sqlite.Error); ok {
 			if e.Code() == 5 {
@@ -30,7 +30,7 @@ func commitAndRollback(tx *sql.Tx, err error) error {
 	}
 	err1 := tx.Rollback()
 	if err1 != nil {
-		panic(err1) // should not happen
+		return err1
 	}
 	return err
 }
