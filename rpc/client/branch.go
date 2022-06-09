@@ -13,7 +13,10 @@ func (fs GRPCFS) Checkout(ctx context.Context, branchName string) (bool, error) 
 		resp, err := c.BranchCheckout(ctx, &pb.BranchReq{
 			BranchName: branchName,
 		})
-		return resp.Exist, err
+		if err != nil {
+			return false, err
+		}
+		return resp.Exist, nil
 	})
 }
 

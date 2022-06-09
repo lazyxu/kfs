@@ -10,32 +10,60 @@ import (
 	"github.com/emirpasic/gods/stacks/arraystack"
 )
 
-type file[T any] struct {
-	path     string
-	info     os.FileInfo
+type File[T any] struct {
+	Path     string
+	Info     os.FileInfo
 	parent   chan T
 	children chan T
 }
 
-func Walker[T any](ctx context.Context, root string, concurrent int, handle func(ctx context.Context, w *file[T]),
-	errHandle func(filePath string, err error)) error {
+type WorkHandlers[T any] interface {
+	FilePathFilter(filePath string) bool
+	FileInfoFilter(filePath string, info os.FileInfo) bool
+	FileHandler(ctx context.Context, filePath string, info os.FileInfo, children []T) T
+	ErrHandler(filePath string, err error)
+}
+
+type DefaultWalkHandlers[T any] struct{}
+
+func (DefaultWalkHandlers[T]) FilePathFilter(filePath string) bool {
+	return false
+}
+
+func (DefaultWalkHandlers[T]) FileInfoFilter(filePath string, info os.FileInfo) bool {
+	return false
+}
+
+func (DefaultWalkHandlers[T]) FileHandler(ctx context.Context, filePath string, info os.FileInfo, children []T) (t T) {
+	return
+}
+
+func (DefaultWalkHandlers[T]) ErrHandler(filePath string, err error) {
+	println(filePath, err.Error())
+}
+
+func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers WorkHandlers[T]) (t T, err error) {
 	if concurrent <= 0 {
-		return fmt.Errorf("concurrent should be > 0, actual %d", concurrent)
+		return t, fmt.Errorf("concurrent should be > 0, actual %d", concurrent)
 	}
-	root, err := filepath.Abs(root)
+	filePath, err = filepath.Abs(filePath)
 	if err != nil {
-		return err
+		return
 	}
 	stack := arraystack.New()
-	stack.Push(&file[T]{
-		path: root,
+	stack.Push(&File[T]{
+		Path: filePath,
 	})
 	ch := make(chan struct{}, concurrent)
+	defer func() {
+		for i := 0; i < len(ch); i++ {
+			ch <- struct{}{}
+		}
+	}()
 	for !stack.Empty() {
 		select {
 		case <-ctx.Done():
-			err = context.DeadlineExceeded
-			goto exit
+			return t, context.DeadlineExceeded
 		default:
 		}
 		v, ok := stack.Pop()
@@ -43,16 +71,15 @@ func Walker[T any](ctx context.Context, root string, concurrent int, handle func
 			panic(errors.New("stack is not empty"))
 		}
 		if v != nil {
-			f := v.(*file[T])
+			f := v.(*File[T])
 			var info os.FileInfo
-			info, err = os.Lstat(f.path)
-			if err != nil {
-				errHandle(f.path, err)
+			info, continues := preHandler(f.Path, handlers)
+			if continues {
 				continue
 			}
-			cur := &file[T]{
-				path:   f.path,
-				info:   info,
+			cur := &File[T]{
+				Path:   f.Path,
+				Info:   info,
 				parent: f.parent,
 			}
 			stack.Push(cur)
@@ -63,15 +90,15 @@ func Walker[T any](ctx context.Context, root string, concurrent int, handle func
 			}
 
 			var infos []os.DirEntry
-			infos, err = os.ReadDir(f.path)
+			infos, err = os.ReadDir(f.Path)
 			if err != nil {
-				errHandle(f.path, err)
+				handlers.ErrHandler(f.Path, err)
 				continue
 			}
 			cur.children = make(chan T, len(infos))
 			for i := len(infos) - 1; i >= 0; i-- {
-				stack.Push(&file[T]{
-					path:   filepath.Join(f.path, infos[i].Name()),
+				stack.Push(&File[T]{
+					Path:   filepath.Join(f.Path, infos[i].Name()),
 					parent: cur.children,
 				})
 			}
@@ -80,17 +107,44 @@ func Walker[T any](ctx context.Context, root string, concurrent int, handle func
 			if !ok {
 				panic(errors.New("non-nil element was pushed into stack before nil"))
 			}
-			f := vv.(*file[T])
+			f := vv.(*File[T])
 			ch <- struct{}{}
 			go func() {
-				handle(ctx, f)
+				cnt := cap(f.children)
+				children := make([]T, cnt)
+				for i := 0; i < cnt; i++ {
+					children[i] = <-f.children
+				}
+				parent := handlers.FileHandler(ctx, f.Path, f.Info, children)
+				if f.parent != nil {
+					f.parent <- parent
+				} else {
+					t = parent
+				}
 				<-ch
 			}()
 		}
 	}
-exit:
-	for i := 0; i < concurrent; i++ {
-		ch <- struct{}{}
+	return
+}
+
+func preHandler[T any](filePath string, handlers WorkHandlers[T]) (info os.FileInfo, continues bool) {
+	var err error
+	defer func() {
+		if err != nil {
+			handlers.ErrHandler(filePath, err)
+			continues = true
+		}
+	}()
+	if handlers.FilePathFilter(filePath) {
+		return info, true
 	}
-	return err
+	info, err = os.Lstat(filePath)
+	if err != nil {
+		return
+	}
+	if handlers.FileInfoFilter(filePath, info) {
+		return info, true
+	}
+	return
 }

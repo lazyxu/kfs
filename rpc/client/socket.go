@@ -8,17 +8,17 @@ import (
 	"os"
 )
 
-func (v *uploadVisitor) uploadFile(filePath string, hash string, size uint64) (err error) {
-	c, err := v.p.Get()
+func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (err error) {
+	c, err := h.p.Get()
 	if err != nil {
 		return err
 	}
 	defer func() {
 		if err != nil {
-			v.p.Close(c)
+			h.p.Close(c)
 			return
 		}
-		err = v.p.Put(c)
+		err = h.p.Put(c)
 	}()
 	conn := c.(net.Conn)
 

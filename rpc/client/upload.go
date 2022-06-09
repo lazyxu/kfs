@@ -16,8 +16,6 @@ import (
 
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
-	storage "github.com/lazyxu/kfs/storage/local"
-
 	"github.com/lazyxu/kfs/pb"
 )
 
@@ -57,23 +55,17 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 				},
 				IdleTimeout: idleTimeout,
 			})
-			v := &uploadVisitor{
+			if err != nil {
+				return
+			}
+			defer p.Release()
+			handlers := &uploadHandlers{
 				c:             c,
 				p:             p,
 				uploadProcess: uploadProcess,
 				concurrent:    concurrent,
 			}
-			v.connCh = make(chan net.Conn, concurrent)
-			for i := 0; i < concurrent; i++ {
-				var conn net.Conn
-				conn, err = net.Dial("tcp", "127.0.0.1:1124")
-				if err != nil {
-					return
-				}
-				v.connCh <- conn
-			}
-			walker := storage.NewWalker[sqlite.FileOrDir](ctx, srcPath, v)
-			scanResp, err := walker.Walk(concurrent > 1)
+			fileResp, err := core.Walk[fileResp](ctx, srcPath, concurrent, handlers)
 			if err != nil {
 				return
 			}
@@ -81,7 +73,7 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 			if err != nil {
 				return
 			}
-			fileOrDir := scanResp.(sqlite.FileOrDir)
+			fileOrDir := fileResp.fileOrDir
 			modifyTime := uint64(info.ModTime().UnixNano())
 			client, err := c.Upload(ctx)
 			if err != nil {
