@@ -15,7 +15,7 @@ service KoalaFS {
   }
   rpc upload (stream UploadReq) returns (stream UploadResp) {
   }
-  rpc reset (Void) returns (Void) {
+  rpc reset (BranchReq) returns (Void) {
   }
 }
 

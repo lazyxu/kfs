@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-func (fs *KFS) Reset(ctx context.Context) error {
+func (fs *KFS) Reset(ctx context.Context, branchName string) error {
 	err := fs.Close()
 	if err != nil {
 		return err
@@ -20,5 +20,6 @@ func (fs *KFS) Reset(ctx context.Context) error {
 	}
 	fs.Db = kfs.Db
 	fs.S = kfs.S
-	return nil
+	_, err = fs.Checkout(ctx, branchName)
+	return err
 }

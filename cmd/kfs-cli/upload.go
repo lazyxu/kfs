@@ -24,6 +24,8 @@ func init() {
 	uploadCmd.PersistentFlags().String(DirPathStr, "", "move into dir")
 	uploadCmd.PersistentFlags().BoolP(VerboseStr, "v", false, "verbose")
 	uploadCmd.PersistentFlags().IntP(ConcurrentStr, "c", 1, "concurrent")
+	uploadCmd.PersistentFlags().StringP(EncoderStr, "e", "", "[\"\", \"lz4\"]")
+	uploadCmd.PersistentFlags().Bool(CpuProfilerStr, false, "cpu profile")
 	uploadCmd.PersistentFlags().StringP(ChunkSizeStr, "b", "1 MiB", "[1 KiB, 1 GiB]")
 }
 
@@ -44,6 +46,8 @@ func runUpload(cmd *cobra.Command, args []string) {
 	//humanize.ParseBytes()
 	dstPath := cmd.Flag(PathStr).Value.String()
 	verbose := cmd.Flag(VerboseStr).Value.String() != "false"
+	encoder := cmd.Flag(EncoderStr).Value.String()
+	cpuProfile := cmd.Flag(CpuProfilerStr).Value.String() != "false"
 	concurrent, err := strconv.Atoi(cmd.Flag(ConcurrentStr).Value.String())
 	if err != nil {
 		return
@@ -57,8 +61,16 @@ func runUpload(cmd *cobra.Command, args []string) {
 		uploadProcess = &core.EmptyUploadProcess{}
 	}
 
+	if cpuProfile {
+
+	}
+
 	err = withFS(serverType, serverAddr, func(fs core.FS) error {
-		branch, commit, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, uploadProcess, concurrent)
+		branch, commit, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, core.UploadConfig{
+			Encoder:       encoder,
+			UploadProcess: uploadProcess,
+			Concurrent:    concurrent,
+		})
 		if err != nil {
 			return err
 		}

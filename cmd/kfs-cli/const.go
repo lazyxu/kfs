@@ -16,8 +16,10 @@ const (
 	ChunkSizeStr   = "block-bytes"
 	DescriptionStr = "description"
 
-	VerboseStr    = "verbose"
-	ConcurrentStr = "concurrent"
+	VerboseStr     = "verbose"
+	ConcurrentStr  = "concurrent"
+	EncoderStr     = "encoder"
+	CpuProfilerStr = "cpu-profile"
 )
 
 var (

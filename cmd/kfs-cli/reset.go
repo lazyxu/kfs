@@ -29,6 +29,6 @@ func runReset(cmd *cobra.Command, args []string) {
 	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
 
 	err = withFS(serverType, serverAddr, func(fs core.FS) error {
-		return fs.Reset(cmd.Context())
+		return fs.Reset(cmd.Context(), branchName)
 	})
 }

@@ -5,9 +5,10 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"net"
+
+	"github.com/pierrec/lz4"
 
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
@@ -30,7 +31,8 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 		case 1:
 			handleUploadFile(kfsCore, conn)
 		default:
-			panic(fmt.Errorf("no such command %d", command))
+			println("no such command", command)
+			//panic(fmt.Errorf("no such command %d", command))
 		}
 	}
 }
@@ -51,6 +53,14 @@ func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
 		}
 	}()
 	reader := bufio.NewReader(conn)
+
+	encoder, err := reader.ReadString(byte(0))
+	if err != nil {
+		println("encoder", err.Error())
+		return
+	}
+	encoder = encoder[:len(encoder)-1]
+	println(conn.RemoteAddr().String(), "encoder", encoder)
 
 	hashBytes := make([]byte, 256/8)
 	err = binary.Read(reader, binary.LittleEndian, hashBytes)
@@ -75,7 +85,12 @@ func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
 			return err
 		}
 		w := io.MultiWriter(f, hasher)
-		_, err = io.CopyN(w, conn, size)
+		if encoder == "lz4" {
+			r := lz4.NewReader(reader)
+			_, err = io.CopyN(w, r, size)
+		} else {
+			_, err = io.CopyN(w, conn, size)
+		}
 		return err
 	})
 	if err != nil {

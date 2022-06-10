@@ -1,12 +1,12 @@
 go 1.18
 
 use (
-  ./sqlite/noncgo
-  ./storage/local
-  ./core
-  ./rpc/server
-  ./rpc/client
-  ./cmd/kfs-cli
-  ./cmd/kfs-server
-  ./pb
+	./cmd/kfs-cli
+	./cmd/kfs-server
+	./core
+	./pb
+	./rpc/client
+	./rpc/server
+	./sqlite/noncgo
+	./storage/local
 )

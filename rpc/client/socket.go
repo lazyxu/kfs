@@ -6,6 +6,8 @@ import (
 	"io"
 	"net"
 	"os"
+
+	"github.com/pierrec/lz4"
 )
 
 func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (err error) {
@@ -23,7 +25,12 @@ func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (
 	conn := c.(net.Conn)
 
 	//println(conn.LocalAddr().String(), 1)
-	_, err = conn.Write([]byte{1})
+	length := len(h.encoder)
+	header := make([]byte, length+2)
+	header[0] = 1
+	copy(header[1:], h.encoder)
+	header[length+1] = 0
+	_, err = conn.Write(header)
 	if err != nil {
 		return err
 	}
@@ -60,9 +67,19 @@ func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (
 	}
 	defer f.Close()
 
-	_, err = io.CopyN(conn, f, int64(size))
-	if err != nil {
-		return err
+	if h.encoder == "lz4" {
+		w := lz4.NewWriter(conn)
+		_, err = io.CopyN(w, f, int64(size))
+		if err != nil {
+			w.Flush()
+			return err
+		}
+		w.Flush()
+	} else {
+		_, err = io.CopyN(conn, f, int64(size))
+		if err != nil {
+			return err
+		}
 	}
 
 	//println(conn.LocalAddr().String(), filePath, "CopyN")

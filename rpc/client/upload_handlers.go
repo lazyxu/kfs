@@ -19,6 +19,7 @@ type uploadHandlers struct {
 	p             pool.Pool
 	uploadProcess core.UploadProcess
 	concurrent    int
+	encoder       string
 }
 
 type fileResp struct {
@@ -41,40 +42,7 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, filePath string, info 
 		if err != nil {
 			return
 		}
-		if h.concurrent > 1 {
-			err = h.uploadFile(filePath, fileResp.fileOrDir.Hash(), fileResp.fileOrDir.Size())
-			if err != nil {
-				return
-			}
-			return
-		}
-		var client pb.KoalaFS_UploadClient
-		client, err = h.c.Upload(ctx)
-		if err != nil {
-			return
-		}
-		err = SendContent(h.uploadProcess, fileResp.fileOrDir.Hash(), filePath, func(data []byte, isFirst bool, isLast bool) error {
-			if isFirst {
-				return client.Send(&pb.UploadReq{
-					File: &pb.UploadReqFile{
-						Hash:        fileResp.fileOrDir.Hash(),
-						Size:        uint64(info.Size()),
-						Bytes:       data,
-						IsLastChunk: isLast,
-					},
-				})
-			}
-			return client.Send(&pb.UploadReq{
-				File: &pb.UploadReqFile{
-					Bytes:       data,
-					IsLastChunk: isLast,
-				},
-			})
-		})
-		if err != nil {
-			return
-		}
-		_, err = client.Recv()
+		err = h.uploadFile(filePath, fileResp.fileOrDir.Hash(), fileResp.fileOrDir.Size())
 		if err != nil {
 			return
 		}
