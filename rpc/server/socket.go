@@ -54,14 +54,6 @@ func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
 	}()
 	reader := bufio.NewReader(conn)
 
-	encoder, err := reader.ReadString(byte(0))
-	if err != nil {
-		println("encoder", err.Error())
-		return
-	}
-	encoder = encoder[:len(encoder)-1]
-	println(conn.RemoteAddr().String(), "encoder", encoder)
-
 	hashBytes := make([]byte, 256/8)
 	err = binary.Read(reader, binary.LittleEndian, hashBytes)
 	if err != nil {
@@ -80,17 +72,26 @@ func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
 	println(conn.RemoteAddr().String(), "size", size)
 
 	exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) error {
-		_, err = conn.Write([]byte{0}) // not exist
+		_, err := conn.Write([]byte{0}) // not exist
 		if err != nil {
 			return err
 		}
+
+		encoder, err := reader.ReadString(byte(0))
+		if err != nil {
+			return err
+		}
+		encoder = encoder[:len(encoder)-1]
+		println(conn.RemoteAddr().String(), "encoder", len(encoder), encoder)
+
 		w := io.MultiWriter(f, hasher)
 		if encoder == "lz4" {
 			r := lz4.NewReader(reader)
 			_, err = io.CopyN(w, r, size)
 		} else {
-			_, err = io.CopyN(w, conn, size)
+			_, err = io.CopyN(w, reader, size)
 		}
+		println(conn.RemoteAddr().String(), "Copy")
 		return err
 	})
 	if err != nil {

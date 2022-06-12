@@ -10,6 +10,29 @@ import (
 	"github.com/pierrec/lz4"
 )
 
+func (h *uploadHandlers) copyFile(conn net.Conn, filePath string, size int64) error {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if h.encoder == "lz4" {
+		w := lz4.NewWriter(conn)
+		_, err = io.CopyN(w, f, size)
+		if err != nil {
+			return err
+		}
+		defer w.Flush()
+	} else {
+		_, err = io.CopyN(conn, f, size)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (err error) {
 	c, err := h.p.Get()
 	if err != nil {
@@ -24,13 +47,7 @@ func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (
 	}()
 	conn := c.(net.Conn)
 
-	//println(conn.LocalAddr().String(), 1)
-	length := len(h.encoder)
-	header := make([]byte, length+2)
-	header[0] = 1
-	copy(header[1:], h.encoder)
-	header[length+1] = 0
-	_, err = conn.Write(header)
+	_, err = conn.Write([]byte{1})
 	if err != nil {
 		return err
 	}
@@ -61,28 +78,22 @@ func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (
 		return nil
 	}
 
-	f, err := os.Open(filePath)
+	length := len(h.encoder)
+	header := make([]byte, length+1)
+	copy(header[:], h.encoder)
+	header[length] = 0
+	_, err = conn.Write(header)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	//println(conn.LocalAddr().String(), filePath, "encoder")
 
-	if h.encoder == "lz4" {
-		w := lz4.NewWriter(conn)
-		_, err = io.CopyN(w, f, int64(size))
-		if err != nil {
-			w.Flush()
-			return err
-		}
-		w.Flush()
-	} else {
-		_, err = io.CopyN(conn, f, int64(size))
-		if err != nil {
-			return err
-		}
+	err = h.copyFile(conn, filePath, int64(size))
+	if err != nil {
+		return err
 	}
+	//println(conn.LocalAddr().String(), filePath, "copyFile")
 
-	//println(conn.LocalAddr().String(), filePath, "CopyN")
 	var code int8
 	err = binary.Read(conn, binary.LittleEndian, &code)
 	if err != nil {
