@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -47,6 +48,14 @@ func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (
 	}()
 	conn := c.(net.Conn)
 
+	p := &Process{
+		conn:     conn,
+		filePath: filePath,
+		size:     size,
+	}
+	p.label = "hash"
+	h.ch <- p
+
 	_, err = conn.Write([]byte{1})
 	if err != nil {
 		return err
@@ -60,24 +69,30 @@ func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (
 	if err != nil {
 		return err
 	}
-	//println(conn.LocalAddr().String(), filePath, "hash", hash)
 
+	p.label = "size"
+	h.ch <- p
 	err = binary.Write(conn, binary.LittleEndian, size)
 	if err != nil {
 		return err
 	}
-	//println(conn.LocalAddr().String(), filePath, "size", size)
 
+	p.label = "exist?"
+	h.ch <- p
 	var exist bool
 	err = binary.Read(conn, binary.LittleEndian, &exist)
 	if err != nil {
 		return err
 	}
-	//println(conn.LocalAddr().String(), filePath, "exist", exist)
+	p.label = fmt.Sprintf("exist=%t", exist)
+	h.ch <- p
+
 	if exist {
 		return nil
 	}
 
+	p.label = fmt.Sprintf("encoder=%s", h.encoder)
+	h.ch <- p
 	length := len(h.encoder)
 	header := make([]byte, length+1)
 	copy(header[:], h.encoder)
@@ -86,19 +101,23 @@ func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (
 	if err != nil {
 		return err
 	}
-	//println(conn.LocalAddr().String(), filePath, "encoder")
 
+	p.label = "copyFile"
+	h.ch <- p
 	err = h.copyFile(conn, filePath, int64(size))
 	if err != nil {
 		return err
 	}
-	//println(conn.LocalAddr().String(), filePath, "copyFile")
 
+	p.label = "code?"
+	h.ch <- p
 	var code int8
 	err = binary.Read(conn, binary.LittleEndian, &code)
 	if err != nil {
 		return err
 	}
-	//println(conn.LocalAddr().String(), filePath, "code", code)
+	p.label = fmt.Sprintf("code=%d", code)
+	h.ch <- p
+
 	return nil
 }

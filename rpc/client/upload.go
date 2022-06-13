@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/silenceper/pool"
@@ -64,8 +65,17 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 				p:             p,
 				uploadProcess: config.UploadProcess,
 				encoder:       config.Encoder,
+				ch:            make(chan *Process),
 			}
+			var wg sync.WaitGroup
+			wg.Add(1)
+			go func() {
+				handlers.handleProcess(srcPath, config.Concurrent)
+				wg.Done()
+			}()
 			fileResp, err := core.Walk[fileResp](ctx, srcPath, config.Concurrent, handlers)
+			close(handlers.ch)
+			wg.Wait()
 			if err != nil {
 				return
 			}

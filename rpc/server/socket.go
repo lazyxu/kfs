@@ -1,12 +1,12 @@
 package server
 
 import (
-	"bufio"
 	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"io"
 	"net"
+	"strings"
 
 	"github.com/pierrec/lz4"
 
@@ -52,10 +52,11 @@ func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
 			_, err = conn.Write([]byte{1})
 		}
 	}()
-	reader := bufio.NewReader(conn)
+
+	// time.Sleep(time.Millisecond * time.Duration(rand.Intn(2000)))
 
 	hashBytes := make([]byte, 256/8)
-	err = binary.Read(reader, binary.LittleEndian, hashBytes)
+	err = binary.Read(conn, binary.LittleEndian, hashBytes)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "hashBytes", err.Error())
 		return
@@ -64,7 +65,7 @@ func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
 	println("hash", hash)
 
 	var size int64
-	err = binary.Read(reader, binary.LittleEndian, &size)
+	err = binary.Read(conn, binary.LittleEndian, &size)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "size", err.Error())
 		return
@@ -77,19 +78,15 @@ func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
 			return err
 		}
 
-		encoder, err := reader.ReadString(byte(0))
-		if err != nil {
-			return err
-		}
-		encoder = encoder[:len(encoder)-1]
+		encoder, err := readString(conn)
 		println(conn.RemoteAddr().String(), "encoder", len(encoder), encoder)
 
 		w := io.MultiWriter(f, hasher)
 		if encoder == "lz4" {
-			r := lz4.NewReader(reader)
+			r := lz4.NewReader(conn)
 			_, err = io.CopyN(w, r, size)
 		} else {
-			_, err = io.CopyN(w, reader, size)
+			_, err = io.CopyN(w, conn, size)
 		}
 		println(conn.RemoteAddr().String(), "Copy")
 		return err
@@ -120,6 +117,25 @@ func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
 		return
 	}
 	println(conn.RemoteAddr().String(), "code", 0)
+}
+
+func readString(r io.Reader) (string, error) {
+	var b byte
+	var sb strings.Builder
+	for {
+		err := binary.Read(r, binary.LittleEndian, &b)
+		if err != nil {
+			return "", err
+		}
+		if b == 0 {
+			break
+		}
+		err = sb.WriteByte(b)
+		if err != nil {
+			return "", err
+		}
+	}
+	return sb.String(), nil
 }
 
 func SocketServer(kfsCore *core.KFS, portString string) error {

@@ -20,6 +20,7 @@ type uploadHandlers struct {
 	uploadProcess core.UploadProcess
 	concurrent    int
 	encoder       string
+	ch            chan *Process
 }
 
 type fileResp struct {
