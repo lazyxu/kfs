@@ -22,6 +22,7 @@ type WorkHandlers[T any] interface {
 	FileInfoFilter(filePath string, info os.FileInfo) bool
 	FileHandler(ctx context.Context, filePath string, info os.FileInfo, children []T) T
 	ErrHandler(filePath string, err error)
+	StackSizeHandler(size int)
 }
 
 type DefaultWalkHandlers[T any] struct{}
@@ -40,6 +41,9 @@ func (DefaultWalkHandlers[T]) FileHandler(ctx context.Context, filePath string, 
 
 func (DefaultWalkHandlers[T]) ErrHandler(filePath string, err error) {
 	println(filePath, err.Error())
+}
+
+func (DefaultWalkHandlers[T]) StackSizeHandler(size int) {
 }
 
 func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers WorkHandlers[T]) (t T, err error) {
@@ -66,15 +70,16 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 			return t, context.DeadlineExceeded
 		default:
 		}
-		v, ok := stack.Pop()
-		if !ok {
-			panic(errors.New("stack is not empty"))
-		}
+		v, _ := stack.Pop()
 		if v != nil {
+			handlers.StackSizeHandler(stack.Size())
 			f := v.(*File[T])
 			var info os.FileInfo
 			info, continues := preHandler(f.Path, handlers)
 			if continues {
+				if f.parent != nil {
+					f.parent <- t
+				}
 				continue
 			}
 			cur := &File[T]{
@@ -107,6 +112,7 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 			if !ok {
 				panic(errors.New("non-nil element was pushed into stack before nil"))
 			}
+			handlers.StackSizeHandler(stack.Size())
 			f := vv.(*File[T])
 			ch <- struct{}{}
 			go func() {
@@ -125,6 +131,7 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 			}()
 		}
 	}
+	handlers.StackSizeHandler(0)
 	return
 }
 

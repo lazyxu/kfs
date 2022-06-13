@@ -49,9 +49,10 @@ func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (
 	conn := c.(net.Conn)
 
 	p := &Process{
-		conn:     conn,
-		filePath: filePath,
-		size:     size,
+		conn:      conn,
+		filePath:  filePath,
+		size:      size,
+		stackSize: -1,
 	}
 	p.label = "hash"
 	h.ch <- p

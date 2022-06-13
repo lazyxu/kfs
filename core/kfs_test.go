@@ -16,7 +16,10 @@ func TestKFS(t *testing.T) {
 	defer kfsCore.Close()
 	ctx := context.Background()
 	branchName := "default"
-	_, _, err = kfsCore.Upload(ctx, branchName, "", ".", &EmptyUploadProcess{}, 1)
+	_, _, err = kfsCore.Upload(ctx, branchName, "", ".", UploadConfig{
+		UploadProcess: &EmptyUploadProcess{},
+		Concurrent:    1,
+	})
 	if err != nil {
 		t.Error(err)
 		return

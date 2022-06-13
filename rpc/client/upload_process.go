@@ -14,17 +14,25 @@ import (
 )
 
 type Process struct {
-	label    string
-	conn     net.Conn
-	filePath string
-	size     uint64
-	err      error
+	label     string
+	conn      net.Conn
+	filePath  string
+	size      uint64
+	stackSize int
+	err       error
 }
 
 func (h *uploadHandlers) ErrHandler(filePath string, err error) {
 	h.ch <- &Process{
-		filePath: filePath,
-		err:      err,
+		filePath:  filePath,
+		err:       err,
+		stackSize: -1,
+	}
+}
+
+func (h *uploadHandlers) StackSizeHandler(size int) {
+	h.ch <- &Process{
+		stackSize: size,
 	}
 }
 
@@ -68,6 +76,15 @@ func (h *uploadHandlers) handleProcess(srcPath string, concurrent int) {
 		if p.err != nil {
 			println(rel+":", p.err.Error())
 			errCnt++
+			continue
+		}
+		if p.stackSize != -1 {
+			size := set.Size()
+			offset := size + 2 + errCnt
+			termenv.CursorPrevLine(offset)
+			termenv.ClearLine()
+			fmt.Printf("waiting to process: %d", p.stackSize)
+			termenv.CursorNextLine(offset)
 			continue
 		}
 		port := p.conn.LocalAddr().String()
