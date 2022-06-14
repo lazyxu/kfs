@@ -20,6 +20,7 @@ type uploadHandlers struct {
 	uploadProcess core.UploadProcess
 	concurrent    int
 	encoder       string
+	verbose       bool
 	ch            chan *Process
 }
 

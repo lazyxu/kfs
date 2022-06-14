@@ -54,12 +54,12 @@ func runUpload(cmd *cobra.Command, args []string) {
 	}
 	srcPath := args[0]
 
-	var uploadProcess core.UploadProcess
-	if verbose {
-		uploadProcess = &UploadProcessBar{}
-	} else {
-		uploadProcess = &core.EmptyUploadProcess{}
-	}
+	var uploadProcess core.UploadProcess = &core.EmptyUploadProcess{}
+	//if verbose {
+	//	uploadProcess = &UploadProcessBar{}
+	//} else {
+	//	uploadProcess = &core.EmptyUploadProcess{}
+	//}
 
 	if cpuProfile {
 
@@ -75,6 +75,7 @@ func runUpload(cmd *cobra.Command, args []string) {
 		Encoder:       encoder,
 		UploadProcess: uploadProcess,
 		Concurrent:    concurrent,
+		Verbose:       verbose,
 	})
 	if err != nil {
 		return

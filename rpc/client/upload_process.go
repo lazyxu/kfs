@@ -23,16 +23,22 @@ type Process struct {
 }
 
 func (h *uploadHandlers) ErrHandler(filePath string, err error) {
-	h.ch <- &Process{
-		filePath:  filePath,
-		err:       err,
-		stackSize: -1,
+	if h.verbose {
+		h.ch <- &Process{
+			filePath:  filePath,
+			err:       err,
+			stackSize: -1,
+		}
+	} else {
+		println(filePath+":", err.Error())
 	}
 }
 
 func (h *uploadHandlers) StackSizeHandler(size int) {
-	h.ch <- &Process{
-		stackSize: size,
+	if h.verbose {
+		h.ch <- &Process{
+			stackSize: size,
+		}
 	}
 }
 
@@ -91,12 +97,14 @@ func (h *uploadHandlers) handleProcess(srcPath string, concurrent int) {
 		port = port[strings.LastIndexByte(port, ':')+1:]
 		_, line := addToSet(set, port)
 		size := set.Size()
-		line.size += p.size
-		line.count++
+		if p.label == "code=0" || p.label == "exist" {
+			line.size += p.size
+			line.count++
+		}
 		offset := size + 1 - line.index + errCnt
 		termenv.CursorPrevLine(offset)
 		termenv.ClearLine()
-		fmt.Printf("%5s %6s %d: %s  %6s %s", port, humanize.Bytes(line.size), line.count, p.label, humanize.Bytes(p.size), rel)
+		fmt.Printf("%5s %6s %d: %-8s %6s %s", port, humanize.Bytes(line.size), line.count, p.label, humanize.Bytes(p.size), rel)
 		termenv.CursorNextLine(offset)
 	}
 }

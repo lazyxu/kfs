@@ -65,17 +65,23 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 				p:             p,
 				uploadProcess: config.UploadProcess,
 				encoder:       config.Encoder,
+				verbose:       config.Verbose,
 				ch:            make(chan *Process),
 			}
 			var wg sync.WaitGroup
-			wg.Add(1)
-			go func() {
-				handlers.handleProcess(srcPath, config.Concurrent)
-				wg.Done()
-			}()
-			fileResp, err := core.Walk[fileResp](ctx, srcPath, config.Concurrent, handlers)
-			close(handlers.ch)
-			wg.Wait()
+			if config.Verbose {
+				handlers.ch = make(chan *Process)
+				wg.Add(1)
+				go func() {
+					handlers.handleProcess(srcPath, config.Concurrent)
+					wg.Done()
+				}()
+			}
+			walkResp, err := core.Walk[fileResp](ctx, srcPath, config.Concurrent, handlers)
+			if config.Verbose {
+				close(handlers.ch)
+				wg.Wait()
+			}
 			if err != nil {
 				return
 			}
@@ -83,7 +89,7 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 			if err != nil {
 				return
 			}
-			fileOrDir := fileResp.fileOrDir
+			fileOrDir := walkResp.fileOrDir
 			modifyTime := uint64(info.ModTime().UnixNano())
 			client, err := c.Upload(ctx)
 			if err != nil {
