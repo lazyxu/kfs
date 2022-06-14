@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/emirpasic/gods/stacks/arraystack"
 )
@@ -58,12 +59,35 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 	stack.Push(&File[T]{
 		Path: filePath,
 	})
-	ch := make(chan struct{}, concurrent)
+	ch := make(chan *File[T], concurrent)
+	var wg sync.WaitGroup
 	defer func() {
-		for i := 0; i < len(ch); i++ {
-			ch <- struct{}{}
-		}
+		close(ch)
+		wg.Wait()
 	}()
+	wg.Add(concurrent)
+	for i := 0; i < concurrent; i++ {
+		go func() {
+			for {
+				f, ok := <-ch
+				if !ok {
+					break
+				}
+				cnt := cap(f.children)
+				children := make([]T, cnt)
+				for i := 0; i < cnt; i++ {
+					children[i] = <-f.children
+				}
+				parent := handlers.FileHandler(ctx, f.Path, f.Info, children)
+				if f.parent != nil {
+					f.parent <- parent
+				} else {
+					t = parent
+				}
+			}
+			wg.Done()
+		}()
+	}
 	for !stack.Empty() {
 		select {
 		case <-ctx.Done():
@@ -114,21 +138,7 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 			}
 			handlers.StackSizeHandler(stack.Size())
 			f := vv.(*File[T])
-			ch <- struct{}{}
-			go func() {
-				cnt := cap(f.children)
-				children := make([]T, cnt)
-				for i := 0; i < cnt; i++ {
-					children[i] = <-f.children
-				}
-				parent := handlers.FileHandler(ctx, f.Path, f.Info, children)
-				if f.parent != nil {
-					f.parent <- parent
-				} else {
-					t = parent
-				}
-				<-ch
-			}()
+			ch <- f
 		}
 	}
 	handlers.StackSizeHandler(0)
