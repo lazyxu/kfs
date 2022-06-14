@@ -7,8 +7,12 @@ import (
 )
 
 func (fs GRPCFS) Reset(ctx context.Context, branchName string) error {
-	return withFS(fs, func(c pb.KoalaFSClient) error {
-		_, err := c.Reset(ctx, &pb.BranchReq{BranchName: branchName})
+	conn, c, err := getGRPCClient(fs)
+	if err != nil {
 		return err
-	})
+	}
+	defer conn.Close()
+
+	_, err = c.Reset(ctx, &pb.BranchReq{BranchName: branchName})
+	return err
 }

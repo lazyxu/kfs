@@ -17,37 +17,13 @@ import (
 
 const fileChunkSize = 1024 * 1024
 
-func withFS(fs GRPCFS, fn func(pb.KoalaFSClient) error) error {
+func getGRPCClient(fs GRPCFS) (*grpc.ClientConn, pb.KoalaFSClient, error) {
 	conn, err := grpc.Dial(fs.RemoteAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
-	defer conn.Close()
 	c := pb.NewKoalaFSClient(conn)
-	return fn(c)
-}
-
-func withFS1[T any](fs GRPCFS, fn func(pb.KoalaFSClient) (T, error)) (T, error) {
-	conn, err := grpc.Dial(fs.RemoteAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		var t T
-		return t, err
-	}
-	defer conn.Close()
-	c := pb.NewKoalaFSClient(conn)
-	return fn(c)
-}
-
-func withFS2[T1 any, T2 any](fs GRPCFS, fn func(pb.KoalaFSClient) (T1, T2, error)) (T1, T2, error) {
-	conn, err := grpc.Dial(fs.RemoteAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		var t1 T1
-		var t2 T2
-		return t1, t2, err
-	}
-	defer conn.Close()
-	c := pb.NewKoalaFSClient(conn)
-	return fn(c)
+	return conn, c, nil
 }
 
 func SendContent(process core.UploadProcess, hash string, filename string, fn func(data []byte, isFirst bool, isLast bool) error) error {

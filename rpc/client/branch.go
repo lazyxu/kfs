@@ -9,21 +9,29 @@ import (
 )
 
 func (fs GRPCFS) Checkout(ctx context.Context, branchName string) (bool, error) {
-	return withFS1[bool](fs, func(c pb.KoalaFSClient) (bool, error) {
-		resp, err := c.BranchCheckout(ctx, &pb.BranchReq{
-			BranchName: branchName,
-		})
-		if err != nil {
-			return false, err
-		}
-		return resp.Exist, nil
+	conn, c, err := getGRPCClient(fs)
+	if err != nil {
+		return false, err
+	}
+	defer conn.Close()
+
+	resp, err := c.BranchCheckout(ctx, &pb.BranchReq{
+		BranchName: branchName,
 	})
+	if err != nil {
+		return false, err
+	}
+	return resp.Exist, nil
 }
 
 func (fs GRPCFS) BranchInfo(ctx context.Context, branchName string) (sqlite.IBranch, error) {
-	return withFS1[sqlite.IBranch](fs, func(c pb.KoalaFSClient) (sqlite.IBranch, error) {
-		return c.BranchInfo(ctx, &pb.BranchInfoReq{
-			BranchName: branchName,
-		})
+	conn, c, err := getGRPCClient(fs)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	return c.BranchInfo(ctx, &pb.BranchInfoReq{
+		BranchName: branchName,
 	})
 }
