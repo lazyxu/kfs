@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/lazyxu/kfs/core"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -43,8 +41,11 @@ func runInit(cmd *cobra.Command, args []string) {
 		ExitWithError(err)
 	}()
 
-	err = withFS(serverType, serverAddr, func(fs core.FS) error {
-		_, err = fs.Checkout(cmd.Context(), branchName)
-		return err
-	})
+	fs, err := getFS(serverType, serverAddr)
+	if err != nil {
+		return
+	}
+	defer fs.Close()
+
+	_, err = fs.Checkout(cmd.Context(), branchName)
 }

@@ -9,3 +9,7 @@ func New(remoteAddr string) *GRPCFS {
 		RemoteAddr: remoteAddr,
 	}
 }
+
+func (fs *GRPCFS) Close() error {
+	return nil
+}

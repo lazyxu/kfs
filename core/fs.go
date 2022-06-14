@@ -18,4 +18,5 @@ type FS interface {
 	List(ctx context.Context, branchName string, filePath string, onLength func(int) error, onDirItem func(item sqlite.IDirItem) error) error
 	Upload(ctx context.Context, branchName string, dstPath string, srcPath string, config UploadConfig) (sqlite.Commit, sqlite.Branch, error)
 	Reset(ctx context.Context, branchName string) error
+	Close() error
 }

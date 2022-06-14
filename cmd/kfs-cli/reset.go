@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/lazyxu/kfs/core"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,7 +26,11 @@ func runReset(cmd *cobra.Command, args []string) {
 	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
 	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
 
-	err = withFS(serverType, serverAddr, func(fs core.FS) error {
-		return fs.Reset(cmd.Context(), branchName)
-	})
+	fs, err := getFS(serverType, serverAddr)
+	if err != nil {
+		return
+	}
+	defer fs.Close()
+
+	err = fs.Reset(cmd.Context(), branchName)
 }

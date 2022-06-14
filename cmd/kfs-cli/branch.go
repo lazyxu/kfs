@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/lazyxu/kfs/core"
-
 	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"
@@ -49,16 +47,19 @@ func runCheckoutBranch(cmd *cobra.Command, args []string) {
 
 	branchName := args[0]
 
-	err = withFS(serverType, serverAddr, func(fs core.FS) error {
-		_, err = fs.Checkout(cmd.Context(), branchName)
-		if err != nil {
-			return err
-		}
+	fs, err := getFS(serverType, serverAddr)
+	if err != nil {
+		return
+	}
+	defer fs.Close()
 
-		fmt.Printf("switch to branch '%s'\n", branchName)
-		viper.Set(BranchNameStr, branchName)
-		return viper.WriteConfig()
-	})
+	_, err = fs.Checkout(cmd.Context(), branchName)
+	if err != nil {
+		return
+	}
+	fmt.Printf("switch to branch '%s'\n", branchName)
+	viper.Set(BranchNameStr, branchName)
+	err = viper.WriteConfig()
 }
 
 var branchInfoCmd = &cobra.Command{
@@ -85,18 +86,21 @@ func runBranchInfo(cmd *cobra.Command, args []string) {
 	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
 	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
 
-	err = withFS(serverType, serverAddr, func(fs core.FS) error {
-		branch, err := fs.BranchInfo(cmd.Context(), branchName)
-		if err != nil {
-			return err
-		}
+	fs, err := getFS(serverType, serverAddr)
+	if err != nil {
+		return
+	}
+	defer fs.Close()
 
-		fmt.Printf("description: %s\n", branch.GetDescription())
-		fmt.Printf("commitId: %d\n", branch.GetCommitId())
-		fmt.Printf("size: %d\n", branch.GetSize())
-		fmt.Printf("count: %d\n", branch.GetCount())
-		return nil
-	})
+	branch, err := fs.BranchInfo(cmd.Context(), branchName)
+	if err != nil {
+		return
+	}
+
+	fmt.Printf("description: %s\n", branch.GetDescription())
+	fmt.Printf("commitId: %d\n", branch.GetCommitId())
+	fmt.Printf("size: %d\n", branch.GetSize())
+	fmt.Printf("count: %d\n", branch.GetCount())
 }
 
 var branchUpdateCmd = &cobra.Command{

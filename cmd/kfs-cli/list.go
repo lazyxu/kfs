@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lazyxu/kfs/core"
-
 	"github.com/dustin/go-humanize"
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
@@ -74,10 +72,14 @@ func runList(cmd *cobra.Command, args []string) {
 	}
 	isHumanize := cmd.Flag(HumanizeStr).Value.String() == "true"
 
-	err = withFS(serverType, serverAddr, func(fs core.FS) error {
-		return fs.List(cmd.Context(), branchName, p, printHeader, func(item sqlite.IDirItem) error {
-			printBody(item, isHumanize)
-			return nil
-		})
+	fs, err := getFS(serverType, serverAddr)
+	if err != nil {
+		return
+	}
+	defer fs.Close()
+
+	err = fs.List(cmd.Context(), branchName, p, printHeader, func(item sqlite.IDirItem) error {
+		printBody(item, isHumanize)
+		return nil
 	})
 }

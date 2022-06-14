@@ -65,16 +65,19 @@ func runUpload(cmd *cobra.Command, args []string) {
 
 	}
 
-	err = withFS(serverType, serverAddr, func(fs core.FS) error {
-		branch, commit, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, core.UploadConfig{
-			Encoder:       encoder,
-			UploadProcess: uploadProcess,
-			Concurrent:    concurrent,
-		})
-		if err != nil {
-			return err
-		}
-		fmt.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", branch.Hash[:4], commit.CommitId, humanize.Bytes(commit.Size), commit.Count)
-		return nil
+	fs, err := getFS(serverType, serverAddr)
+	if err != nil {
+		return
+	}
+	defer fs.Close()
+
+	branch, commit, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, core.UploadConfig{
+		Encoder:       encoder,
+		UploadProcess: uploadProcess,
+		Concurrent:    concurrent,
 	})
+	if err != nil {
+		return
+	}
+	fmt.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", branch.Hash[:4], commit.CommitId, humanize.Bytes(commit.Size), commit.Count)
 }
