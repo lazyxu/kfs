@@ -21,9 +21,11 @@ type File[T any] struct {
 type WorkHandlers[T any] interface {
 	FilePathFilter(filePath string) bool
 	FileInfoFilter(filePath string, info os.FileInfo) bool
-	FileHandler(ctx context.Context, filePath string, info os.FileInfo, children []T) T
+	FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []T) T
 	ErrHandler(filePath string, err error)
 	StackSizeHandler(size int)
+	BeforeFileHandler(ctx context.Context, index int)
+	AfterFileHandler(ctx context.Context, index int)
 }
 
 type DefaultWalkHandlers[T any] struct{}
@@ -36,7 +38,7 @@ func (DefaultWalkHandlers[T]) FileInfoFilter(filePath string, info os.FileInfo) 
 	return false
 }
 
-func (DefaultWalkHandlers[T]) FileHandler(ctx context.Context, filePath string, info os.FileInfo, children []T) (t T) {
+func (DefaultWalkHandlers[T]) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []T) (t T) {
 	return
 }
 
@@ -45,6 +47,12 @@ func (DefaultWalkHandlers[T]) ErrHandler(filePath string, err error) {
 }
 
 func (DefaultWalkHandlers[T]) StackSizeHandler(size int) {
+}
+
+func (DefaultWalkHandlers[T]) BeforeFileHandler(ctx context.Context, index int) {
+}
+
+func (DefaultWalkHandlers[T]) AfterFileHandler(ctx context.Context, index int) {
 }
 
 func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers WorkHandlers[T]) (t T, err error) {
@@ -67,7 +75,8 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 	}()
 	wg.Add(concurrent)
 	for i := 0; i < concurrent; i++ {
-		go func() {
+		go func(index int) {
+			handlers.BeforeFileHandler(ctx, index)
 			for {
 				f, ok := <-ch
 				if !ok {
@@ -78,15 +87,16 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 				for i := 0; i < cnt; i++ {
 					children[i] = <-f.children
 				}
-				parent := handlers.FileHandler(ctx, f.Path, f.Info, children)
+				parent := handlers.FileHandler(ctx, index, f.Path, f.Info, children)
 				if f.parent != nil {
 					f.parent <- parent
 				} else {
 					t = parent
 				}
 			}
+			handlers.AfterFileHandler(ctx, index)
 			wg.Done()
-		}()
+		}(i)
 	}
 	for !stack.Empty() {
 		select {

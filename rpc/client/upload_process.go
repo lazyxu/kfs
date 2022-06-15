@@ -2,20 +2,17 @@ package client
 
 import (
 	"fmt"
-	"net"
 	"path/filepath"
 	"strings"
 
 	"github.com/dustin/go-humanize"
 
 	"github.com/muesli/termenv"
-
-	"github.com/emirpasic/gods/sets/linkedhashset"
 )
 
 type Process struct {
+	index     int
 	label     string
-	conn      net.Conn
 	filePath  string
 	size      uint64
 	stackSize int
@@ -43,34 +40,17 @@ func (h *uploadHandlers) StackSizeHandler(size int) {
 }
 
 type LineProcess struct {
-	index int
 	port  string
 	size  uint64
 	count int
 }
 
-func addToSet(set *linkedhashset.Set, port string) (int, *LineProcess) {
-	index, lp := set.Find(func(index int, value interface{}) bool {
-		v := value.(*LineProcess)
-		return v.port == port
-	})
-	if lp != nil {
-		return index, lp.(*LineProcess)
-	}
-	line := &LineProcess{
-		index: set.Size(),
-		port:  port,
-	}
-	set.Add(line)
-	return index, line
-}
-
-func (h *uploadHandlers) handleProcess(srcPath string, concurrent int) {
-	set := linkedhashset.New()
+func (h *uploadHandlers) handleProcess(srcPath string) {
+	lines := make([]*LineProcess, h.concurrent)
 	errCnt := 0
 
 	println()
-	for i := 0; i < concurrent; i++ {
+	for i := 0; i < h.concurrent; i++ {
 		println()
 	}
 	println()
@@ -85,7 +65,7 @@ func (h *uploadHandlers) handleProcess(srcPath string, concurrent int) {
 			continue
 		}
 		if p.stackSize != -1 {
-			size := set.Size()
+			size := h.concurrent
 			offset := size + 2 + errCnt
 			termenv.CursorPrevLine(offset)
 			termenv.ClearLine()
@@ -93,15 +73,22 @@ func (h *uploadHandlers) handleProcess(srcPath string, concurrent int) {
 			termenv.CursorNextLine(offset)
 			continue
 		}
-		port := p.conn.LocalAddr().String()
+		port := h.conns[p.index].LocalAddr().String()
 		port = port[strings.LastIndexByte(port, ':')+1:]
-		_, line := addToSet(set, port)
-		size := set.Size()
+
+		if lines[p.index] == nil {
+			lines[p.index] = &LineProcess{
+				port: port,
+			}
+		}
+		line := lines[p.index]
+
+		size := h.concurrent
 		if p.label == "code=0" || p.label == "exist" {
 			line.size += p.size
 			line.count++
 		}
-		offset := size + 1 - line.index + errCnt
+		offset := size + 1 - p.index + errCnt
 		termenv.CursorPrevLine(offset)
 		termenv.ClearLine()
 		fmt.Printf("%5s %6s %d: %-8s %6s %s", port, humanize.Bytes(line.size), line.count, p.label, humanize.Bytes(p.size), rel)

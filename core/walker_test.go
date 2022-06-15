@@ -14,7 +14,7 @@ type TestWalkerHandlers struct {
 	DefaultWalkHandlers[int64]
 }
 
-func (TestWalkerHandlers) FileHandler(ctx context.Context, filePath string, info os.FileInfo, children []int64) int64 {
+func (TestWalkerHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []int64) int64 {
 	var size int64
 	if !info.IsDir() {
 		size = info.Size()
@@ -45,7 +45,7 @@ type TestWalkerWithTimeoutHandlers struct {
 	cnt int64
 }
 
-func (h *TestWalkerWithTimeoutHandlers) FileHandler(ctx context.Context, filePath string, info os.FileInfo, children []int64) int64 {
+func (h *TestWalkerWithTimeoutHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []int64) int64 {
 	time.Sleep(100 * time.Millisecond)
 	atomic.AddInt64(&h.cnt, 1)
 	return 0

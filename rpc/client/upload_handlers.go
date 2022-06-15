@@ -2,10 +2,9 @@ package client
 
 import (
 	"context"
+	"net"
 	"os"
 	"path/filepath"
-
-	"github.com/silenceper/pool"
 
 	"github.com/lazyxu/kfs/core"
 
@@ -16,12 +15,12 @@ import (
 type uploadHandlers struct {
 	core.DefaultWalkHandlers[fileResp]
 	c             pb.KoalaFSClient
-	p             pool.Pool
 	uploadProcess core.UploadProcess
 	concurrent    int
 	encoder       string
 	verbose       bool
 	ch            chan *Process
+	conns         []net.Conn
 }
 
 type fileResp struct {
@@ -29,7 +28,20 @@ type fileResp struct {
 	info      os.FileInfo
 }
 
-func (h *uploadHandlers) FileHandler(ctx context.Context, filePath string, info os.FileInfo, children []fileResp) (fileResp fileResp) {
+func (h *uploadHandlers) BeforeFileHandler(ctx context.Context, index int) {
+	conn, err := net.Dial("tcp", "127.0.0.1:1124")
+	if err != nil {
+		println(err.Error())
+		os.Exit(1)
+	}
+	h.conns[index] = conn
+}
+
+func (h *uploadHandlers) AfterFileHandler(ctx context.Context, index int) {
+	h.conns[index].Close()
+}
+
+func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []fileResp) (fileResp fileResp) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -40,11 +52,21 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, filePath string, info 
 	if info.Mode().IsRegular() {
 		h.uploadProcess = h.uploadProcess.New(int(info.Size()), filepath.Base(filePath))
 		defer h.uploadProcess.Close()
+		if h.verbose {
+			p := &Process{
+				index:     index,
+				filePath:  filePath,
+				size:      uint64(info.Size()),
+				stackSize: -1,
+			}
+			p.label = "hash?"
+			h.ch <- p
+		}
 		fileResp.fileOrDir, err = core.NewFileByName(h.uploadProcess, filePath)
 		if err != nil {
 			return
 		}
-		err = h.uploadFile(filePath, fileResp.fileOrDir.Hash(), fileResp.fileOrDir.Size())
+		err = h.uploadFile(ctx, index, filePath, fileResp.fileOrDir.Hash(), fileResp.fileOrDir.Size())
 		if err != nil {
 			return
 		}

@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -34,24 +35,20 @@ func (h *uploadHandlers) copyFile(conn net.Conn, filePath string, size int64) er
 	return nil
 }
 
-func (h *uploadHandlers) uploadFile(filePath string, hash string, size uint64) (err error) {
-	c, err := h.p.Get()
-	if err != nil {
-		return err
-	}
+func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath string, hash string, size uint64) (err error) {
 	defer func() {
 		if err != nil {
-			h.p.Close(c)
+			h.conns[index].Close()
 			return
 		}
-		err = h.p.Put(c)
+		h.BeforeFileHandler(ctx, index)
 	}()
-	conn := c.(net.Conn)
+	conn := h.conns[index]
 
 	var p *Process
 	if h.verbose {
 		p = &Process{
-			conn:      conn,
+			index:     index,
 			filePath:  filePath,
 			size:      size,
 			stackSize: -1,

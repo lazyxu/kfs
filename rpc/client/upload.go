@@ -2,16 +2,11 @@ package client
 
 import (
 	"context"
-	"encoding/binary"
-	"fmt"
 	"io"
 	"net"
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
-
-	"github.com/silenceper/pool"
 
 	"github.com/lazyxu/kfs/core"
 
@@ -31,53 +26,21 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 	if err != nil {
 		return
 	}
-	idleTimeout := time.Second * 10
-	p, err := pool.NewChannelPool(&pool.Config{
-		InitialCap: 0,
-		MaxCap:     config.Concurrent,
-		MaxIdle:    config.Concurrent,
-		Factory: func() (interface{}, error) {
-			return net.Dial("tcp", "127.0.0.1:1124")
-		},
-		Close: func(i interface{}) error {
-			return i.(net.Conn).Close()
-		},
-		Ping: func(i interface{}) error {
-			conn := i.(net.Conn)
-			_, err := conn.Write([]byte{0})
-			if err != nil {
-				return err
-			}
-			var pong uint8
-			err = binary.Read(conn, binary.LittleEndian, &pong)
-			if err != nil {
-				return err
-			}
-			if pong != 0 {
-				return fmt.Errorf("pong is %d, expected 0", pong)
-			}
-			return nil
-		},
-		IdleTimeout: idleTimeout,
-	})
-	if err != nil {
-		return
-	}
-	defer p.Release()
 	handlers := &uploadHandlers{
 		c:             c,
-		p:             p,
 		uploadProcess: config.UploadProcess,
 		encoder:       config.Encoder,
 		verbose:       config.Verbose,
+		concurrent:    config.Concurrent,
 		ch:            make(chan *Process),
+		conns:         make([]net.Conn, config.Concurrent),
 	}
 	var wg sync.WaitGroup
 	if config.Verbose {
 		handlers.ch = make(chan *Process)
 		wg.Add(1)
 		go func() {
-			handlers.handleProcess(srcPath, config.Concurrent)
+			handlers.handleProcess(srcPath)
 			wg.Done()
 		}()
 	}
