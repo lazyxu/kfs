@@ -2,12 +2,15 @@ package client
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"net"
 	"os"
+
+	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
 	"github.com/pierrec/lz4"
 )
@@ -35,7 +38,49 @@ func (h *uploadHandlers) copyFile(conn net.Conn, filePath string, size int64) er
 	return nil
 }
 
-func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath string, hash string, size uint64) (err error) {
+func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *Process) (sqlite.File, error) {
+	if h.verbose {
+		p.label = "stat?"
+		h.ch <- p
+	}
+	f, err := os.Open(filePath)
+	if err != nil {
+		return sqlite.File{}, err
+	}
+	defer f.Close()
+	info, err := f.Stat()
+	if err != nil {
+		return sqlite.File{}, err
+	}
+	if h.verbose {
+		p.label = "hash?"
+		p.size = uint64(info.Size())
+		h.ch <- p
+	}
+	hash := sha256.New()
+	_, err = io.Copy(hash, f)
+	if err != nil {
+		return sqlite.File{}, err
+	}
+	return sqlite.NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(info.Size())), nil
+}
+
+func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath string) (file sqlite.File, err error) {
+	var p *Process
+	if h.verbose {
+		p = &Process{
+			index:     index,
+			filePath:  filePath,
+			stackSize: -1,
+		}
+		p.label = "start"
+		h.ch <- p
+	}
+	file, err = h.getSizeAndCalHash(filePath, p)
+	if err != nil {
+		return
+	}
+
 	defer func() {
 		if err != nil {
 			h.conns[index].Close()
@@ -45,39 +90,27 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	}()
 	conn := h.conns[index]
 
-	var p *Process
-	if h.verbose {
-		p = &Process{
-			index:     index,
-			filePath:  filePath,
-			size:      size,
-			stackSize: -1,
-		}
-		p.label = "hash"
-		h.ch <- p
-	}
-
 	_, err = conn.Write([]byte{1})
 	if err != nil {
-		return err
+		return
 	}
 
-	hashBytes, err := hex.DecodeString(hash)
+	hashBytes, err := hex.DecodeString(file.Hash())
 	if err != nil {
-		return err
+		return
 	}
 	_, err = conn.Write(hashBytes)
 	if err != nil {
-		return err
+		return
 	}
 
 	if h.verbose {
 		p.label = "size"
 		h.ch <- p
 	}
-	err = binary.Write(conn, binary.LittleEndian, size)
+	err = binary.Write(conn, binary.LittleEndian, file.Size())
 	if err != nil {
-		return err
+		return
 	}
 
 	if h.verbose {
@@ -87,7 +120,7 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	var exist bool
 	err = binary.Read(conn, binary.LittleEndian, &exist)
 	if err != nil {
-		return err
+		return
 	}
 
 	if exist {
@@ -95,7 +128,7 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 			p.label = fmt.Sprintf("exist")
 			h.ch <- p
 		}
-		return nil
+		return
 	}
 
 	if h.verbose {
@@ -108,16 +141,16 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	header[length] = 0
 	_, err = conn.Write(header)
 	if err != nil {
-		return err
+		return
 	}
 
 	if h.verbose {
 		p.label = "copyFile"
 		h.ch <- p
 	}
-	err = h.copyFile(conn, filePath, int64(size))
+	err = h.copyFile(conn, filePath, int64(file.Size()))
 	if err != nil {
-		return err
+		return
 	}
 
 	if h.verbose {
@@ -127,12 +160,12 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	var code int8
 	err = binary.Read(conn, binary.LittleEndian, &code)
 	if err != nil {
-		return err
+		return
 	}
 	if h.verbose {
 		p.label = fmt.Sprintf("code=%d", code)
 		h.ch <- p
 	}
 
-	return nil
+	return
 }

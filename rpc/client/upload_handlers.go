@@ -52,21 +52,7 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 	if info.Mode().IsRegular() {
 		h.uploadProcess = h.uploadProcess.New(int(info.Size()), filepath.Base(filePath))
 		defer h.uploadProcess.Close()
-		if h.verbose {
-			p := &Process{
-				index:     index,
-				filePath:  filePath,
-				size:      uint64(info.Size()),
-				stackSize: -1,
-			}
-			p.label = "hash?"
-			h.ch <- p
-		}
-		fileResp.fileOrDir, err = core.NewFileByName(h.uploadProcess, filePath)
-		if err != nil {
-			return
-		}
-		err = h.uploadFile(ctx, index, filePath, fileResp.fileOrDir.Hash(), fileResp.fileOrDir.Size())
+		fileResp.fileOrDir, err = h.uploadFile(ctx, index, filePath)
 		if err != nil {
 			return
 		}
