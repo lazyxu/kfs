@@ -20,4 +20,5 @@ type FS interface {
 	Upload(ctx context.Context, branchName string, dstPath string, srcPath string, config UploadConfig) (sqlite.Commit, sqlite.Branch, error)
 	Reset(ctx context.Context, branchName string) error
 	Close() error
+	Download(ctx context.Context, branchName string, dstPath string, srcPath string, config UploadConfig) (string, error)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"os"
 )
 
 type File struct {
@@ -80,4 +81,38 @@ func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []
 		}
 		return nil
 	})
+}
+
+func (db *DB) GetFileHashMode(ctx context.Context, branchName string, splitPath []string) (hash string, mode os.FileMode, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	tx, err := conn.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if err == nil {
+			err = tx.Commit()
+			if err != nil {
+				err1 := tx.Rollback()
+				if err1 != nil {
+					panic(err1) // should not happen
+				}
+				return
+			}
+		}
+	}()
+	hash, err = db.getBranchCommitHash(ctx, tx, branchName)
+	if err != nil {
+		return
+	}
+	for i := range splitPath[:len(splitPath)-1] {
+		hash, err = db.getDirItemHash(ctx, tx, hash, splitPath, i)
+		if err != nil {
+			return
+		}
+	}
+	hash, m, err := db.getDirItemHashMode(ctx, tx, hash, splitPath, len(splitPath)-1)
+	mode = os.FileMode(m)
+	return
 }

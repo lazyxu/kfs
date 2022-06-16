@@ -6,7 +6,8 @@ import (
 	"encoding/hex"
 	"io"
 	"net"
-	"strings"
+
+	"github.com/lazyxu/kfs/rpc/rpcutil"
 
 	"github.com/pierrec/lz4"
 
@@ -19,19 +20,20 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 	println(conn.RemoteAddr().String(), "process")
 
 	for {
-		var command uint8
-		err := binary.Read(conn, binary.LittleEndian, &command)
-		if err != nil {
-			println("command", err.Error())
+		commandType, err := rpcutil.ReadCommandType(conn)
+		if err != nil && err != io.EOF {
+			println("commandType", err.Error())
 			return
 		}
-		switch command {
-		case 0:
+		switch commandType {
+		case rpcutil.CommandPing:
 			pong(conn)
-		case 1:
-			handleUploadFile(kfsCore, conn)
+		case rpcutil.CommandUpload:
+			handleUpload(kfsCore, conn)
+		case rpcutil.CommandDownload:
+			handleDownload(kfsCore, conn)
 		default:
-			println("no such command", command)
+			println("no such commandType", commandType)
 			//panic(fmt.Errorf("no such command %d", command))
 		}
 	}
@@ -45,11 +47,11 @@ func pong(conn net.Conn) {
 	}
 }
 
-func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
+func handleUpload(kfsCore *core.KFS, conn net.Conn) {
 	var err error
 	defer func() {
 		if err != nil {
-			_, err = conn.Write([]byte{1})
+			rpcutil.WriteErrorExit(conn, err)
 		}
 	}()
 
@@ -78,7 +80,7 @@ func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
 			return err
 		}
 
-		encoder, err := readString(conn)
+		encoder, err := rpcutil.ReadString(conn)
 		println(conn.RemoteAddr().String(), "encoder", len(encoder), encoder)
 
 		w := io.MultiWriter(f, hasher)
@@ -111,31 +113,12 @@ func handleUploadFile(kfsCore *core.KFS, conn net.Conn) {
 		return
 	}
 
-	_, err = conn.Write([]byte{0})
+	err = rpcutil.WriteSuccessExit(conn)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "code", err.Error())
 		return
 	}
 	println(conn.RemoteAddr().String(), "code", 0)
-}
-
-func readString(r io.Reader) (string, error) {
-	var b byte
-	var sb strings.Builder
-	for {
-		err := binary.Read(r, binary.LittleEndian, &b)
-		if err != nil {
-			return "", err
-		}
-		if b == 0 {
-			break
-		}
-		err = sb.WriteByte(b)
-		if err != nil {
-			return "", err
-		}
-	}
-	return sb.String(), nil
 }
 
 func SocketServer(kfsCore *core.KFS, portString string) error {

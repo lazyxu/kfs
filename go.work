@@ -5,6 +5,7 @@ use (
 	./cmd/kfs-server
 	./core
 	./pb
+	./rpc/rpcutil
 	./rpc/client
 	./rpc/server
 	./sqlite/noncgo

@@ -111,3 +111,30 @@ func (s *Storage) Read(hash string) (io.ReadCloser, error) {
 	}
 	return f, nil
 }
+
+type SizedReadCloser interface {
+	io.ReadCloser
+	Size() int64
+}
+
+type sizedReaderCloser struct {
+	io.ReadCloser
+	size int64
+}
+
+func (rc sizedReaderCloser) Size() int64 {
+	return rc.size
+}
+
+func (s *Storage) ReadWithSize(hash string) (SizedReadCloser, error) {
+	p := path.Join(s.root, files, hash)
+	f, err := os.OpenFile(p, os.O_RDONLY, 0o200)
+	if err != nil {
+		return nil, err
+	}
+	info, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	return sizedReaderCloser{f, info.Size()}, nil
+}

@@ -5,10 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"os"
+
+	"github.com/lazyxu/kfs/rpc/rpcutil"
 
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
@@ -90,7 +93,7 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	}()
 	conn := h.conns[index]
 
-	_, err = conn.Write([]byte{1})
+	err = rpcutil.WriteCommandType(conn, rpcutil.CommandUpload)
 	if err != nil {
 		return
 	}
@@ -135,11 +138,7 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 		p.label = fmt.Sprintf("e=%s", h.encoder)
 		h.ch <- p
 	}
-	length := len(h.encoder)
-	header := make([]byte, length+1)
-	copy(header[:], h.encoder)
-	header[length] = 0
-	_, err = conn.Write(header)
+	err = rpcutil.WriteString(conn, h.encoder)
 	if err != nil {
 		return
 	}
@@ -157,14 +156,17 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 		p.label = "code?"
 		h.ch <- p
 	}
-	var code int8
-	err = binary.Read(conn, binary.LittleEndian, &code)
+	code, errMsg, err := rpcutil.ReadExit(conn)
 	if err != nil {
 		return
 	}
 	if h.verbose {
 		p.label = fmt.Sprintf("code=%d", code)
 		h.ch <- p
+		if code != rpcutil.EOK {
+			p.err = errors.New(errMsg)
+			h.ch <- p
+		}
 	}
 
 	return
