@@ -106,6 +106,9 @@ func (db *DB) GetFileHashMode(ctx context.Context, branchName string, splitPath 
 	if err != nil {
 		return
 	}
+	if len(splitPath) == 0 {
+		return hash, os.ModeDir | os.ModePerm, nil
+	}
 	for i := range splitPath[:len(splitPath)-1] {
 		hash, err = db.getDirItemHash(ctx, tx, hash, splitPath, i)
 		if err != nil {

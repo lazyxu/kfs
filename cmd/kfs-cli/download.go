@@ -13,7 +13,7 @@ import (
 var downloadCmd = &cobra.Command{
 	Use:     "download",
 	Example: "kfs-cli download -p path filePath",
-	Args:    cobra.RangeArgs(1, 1),
+	Args:    cobra.RangeArgs(0, 1),
 	Run:     runDownload,
 }
 
@@ -50,7 +50,16 @@ func runDownload(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
-	srcPath := args[0]
+	var srcPath string
+	if len(args) > 0 {
+		srcPath = args[0]
+	}
+	if dstPath == "" {
+		dstPath = srcPath
+	}
+	if dstPath == "" {
+		err = fmt.Errorf("unknown dstPath")
+	}
 
 	var uploadProcess core.UploadProcess = &core.EmptyUploadProcess{}
 	//if verbose {
