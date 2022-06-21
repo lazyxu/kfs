@@ -52,10 +52,11 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 	if info.Mode().IsRegular() {
 		h.uploadProcess = h.uploadProcess.New(int(info.Size()), filepath.Base(filePath))
 		defer h.uploadProcess.Close()
-		fileResp.fileOrDir, err = h.uploadFile(ctx, index, filePath)
+		file, err := h.uploadFile(ctx, index, filePath)
 		if err != nil {
 			return
 		}
+		fileResp.fileOrDir = file
 		return
 	} else if info.IsDir() {
 		dirItems := make([]*pb.DirItem, len(children))

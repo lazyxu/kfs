@@ -87,9 +87,9 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	defer func() {
 		if err != nil {
 			h.conns[index].Close()
+			h.BeforeFileHandler(ctx, index)
 			return
 		}
-		h.BeforeFileHandler(ctx, index)
 	}()
 	conn := h.conns[index]
 
