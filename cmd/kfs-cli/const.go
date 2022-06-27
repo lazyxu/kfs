@@ -4,6 +4,7 @@ import "errors"
 
 const (
 	ServerTypeStr       = "server-type"
+	ConfigFileStr       = "config-file"
 	ServerTypeLocal     = "local"
 	ServerTypeRemote    = "remote"
 	ServerAddrStr       = "server-addr"

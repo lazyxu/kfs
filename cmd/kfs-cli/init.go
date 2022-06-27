@@ -31,6 +31,7 @@ func runInit(cmd *cobra.Command, args []string) {
 	socketServerAddr := "localhost:1124"
 	branchName := cmd.Flag(BranchNameStr).Value.String()
 	defer func() {
+		loadConfigFile(cmd)
 		viper.Set(ServerTypeStr, serverType)
 		viper.Set(GrpcServerAddrStr, grpcServerAddr)
 		viper.Set(SocketServerAddrStr, socketServerAddr)

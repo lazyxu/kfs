@@ -2,12 +2,17 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/lazyxu/kfs/rpc/client"
 	"github.com/spf13/viper"
 )
 
-func loadFs() (*client.RpcFs, string) {
+func loadFs(cmd *cobra.Command) (*client.RpcFs, string) {
+	loadConfigFile(cmd)
 	grpcServerAddr := viper.GetString(GrpcServerAddrStr)
 	socketServerAddr := viper.GetString(SocketServerAddrStr)
 	branchName := viper.GetString(BranchNameStr)
@@ -16,4 +21,37 @@ func loadFs() (*client.RpcFs, string) {
 		GrpcServerAddr:   grpcServerAddr,
 		SocketServerAddr: socketServerAddr,
 	}, branchName
+}
+
+func loadConfigFile(cmd *cobra.Command) {
+	configFile := cmd.Flag(ConfigFileStr).Value.String()
+	extIndex := strings.LastIndexByte(configFile, '.')
+	ext := configFile[extIndex+1:]
+	fileName := configFile[:extIndex]
+	pathSeparatorIndex := strings.LastIndexByte(fileName, os.PathSeparator)
+	dir := configFile[:pathSeparatorIndex]
+	fileName = configFile[pathSeparatorIndex+1:]
+	viper.AddConfigPath(dir)
+	viper.SetConfigName(fileName)
+	viper.SetConfigType(ext)
+	viper.AutomaticEnv()
+	_, err := os.Stat(configFile)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			panic(err)
+		}
+		f, err := os.Create(configFile)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		f.Write([]byte("{}"))
+		if err != nil {
+			panic(err)
+		}
+	}
+	err = viper.ReadInConfig()
+	if err != nil {
+		fmt.Errorf("Can not read config: %s\n", viper.ConfigFileUsed())
+	}
 }

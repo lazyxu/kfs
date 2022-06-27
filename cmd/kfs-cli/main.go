@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var rootCmd = &cobra.Command{
@@ -28,31 +27,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	viper.AddConfigPath(home)
-	viper.SetConfigName(".kfs")
-	viper.SetConfigType("json")
-	viper.AutomaticEnv()
+	rootCmd.PersistentFlags().String(ConfigFileStr, filepath.Join(home, ".kfs.json"), "the path for the config file")
 
-	configFile := path.Join(home, ".kfs.json")
-	_, err = os.Stat(configFile)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			panic(err)
-		}
-		f, err := os.Create(configFile)
-		if err != nil {
-			panic(err)
-		}
-		defer f.Close()
-		f.Write([]byte("{}"))
-		if err != nil {
-			panic(err)
-		}
-	}
-	err = viper.ReadInConfig()
-	if err != nil {
-		fmt.Errorf("Can not read config: %s\n", viper.ConfigFileUsed())
-	}
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(branchCmd)
 	rootCmd.AddCommand(checkoutCmd)

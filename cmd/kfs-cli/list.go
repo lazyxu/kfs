@@ -59,7 +59,7 @@ func runList(cmd *cobra.Command, args []string) {
 		ExitWithError(err)
 	}()
 
-	fs, branchName := loadFs()
+	fs, branchName := loadFs(cmd)
 
 	p := ""
 	if len(args) != 0 {
