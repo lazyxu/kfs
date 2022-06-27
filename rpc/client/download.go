@@ -13,7 +13,7 @@ import (
 	"github.com/lazyxu/kfs/core"
 )
 
-func (fs GRPCFS) Download(ctx context.Context, branchName string, dstPath string, srcPath string, config core.UploadConfig) (filePath string, err error) {
+func (fs *RpcFs) Download(ctx context.Context, branchName string, dstPath string, srcPath string, config core.UploadConfig) (filePath string, err error) {
 	conn, err := net.Dial("tcp", "127.0.0.1:1124")
 	if err != nil {
 		return

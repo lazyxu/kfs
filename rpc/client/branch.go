@@ -8,7 +8,7 @@ import (
 	"github.com/lazyxu/kfs/pb"
 )
 
-func (fs GRPCFS) Checkout(ctx context.Context, branchName string) (bool, error) {
+func (fs *RpcFs) Checkout(ctx context.Context, branchName string) (bool, error) {
 	conn, c, err := getGRPCClient(fs)
 	if err != nil {
 		return false, err
@@ -24,7 +24,7 @@ func (fs GRPCFS) Checkout(ctx context.Context, branchName string) (bool, error) 
 	return resp.Exist, nil
 }
 
-func (fs GRPCFS) BranchInfo(ctx context.Context, branchName string) (sqlite.IBranch, error) {
+func (fs *RpcFs) BranchInfo(ctx context.Context, branchName string) (sqlite.IBranch, error) {
 	conn, c, err := getGRPCClient(fs)
 	if err != nil {
 		return nil, err

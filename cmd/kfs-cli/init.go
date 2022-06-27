@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/lazyxu/kfs/rpc/client"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,27 +27,29 @@ func init() {
 func runInit(cmd *cobra.Command, args []string) {
 	var err error
 	serverType := cmd.Flag(ServerTypeStr).Value.String()
-	serverAddr := args[0]
+	grpcServerAddr := args[0]
+	socketServerAddr := "localhost:1124"
 	branchName := cmd.Flag(BranchNameStr).Value.String()
 	defer func() {
 		viper.Set(ServerTypeStr, serverType)
-		viper.Set(ServerAddrStr, serverAddr)
+		viper.Set(GrpcServerAddrStr, grpcServerAddr)
+		viper.Set(SocketServerAddrStr, socketServerAddr)
 		viper.Set(BranchNameStr, branchName)
 		err = viper.WriteConfig()
 		ExitWithError(err)
 		fmt.Printf("%s: %s\n", ServerTypeStr, serverType)
-		fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
+		fmt.Printf("%s: %s\n", GrpcServerAddrStr, grpcServerAddr)
+		fmt.Printf("%s: %s\n", SocketServerAddrStr, socketServerAddr)
 		fmt.Printf("%s: %s\n", BranchNameStr, branchName)
 	}()
 	defer func() {
 		ExitWithError(err)
 	}()
 
-	fs, err := getFS(serverType, serverAddr)
-	if err != nil {
-		return
+	fs := &client.RpcFs{
+		GrpcServerAddr:   grpcServerAddr,
+		SocketServerAddr: socketServerAddr,
 	}
-	defer fs.Close()
 
 	_, err = fs.Checkout(cmd.Context(), branchName)
 }

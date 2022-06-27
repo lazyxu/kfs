@@ -1,10 +1,7 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var resetCmd = &cobra.Command{
@@ -19,18 +16,8 @@ func runReset(cmd *cobra.Command, args []string) {
 	defer func() {
 		ExitWithError(err)
 	}()
-	serverType := viper.GetString(ServerTypeStr)
-	serverAddr := viper.GetString(ServerAddrStr)
-	branchName := viper.GetString(BranchNameStr)
-	fmt.Printf("%s: %s\n", ServerTypeStr, serverType)
-	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
-	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
 
-	fs, err := getFS(serverType, serverAddr)
-	if err != nil {
-		return
-	}
-	defer fs.Close()
+	fs, branchName := loadFs()
 
 	err = fs.Reset(cmd.Context(), branchName)
 }

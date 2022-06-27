@@ -15,7 +15,7 @@ import (
 	"github.com/lazyxu/kfs/pb"
 )
 
-func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, srcPath string, config core.UploadConfig) (commit sqlite.Commit, branch sqlite.Branch, err error) {
+func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, srcPath string, config core.UploadConfig) (commit sqlite.Commit, branch sqlite.Branch, err error) {
 	conn, c, err := getGRPCClient(fs)
 	if err != nil {
 		return
@@ -27,13 +27,14 @@ func (fs GRPCFS) Upload(ctx context.Context, branchName string, dstPath string, 
 		return
 	}
 	handlers := &uploadHandlers{
-		c:             c,
-		uploadProcess: config.UploadProcess,
-		encoder:       config.Encoder,
-		verbose:       config.Verbose,
-		concurrent:    config.Concurrent,
-		ch:            make(chan *Process),
-		conns:         make([]net.Conn, config.Concurrent),
+		c:                c,
+		uploadProcess:    config.UploadProcess,
+		encoder:          config.Encoder,
+		verbose:          config.Verbose,
+		concurrent:       config.Concurrent,
+		socketServerAddr: fs.SocketServerAddr,
+		ch:               make(chan *Process),
+		conns:            make([]net.Conn, config.Concurrent),
 	}
 	var wg sync.WaitGroup
 	if config.Verbose {

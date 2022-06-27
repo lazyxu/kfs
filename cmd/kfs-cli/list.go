@@ -10,7 +10,6 @@ import (
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func printHeader(total int) error {
@@ -59,24 +58,14 @@ func runList(cmd *cobra.Command, args []string) {
 	defer func() {
 		ExitWithError(err)
 	}()
-	serverType := viper.GetString(ServerTypeStr)
-	serverAddr := viper.GetString(ServerAddrStr)
-	branchName := viper.GetString(BranchNameStr)
-	fmt.Printf("%s: %s\n", ServerTypeStr, serverType)
-	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
-	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
+
+	fs, branchName := loadFs()
 
 	p := ""
 	if len(args) != 0 {
 		p = args[0]
 	}
 	isHumanize := cmd.Flag(HumanizeStr).Value.String() == "true"
-
-	fs, err := getFS(serverType, serverAddr)
-	if err != nil {
-		return
-	}
-	defer fs.Close()
 
 	err = fs.List(cmd.Context(), branchName, p, printHeader, func(item sqlite.IDirItem) error {
 		printBody(item, isHumanize)

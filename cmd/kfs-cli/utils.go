@@ -1,14 +1,19 @@
 package main
 
 import (
-	"github.com/lazyxu/kfs/core"
+	"fmt"
+
 	"github.com/lazyxu/kfs/rpc/client"
+	"github.com/spf13/viper"
 )
 
-func getFS(serverType string, serverAddr string) (core.FS, error) {
-	switch serverType {
-	case ServerTypeRemote:
-		return client.New(serverAddr), nil
-	}
-	return nil, InvalidServerType
+func loadFs() (*client.RpcFs, string) {
+	grpcServerAddr := viper.GetString(GrpcServerAddrStr)
+	socketServerAddr := viper.GetString(SocketServerAddrStr)
+	branchName := viper.GetString(BranchNameStr)
+	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
+	return &client.RpcFs{
+		GrpcServerAddr:   grpcServerAddr,
+		SocketServerAddr: socketServerAddr,
+	}, branchName
 }

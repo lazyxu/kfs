@@ -38,20 +38,10 @@ func runCheckoutBranch(cmd *cobra.Command, args []string) {
 	defer func() {
 		ExitWithError(err)
 	}()
-	serverType := viper.GetString(ServerTypeStr)
-	serverAddr := viper.GetString(ServerAddrStr)
-	oldBranchName := viper.GetString(BranchNameStr)
-	fmt.Printf("%s: %s\n", ServerTypeStr, serverType)
-	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
-	fmt.Printf("%s: %s\n", BranchNameStr, oldBranchName)
+
+	fs, _ := loadFs()
 
 	branchName := args[0]
-
-	fs, err := getFS(serverType, serverAddr)
-	if err != nil {
-		return
-	}
-	defer fs.Close()
 
 	_, err = fs.Checkout(cmd.Context(), branchName)
 	if err != nil {
@@ -74,23 +64,12 @@ func runBranchInfo(cmd *cobra.Command, args []string) {
 	defer func() {
 		ExitWithError(err)
 	}()
-	serverType := viper.GetString(ServerTypeStr)
-	serverAddr := viper.GetString(ServerAddrStr)
-	var branchName string
+
+	fs, branchName := loadFs()
+
 	if len(args) != 0 {
 		branchName = args[0]
-	} else {
-		branchName = viper.GetString(BranchNameStr)
 	}
-	fmt.Printf("%s: %s\n", ServerTypeStr, serverType)
-	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
-	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
-
-	fs, err := getFS(serverType, serverAddr)
-	if err != nil {
-		return
-	}
-	defer fs.Close()
 
 	branch, err := fs.BranchInfo(cmd.Context(), branchName)
 	if err != nil {

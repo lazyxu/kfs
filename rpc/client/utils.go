@@ -17,8 +17,8 @@ import (
 
 const fileChunkSize = 1024 * 1024
 
-func getGRPCClient(fs GRPCFS) (*grpc.ClientConn, pb.KoalaFSClient, error) {
-	conn, err := grpc.Dial(fs.RemoteAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func getGRPCClient(fs *RpcFs) (*grpc.ClientConn, pb.KoalaFSClient, error) {
+	conn, err := grpc.Dial(fs.GrpcServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, nil, err
 	}

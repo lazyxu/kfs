@@ -10,7 +10,7 @@ import (
 	"github.com/lazyxu/kfs/pb"
 )
 
-func (fs GRPCFS) List(ctx context.Context, branchName string, filePath string, onLength func(int) error, onDirItem func(item sqlite.IDirItem) error) error {
+func (fs *RpcFs) List(ctx context.Context, branchName string, filePath string, onLength func(int) error, onDirItem func(item sqlite.IDirItem) error) error {
 	conn, c, err := getGRPCClient(fs)
 	if err != nil {
 		return err

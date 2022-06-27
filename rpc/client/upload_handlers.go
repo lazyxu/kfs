@@ -14,13 +14,14 @@ import (
 
 type uploadHandlers struct {
 	core.DefaultWalkHandlers[fileResp]
-	c             pb.KoalaFSClient
-	uploadProcess core.UploadProcess
-	concurrent    int
-	encoder       string
-	verbose       bool
-	ch            chan *Process
-	conns         []net.Conn
+	c                pb.KoalaFSClient
+	uploadProcess    core.UploadProcess
+	concurrent       int
+	encoder          string
+	verbose          bool
+	socketServerAddr string
+	ch               chan *Process
+	conns            []net.Conn
 }
 
 type fileResp struct {
@@ -29,7 +30,7 @@ type fileResp struct {
 }
 
 func (h *uploadHandlers) BeforeFileHandler(ctx context.Context, index int) {
-	conn, err := net.Dial("tcp", "127.0.0.1:1124")
+	conn, err := net.Dial("tcp", h.socketServerAddr)
 	if err != nil {
 		println(err.Error())
 		os.Exit(1)

@@ -9,7 +9,6 @@ import (
 	"github.com/lazyxu/kfs/core"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var uploadCmd = &cobra.Command{
@@ -34,12 +33,8 @@ func runUpload(cmd *cobra.Command, args []string) {
 	defer func() {
 		ExitWithError(err)
 	}()
-	serverType := viper.GetString(ServerTypeStr)
-	serverAddr := viper.GetString(ServerAddrStr)
-	branchName := viper.GetString(BranchNameStr)
-	fmt.Printf("%s: %s\n", ServerTypeStr, serverType)
-	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
-	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
+
+	fs, branchName := loadFs()
 
 	// TODO: SET chunk bytes.
 	//fileChunkSize := cmd.Flag(ChunkSizeStr)
@@ -55,21 +50,10 @@ func runUpload(cmd *cobra.Command, args []string) {
 	srcPath := args[0]
 
 	var uploadProcess core.UploadProcess = &core.EmptyUploadProcess{}
-	//if verbose {
-	//	uploadProcess = &UploadProcessBar{}
-	//} else {
-	//	uploadProcess = &core.EmptyUploadProcess{}
-	//}
 
 	if cpuProfile {
 
 	}
-
-	fs, err := getFS(serverType, serverAddr)
-	if err != nil {
-		return
-	}
-	defer fs.Close()
 
 	branch, commit, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, core.UploadConfig{
 		Encoder:       encoder,

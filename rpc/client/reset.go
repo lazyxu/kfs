@@ -6,7 +6,7 @@ import (
 	"github.com/lazyxu/kfs/pb"
 )
 
-func (fs GRPCFS) Reset(ctx context.Context, branchName string) error {
+func (fs *RpcFs) Reset(ctx context.Context, branchName string) error {
 	conn, c, err := getGRPCClient(fs)
 	if err != nil {
 		return err
