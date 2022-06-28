@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 
@@ -65,12 +66,20 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		go func() {
-			err = server.SocketServer(kfsCore, "1124")
+			lis, err := net.Listen("tcp", "0.0.0.0:1124")
 			if err != nil {
-				return
+				panic(err)
+			}
+			err = server.Socket(lis, kfsCore)
+			if err != nil {
+				panic(err)
 			}
 		}()
-		err = server.GrpcServer(kfsCore, portString)
+		lis, err := net.Listen("tcp", "0.0.0.0:"+portString)
+		if err != nil {
+			panic(err)
+		}
+		err = server.Grpc(lis, kfsCore)
 		if err != nil {
 			return
 		}

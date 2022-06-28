@@ -121,14 +121,10 @@ func handleUpload(kfsCore *core.KFS, conn net.Conn) {
 	println(conn.RemoteAddr().String(), "code", 0)
 }
 
-func SocketServer(kfsCore *core.KFS, portString string) error {
-	lis, err := net.Listen("tcp", "0.0.0.0:"+portString)
-	if err != nil {
-		return err
-	}
-	println("Socket listening on", lis.Addr().String())
+func Socket(listener net.Listener, kfsCore *core.KFS) error {
+	println("Socket listening on", listener.Addr().String())
 	for {
-		conn, err := lis.Accept()
+		conn, err := listener.Accept()
 		if err != nil {
 			println("accept failed", err)
 			continue

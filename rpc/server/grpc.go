@@ -14,14 +14,10 @@ type KoalaFSServer struct {
 	kfsCore *core.KFS
 }
 
-func GrpcServer(kfsCore *core.KFS, portString string) error {
+func Grpc(listener net.Listener, kfsCore *core.KFS) error {
 	server := &KoalaFSServer{kfsCore: kfsCore}
-	lis, err := net.Listen("tcp", "0.0.0.0:"+portString)
-	if err != nil {
-		return err
-	}
 	s := grpc.NewServer()
 	pb.RegisterKoalaFSServer(s, server)
-	println("GRPC listening on", lis.Addr().String())
-	return s.Serve(lis)
+	println("GRPC listening on", listener.Addr().String())
+	return s.Serve(listener)
 }

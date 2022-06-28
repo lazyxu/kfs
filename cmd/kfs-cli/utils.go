@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -24,18 +25,22 @@ func loadFs(cmd *cobra.Command) (*client.RpcFs, string) {
 }
 
 func loadConfigFile(cmd *cobra.Command) {
-	configFile := cmd.Flag(ConfigFileStr).Value.String()
+	configFilePath := cmd.Flag(ConfigFileStr).Value.String()
+	configFile, err := filepath.Abs(configFilePath)
+	if err != nil {
+		panic(err)
+	}
 	extIndex := strings.LastIndexByte(configFile, '.')
 	ext := configFile[extIndex+1:]
 	fileName := configFile[:extIndex]
 	pathSeparatorIndex := strings.LastIndexByte(fileName, os.PathSeparator)
-	dir := configFile[:pathSeparatorIndex]
+	dir := configFile[:pathSeparatorIndex+1]
 	fileName = configFile[pathSeparatorIndex+1:]
 	viper.AddConfigPath(dir)
 	viper.SetConfigName(fileName)
 	viper.SetConfigType(ext)
 	viper.AutomaticEnv()
-	_, err := os.Stat(configFile)
+	_, err = os.Stat(configFile)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			panic(err)
