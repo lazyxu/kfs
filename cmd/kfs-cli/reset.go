@@ -17,7 +17,7 @@ func runReset(cmd *cobra.Command, args []string) {
 		ExitWithError(err)
 	}()
 
-	fs, branchName := loadFs(cmd)
+	fs, branchName, _ := loadFs(cmd)
 
 	err = fs.Reset(cmd.Context(), branchName)
 }

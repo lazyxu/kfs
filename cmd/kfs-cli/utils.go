@@ -12,16 +12,19 @@ import (
 	"github.com/spf13/viper"
 )
 
-func loadFs(cmd *cobra.Command) (*client.RpcFs, string) {
+func loadFs(cmd *cobra.Command) (*client.RpcFs, string, bool) {
 	loadConfigFile(cmd)
-	grpcServerAddr := viper.GetString(GrpcServerAddrStr)
-	socketServerAddr := viper.GetString(SocketServerAddrStr)
+	verbose := cmd.Flag(VerboseStr).Value.String() != "false"
+	grpcServerAddr := viper.GetString(GrpcServerStr)
+	serverServerAddr := viper.GetString(SocketServerStr)
 	branchName := viper.GetString(BranchNameStr)
-	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
+	if verbose {
+		fmt.Printf("%s: %s\n", BranchNameStr, branchName)
+	}
 	return &client.RpcFs{
 		GrpcServerAddr:   grpcServerAddr,
-		SocketServerAddr: socketServerAddr,
-	}, branchName
+		SocketServerAddr: serverServerAddr,
+	}, branchName, verbose
 }
 
 func loadConfigFile(cmd *cobra.Command) {

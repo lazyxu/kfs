@@ -59,7 +59,7 @@ func runList(cmd *cobra.Command, args []string) {
 		ExitWithError(err)
 	}()
 
-	fs, branchName := loadFs(cmd)
+	fs, branchName, _ := loadFs(cmd)
 
 	p := ""
 	if len(args) != 0 {
@@ -67,7 +67,13 @@ func runList(cmd *cobra.Command, args []string) {
 	}
 	isHumanize := cmd.Flag(HumanizeStr).Value.String() == "true"
 
-	err = fs.List(cmd.Context(), branchName, p, printHeader, func(item sqlite.IDirItem) error {
+	err = fs.List(cmd.Context(), branchName, p, func(total int) error {
+		fmt.Fprintf(cmd.OutOrStdout(), "total %d\n", total)
+		if total != 0 {
+			fmt.Fprintf(cmd.OutOrStdout(), "mode      \tcount\ttotalCount\thash\tsize\tmodifyTime         \tname\n")
+		}
+		return nil
+	}, func(item sqlite.IDirItem) error {
 		printBody(item, isHumanize)
 		return nil
 	})

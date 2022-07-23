@@ -39,7 +39,7 @@ func runCheckoutBranch(cmd *cobra.Command, args []string) {
 		ExitWithError(err)
 	}()
 
-	fs, _ := loadFs(cmd)
+	fs, _, _ := loadFs(cmd)
 
 	branchName := args[0]
 
@@ -65,7 +65,7 @@ func runBranchInfo(cmd *cobra.Command, args []string) {
 		ExitWithError(err)
 	}()
 
-	fs, branchName := loadFs(cmd)
+	fs, branchName, _ := loadFs(cmd)
 
 	if len(args) != 0 {
 		branchName = args[0]

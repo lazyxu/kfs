@@ -28,7 +28,7 @@ func init() {
 		panic(err)
 	}
 	rootCmd.PersistentFlags().String(ConfigFileStr, filepath.Join(home, ".kfs.json"), "the path for the config file")
-
+	rootCmd.PersistentFlags().BoolP(VerboseStr, "v", false, "verbose")
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(branchCmd)
 	rootCmd.AddCommand(checkoutCmd)

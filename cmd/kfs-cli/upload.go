@@ -21,7 +21,6 @@ var uploadCmd = &cobra.Command{
 func init() {
 	uploadCmd.PersistentFlags().StringP(PathStr, "p", "", "override the path")
 	uploadCmd.PersistentFlags().String(DirPathStr, "", "move into dir")
-	uploadCmd.PersistentFlags().BoolP(VerboseStr, "v", false, "verbose")
 	uploadCmd.PersistentFlags().IntP(ConcurrentStr, "c", 1, "concurrent")
 	uploadCmd.PersistentFlags().StringP(EncoderStr, "e", "", "[\"\", \"lz4\"]")
 	uploadCmd.PersistentFlags().Bool(CpuProfilerStr, false, "cpu profile")
@@ -34,13 +33,12 @@ func runUpload(cmd *cobra.Command, args []string) {
 		ExitWithError(err)
 	}()
 
-	fs, branchName := loadFs(cmd)
+	fs, branchName, verbose := loadFs(cmd)
 
 	// TODO: SET chunk bytes.
 	//fileChunkSize := cmd.Flag(ChunkSizeStr)
 	//humanize.ParseBytes()
 	dstPath := cmd.Flag(PathStr).Value.String()
-	verbose := cmd.Flag(VerboseStr).Value.String() != "false"
 	encoder := cmd.Flag(EncoderStr).Value.String()
 	cpuProfile := cmd.Flag(CpuProfilerStr).Value.String() != "false"
 	concurrent, err := strconv.Atoi(cmd.Flag(ConcurrentStr).Value.String())

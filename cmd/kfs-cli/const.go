@@ -3,13 +3,10 @@ package main
 import "errors"
 
 const (
-	ServerTypeStr       = "server-type"
-	ConfigFileStr       = "config-file"
-	ServerTypeLocal     = "local"
-	ServerTypeRemote    = "remote"
-	ServerAddrStr       = "server-addr"
-	GrpcServerAddrStr   = "grpc-server-addr"
-	SocketServerAddrStr = "socket-server-addr"
+	ConfigFileStr   = "config-file"
+	ServerAddrStr   = "server-addr"
+	SocketServerStr = "socket-server"
+	GrpcServerStr   = "grpc-server"
 
 	HumanizeStr    = "humanize"
 	BackupPathStr  = "backup-path"

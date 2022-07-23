@@ -32,7 +32,7 @@ func runDownload(cmd *cobra.Command, args []string) {
 		ExitWithError(err)
 	}()
 
-	fs, branchName := loadFs(cmd)
+	fs, branchName, _ := loadFs(cmd)
 
 	// TODO: SET chunk bytes.
 	//fileChunkSize := cmd.Flag(ChunkSizeStr)

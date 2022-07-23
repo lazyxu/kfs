@@ -30,9 +30,6 @@ func (fs *RpcFs) List(ctx context.Context, branchName string, filePath string, o
 		if err != nil && err != io.EOF {
 			return err
 		}
-		if err == io.EOF {
-			return nil
-		}
 		if isFirst {
 			md, err := client.Header()
 			if err != nil {
@@ -47,6 +44,9 @@ func (fs *RpcFs) List(ctx context.Context, branchName string, filePath string, o
 				return err
 			}
 			isFirst = false
+		}
+		if err == io.EOF {
+			return nil
 		}
 		err = onDirItem(dirItem)
 		if err != nil {

@@ -22,23 +22,15 @@ func runCat(cmd *cobra.Command, args []string) {
 	defer func() {
 		ExitWithError(err)
 	}()
-	serverType := viper.GetString(ServerTypeStr)
 	serverAddr := viper.GetString(ServerAddrStr)
 	branchName := viper.GetString(BranchNameStr)
-	fmt.Printf("%s: %s\n", ServerTypeStr, serverType)
 	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
 	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
 
 	p := args[0]
 
 	var readerCloser io.ReadCloser
-	switch serverType {
-	case ServerTypeLocal:
-		readerCloser, err = core.Cat(cmd.Context(), serverAddr, branchName, p)
-	case ServerTypeRemote:
-	default:
-		err = InvalidServerType
-	}
+	readerCloser, err = core.Cat(cmd.Context(), serverAddr, branchName, p)
 
 	if err != nil {
 		return

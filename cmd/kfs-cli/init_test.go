@@ -2,9 +2,9 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"net"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/lazyxu/kfs/core"
@@ -21,10 +21,6 @@ var (
 
 func initServer() error {
 	kfsCore, _, err := core.New(kfsRoot)
-	if err != nil {
-		return err
-	}
-	_, err = kfsCore.Checkout(context.Background(), "master")
 	if err != nil {
 		return err
 	}
@@ -61,13 +57,36 @@ func init() {
 	}
 }
 
-func TestInit(t *testing.T) {
-	rootCmd.SetArgs([]string{"init", "localhost:" + strconv.Itoa(grpcPort), "--config-file", ".kfs.json"})
-	output := new(bytes.Buffer)
-	rootCmd.SetOut(output)
-	rootCmd.SetErr(output)
+func execute(args []string) (string, error) {
+	rootCmd.SetArgs(args)
+	buffer := new(bytes.Buffer)
+	rootCmd.SetOut(buffer)
+	rootCmd.SetErr(buffer)
 	err := rootCmd.Execute()
 	if err != nil {
+		return "", err
+	}
+	return buffer.String(), nil
+}
+
+func Test_init_ls(t *testing.T) {
+	initOutput, err := execute([]string{"init",
+		"--grpc-server", "localhost:" + strconv.Itoa(grpcPort),
+		"--socket-server", "localhost:" + strconv.Itoa(socketPort),
+		"--config-file", ".kfs.json"})
+	if err != nil {
 		t.Error(err)
+	}
+	if initOutput != "" {
+		t.Errorf("init expected \"\", actual \"%s\"", initOutput)
+	}
+
+	lsOutput, err := execute([]string{"ls"})
+	if err != nil {
+		t.Error(err)
+	}
+	lsOutput = strings.Trim(lsOutput, "\n")
+	if lsOutput != "total 0" {
+		t.Errorf("expected \"total 0\", actual \"%s\"", lsOutput)
 	}
 }
