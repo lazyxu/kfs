@@ -20,7 +20,7 @@ var catCmd = &cobra.Command{
 func runCat(cmd *cobra.Command, args []string) {
 	var err error
 	defer func() {
-		ExitWithError(err)
+		ExitWithError(cmd, err)
 	}()
 	serverAddr := viper.GetString(ServerAddrStr)
 	branchName := viper.GetString(BranchNameStr)

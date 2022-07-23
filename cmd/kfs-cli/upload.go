@@ -30,7 +30,7 @@ func init() {
 func runUpload(cmd *cobra.Command, args []string) {
 	var err error
 	defer func() {
-		ExitWithError(err)
+		ExitWithError(cmd, err)
 	}()
 
 	fs, branchName, verbose := loadFs(cmd)
@@ -62,5 +62,5 @@ func runUpload(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
-	fmt.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", branch.Hash[:4], commit.CommitId, humanize.Bytes(commit.Size), commit.Count)
+	fmt.Fprintf(cmd.OutOrStdout(), "hash=%s, commitId=%d, size=%s, count=%d\n", branch.Hash[:4], commit.CommitId, humanize.Bytes(commit.Size), commit.Count)
 }

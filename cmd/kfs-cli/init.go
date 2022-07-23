@@ -36,7 +36,7 @@ func runInit(cmd *cobra.Command, args []string) {
 		viper.Set(SocketServerStr, socketServer)
 		viper.Set(BranchNameStr, branchName)
 		err = viper.WriteConfig()
-		ExitWithError(err)
+		ExitWithError(cmd, err)
 		if verbose {
 			fmt.Printf("%s: %s\n", GrpcServerStr, grpcServer)
 			fmt.Printf("%s: %s\n", SocketServerStr, socketServer)
@@ -44,7 +44,7 @@ func runInit(cmd *cobra.Command, args []string) {
 		}
 	}()
 	defer func() {
-		ExitWithError(err)
+		ExitWithError(cmd, err)
 	}()
 
 	fs := &client.RpcFs{

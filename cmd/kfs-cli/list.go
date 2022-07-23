@@ -56,7 +56,7 @@ func init() {
 func runList(cmd *cobra.Command, args []string) {
 	var err error
 	defer func() {
-		ExitWithError(err)
+		ExitWithError(cmd, err)
 	}()
 
 	fs, branchName, _ := loadFs(cmd)

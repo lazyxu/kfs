@@ -2,9 +2,9 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"net"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/lazyxu/kfs/core"
@@ -55,38 +55,39 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func execute(args []string) (string, error) {
-	rootCmd.SetArgs(args)
-	buffer := new(bytes.Buffer)
-	rootCmd.SetOut(buffer)
-	rootCmd.SetErr(buffer)
-	err := rootCmd.Execute()
-	if err != nil {
-		return "", err
-	}
-	return buffer.String(), nil
-}
-
-func Test_init_ls(t *testing.T) {
-	initOutput, err := execute([]string{"init",
+	stdout, stderr, err := execute([]string{"init",
 		"--grpc-server", "localhost:" + strconv.Itoa(grpcPort),
 		"--socket-server", "localhost:" + strconv.Itoa(socketPort),
 		"--config-file", ".kfs.json"})
 	if err != nil {
-		t.Error(err)
+		panic(err)
 	}
-	if initOutput != "" {
-		t.Errorf("init expected \"\", actual \"%s\"", initOutput)
+	if stdout != "" {
+		panic(fmt.Errorf("init expected \"\", actual \"%s\"", stdout))
 	}
+	if stderr != "" {
+		panic(fmt.Errorf("init expected \"\", actual \"%s\"", stderr))
+	}
+}
 
-	lsOutput, err := execute([]string{"ls"})
+func execute(args []string) (string, string, error) {
+	rootCmd.SetArgs(args)
+	outBuffer := new(bytes.Buffer)
+	errBuffer := new(bytes.Buffer)
+	rootCmd.SetOut(outBuffer)
+	rootCmd.SetErr(errBuffer)
+	err := rootCmd.Execute()
+	if err != nil {
+		return "", "", err
+	}
+	return outBuffer.String(), errBuffer.String(), nil
+}
+
+func exec(t *testing.T, args []string) (string, string) {
+	stdout, stderr, err := execute(args)
 	if err != nil {
 		t.Error(err)
+		return stdout, stderr
 	}
-	lsOutput = strings.Trim(lsOutput, "\n")
-	if lsOutput != "total 0" {
-		t.Errorf("expected \"total 0\", actual \"%s\"", lsOutput)
-	}
+	return stdout, stderr
 }

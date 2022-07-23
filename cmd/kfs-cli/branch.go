@@ -36,7 +36,7 @@ var checkoutCmd = &cobra.Command{
 func runCheckoutBranch(cmd *cobra.Command, args []string) {
 	var err error
 	defer func() {
-		ExitWithError(err)
+		ExitWithError(cmd, err)
 	}()
 
 	fs, _, _ := loadFs(cmd)
@@ -62,7 +62,7 @@ var branchInfoCmd = &cobra.Command{
 func runBranchInfo(cmd *cobra.Command, args []string) {
 	var err error
 	defer func() {
-		ExitWithError(err)
+		ExitWithError(cmd, err)
 	}()
 
 	fs, branchName, _ := loadFs(cmd)

@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"os"
+
+	"github.com/spf13/cobra"
 )
 
-func ExitWithError(err error) {
+func ExitWithError(cmd *cobra.Command, err error) {
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		fmt.Fprintln(cmd.ErrOrStderr(), err)
 	}
 }

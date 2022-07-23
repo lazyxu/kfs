@@ -32,7 +32,7 @@ func NewDir(hash string, size uint64, count uint64, totalCount uint64) Dir {
 
 func NewDirFromDirItem(item IDirItem) (Dir, error) {
 	if !os.FileMode(item.GetMode()).IsDir() {
-		return Dir{}, errors.New("expected dir")
+		return Dir{}, ErrExpectedDir
 	}
 	return Dir{fileOrDir{item.GetHash(), item.GetSize()}, item.GetCount(), item.GetTotalCount()}, nil
 }
