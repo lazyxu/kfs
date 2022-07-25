@@ -9,32 +9,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "kfs",
-	Short: "Kfs is file system used to backup files.",
-}
-
 func main() {
-	err := rootCmd.Execute()
+	err := rootCmd().Execute()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func init() {
+func rootCmd() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "kfs",
+		Short: "Kfs is file system used to backup files.",
+	}
 	home, err := homedir.Dir()
 	if err != nil {
 		panic(err)
 	}
-	rootCmd.PersistentFlags().String(ConfigFileStr, filepath.Join(home, ".kfs.json"), "the path for the config file")
-	rootCmd.PersistentFlags().BoolP(VerboseStr, "v", false, "verbose")
-	rootCmd.AddCommand(initCmd)
-	rootCmd.AddCommand(branchCmd)
-	rootCmd.AddCommand(checkoutCmd)
-	rootCmd.AddCommand(uploadCmd)
-	rootCmd.AddCommand(downloadCmd)
-	rootCmd.AddCommand(listCmd)
-	rootCmd.AddCommand(resetCmd)
-	rootCmd.AddCommand(catCmd)
+	cmd.PersistentFlags().String(ConfigFileStr, filepath.Join(home, ".kfs.json"), "the path for the config file")
+	cmd.PersistentFlags().BoolP(VerboseStr, "v", false, "verbose")
+	cmd.AddCommand(initCmd())
+	cmd.AddCommand(branchCmd())
+	cmd.AddCommand(checkoutCmd())
+	cmd.AddCommand(uploadCmd())
+	cmd.AddCommand(downloadCmd())
+	cmd.AddCommand(listCmd())
+	cmd.AddCommand(resetCmd())
+	cmd.AddCommand(catCmd())
+	return cmd
 }

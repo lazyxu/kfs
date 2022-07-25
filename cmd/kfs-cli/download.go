@@ -9,21 +9,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var downloadCmd = &cobra.Command{
-	Use:     "download",
-	Example: "kfs-cli download -p path filePath",
-	Args:    cobra.RangeArgs(0, 1),
-	Run:     runDownload,
-}
-
-func init() {
-	downloadCmd.PersistentFlags().StringP(PathStr, "p", "", "override the path")
-	downloadCmd.PersistentFlags().String(DirPathStr, "", "move into dir")
-	downloadCmd.PersistentFlags().BoolP(VerboseStr, "v", false, "verbose")
-	downloadCmd.PersistentFlags().IntP(ConcurrentStr, "c", 1, "concurrent")
-	downloadCmd.PersistentFlags().StringP(EncoderStr, "e", "", "[\"\", \"lz4\"]")
-	downloadCmd.PersistentFlags().Bool(CpuProfilerStr, false, "cpu profile")
-	downloadCmd.PersistentFlags().StringP(ChunkSizeStr, "b", "1 MiB", "[1 KiB, 1 GiB]")
+func downloadCmd() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:     "download",
+		Example: "kfs-cli download -p path filePath",
+		Args:    cobra.RangeArgs(0, 1),
+		Run:     runDownload,
+	}
+	cmd.PersistentFlags().StringP(PathStr, "p", "", "override the path")
+	cmd.PersistentFlags().String(DirPathStr, "", "move into dir")
+	cmd.PersistentFlags().BoolP(VerboseStr, "v", false, "verbose")
+	cmd.PersistentFlags().IntP(ConcurrentStr, "c", 1, "concurrent")
+	cmd.PersistentFlags().StringP(EncoderStr, "e", "", "[\"\", \"lz4\"]")
+	cmd.PersistentFlags().Bool(CpuProfilerStr, false, "cpu profile")
+	cmd.PersistentFlags().StringP(ChunkSizeStr, "b", "1 MiB", "[1 KiB, 1 GiB]")
+	return cmd
 }
 
 func runDownload(cmd *cobra.Command, args []string) {
@@ -76,5 +76,5 @@ func runDownload(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
-	fmt.Printf("Saving to '%s'\n", filePath)
+	cmd.Printf("Saving to '%s'\n", filePath)
 }

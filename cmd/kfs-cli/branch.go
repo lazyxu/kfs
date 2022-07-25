@@ -8,29 +8,34 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var branchCmd = &cobra.Command{
-	Use: "branch",
+func branchCmd() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use: "branch",
+	}
+
+	cmd.AddCommand(branchCheckoutCmd())
+	cmd.AddCommand(branchInfoCmd())
+	cmd.AddCommand(branchUpdateCmd())
+	cmd.PersistentFlags().String(DescriptionStr, "", "branch description")
+	return cmd
 }
 
-func init() {
-	branchCmd.AddCommand(branchCheckoutCmd)
-	branchCmd.AddCommand(branchInfoCmd)
-	branchCmd.AddCommand(branchUpdateCmd)
-	branchUpdateCmd.PersistentFlags().String(DescriptionStr, "", "branch description")
+func branchCheckoutCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "checkout",
+		Example: "kfs-cli branch checkout branchName",
+		Args:    cobra.RangeArgs(1, 1),
+		Run:     runCheckoutBranch,
+	}
 }
 
-var branchCheckoutCmd = &cobra.Command{
-	Use:     "checkout",
-	Example: "kfs-cli branch checkout branchName",
-	Args:    cobra.RangeArgs(1, 1),
-	Run:     runCheckoutBranch,
-}
-
-var checkoutCmd = &cobra.Command{
-	Use:     "checkout",
-	Example: "kfs-cli checkout branchName",
-	Args:    cobra.RangeArgs(1, 1),
-	Run:     runCheckoutBranch,
+func checkoutCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "checkout",
+		Example: "kfs-cli checkout branchName",
+		Args:    cobra.RangeArgs(1, 1),
+		Run:     runCheckoutBranch,
+	}
 }
 
 func runCheckoutBranch(cmd *cobra.Command, args []string) {
@@ -52,11 +57,13 @@ func runCheckoutBranch(cmd *cobra.Command, args []string) {
 	err = viper.WriteConfig()
 }
 
-var branchInfoCmd = &cobra.Command{
-	Use:     "info",
-	Example: "kfs-cli branch info branchName",
-	Args:    cobra.RangeArgs(0, 1),
-	Run:     runBranchInfo,
+func branchInfoCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "info",
+		Example: "kfs-cli branch info branchName",
+		Args:    cobra.RangeArgs(0, 1),
+		Run:     runBranchInfo,
+	}
 }
 
 func runBranchInfo(cmd *cobra.Command, args []string) {
@@ -81,10 +88,11 @@ func runBranchInfo(cmd *cobra.Command, args []string) {
 	fmt.Printf("size: %d\n", branch.GetSize())
 	fmt.Printf("count: %d\n", branch.GetCount())
 }
-
-var branchUpdateCmd = &cobra.Command{
-	Use:     "update",
-	Example: "kfs-cli branch update branchName",
-	Args:    cobra.RangeArgs(1, 1),
-	Run:     runCheckoutBranch,
+func branchUpdateCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "update",
+		Example: "kfs-cli branch update branchName",
+		Args:    cobra.RangeArgs(1, 1),
+		Run:     runCheckoutBranch,
+	}
 }

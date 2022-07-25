@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/lazyxu/kfs/core"
 
 	"github.com/lazyxu/kfs/rpc/server"
@@ -71,12 +73,13 @@ func init() {
 }
 
 func execute(args []string) (string, string, error) {
-	rootCmd.SetArgs(args)
+	cmd := rootCmd()
+	cmd.SetArgs(args)
 	outBuffer := new(bytes.Buffer)
 	errBuffer := new(bytes.Buffer)
-	rootCmd.SetOut(outBuffer)
-	rootCmd.SetErr(errBuffer)
-	err := rootCmd.Execute()
+	cmd.SetOut(outBuffer)
+	cmd.SetErr(errBuffer)
+	err := cmd.Execute()
 	if err != nil {
 		return "", "", err
 	}
@@ -85,9 +88,6 @@ func execute(args []string) (string, string, error) {
 
 func exec(t *testing.T, args []string) (string, string) {
 	stdout, stderr, err := execute(args)
-	if err != nil {
-		t.Error(err)
-		return stdout, stderr
-	}
+	assert.Nil(t, err)
 	return stdout, stderr
 }

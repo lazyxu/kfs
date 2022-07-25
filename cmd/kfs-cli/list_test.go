@@ -1,11 +1,12 @@
 package main
 
 import (
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func Test_init_ls(t *testing.T) {
+func TestList(t *testing.T) {
 	// 1. reset
 	{
 		_, _ = exec(t, []string{"reset"})
@@ -13,12 +14,7 @@ func Test_init_ls(t *testing.T) {
 	// 2. ls
 	{
 		stdout, stderr := exec(t, []string{"ls"})
-		stdout = strings.Trim(stdout, "\n")
-		if stdout != "total 0" {
-			t.Errorf("expected \"total 0\", actual \"%s\"", stdout)
-		}
-		if stderr != "" {
-			t.Errorf("expected \"\", actual \"%s\"", stderr)
-		}
+		assert.Contains(t, stdout, "total 0")
+		assert.Empty(t, stderr)
 	}
 }

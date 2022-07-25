@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -27,30 +28,30 @@ func formatCount(mode uint64, count uint64) string {
 	return fmt.Sprintf("%5d", count)
 }
 
-func printBody(dirItem sqlite.IDirItem, isHumanize bool) {
+func printBody(w io.Writer, dirItem sqlite.IDirItem, isHumanize bool) {
 	modifyTime := time.Unix(0, int64(dirItem.GetModifyTime())).Format("2006-01-02 15:04:05")
 	if isHumanize {
-		fmt.Printf("%s\t%s\t     %s\t%s\t%s\t%s\t%s\n",
+		fmt.Fprintf(w, "%s\t%s\t     %s\t%s\t%s\t%s\t%s\n",
 			os.FileMode(dirItem.GetMode()).String(),
 			formatCount(dirItem.GetMode(), dirItem.GetCount()), formatCount(dirItem.GetMode(), dirItem.GetTotalCount()),
 			dirItem.GetHash()[:4], humanize.Bytes(dirItem.GetSize()), modifyTime, dirItem.GetName())
 	} else {
-		fmt.Printf("%s\t%s\t     %s\t%s\t%d\t%s\t%s\n",
+		fmt.Fprintf(w, "%s\t%s\t     %s\t%s\t%d\t%s\t%s\n",
 			os.FileMode(dirItem.GetMode()).String(),
 			formatCount(dirItem.GetMode(), dirItem.GetCount()), formatCount(dirItem.GetMode(), dirItem.GetTotalCount()),
 			dirItem.GetHash()[:4], dirItem.GetSize(), modifyTime, dirItem.GetName())
 	}
 }
 
-var listCmd = &cobra.Command{
-	Use:     "ls",
-	Example: "kfs-cli ls .",
-	Args:    cobra.RangeArgs(0, 1),
-	Run:     runList,
-}
-
-func init() {
-	listCmd.PersistentFlags().Bool(HumanizeStr, true, "")
+func listCmd() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:     "ls",
+		Example: "kfs-cli ls .",
+		Args:    cobra.RangeArgs(0, 1),
+		Run:     runList,
+	}
+	cmd.PersistentFlags().Bool(HumanizeStr, true, "")
+	return cmd
 }
 
 func runList(cmd *cobra.Command, args []string) {
@@ -68,13 +69,13 @@ func runList(cmd *cobra.Command, args []string) {
 	isHumanize := cmd.Flag(HumanizeStr).Value.String() == "true"
 
 	err = fs.List(cmd.Context(), branchName, p, func(total int) error {
-		fmt.Fprintf(cmd.OutOrStdout(), "total %d\n", total)
+		cmd.Printf("total %d\n", total)
 		if total != 0 {
-			fmt.Fprintf(cmd.OutOrStdout(), "mode      \tcount\ttotalCount\thash\tsize\tmodifyTime         \tname\n")
+			cmd.Printf("mode      \tcount\ttotalCount\thash\tsize\tmodifyTime         \tname\n")
 		}
 		return nil
 	}, func(item sqlite.IDirItem) error {
-		printBody(item, isHumanize)
+		printBody(cmd.OutOrStdout(), item, isHumanize)
 		return nil
 	})
 }

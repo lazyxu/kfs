@@ -9,19 +9,19 @@ import (
 	"github.com/spf13/viper"
 )
 
-var initCmd = &cobra.Command{
-	Use: "init",
-	Example: `
+func initCmd() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use: "init",
+		Example: `
 kfs-cli init -b master -s localhost:1123
 `,
-	Args: cobra.RangeArgs(0, 0),
-	Run:  runInit,
-}
-
-func init() {
-	initCmd.PersistentFlags().StringP(BranchNameStr, "b", "master", "default branch name")
-	initCmd.PersistentFlags().String(GrpcServerStr, "localhost:1123", "grpc server address")
-	initCmd.PersistentFlags().String(SocketServerStr, "localhost:1124", "socket server address")
+		Args: cobra.RangeArgs(0, 0),
+		Run:  runInit,
+	}
+	cmd.PersistentFlags().StringP(BranchNameStr, "b", "master", "default branch name")
+	cmd.PersistentFlags().String(GrpcServerStr, "localhost:1123", "grpc server address")
+	cmd.PersistentFlags().String(SocketServerStr, "localhost:1124", "socket server address")
+	return cmd
 }
 
 func runInit(cmd *cobra.Command, args []string) {

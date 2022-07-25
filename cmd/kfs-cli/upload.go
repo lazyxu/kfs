@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/dustin/go-humanize"
@@ -11,20 +10,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var uploadCmd = &cobra.Command{
-	Use:     "upload",
-	Example: "kfs-cli upload -p path filePath",
-	Args:    cobra.RangeArgs(1, 1),
-	Run:     runUpload,
-}
+func uploadCmd() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:     "upload",
+		Example: "kfs-cli upload -p path filePath",
+		Args:    cobra.RangeArgs(1, 1),
+		Run:     runUpload,
+	}
 
-func init() {
-	uploadCmd.PersistentFlags().StringP(PathStr, "p", "", "override the path")
-	uploadCmd.PersistentFlags().String(DirPathStr, "", "move into dir")
-	uploadCmd.PersistentFlags().IntP(ConcurrentStr, "c", 1, "concurrent")
-	uploadCmd.PersistentFlags().StringP(EncoderStr, "e", "", "[\"\", \"lz4\"]")
-	uploadCmd.PersistentFlags().Bool(CpuProfilerStr, false, "cpu profile")
-	uploadCmd.PersistentFlags().StringP(ChunkSizeStr, "b", "1 MiB", "[1 KiB, 1 GiB]")
+	cmd.PersistentFlags().StringP(PathStr, "p", "", "override the path")
+	cmd.PersistentFlags().String(DirPathStr, "", "move into dir")
+	cmd.PersistentFlags().IntP(ConcurrentStr, "c", 1, "concurrent")
+	cmd.PersistentFlags().StringP(EncoderStr, "e", "", "[\"\", \"lz4\"]")
+	cmd.PersistentFlags().Bool(CpuProfilerStr, false, "cpu profile")
+	cmd.PersistentFlags().StringP(ChunkSizeStr, "b", "1 MiB", "[1 KiB, 1 GiB]")
+	return cmd
 }
 
 func runUpload(cmd *cobra.Command, args []string) {
@@ -62,5 +62,5 @@ func runUpload(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "hash=%s, commitId=%d, size=%s, count=%d\n", branch.Hash[:4], commit.CommitId, humanize.Bytes(commit.Size), commit.Count)
+	cmd.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", branch.Hash[:4], commit.CommitId, humanize.Bytes(commit.Size), commit.Count)
 }

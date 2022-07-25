@@ -4,11 +4,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var resetCmd = &cobra.Command{
-	Use:     "reset",
-	Example: "kfs-cli reset",
-	Args:    cobra.RangeArgs(0, 0),
-	Run:     runReset,
+func resetCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "reset",
+		Example: "kfs-cli reset",
+		Args:    cobra.RangeArgs(0, 0),
+		Run:     runReset,
+	}
 }
 
 func runReset(cmd *cobra.Command, args []string) {

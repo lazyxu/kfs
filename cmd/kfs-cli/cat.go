@@ -10,11 +10,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-var catCmd = &cobra.Command{
-	Use:     "cat",
-	Example: "kfs-cli cat test.txt",
-	Args:    cobra.RangeArgs(1, 1),
-	Run:     runCat,
+func catCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:     "cat",
+		Example: "kfs-cli cat test.txt",
+		Args:    cobra.RangeArgs(1, 1),
+		Run:     runCat,
+	}
 }
 
 func runCat(cmd *cobra.Command, args []string) {
