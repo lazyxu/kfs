@@ -1,13 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"io"
-	"os"
 
-	"github.com/lazyxu/kfs/core"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func catCmd() *cobra.Command {
@@ -24,21 +20,19 @@ func runCat(cmd *cobra.Command, args []string) {
 	defer func() {
 		ExitWithError(cmd, err)
 	}()
-	serverAddr := viper.GetString(ServerAddrStr)
-	branchName := viper.GetString(BranchNameStr)
-	fmt.Printf("%s: %s\n", ServerAddrStr, serverAddr)
-	fmt.Printf("%s: %s\n", BranchNameStr, branchName)
 
-	p := args[0]
+	fs, branchName, _ := loadFs(cmd)
 
-	var readerCloser io.ReadCloser
-	readerCloser, err = core.Cat(cmd.Context(), serverAddr, branchName, p)
+	srcPath := args[0]
 
-	if err != nil {
-		return
-	}
-	defer readerCloser.Close()
-	_, err = io.Copy(os.Stdout, readerCloser)
+	err = fs.Cat(cmd.Context(), branchName, srcPath, func(r io.Reader, size int64) error {
+		_, e := io.CopyN(cmd.OutOrStdout(), r, size)
+		if e != nil {
+			return e
+		}
+		return nil
+	})
+
 	if err != nil {
 		return
 	}

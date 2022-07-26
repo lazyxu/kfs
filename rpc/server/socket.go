@@ -32,6 +32,8 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 			handleUpload(kfsCore, conn)
 		case rpcutil.CommandDownload:
 			handleDownload(kfsCore, conn)
+		case rpcutil.CommandCat:
+			handleCat(kfsCore, conn)
 		default:
 			println("no such commandType", commandType)
 			//panic(fmt.Errorf("no such command %d", command))

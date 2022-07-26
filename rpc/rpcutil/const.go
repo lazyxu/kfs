@@ -8,6 +8,8 @@ const (
 	CommandUpload
 
 	CommandDownload
+
+	CommandCat
 )
 
 type ExitCode = int8
