@@ -36,5 +36,6 @@ func rootCmd() *cobra.Command {
 	cmd.AddCommand(listCmd())
 	cmd.AddCommand(resetCmd())
 	cmd.AddCommand(catCmd())
+	cmd.AddCommand(touchCmd())
 	return cmd
 }

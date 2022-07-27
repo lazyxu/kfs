@@ -36,14 +36,16 @@ func handleCat(kfsCore *core.KFS, conn net.Conn) {
 		err = fmt.Errorf("invalid mode: %x", mode)
 		return
 	}
+	rc, err := kfsCore.S.ReadWithSize(hash)
+	if err != nil {
+		return
+	}
+	defer rc.Close()
 	err = rpcutil.WriteSuccessExit(conn)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "code", err.Error())
 		return
 	}
-	println(conn.RemoteAddr().String(), "code", 0)
-	rc, err := kfsCore.S.ReadWithSize(hash)
-	defer rc.Close()
 	err = binary.Write(conn, binary.LittleEndian, rc.Size())
 	if err != nil {
 		return
@@ -52,4 +54,5 @@ func handleCat(kfsCore *core.KFS, conn net.Conn) {
 	if err != nil {
 		return
 	}
+	err = rpcutil.WriteSuccessExit(conn)
 }
