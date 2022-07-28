@@ -4,10 +4,46 @@ import (
 	"encoding/binary"
 	"io"
 	"strings"
+
+	"github.com/golang/protobuf/proto"
 )
 
 func WriteCommandType(w io.Writer, commandType CommandType) error {
 	return binary.Write(w, binary.LittleEndian, commandType)
+}
+
+func WriteProto(w io.Writer, m proto.Message) error {
+	req, err := proto.Marshal(m)
+	if err != nil {
+		return err
+	}
+	err = binary.Write(w, binary.LittleEndian, uint64(len(req)))
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(req)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ReadProto(r io.Reader, m proto.Message) error {
+	var length uint64
+	err := binary.Read(r, binary.LittleEndian, &length)
+	if err != nil {
+		return err
+	}
+	buf := make([]byte, length)
+	_, err = r.Read(buf)
+	if err != nil {
+		return err
+	}
+	err = proto.Unmarshal(buf, m)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func ReadCommandType(r io.Reader) (commandType CommandType, err error) {

@@ -30,6 +30,8 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 			pong(conn)
 		case rpcutil.CommandUpload:
 			handleUpload(kfsCore, conn)
+		case rpcutil.CommandTouch:
+			handleTouch(kfsCore, conn)
 		case rpcutil.CommandDownload:
 			handleDownload(kfsCore, conn)
 		case rpcutil.CommandCat:

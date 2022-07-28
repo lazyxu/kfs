@@ -6,6 +6,7 @@ const (
 	CommandPing CommandType = iota
 
 	CommandUpload
+	CommandTouch
 
 	CommandDownload
 

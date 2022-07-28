@@ -124,3 +124,22 @@ message PathReq {
   string branchName = 1;
   string path = 2;
 }
+
+// socket protoc
+
+message TouchReq {
+  string branchName = 1;
+  string path = 2;
+  uint64 Mode = 3;
+  uint64 CreateTime = 7;
+  uint64 ModifyTime = 8;
+  uint64 ChangeTime = 9;
+  uint64 AccessTime = 10;
+}
+
+message TouchResp {
+  string hash = 1;
+  uint64 commitId = 2;
+  uint64 size = 3;
+  uint64 count = 4;
+}
