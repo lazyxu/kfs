@@ -68,7 +68,7 @@ func runList(cmd *cobra.Command, args []string) {
 	}
 	isHumanize := cmd.Flag(HumanizeStr).Value.String() == "true"
 
-	err = fs.List(cmd.Context(), branchName, p, func(total int) error {
+	err = fs.List(cmd.Context(), branchName, p, func(total int64) error {
 		cmd.Printf("total %d\n", total)
 		if total != 0 {
 			cmd.Printf("mode      \tcount\ttotalCount\thash\tsize\tmodifyTime         \tname\n")

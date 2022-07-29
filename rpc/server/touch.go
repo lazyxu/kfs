@@ -17,9 +17,11 @@ func handleTouch(kfsCore *core.KFS, conn net.Conn) {
 	var err error
 	defer func() {
 		if err != nil {
-			rpcutil.WriteErrorExit(conn, err)
+			rpcutil.WriteInvalid(conn, err)
 		}
 	}()
+
+	// read
 	var req pb.TouchReq
 	err = rpcutil.ReadProto(conn, &req)
 	if err != nil {
@@ -39,21 +41,33 @@ func handleTouch(kfsCore *core.KFS, conn net.Conn) {
 		Size:       fileOrDir.Size(),
 		Count:      fileOrDir.Count(),
 		TotalCount: fileOrDir.TotalCount(),
-		CreateTime: req.CreateTime,
-		ModifyTime: req.ModifyTime,
-		ChangeTime: req.ChangeTime,
-		AccessTime: req.AccessTime,
+		CreateTime: req.Time,
+		ModifyTime: req.Time,
+		ChangeTime: req.Time,
+		AccessTime: req.Time,
 	})
 	if err != nil {
 		return
 	}
-	fmt.Println("Touch finish", req.Path)
+	fmt.Println("Socket.Touch finish", req.String())
+
+	// write
+	err = rpcutil.WriteOK(conn)
+	if err != nil {
+		return
+	}
 	err = rpcutil.WriteProto(conn, &pb.TouchResp{
 		Hash:     commit.Hash,
 		CommitId: commit.Id,
 		Size:     branch.Size,
 		Count:    branch.Count,
 	})
+	if err != nil {
+		return
+	}
+
+	// exit
+	err = rpcutil.WriteOK(conn)
 	if err != nil {
 		return
 	}

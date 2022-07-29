@@ -9,8 +9,6 @@ service KoalaFS {
   }
   rpc branchInfo (BranchInfoReq) returns (BranchInfoResp) {
   }
-  rpc list (PathReq) returns (stream DirItem) {
-  }
   rpc download (DownloadReq) returns (stream DownloadResp) {
   }
   rpc upload (stream UploadReq) returns (stream UploadResp) {
@@ -29,19 +27,6 @@ message DownloadReq {
 
 message DownloadResp {
   bytes bytes = 1;
-}
-
-message DirItem {
-  string Hash = 1;
-  string Name = 2;
-  uint64 Mode = 3;
-  uint64 Size = 4;
-  uint64 Count = 5;
-  uint64 TotalCount = 6;
-  uint64 CreateTime = 7;
-  uint64 ModifyTime = 8;
-  uint64 ChangeTime = 9;
-  uint64 AccessTime = 10;
 }
 
 message BranchInfoReq {
@@ -120,21 +105,31 @@ message UploadErrResp {
   string path = 2;
 }
 
+// socket protoc
+
 message PathReq {
   string branchName = 1;
   string path = 2;
 }
 
-// socket protoc
+message DirItem {
+  string Hash = 1;
+  string Name = 2;
+  uint64 Mode = 3;
+  uint64 Size = 4;
+  uint64 Count = 5;
+  uint64 TotalCount = 6;
+  uint64 CreateTime = 7;
+  uint64 ModifyTime = 8;
+  uint64 ChangeTime = 9;
+  uint64 AccessTime = 10;
+}
 
 message TouchReq {
   string branchName = 1;
   string path = 2;
   uint64 Mode = 3;
-  uint64 CreateTime = 7;
-  uint64 ModifyTime = 8;
-  uint64 ChangeTime = 9;
-  uint64 AccessTime = 10;
+  uint64 Time = 4;
 }
 
 message TouchResp {

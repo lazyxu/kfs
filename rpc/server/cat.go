@@ -15,7 +15,7 @@ func handleCat(kfsCore *core.KFS, conn net.Conn) {
 	var err error
 	defer func() {
 		if err != nil {
-			rpcutil.WriteErrorExit(conn, err)
+			rpcutil.WriteInvalid(conn, err)
 		}
 	}()
 	branchName, err := rpcutil.ReadString(conn)
@@ -41,7 +41,7 @@ func handleCat(kfsCore *core.KFS, conn net.Conn) {
 		return
 	}
 	defer rc.Close()
-	err = rpcutil.WriteSuccessExit(conn)
+	err = rpcutil.WriteOK(conn)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "code", err.Error())
 		return
@@ -54,5 +54,5 @@ func handleCat(kfsCore *core.KFS, conn net.Conn) {
 	if err != nil {
 		return
 	}
-	err = rpcutil.WriteSuccessExit(conn)
+	err = rpcutil.WriteOK(conn)
 }

@@ -32,6 +32,8 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 			handleUpload(kfsCore, conn)
 		case rpcutil.CommandTouch:
 			handleTouch(kfsCore, conn)
+		case rpcutil.CommandList:
+			handleList(kfsCore, conn)
 		case rpcutil.CommandDownload:
 			handleDownload(kfsCore, conn)
 		case rpcutil.CommandCat:
@@ -55,7 +57,7 @@ func handleUpload(kfsCore *core.KFS, conn net.Conn) {
 	var err error
 	defer func() {
 		if err != nil {
-			rpcutil.WriteErrorExit(conn, err)
+			rpcutil.WriteInvalid(conn, err)
 		}
 	}()
 
@@ -117,7 +119,7 @@ func handleUpload(kfsCore *core.KFS, conn net.Conn) {
 		return
 	}
 
-	err = rpcutil.WriteSuccessExit(conn)
+	err = rpcutil.WriteOK(conn)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "code", err.Error())
 		return

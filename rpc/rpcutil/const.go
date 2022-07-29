@@ -5,6 +5,8 @@ type CommandType = int8
 const (
 	CommandPing CommandType = iota
 
+	CommandList
+
 	CommandUpload
 	CommandTouch
 
@@ -13,9 +15,9 @@ const (
 	CommandCat
 )
 
-type ExitCode = int8
+type Status = int8
 
 const (
-	EOK ExitCode = iota
+	EOK Status = iota
 	EInvalid
 )

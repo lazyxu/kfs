@@ -30,7 +30,7 @@ func (fs *RpcFs) Cat(ctx context.Context, branchName string, filePath string, fn
 		return
 	}
 
-	code, errMsg, err := rpcutil.ReadExit(conn)
+	code, errMsg, err := rpcutil.ReadStatus(conn)
 	if err != nil {
 		return
 	}
@@ -47,7 +47,7 @@ func (fs *RpcFs) Cat(ctx context.Context, branchName string, filePath string, fn
 	if err != nil {
 		return
 	}
-	code, errMsg, err = rpcutil.ReadExit(conn)
+	code, errMsg, err = rpcutil.ReadStatus(conn)
 	if err != nil {
 		return
 	}

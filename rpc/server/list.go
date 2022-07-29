@@ -1,23 +1,43 @@
 package server
 
 import (
+	"context"
+	"encoding/binary"
 	"fmt"
-	"strconv"
+	"net"
+
+	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
 
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
 	"github.com/lazyxu/kfs/pb"
-	"google.golang.org/grpc/metadata"
 )
 
-func (s *KoalaFSServer) List(req *pb.PathReq, server pb.KoalaFS_ListServer) error {
-	fmt.Println("List", req)
-	err := s.kfsCore.List(server.Context(), req.BranchName, req.Path, func(i int) error {
-		return server.SendHeader(metadata.MD{
-			"length": []string{strconv.Itoa(i)},
-		})
+func handleList(kfsCore *core.KFS, conn net.Conn) {
+	var err error
+	defer func() {
+		if err != nil {
+			rpcutil.WriteInvalid(conn, err)
+		}
+	}()
+	// read
+	var req pb.PathReq
+	err = rpcutil.ReadProto(conn, &req)
+	if err != nil {
+		return
+	}
+
+	// write
+	err = rpcutil.WriteOK(conn)
+	if err != nil {
+		return
+	}
+	fmt.Println("Socket.List", req.String())
+	err = kfsCore.List(context.TODO(), req.BranchName, req.Path, func(n int) error {
+		return binary.Write(conn, binary.LittleEndian, int64(n))
 	}, func(dirItem sqlite.IDirItem) error {
-		return server.Send(&pb.DirItem{
+		return rpcutil.WriteProto(conn, &pb.DirItem{
 			Hash:       dirItem.GetHash(),
 			Name:       dirItem.GetName(),
 			Mode:       dirItem.GetMode(),
@@ -31,7 +51,12 @@ func (s *KoalaFSServer) List(req *pb.PathReq, server pb.KoalaFS_ListServer) erro
 		})
 	})
 	if err != nil {
-		return err
+		return
 	}
-	return nil
+
+	// exit
+	err = rpcutil.WriteOK(conn)
+	if err != nil {
+		return
+	}
 }

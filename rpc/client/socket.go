@@ -156,7 +156,7 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 		p.label = "code?"
 		h.ch <- p
 	}
-	code, errMsg, err := rpcutil.ReadExit(conn)
+	code, errMsg, err := rpcutil.ReadStatus(conn)
 	if err != nil {
 		return
 	}

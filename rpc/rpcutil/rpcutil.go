@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 func WriteCommandType(w io.Writer, commandType CommandType) error {
@@ -51,7 +51,7 @@ func ReadCommandType(r io.Reader) (commandType CommandType, err error) {
 	return
 }
 
-func WriteErrorExit(w io.Writer, err error) error {
+func WriteInvalid(w io.Writer, err error) error {
 	err1 := binary.Write(w, binary.LittleEndian, EInvalid)
 	if err1 != nil {
 		return err1
@@ -59,16 +59,16 @@ func WriteErrorExit(w io.Writer, err error) error {
 	return WriteString(w, err.Error())
 }
 
-func WriteSuccessExit(w io.Writer) error {
+func WriteOK(w io.Writer) error {
 	return binary.Write(w, binary.LittleEndian, EOK)
 }
 
-func ReadExit(r io.Reader) (exitCode ExitCode, errMsg string, err error) {
-	err = binary.Read(r, binary.LittleEndian, &exitCode)
+func ReadStatus(r io.Reader) (status Status, errMsg string, err error) {
+	err = binary.Read(r, binary.LittleEndian, &status)
 	if err != nil {
 		return
 	}
-	if exitCode != EOK {
+	if status != EOK {
 		errMsg, err = ReadString(r)
 	}
 	return

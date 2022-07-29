@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"net"
 	"os"
 	"time"
 
@@ -14,31 +13,13 @@ import (
 )
 
 func (fs *RpcFs) Touch(ctx context.Context, branchName string, filePath string) (commit sqlite.Commit, branch sqlite.Branch, err error) {
-	conn, err := net.Dial("tcp", fs.SocketServerAddr)
-	if err != nil {
-		return
-	}
-	defer conn.Close()
-
-	err = rpcutil.WriteCommandType(conn, rpcutil.CommandTouch)
-	if err != nil {
-		return
-	}
-	modifyTime := uint64(time.Now().UnixNano())
-	err = rpcutil.WriteProto(conn, &pb.TouchReq{
+	var resp pb.TouchResp
+	err = ReqResp(fs.SocketServerAddr, rpcutil.CommandTouch, &pb.TouchReq{
 		BranchName: branchName,
 		Path:       filePath,
 		Mode:       uint64(os.FileMode(0o600)),
-		CreateTime: modifyTime,
-		ModifyTime: modifyTime,
-		ChangeTime: modifyTime,
-		AccessTime: modifyTime,
-	})
-	if err != nil {
-		return
-	}
-	var resp pb.TouchResp
-	err = rpcutil.ReadProto(conn, &resp)
+		Time:       uint64(time.Now().UnixNano()),
+	}, &resp)
 	if err != nil {
 		return
 	}

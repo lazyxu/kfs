@@ -17,7 +17,7 @@ func handleDownload(kfsCore *core.KFS, conn net.Conn) {
 	var err error
 	defer func() {
 		if err != nil {
-			rpcutil.WriteErrorExit(conn, err)
+			rpcutil.WriteInvalid(conn, err)
 		}
 	}()
 	branchName, err := rpcutil.ReadString(conn)
