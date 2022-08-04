@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"testing"
 
@@ -25,7 +26,7 @@ func TestDownloadFile(t *testing.T) {
 	}
 	// 3. download file
 	{
-		tempFilePath := os.TempDir() + fileName
+		tempFilePath := filepath.Join(os.TempDir(), fileName)
 		_ = os.Remove(tempFilePath)
 		stdout, stderr := exec(t, []string{"download", fileName, "-p", tempFilePath})
 		assert.Regexp(t, downloadStdoutRegex, stdout)
@@ -54,7 +55,7 @@ func TestDownloadDir(t *testing.T) {
 	// 3. download dir
 	{
 		fileName := "kfs-test"
-		tempFilePath := os.TempDir() + fileName
+		tempFilePath := filepath.Join(os.TempDir(), fileName)
 		_ = os.Remove(tempFilePath)
 		stdout, stderr := exec(t, []string{"download", "-p", tempFilePath})
 		assert.Empty(t, stderr)

@@ -21,8 +21,13 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 
 	for {
 		commandType, err := rpcutil.ReadCommandType(conn)
-		if err != nil && err != io.EOF {
-			println("commandType", err.Error())
+		if err == io.EOF {
+			conn.Close()
+			return
+		}
+		if err != nil {
+			println("commandType", commandType, err.Error())
+			conn.Close()
 			return
 		}
 		switch commandType {
