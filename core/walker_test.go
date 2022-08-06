@@ -46,6 +46,11 @@ type TestWalkerWithTimeoutHandlers struct {
 }
 
 func (h *TestWalkerWithTimeoutHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []int64) int64 {
+	select {
+	case <-ctx.Done():
+		return 0
+	default:
+	}
 	time.Sleep(100 * time.Millisecond)
 	atomic.AddInt64(&h.cnt, 1)
 	return 0

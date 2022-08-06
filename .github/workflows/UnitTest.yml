@@ -1,0 +1,86 @@
+name: UnitTest
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+
+  UnitTest_storage-local:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.19
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Test
+        run: |
+          cd storage/local && go test -v ./...
+
+  UnitTest_sqlite-noncgo:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.19
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Test
+        run: |
+          cd sqlite/noncgo && go test -v ./...
+
+  UnitTest_core:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.19
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Test
+        run: |
+          cd core && go test -v ./...
+
+  UnitTest_kfs-cli:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.19
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+
+      - name: Install Go plugins for the protocol compiler
+        run: |
+          export GO111MODULE=on
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+          export PATH="$PATH:$(go env GOPATH)/bin"
+
+      - name: Generate pb.go
+        run: sh tools/protoc_go.sh
+
+      - name: Test
+        run: |
+          cd cmd/kfs-cli && go test -v ./...
