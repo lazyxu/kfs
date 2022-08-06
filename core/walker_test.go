@@ -51,13 +51,13 @@ func (h *TestWalkerWithTimeoutHandlers) FileHandler(ctx context.Context, index i
 		return 0
 	default:
 	}
-	time.Sleep(100 * time.Millisecond)
 	atomic.AddInt64(&h.cnt, 1)
+	time.Sleep(2000 * time.Millisecond)
 	return 0
 }
 
 func TestWalkerWithTimeout(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 1000*time.Millisecond)
 	defer cancel()
 	handlers := &TestWalkerWithTimeoutHandlers{}
 	_, err := Walk[int64](ctx, ".", 1, handlers)
@@ -69,8 +69,8 @@ func TestWalkerWithTimeout(t *testing.T) {
 		t.Error(fmt.Errorf("expected (%s), actual (%s)", context.DeadlineExceeded.Error(), err.Error()))
 		return
 	}
-	if atomic.LoadInt64(&handlers.cnt) != 2 {
-		t.Error(fmt.Errorf("cnt should be 2, actual (%d)", atomic.LoadInt64(&handlers.cnt)))
+	if atomic.LoadInt64(&handlers.cnt) != 1 {
+		t.Error(fmt.Errorf("cnt should be 1, actual (%d)", atomic.LoadInt64(&handlers.cnt)))
 		return
 	}
 }
