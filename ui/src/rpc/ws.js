@@ -4,9 +4,20 @@
 import { getConfig } from './config';
 import { PathReq, DirItem } from '../pb/fs_pb';
 
+async function wait(fn) {
+  return await new Promise((resolve, reject) => {
+    setInterval(() => {
+      if (fn()) {
+        resolve();
+      }
+    }, 100);
+  });
+}
+
 export function list() {
+  let p = {};
   const rws = new WebSocket(getConfig().wsHost);
-  rws.addEventListener('open', () => {
+  rws.addEventListener('open', async () => {
     rws.send(new Uint8Array([1]));
     let req = new PathReq();
     console.log(req);
@@ -16,59 +27,30 @@ export function list() {
     console.log(reqData);
     rws.send(new Int32Array([reqData.length, 0]));
     rws.send(reqData);
+    await wait(() => { return p.p; });
+    let data = await p.p;
+    p = p.p;
+    let code = new Int8Array(data)[0];
+    console.log('code', code);
+    data = await p.p;
+    p = p.p;
+    let total = new Int32Array(data)[0];
+    console.log('total', total);
+    for (let i = 0; i < total; i++) {
+      data = await p.p;
+      p = p.p;
+      console.log('length', new Int32Array(data)[0]);
+      data = await p.p;
+      p = p.p;
+      let resp = DirItem.deserializeBinary(data);
+      console.log('resp', resp.toObject());
+    }
   });
-  let state = 0;
-  let funcs = [];
-  let i = -1;
-  let total;
-  rws.addEventListener('message', async ({ data }) => {
-    i++;
-    let ii = i;
-    if (i != 0) {
-      await new Promise((resolve, reject)=> {
-        setInterval(() => {
-          if (funcs[ii - 1]) {
-            resolve();
-          }
-        }, 100);
-      })
-      // console.log('wait', ii, funcs[ii - 1].i, funcs.length)
-      await funcs[ii - 1];
-      // console.log('wait done', ii, funcs[ii - 1].i, funcs.length)
-    }
-    let p = async () => {
-      // console.log('state', ii, state);
-      switch (state) {
-        case 0:
-          let code = new Int8Array(await data.arrayBuffer())[0];
-          console.log('code', code);
-          if (code != 0) {
-            state = -1;
-            return;
-          }
-          break;
-        case 1:
-          total = new Int32Array(await data.arrayBuffer())[0];
-          console.log('total', total);
-          break;
-        case 2:
-          // console.log('length', new Int32Array(await data.arrayBuffer())[0]);
-          break;
-        case 3:
-          let resp = DirItem.deserializeBinary(await data.arrayBuffer());
-          console.log('resp', resp.toObject());
-          total--;
-          if (total != 0) {
-            state -= 2;
-          }
-          break;
-        default:
-          break;
-      }
-      state++;
-      // console.log('state done', ii, state);
-    }
-    p.i=ii;
-    funcs.push(p());
+  let lastP = p;
+  rws.addEventListener('message', ({ data }) => {
+    lastP.p = (async () => {
+      return await data.arrayBuffer();
+    })()
+    lastP = lastP.p;
   });
 }
