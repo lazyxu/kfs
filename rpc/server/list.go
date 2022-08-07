@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"net"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
@@ -14,7 +13,7 @@ import (
 	"github.com/lazyxu/kfs/pb"
 )
 
-func handleList(kfsCore *core.KFS, conn net.Conn) {
+func handleList(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 	var err error
 	defer func() {
 		if err != nil {

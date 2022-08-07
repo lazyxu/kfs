@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net"
 	"path/filepath"
 
 	"github.com/lazyxu/kfs/core"
@@ -13,7 +12,7 @@ import (
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 )
 
-func handleTouch(kfsCore *core.KFS, conn net.Conn) {
+func handleTouch(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 	var err error
 	defer func() {
 		if err != nil {

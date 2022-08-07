@@ -16,8 +16,13 @@ import (
 	"github.com/lazyxu/kfs/core"
 )
 
-func process(kfsCore *core.KFS, conn net.Conn) {
-	println(conn.RemoteAddr().String(), "process")
+type AddrReadWriteCloser interface {
+	io.ReadWriteCloser
+	RemoteAddr() net.Addr
+}
+
+func Process(kfsCore *core.KFS, conn AddrReadWriteCloser) {
+	println(conn.RemoteAddr().String(), "Process")
 
 	for {
 		commandType, err := rpcutil.ReadCommandType(conn)
@@ -50,7 +55,7 @@ func process(kfsCore *core.KFS, conn net.Conn) {
 	}
 }
 
-func pong(conn net.Conn) {
+func pong(conn AddrReadWriteCloser) {
 	_, err := conn.Write([]byte{0})
 	if err != nil {
 		println(conn.RemoteAddr().String(), "pong", err)
@@ -58,7 +63,7 @@ func pong(conn net.Conn) {
 	}
 }
 
-func handleUpload(kfsCore *core.KFS, conn net.Conn) {
+func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -140,6 +145,6 @@ func Socket(listener net.Listener, kfsCore *core.KFS) error {
 			println("accept failed", err)
 			continue
 		}
-		go process(kfsCore, conn)
+		go Process(kfsCore, conn)
 	}
 }

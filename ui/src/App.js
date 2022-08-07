@@ -1,6 +1,8 @@
 import logo from './logo.svg';
 import './App.css';
 
+import { list } from './rpc/ws';
+
 function App() {
   return (
     <div className="App">
@@ -9,14 +11,15 @@ function App() {
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
-        <a
+        <button
           className="App-link"
           href="https://reactjs.org"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={list}
         >
-          Learn React
-        </a>
+          List
+        </button>
       </header>
     </div>
   );

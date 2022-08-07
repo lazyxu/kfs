@@ -4,9 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/gorilla/websocket"
 
 	"github.com/lazyxu/kfs/rpc/server"
 
@@ -30,7 +34,7 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "kfs",
+	Use:   "kfs-server",
 	Short: "Kfs is file system used to backup files.",
 	Args:  cobra.RangeArgs(1, 1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -75,6 +79,12 @@ var rootCmd = &cobra.Command{
 				panic(err)
 			}
 		}()
+		go func() {
+			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+				wsHandler(w, r, kfsCore)
+			})
+			log.Fatal(http.ListenAndServe("0.0.0.0:1125", nil))
+		}()
 		lis, err := net.Listen("tcp", "0.0.0.0:"+portString)
 		if err != nil {
 			panic(err)
@@ -84,4 +94,22 @@ var rootCmd = &cobra.Command{
 			return
 		}
 	},
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+} // use default options
+
+func wsHandler(w http.ResponseWriter, r *http.Request, kfsCore *core.KFS) {
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Print("upgrade:", err)
+		return
+	}
+	defer c.Close()
+	for {
+		server.Process(kfsCore, ToAddrReadWriteCloser(c))
+	}
 }

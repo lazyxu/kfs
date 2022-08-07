@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"net"
 	"os"
 
 	"github.com/lazyxu/kfs/rpc/rpcutil"
@@ -13,7 +12,7 @@ import (
 	"github.com/lazyxu/kfs/core"
 )
 
-func handleDownload(kfsCore *core.KFS, conn net.Conn) {
+func handleDownload(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -45,7 +44,7 @@ func handleDownload(kfsCore *core.KFS, conn net.Conn) {
 	}
 }
 
-func download(ctx context.Context, kfsCore *core.KFS, conn net.Conn, relPath string, hash string, mode os.FileMode) error {
+func download(ctx context.Context, kfsCore *core.KFS, conn AddrReadWriteCloser, relPath string, hash string, mode os.FileMode) error {
 	println("download", relPath, hash[:4], mode.IsDir())
 	err := binary.Write(conn, binary.LittleEndian, mode)
 	if err != nil {

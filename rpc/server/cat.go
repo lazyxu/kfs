@@ -5,13 +5,12 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"net"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 )
 
-func handleCat(kfsCore *core.KFS, conn net.Conn) {
+func handleCat(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 	var err error
 	defer func() {
 		if err != nil {
