@@ -10,6 +10,7 @@
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
     "google-protobuf": "^3.21.0",
+    "protobufjs": "^7.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -21,7 +22,7 @@
     "start": "react-scripts start",
     "watch": "cra-build-watch",
     "start:electron": "electron .",
-    "build": "react-scripts build",
+    "build": "react-scripts build && cp ../pb/fs.proto ../cmd/kfs-server/build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

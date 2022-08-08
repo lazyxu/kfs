@@ -2,7 +2,29 @@
 // import WebSocket from 'ws';
 
 import { getConfig } from './config';
-import { PathReq, DirItem } from '../pb/fs_pb';
+
+var protobuf = require("protobufjs");
+
+let pbRoot;
+
+function encode(path, payload) {
+  let type = pbRoot.lookupType(path);
+  let message = type.create(payload);
+  return type.encode(message).finish();
+}
+
+function decode(path, buffer) {
+  let type = pbRoot.lookupType(path);
+  var message = type.decode(new Uint8Array(buffer));
+  return type.toObject(message);
+}
+
+protobuf.load("./fs.proto", function(err, root) {
+  if (err)
+      throw err;
+  pbRoot = root;
+  console.log(root);
+});
 
 class WebSocketReceiver {
   constructor(ws) {
@@ -32,12 +54,8 @@ export function list() {
   const ws = new WebSocket(getConfig().wsHost);
   ws.addEventListener('open', async () => {
     ws.send(new Uint8Array([1]));
-    let req = new PathReq();
-    console.log(req);
-    req.setBranchname("master");
-    req.setPath("/");
-    let reqData = req.serializeBinary();
-    console.log(reqData);
+    let reqData = encode("PathReq", {branchName: "master", path: '/'});
+    console.log('reqData', reqData);
     ws.send(new Int32Array([reqData.length, 0]));
     ws.send(reqData);
 
@@ -52,8 +70,8 @@ export function list() {
       data = await receiver.recv();
       console.log('length', new Int32Array(data)[0]);
       data = await receiver.recv();
-      let resp = DirItem.deserializeBinary(data);
-      console.log('resp', resp.toObject());
+      let resp = decode("DirItem", data);
+      console.log('resp', resp);
     }
     data = await receiver.recv();
     code = new Int8Array(data)[0];

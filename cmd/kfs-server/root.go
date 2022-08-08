@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 
 	"github.com/gorilla/websocket"
@@ -32,6 +34,9 @@ const (
 func init() {
 	rootCmd.PersistentFlags().StringP(portStr, "p", "0", "grpc port")
 }
+
+//go:embed build/*
+var build embed.FS
 
 var rootCmd = &cobra.Command{
 	Use:   "kfs-server",
@@ -80,9 +85,10 @@ var rootCmd = &cobra.Command{
 			}
 		}()
 		go func() {
-			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 				wsHandler(w, r, kfsCore)
 			})
+			http.Handle("/", http.FileServer(AddPrefix(http.FS(build), "build")))
 			log.Fatal(http.ListenAndServe("0.0.0.0:1125", nil))
 		}()
 		lis, err := net.Listen("tcp", "0.0.0.0:"+portString)
@@ -94,6 +100,19 @@ var rootCmd = &cobra.Command{
 			return
 		}
 	},
+}
+
+type Dir struct {
+	fs     http.FileSystem
+	prefix string
+}
+
+func AddPrefix(fs http.FileSystem, prefix string) http.FileSystem {
+	return Dir{fs, prefix}
+}
+
+func (d Dir) Open(name string) (http.File, error) {
+	return d.fs.Open(path.Clean(d.prefix + name))
 }
 
 var upgrader = websocket.Upgrader{
