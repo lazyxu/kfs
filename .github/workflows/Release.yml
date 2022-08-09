@@ -26,20 +26,12 @@ jobs:
         uses: actions/checkout@v2
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
-      - name: Install Go plugins for the protocol compiler
-        run: |
-          export GO111MODULE=on
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-          export PATH="$PATH:$(go env GOPATH)/bin"
-      - name: Generate pb.go
-        run: sh tools/protoc_go.sh
       - name: Build
         run: |
-          cd cmd/kfs-cli
-          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o kfs-cli-${{ matrix.os }}-${{ matrix.arch }}
-          cd ../../cmd/kfs-server
-          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o kfs-server-${{ matrix.os }}-${{ matrix.arch }}
+          export GOOS=${{ matrix.os }}
+          export GOARCH=${{ matrix.arch }}
+          bash scripts.sh build server
+          bash scripts.sh build cli
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')

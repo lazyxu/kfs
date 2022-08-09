@@ -1,7 +1,5 @@
 #!/bin/bash
 
-trap "kill 0" EXIT
-
 set -e
 
 root=$(cd "$(dirname "$0")"; pwd)
@@ -13,12 +11,12 @@ is_command_exist () {
 }
 
 if ! is_command_exist protoc-gen-go; then
-  echo "install protoc-gen-go and protoc-gen-go-grpc"
-  export GO111MODULE=on
   go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
   go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
-  export PATH="$PATH:$(go env GOPATH)/bin"
 fi
+
+export GO111MODULE=on
+export PATH="$PATH:$(go env GOPATH)/bin"
 
 protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. pb/fs.proto
 
@@ -37,6 +35,7 @@ case $1 in
         ;;
 
       electron)
+        trap "kill 0" EXIT
         cd $root/ui
         tempfile=$(mktemp)
         yarn watch > $tempfile 2>&1 &
@@ -63,18 +62,21 @@ case $1 in
     case $2 in
       server)
         cd $root/ui
+        yarn
         yarn build
         cd $root/cmd/kfs-server
-        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server
+        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
         ;;
 
       cli)
         cd $root/cmd/kfs-cli
-        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-cli
+        echo "GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-cli-$GOOS-$GOARCH"
+        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-cli-$GOOS-$GOARCH
         ;;
 
       electron)
         cd $root/ui
+        yarn
         yarn build
         yarn build:electron
         ;;
