@@ -8,16 +8,17 @@ const { getProcesses } = require('./processManager');
 let mainWindow;
 
 const { nativeImage } = require('electron');
+const { setUncaughtExceptionCaptureCallback } = require('process');
 const image = nativeImage.createFromPath(path.join(__dirname,
   process.env.ELECTRON_START_URL ? '../desktop/public/icon512.png' : 'public/icon512.png'));
 
 app.setName("考拉云盘");
-app.dock.setIcon(image);
+// app.dock.setIcon(image);
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1280,
+    height: 800,
     // title: "考拉云盘",
     titleBarStyle: 'hidden',
     // backgroundColor: '#FFF',
@@ -33,6 +34,8 @@ function createWindow() {
     },
     // icon: image,
   });
+  mainWindow.webContents.openDevTools();
+
   global.mainWindow = mainWindow;
 
   mainWindow.loadURL(process.env.ELECTRON_START_URL || require('url').format({
@@ -40,10 +43,6 @@ function createWindow() {
     protocol: 'file:',
     slashes: true
   }));
-
-  const remoteMain = require('@electron/remote/main');
-  remoteMain.initialize();
-  remoteMain.enable(mainWindow.webContents);
 
   const { app, Menu } = require('electron');
 
