@@ -16,10 +16,12 @@ mac:
   artifactName: ${name}-${version}-mac.${ext}
   category: "com.apple.idms.appleid.prd.524658536a5a45574243647659714e625148656136773d3d"
   icon: "./public/icon512.png"
+  target:
+    - "dmg"
+    - "zip"
 
 dmg:
   writeUpdateInfo: false
-pkg:
 
 win:
   artifactName: ${name}-${version}-win.${ext}
