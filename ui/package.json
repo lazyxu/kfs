@@ -27,7 +27,7 @@
     "start": "react-scripts start",
     "start:electron": "electron .",
     "build": "react-scripts build",
-    "build:electron": "electron-builder -c electron-builder.yml",
+    "build:electron": "electron-builder -c electron-builder.yml --publish=never",
     "watch": "cra-build-watch",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

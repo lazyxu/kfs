@@ -67,7 +67,11 @@ case $1 in
         cd $root/cmd/kfs-server
         echo "GOOS=$GOOS GOARCH=$GOARCH"
         if [[ $GOOS != '' && $GOARCH != '' ]]; then
-          GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
+          if [[ $GOOS == 'windows' ]]; then
+            GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH.exe
+          else
+            GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
+          fi
         else
           go build -o kfs-cli
         fi
@@ -77,7 +81,11 @@ case $1 in
         cd $root/cmd/kfs-cli
         echo "GOOS=$GOOS GOARCH=$GOARCH"
         if [[ $GOOS != '' && $GOARCH != '' ]]; then
-          GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-cli-$GOOS-$GOARCH
+          if [[ $GOOS == 'windows' ]]; then
+            GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-cli-$GOOS-$GOARCH.exe
+          else
+            GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-cli-$GOOS-$GOARCH
+          fi
         else
           go build -o kfs-cli
         fi
