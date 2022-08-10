@@ -1,10 +1,14 @@
 {
-  "name": "ui",
+  "name": "koala-drive",
   "version": "0.1.0",
   "description": "Hello World!",
   "main": "main.js",
   "author": "Xu Liang",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lazyxu/kfs.git"
+  },
   "dependencies": {
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
