@@ -28,8 +28,8 @@ jobs:
         uses: arduino/setup-protoc@v1
       - name: Build
         run: |
-          GOOS=${{ matrix.os }}
-          GOARCH=${{ matrix.arch }}
+          export GOOS=${{ matrix.os }}
+          export GOARCH=${{ matrix.arch }}
           bash scripts.sh build server
           bash scripts.sh build cli
       - name: Release
