@@ -1,8 +1,12 @@
 productName: "考拉云盘"
+
 appId: "meteorkl@126.com"
+
 copyright: "Copyright © 2022 Xu Liang"
+
 directories:
   buildResources: "./build"
+
 extraResources:
   - from: "./extraResources"
     to: "extraResources"
@@ -11,15 +15,26 @@ extraResources:
 mac:
   category: "com.apple.idms.appleid.prd.524658536a5a45574243647659714e625148656136773d3d"
   icon: "./public/icon512.png"
-win:
-  icon: "./public/icon512.png"
-  target: portable
-linux:
-  icon: "./public/icon512.png"
-nsis:
-  differentialPackage: false
+
 dmg:
   writeUpdateInfo: false
-asar: false
+
+win:
+  icon: "./public/icon512.png"
+  target:
+    - "zip"
+    - "nsis"
+
+# Config for the windows installer
+nsis:
+  oneClick: true
+  perMachine: true
+
+linux:
+  icon: "./public/icon512.png"
+
+# Package electron code into a asar archive. Set to false to debug issues.
+asar: true
+
 extends: null
 
