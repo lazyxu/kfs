@@ -46,3 +46,7 @@ asar: true
 
 extends: null
 
+publish:
+  provider: "github"
+  owner: "lazyxu"
+  repo: "kfs"
