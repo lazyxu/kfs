@@ -65,6 +65,7 @@ case $1 in
         yarn
         yarn build
         cd $root/cmd/kfs-server
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
         if [[ $GOOS != '' && $GOARCH != '' ]]; then
           GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
         else
@@ -74,6 +75,7 @@ case $1 in
 
       cli)
         cd $root/cmd/kfs-cli
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
         if [[ $GOOS != '' && $GOARCH != '' ]]; then
           GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-cli-$GOOS-$GOARCH
         else
