@@ -38,11 +38,7 @@ function createWindow() {
 
   global.mainWindow = mainWindow;
 
-  mainWindow.loadURL(process.env.ELECTRON_START_URL || require('url').format({
-    pathname: path.join(__dirname, 'build/index.html'),
-    protocol: 'file:',
-    slashes: true
-  }));
+  mainWindow.loadFile('build/index.html');
 
   const { app, Menu } = require('electron');
 
