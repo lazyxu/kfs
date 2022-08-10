@@ -30,9 +30,12 @@ jobs:
         run: |
           export GH_TOKEN=${{ secrets.github_token }}
           bash scripts.sh build electron
+          ls ui/dist
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            ui/dist
+            ui/dist/*.snap
+            ui/dist/*.AppImage
+            ui/dist/*.zip
