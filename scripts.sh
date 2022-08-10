@@ -11,8 +11,8 @@ is_command_exist () {
 }
 
 if ! is_command_exist protoc-gen-go; then
-  go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
-  go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+  GOOS= GOARCH= go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+  GOOS= GOARCH= go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 fi
 
 export GO111MODULE=on
@@ -65,6 +65,7 @@ case $1 in
         yarn
         yarn build
         cd $root/cmd/kfs-server
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
         if [[ $GOOS != '' && $GOARCH != '' ]]; then
           GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
         else
@@ -74,6 +75,7 @@ case $1 in
 
       cli)
         cd $root/cmd/kfs-cli
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
         if [[ $GOOS != '' && $GOARCH != '' ]]; then
           GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-cli-$GOOS-$GOARCH
         else
