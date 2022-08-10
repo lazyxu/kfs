@@ -28,6 +28,7 @@ jobs:
         uses: arduino/setup-protoc@v1
       - name: Build
         run: |
+          export GH_TOKEN=${{ secrets.github_token }}
           bash scripts.sh build electron
       - name: Release
         uses: softprops/action-gh-release@v1
