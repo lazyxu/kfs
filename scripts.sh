@@ -88,7 +88,6 @@ case $1 in
       electron)
         cd $root/ui
         yarn
-        yarn build
         yarn build:electron
         ;;
 

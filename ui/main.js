@@ -5,15 +5,10 @@ const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const path = require('path');
 const { getProcesses } = require('./processManager');
 
+const publicPath = 'public-electron';
 let mainWindow;
 
-const { nativeImage } = require('electron');
-const { setUncaughtExceptionCaptureCallback } = require('process');
-const image = nativeImage.createFromPath(path.join(__dirname,
-  process.env.ELECTRON_START_URL ? '../desktop/public/icon512.png' : 'public/icon512.png'));
-
 app.setName("考拉云盘");
-// app.dock.setIcon(image);
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -38,7 +33,7 @@ function createWindow() {
 
   global.mainWindow = mainWindow;
 
-  mainWindow.loadFile('build/index.html');
+  mainWindow.loadFile(path.join(publicPath, 'index.html'));
 
   const { app, Menu } = require('electron');
 

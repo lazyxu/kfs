@@ -4,9 +4,6 @@ appId: "com.electron.lazyxu"
 
 copyright: "Copyright © 2022 Xu Liang"
 
-directories:
-  buildResources: "./build"
-
 extraResources:
   - from: "./extraResources"
     to: "extraResources"

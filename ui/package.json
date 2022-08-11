@@ -27,8 +27,8 @@
     "start": "react-scripts start",
     "start:electron": "electron .",
     "build": "react-scripts build",
-    "build:electron": "electron-builder -c electron-builder.yml --publish=never",
-    "watch": "cra-build-watch",
+    "build:electron": "BUILD_PATH=public-electron PUBLIC_URL=. react-scripts build && electron-builder -c electron-builder.yml --publish=never",
+    "watch": "cra-build-watch -b public-electron",
     "test": "react-scripts test --ci",
     "eject": "react-scripts eject"
   },
