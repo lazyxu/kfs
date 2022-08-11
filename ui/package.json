@@ -29,7 +29,7 @@
     "build": "react-scripts build",
     "build:electron": "electron-builder -c electron-builder.yml --publish=never",
     "watch": "cra-build-watch",
-    "test": "cp ../pb/fs.proto ../ui/ && react-scripts test",
+    "test": "react-scripts test --ci",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

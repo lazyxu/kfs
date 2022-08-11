@@ -5,6 +5,7 @@ set -e
 root=$(cd "$(dirname "$0")"; pwd)
 
 cp pb/fs.proto ui/public
+cp pb/fs.proto ui
 
 is_command_exist () {
   which $1 >/dev/null 2>&1
@@ -23,7 +24,8 @@ protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. pb
 usage () {
   echo 'Usage:
   bash scripts.sh start [web|desktop]
-  bash scripts.sh build [server|cli|desktop]'
+  bash scripts.sh build [server|cli|desktop]
+  bash scripts.sh unittest [go|js]'
 }
 
 case $1 in
@@ -73,7 +75,7 @@ case $1 in
             GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
           fi
         else
-          go build -o kfs-cli
+          go build -o kfs-server
         fi
         ;;
 
@@ -96,6 +98,31 @@ case $1 in
         yarn
         yarn build
         yarn build:electron
+        ;;
+
+      *)
+        usage
+        ;;
+    esac
+    ;;
+
+  unittest)
+    case $2 in
+      go)
+        cd $root/storage/local && go test -v ./...
+        cd $root/sqlite/noncgo && go test -v ./...
+        cd $root/core && go test -v ./...
+        cd $root/cmd/kfs-cli && go test -v ./...
+        ;;
+
+      js)
+        bash scripts.sh build server
+        ./cmd/kfs-server/kfs-server tmp &
+        backend_process=$!
+        cd $root/ui
+        yarn
+        yarn test
+        kill $backend_process
         ;;
 
       *)
