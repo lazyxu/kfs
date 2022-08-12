@@ -1,0 +1,31 @@
+.page {
+  header {
+    text-align: left;
+    font-size: 20px;
+    padding-bottom: 28px;
+  }
+  .box {
+    border: 1px solid var(--divider_primary);
+    margin-bottom: 1em;
+    padding: 1em 1em 0 1em;
+  }
+  .configs {
+    & .configs_item {
+      width: 100%;
+      height: 44px;
+      line-height: 14px;
+      display: flex;
+      & .configs_item_key {
+        width: 150px;
+        text-align: left;
+      }
+      & .configs_item_values {
+        flex: auto;
+        input[type='text'] {
+          margin-right: 20px;
+          width: 250px;
+        }
+      }
+    }
+  }
+}
