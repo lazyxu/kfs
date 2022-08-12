@@ -65,7 +65,7 @@ case $1 in
       server)
         cd $root/ui
         yarn
-        yarn build
+        BUILD_PATH=$root/cmd/kfs-server/build yarn build
         cd $root/cmd/kfs-server
         echo "GOOS=$GOOS GOARCH=$GOARCH"
         if [[ $GOOS != '' && $GOARCH != '' ]]; then
@@ -88,6 +88,7 @@ case $1 in
       electron)
         cd $root/ui
         yarn
+        BUILD_PATH=public-electron PUBLIC_URL=. yarn build
         yarn build:electron
         ;;
 
