@@ -7,6 +7,8 @@ import (
 	"io"
 	"net"
 
+	"github.com/gorilla/websocket"
+
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 
 	"github.com/pierrec/lz4"
@@ -26,7 +28,7 @@ func Process(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 
 	for {
 		commandType, err := rpcutil.ReadCommandType(conn)
-		if err == io.EOF {
+		if err == io.EOF || websocket.IsUnexpectedCloseError(err) {
 			conn.Close()
 			return
 		}

@@ -128,7 +128,5 @@ func wsHandler(w http.ResponseWriter, r *http.Request, kfsCore *core.KFS) {
 		return
 	}
 	defer c.Close()
-	for {
-		server.Process(kfsCore, ToAddrReadWriteCloser(c))
-	}
+	server.Process(kfsCore, ToAddrReadWriteCloser(c))
 }
