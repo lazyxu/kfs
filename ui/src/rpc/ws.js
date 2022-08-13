@@ -72,12 +72,14 @@ class WebSocketReceiver {
   }
 }
 
+const CommandList = 2;
+
 export function list(onTotal, onDirItem) {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(getConfig().wsHost);
     ws.addEventListener('open', async () => {
       try {
-        ws.send(new Uint8Array([1]));
+        ws.send(new Uint8Array([CommandList]));
         let reqData = await encode("PathReq", { branchName: "master", path: '/' });
         console.log('reqData', reqData);
         ws.send(new Int32Array([reqData.length, 0]));
@@ -105,6 +107,8 @@ export function list(onTotal, onDirItem) {
         resolve(code);
       } catch (e) {
         reject(e);
+      } finally {
+        ws.close();
       }
     });
   });

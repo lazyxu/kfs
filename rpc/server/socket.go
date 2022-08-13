@@ -88,9 +88,9 @@ func init() {
 		}
 		return nil
 	})
+	registerCommand(rpcutil.CommandList, handleList)
 	registerCommand(rpcutil.CommandUpload, handleUpload)
 	registerCommand(rpcutil.CommandTouch, handleTouch)
-	registerCommand(rpcutil.CommandList, handleList)
 	registerCommand(rpcutil.CommandDownload, handleDownload)
 	registerCommand(rpcutil.CommandCat, handleCat)
 }
