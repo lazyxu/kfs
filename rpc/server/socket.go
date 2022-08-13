@@ -23,6 +23,21 @@ type AddrReadWriteCloser interface {
 	RemoteAddr() net.Addr
 }
 
+type CommandHandler func(kfsCore *core.KFS, conn AddrReadWriteCloser)
+
+var commandHandlers = make(map[rpcutil.CommandType]CommandHandler)
+
+func registerCommand(commandType rpcutil.CommandType, handler func(kfsCore *core.KFS, conn AddrReadWriteCloser) error) {
+	commandHandlers[commandType] = func(kfsCore *core.KFS, conn AddrReadWriteCloser) {
+		err := handler(kfsCore, conn)
+		if err != nil {
+			rpcutil.WriteInvalid(conn, err)
+			return
+		}
+		rpcutil.WriteOK(conn)
+	}
+}
+
 func Process(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 	println(conn.RemoteAddr().String(), "Process")
 
@@ -37,49 +52,46 @@ func Process(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 			conn.Close()
 			return
 		}
-		switch commandType {
-		case rpcutil.CommandPing:
-			pong(conn)
-		case rpcutil.CommandUpload:
-			handleUpload(kfsCore, conn)
-		case rpcutil.CommandTouch:
-			handleTouch(kfsCore, conn)
-		case rpcutil.CommandList:
-			handleList(kfsCore, conn)
-		case rpcutil.CommandDownload:
-			handleDownload(kfsCore, conn)
-		case rpcutil.CommandCat:
-			handleCat(kfsCore, conn)
-		default:
-			println("no such commandType", commandType)
-			//panic(fmt.Errorf("no such command %d", command))
+		if handler, ok := commandHandlers[commandType]; ok {
+			handler(kfsCore, conn)
+		} else {
+			println("invalid commandType", commandType)
 		}
 	}
 }
 
-func pong(conn AddrReadWriteCloser) {
-	_, err := conn.Write([]byte{0})
-	if err != nil {
-		println(conn.RemoteAddr().String(), "pong", err)
-		return
-	}
-}
-
-func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) {
-	var err error
-	defer func() {
+func init() {
+	registerCommand(rpcutil.CommandPing, func(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+		conn.Write([]byte{0})
+		return nil
+	})
+	registerCommand(rpcutil.CommandReset, func(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+		branchName, err := rpcutil.ReadString(conn)
 		if err != nil {
-			rpcutil.WriteInvalid(conn, err)
+			return err
 		}
-	}()
+		err = kfsCore.Reset(context.TODO(), branchName)
+		if err != nil {
+			println(conn.RemoteAddr().String(), "Reset", err.Error())
+			return err
+		}
+		return nil
+	})
+	registerCommand(rpcutil.CommandUpload, handleUpload)
+	registerCommand(rpcutil.CommandTouch, handleTouch)
+	registerCommand(rpcutil.CommandList, handleList)
+	registerCommand(rpcutil.CommandDownload, handleDownload)
+	registerCommand(rpcutil.CommandCat, handleCat)
+}
 
+func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	// time.Sleep(time.Millisecond * time.Duration(rand.Intn(2000)))
 
 	hashBytes := make([]byte, 256/8)
-	err = binary.Read(conn, binary.LittleEndian, hashBytes)
+	err := binary.Read(conn, binary.LittleEndian, hashBytes)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "hashBytes", err.Error())
-		return
+		return err
 	}
 	hash := hex.EncodeToString(hashBytes)
 	println("hash", hash)
@@ -88,12 +100,12 @@ func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 	err = binary.Read(conn, binary.LittleEndian, &size)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "size", err.Error())
-		return
+		return err
 	}
 	println(conn.RemoteAddr().String(), "size", size)
 
 	exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) error {
-		_, err := conn.Write([]byte{0}) // not exist
+		_, err = conn.Write([]byte{1}) // not exist
 		if err != nil {
 			return err
 		}
@@ -113,30 +125,19 @@ func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 	})
 	if err != nil {
 		println(conn.RemoteAddr().String(), "WriteFn", err.Error())
-		return
+		return err
 	}
 	if exist {
-		_, err = conn.Write([]byte{1})
-		if err != nil {
-			println(conn.RemoteAddr().String(), "exist", err.Error())
-		}
-		println(conn.RemoteAddr().String(), "exist")
-		return
+		return nil
 	}
 
 	f := sqlite.NewFile(hash, uint64(size))
 	err = kfsCore.Db.WriteFile(context.Background(), f)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "Db.WriteFile", err.Error())
-		return
+		return err
 	}
-
-	err = rpcutil.WriteOK(conn)
-	if err != nil {
-		println(conn.RemoteAddr().String(), "code", err.Error())
-		return
-	}
-	println(conn.RemoteAddr().String(), "code", 0)
+	return nil
 }
 
 func Socket(listener net.Listener, kfsCore *core.KFS) error {

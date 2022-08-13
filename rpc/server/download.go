@@ -12,36 +12,31 @@ import (
 	"github.com/lazyxu/kfs/core"
 )
 
-func handleDownload(kfsCore *core.KFS, conn AddrReadWriteCloser) {
-	var err error
-	defer func() {
-		if err != nil {
-			rpcutil.WriteInvalid(conn, err)
-		}
-	}()
+func handleDownload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	branchName, err := rpcutil.ReadString(conn)
 	if err != nil {
-		return
+		return err
 	}
 	filePath, err := rpcutil.ReadString(conn)
 	if err != nil {
-		return
+		return err
 	}
 	println(branchName, filePath)
 	ctx := context.Background()
 	hash, mode, err := kfsCore.Db.GetFileHashMode(ctx, branchName, core.FormatPath(filePath))
 	if err != nil {
-		return
+		return err
 	}
 	err = download(ctx, kfsCore, conn, "", hash, mode)
 	if err != nil {
-		return
+		return err
 	}
 	mode = 0
 	err = binary.Write(conn, binary.LittleEndian, mode)
 	if err != nil {
-		return
+		return err
 	}
+	return nil
 }
 
 func download(ctx context.Context, kfsCore *core.KFS, conn AddrReadWriteCloser, relPath string, hash string, mode os.FileMode) error {

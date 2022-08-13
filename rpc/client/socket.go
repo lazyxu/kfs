@@ -120,13 +120,13 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 		p.label = "exist?"
 		h.ch <- p
 	}
-	var exist bool
-	err = binary.Read(conn, binary.LittleEndian, &exist)
+	var notExist bool
+	err = binary.Read(conn, binary.LittleEndian, &notExist)
 	if err != nil {
 		return
 	}
 
-	if exist {
+	if !notExist {
 		if h.verbose {
 			p.label = fmt.Sprintf("exist")
 			h.ch <- p

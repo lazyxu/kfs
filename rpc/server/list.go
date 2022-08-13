@@ -13,24 +13,18 @@ import (
 	"github.com/lazyxu/kfs/pb"
 )
 
-func handleList(kfsCore *core.KFS, conn AddrReadWriteCloser) {
-	var err error
-	defer func() {
-		if err != nil {
-			rpcutil.WriteInvalid(conn, err)
-		}
-	}()
+func handleList(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	// read
 	var req pb.PathReq
-	err = rpcutil.ReadProto(conn, &req)
+	err := rpcutil.ReadProto(conn, &req)
 	if err != nil {
-		return
+		return err
 	}
 
 	// write
 	err = rpcutil.WriteOK(conn)
 	if err != nil {
-		return
+		return err
 	}
 	fmt.Println("Socket.List", req.String())
 	err = kfsCore.List(context.TODO(), req.BranchName, req.Path, func(n int) error {
@@ -50,12 +44,7 @@ func handleList(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 		})
 	})
 	if err != nil {
-		return
+		return err
 	}
-
-	// exit
-	err = rpcutil.WriteOK(conn)
-	if err != nil {
-		return
-	}
+	return nil
 }

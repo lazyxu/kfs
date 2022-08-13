@@ -5,6 +5,8 @@ type CommandType = int8
 const (
 	CommandPing CommandType = iota
 
+	CommandReset
+
 	CommandList
 
 	CommandUpload
