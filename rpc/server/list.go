@@ -13,10 +13,10 @@ import (
 	"github.com/lazyxu/kfs/pb"
 )
 
-func handleList(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+func handleList(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
 	// read
 	var req pb.PathReq
-	err := rpcutil.ReadProto(conn, &req)
+	err = rpcutil.ReadProto(conn, &req)
 	if err != nil {
 		return err
 	}

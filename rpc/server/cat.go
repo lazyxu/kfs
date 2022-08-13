@@ -10,7 +10,7 @@ import (
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 )
 
-func handleCat(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+func handleCat(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
 	branchName, err := rpcutil.ReadString(conn)
 	if err != nil {
 		return err

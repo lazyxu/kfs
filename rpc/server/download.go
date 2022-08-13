@@ -12,7 +12,7 @@ import (
 	"github.com/lazyxu/kfs/core"
 )
 
-func handleDownload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+func handleDownload(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
 	branchName, err := rpcutil.ReadString(conn)
 	if err != nil {
 		return err

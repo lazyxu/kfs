@@ -23,18 +23,20 @@ type AddrReadWriteCloser interface {
 	RemoteAddr() net.Addr
 }
 
-type CommandHandler func(kfsCore *core.KFS, conn AddrReadWriteCloser)
+type CommandHandler func(kfsCore *core.KFS, conn AddrReadWriteCloser) error
 
 var commandHandlers = make(map[rpcutil.CommandType]CommandHandler)
 
-func registerCommand(commandType rpcutil.CommandType, handler func(kfsCore *core.KFS, conn AddrReadWriteCloser) error) {
-	commandHandlers[commandType] = func(kfsCore *core.KFS, conn AddrReadWriteCloser) {
+func registerCommand(commandType rpcutil.CommandType, handler CommandHandler) {
+	commandHandlers[commandType] = func(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		err := handler(kfsCore, conn)
-		if err != nil {
-			rpcutil.WriteInvalid(conn, err)
-			return
+		if e, ok := err.(*rpcutil.UnexpectedError); ok {
+			return e
 		}
-		rpcutil.WriteOK(conn)
+		if err != nil {
+			return rpcutil.WriteInvalid(conn, err)
+		}
+		return rpcutil.WriteOK(conn)
 	}
 }
 
@@ -47,13 +49,22 @@ func Process(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 			conn.Close()
 			return
 		}
+		if e, ok := err.(*rpcutil.UnexpectedError); ok && e.Err == io.EOF {
+			conn.Close()
+			return
+		}
 		if err != nil {
 			println("commandType", commandType, err.Error())
 			conn.Close()
 			return
 		}
 		if handler, ok := commandHandlers[commandType]; ok {
-			handler(kfsCore, conn)
+			e := handler(kfsCore, conn)
+			if e != nil {
+				println(e.Error())
+				conn.Close()
+				return
+			}
 		} else {
 			println("invalid commandType", commandType)
 		}
@@ -61,11 +72,11 @@ func Process(kfsCore *core.KFS, conn AddrReadWriteCloser) {
 }
 
 func init() {
-	registerCommand(rpcutil.CommandPing, func(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
-		conn.Write([]byte{0})
-		return nil
+	registerCommand(rpcutil.CommandPing, func(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
+		_, err = conn.Write([]byte{0})
+		return rpcutil.UnexpectedIfError(err)
 	})
-	registerCommand(rpcutil.CommandReset, func(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+	registerCommand(rpcutil.CommandReset, func(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
 		branchName, err := rpcutil.ReadString(conn)
 		if err != nil {
 			return err
@@ -91,7 +102,7 @@ func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	err := binary.Read(conn, binary.LittleEndian, hashBytes)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "hashBytes", err.Error())
-		return err
+		return rpcutil.UnexpectedIfError(err)
 	}
 	hash := hex.EncodeToString(hashBytes)
 	println("hash", hash)
@@ -100,28 +111,28 @@ func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	err = binary.Read(conn, binary.LittleEndian, &size)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "size", err.Error())
-		return err
+		return rpcutil.UnexpectedIfError(err)
 	}
 	println(conn.RemoteAddr().String(), "size", size)
 
-	exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) error {
-		_, err = conn.Write([]byte{1}) // not exist
-		if err != nil {
-			return err
+	exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) (e error) {
+		_, e = conn.Write([]byte{1}) // not exist
+		if e != nil {
+			return rpcutil.UnexpectedIfError(e)
 		}
 
-		encoder, err := rpcutil.ReadString(conn)
+		encoder, e := rpcutil.ReadString(conn)
 		println(conn.RemoteAddr().String(), "encoder", len(encoder), encoder)
 
 		w := io.MultiWriter(f, hasher)
 		if encoder == "lz4" {
 			r := lz4.NewReader(conn)
-			_, err = io.CopyN(w, r, size)
+			_, e = io.CopyN(w, r, size)
 		} else {
-			_, err = io.CopyN(w, conn, size)
+			_, e = io.CopyN(w, conn, size)
 		}
 		println(conn.RemoteAddr().String(), "Copy")
-		return err
+		return rpcutil.UnexpectedIfError(e)
 	})
 	if err != nil {
 		println(conn.RemoteAddr().String(), "WriteFn", err.Error())

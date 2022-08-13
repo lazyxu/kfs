@@ -12,10 +12,10 @@ import (
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 )
 
-func handleTouch(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+func handleTouch(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
 	// read
 	var req pb.TouchReq
-	err := rpcutil.ReadProto(conn, &req)
+	err = rpcutil.ReadProto(conn, &req)
 	if err != nil {
 		return err
 	}
