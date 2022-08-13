@@ -29,7 +29,7 @@
     "start:electron": "electron .",
     "build": "react-scripts build",
     "build:electron": "electron-builder -c electron-builder.yml --publish=never",
-    "watch": "cra-build-watch -b public-electron",
+    "watch": "cra-build-watch -b electron-development",
     "test": "react-scripts test --ci",
     "eject": "react-scripts eject"
   },

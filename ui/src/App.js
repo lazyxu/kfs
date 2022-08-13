@@ -4,11 +4,13 @@ import Menu from 'components/Menu/Menu';
 import { Body, Layout, Sider, Content } from 'components/Web/Web';
 import SystemConfig from 'components/Page/Setting/SystemConfig';
 import Logo from 'components/Logo/Logo';
+import Version from 'components/Version';
 
 import useMenu from 'hox/menu';
 import useSysConfig from 'hox/sysConfig';
 
 function App() {
+  console.log(process.env);
   const { sysConfig } = useSysConfig();
   const { menu } = useMenu();
   useEffect(() => {
@@ -27,6 +29,7 @@ function App() {
               { icon: 'system', name: '资源监控' },
             ]}
             />
+            <Version />
           </Sider>
           <Content>
             {menu === '文件' && <span>{menu}</span>}

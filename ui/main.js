@@ -1,11 +1,20 @@
-require('electron-reloader')(module);
-
 // eslint-disable-next-line import/no-extraneous-dependencies
-const { app, BrowserWindow, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, dialog, ipcMain, Menu } = require('electron');
+
+if (app.isPackaged) {
+  process.env.NODE_ENV = 'production';
+  process.env.REACT_APP_PLATFORM = 'electron';
+}
+
+if (process.env.NODE_ENV === 'development') {
+  require('electron-reloader')(module);
+}
+
+
 const path = require('path');
 const { getProcesses } = require('./processManager');
 
-const publicPath = 'public-electron';
+const publicPath = 'electron-' + process.env.NODE_ENV;
 let mainWindow;
 
 app.setName("考拉云盘");
@@ -34,8 +43,6 @@ function createWindow() {
   global.mainWindow = mainWindow;
 
   mainWindow.loadFile(path.join(publicPath, 'index.html'));
-
-  const { app, Menu } = require('electron');
 
   const isMac = process.platform === 'darwin';
 
