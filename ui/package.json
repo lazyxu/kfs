@@ -10,10 +10,6 @@
     "url": "https://github.com/lazyxu/kfs.git"
   },
   "dependencies": {
-    "@testing-library/jest-dom": "^5.14.1",
-    "@testing-library/react": "^13.0.0",
-    "@testing-library/user-event": "^13.2.1",
-    "electron-reloader": "^1.2.3",
     "google-protobuf": "^3.21.0",
     "hox": "^2.0.0",
     "protobufjs": "^7.0.0",
@@ -52,12 +48,18 @@
     ]
   },
   "devDependencies": {
-    "@babel/core": "^7.18.10",
-    "@babel/preset-react": "^7.18.6",
+    "@babel/eslint-parser": "^7.18.9",
     "@craco/craco": "^6.4.5",
     "@jagannathbhat/cra-build-watch": "^1.0.1",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^13.0.0",
+    "@testing-library/user-event": "^13.2.1",
     "electron": "^20.0.1",
     "electron-builder": "^23.3.3",
+    "electron-reloader": "^1.2.3",
+    "eslint": "^8.22.0",
+    "eslint-config-alloy": "^4.6.2",
+    "eslint-plugin-react": "^7.30.1",
     "node-sass": "^7.0.1"
   }
 }

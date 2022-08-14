@@ -17,7 +17,6 @@ function getRoot() {
       if (err)
         throw err;
       gRoot = root;
-      console.log(gRoot);
       resolve(gRoot);
     });
   });

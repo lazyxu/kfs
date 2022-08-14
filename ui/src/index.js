@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { HoxRoot } from 'hox';
 
 import 'reset.scss';
 import 'normalize.css';
@@ -8,7 +9,6 @@ import 'index.scss';
 
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { HoxRoot } from "hox";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -16,7 +16,7 @@ root.render(
     <HoxRoot>
       <App />
     </HoxRoot>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
 
 // If you want to start measuring performance in your app, pass a function
