@@ -1,24 +1,26 @@
 module.exports = {
     extends: [
-      'alloy',
-      'alloy/react',
+        'alloy',
+        'alloy/react',
     ],
+    parserOptions: {
+        ecmaVersion: 2022
+    },
     env: {
-      // Your environments (which contains several predefined global variables)
-      //
-      browser: true,
-      node: true,
-      // mocha: true,
-      jest: true,
-      es2022: true,
-      worker: true
+        // Your environments (which contains several predefined global variables)
+        //
+        browser: true,
+        node: true,
+        // mocha: true,
+        jest: true,
+        worker: true
     },
     globals: {
-      // Your global variables (setting to false means it's not allowed to be reassigned)
-      //
-      // myGlobal: false
+        // Your global variables (setting to false means it's not allowed to be reassigned)
+        //
+        // myGlobal: false
     },
     rules: {
-      // Customize your rules
+        // Customize your rules
     },
-  };
+};

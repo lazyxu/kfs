@@ -3,7 +3,7 @@
 
 import { getConfig } from './config';
 
-var protobuf = require("protobufjs");
+let protobuf = require("protobufjs");
 
 let gRoot;
 
@@ -13,7 +13,7 @@ function getRoot() {
       resolve(gRoot);
       return;
     }
-    protobuf.load("./fs.proto", function (err, root) {
+    protobuf.load("./fs.proto", (err, root) => {
       if (err)
         throw err;
       gRoot = root;
@@ -32,7 +32,7 @@ async function encode(path, payload) {
 async function decode(path, buffer) {
   let pbRoot = await getRoot();
   let type = pbRoot.lookupType(path);
-  var message = type.decode(new Uint8Array(buffer));
+  let message = type.decode(new Uint8Array(buffer));
   return type.toObject(message);
 }
 
