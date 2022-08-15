@@ -7,6 +7,6 @@ test('renders src/App.js', () => {
     <HoxRoot>
       <App />
     </HoxRoot>);
-  const element = screen.getByText(/考拉云盘/i);
+  const element = screen.getByText(/文件/i);
   expect(element).toBeInTheDocument();
 });
