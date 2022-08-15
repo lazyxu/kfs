@@ -1,20 +1,14 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { app, BrowserWindow, dialog, ipcMain, Menu } = require('electron');
 
-if (app.isPackaged) {
-  process.env.NODE_ENV = 'production';
-  process.env.REACT_APP_PLATFORM = 'electron';
-}
-
-if (process.env.NODE_ENV === 'development') {
+if (!app.isPackaged) {
   require('electron-reloader')(module);
 }
-
 
 const path = require('path');
 const { getProcesses } = require('./processManager');
 
-const publicPath = 'electron-' + process.env.NODE_ENV;
+const publicPath = 'electron-' + (app.isPackaged ? 'production' : 'development');
 let mainWindow;
 
 app.setName("考拉云盘");
@@ -24,7 +18,7 @@ function createWindow() {
     width: 1280,
     height: 800,
     // title: "考拉云盘",
-    titleBarStyle: 'hidden',
+    // titleBarStyle: 'hidden',
     // backgroundColor: '#FFF',
     webPreferences: {
       // preload: path.join(publicPath, 'preload.js'),
@@ -36,9 +30,8 @@ function createWindow() {
       nodeIntegrationInSubFrames: true, //for subContent nodeIntegration Enable
       // webviewTag:true //for webView
     },
-    // icon: image,
+    icon: 'public/icon512.png',
   });
-  mainWindow.webContents.openDevTools();
 
   global.mainWindow = mainWindow;
 

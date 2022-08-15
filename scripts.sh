@@ -40,7 +40,7 @@ case $1 in
         trap "kill 0" EXIT
         cd $root/ui
         tempfile=$(mktemp)
-        NODE_ENV=development REACT_APP_PLATFORM=electron yarn watch > $tempfile 2>&1 &
+        NODE_ENV=development REACT_APP_PLATFORM=$(go env GOOS) yarn watch > $tempfile 2>&1 &
         cnt=1
         while IFS= read -r line; do
           echo $line
@@ -51,7 +51,7 @@ case $1 in
             break;
           fi
         done < <(tail -f $tempfile)
-        NODE_ENV=development yarn start:electron
+        yarn start:electron
         ;;
 
       *)
@@ -65,7 +65,7 @@ case $1 in
       server)
         cd $root/ui
         yarn
-        BUILD_PATH=$root/cmd/kfs-server/build REACT_APP_PLATFORM=web yarn build
+        NODE_ENV=production REACT_APP_PLATFORM=web BUILD_PATH=$root/cmd/kfs-server/build PUBLIC_URL=/ yarn build
         cd $root/cmd/kfs-server
         echo "GOOS=$GOOS GOARCH=$GOARCH"
         if [[ $GOOS != '' && $GOARCH != '' ]]; then
@@ -88,8 +88,8 @@ case $1 in
       electron)
         cd $root/ui
         yarn
-        BUILD_PATH=electron-production PUBLIC_URL=. REACT_APP_PLATFORM=electron yarn build
-        NODE_ENV=development yarn build:electron
+        NODE_ENV=production REACT_APP_PLATFORM=$(go env GOOS) BUILD_PATH=electron-production PUBLIC_URL=. yarn build
+        yarn build:electron
         ;;
 
       *)

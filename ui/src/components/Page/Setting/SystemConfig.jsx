@@ -24,8 +24,12 @@ export default () => {
                 <span> 浅色 </span>
                 <input type="radio" name="theme" checked={sysConfig.theme === 'dark'} onChange={() => setSysConfig(c => ({ ...c, theme: 'dark' }))} />
                 <span> 深色 </span>
-                <input type="radio" name="theme" checked={sysConfig.theme === 'system'} onChange={() => setSysConfig(c => ({ ...c, theme: 'system' }))} />
-                <span> 跟随系统 </span>
+                  {process.env.REACT_APP_PLATFORM === 'web' ? [] : <>
+                      <input type="radio" name="theme" checked={sysConfig.theme === 'system'}
+                             onChange={() => setSysConfig(c => ({...c, theme: 'system'}))}/>
+                      <span> 跟随系统 </span>
+                  </>
+                  }
               </div>
             </li>
             <li className={styles.configs_item}>
