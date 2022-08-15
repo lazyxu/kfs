@@ -13,6 +13,8 @@ let mainWindow;
 
 app.setName("考拉云盘");
 
+const remoteMain = require('@electron/remote/main');
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -32,6 +34,9 @@ function createWindow() {
     },
     icon: 'public/icon512.png',
   });
+
+  remoteMain.initialize();
+  remoteMain.enable(mainWindow.webContents);
 
   global.mainWindow = mainWindow;
 

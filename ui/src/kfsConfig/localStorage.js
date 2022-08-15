@@ -1,20 +1,5 @@
-const key = 'kfs-config';
-
-function get() {
-  const item = localStorage.getItem(key);
-  try {
-    return JSON.parse(item);
-  } catch (_) {
-    return undefined;
-  }
+if (process.env.REACT_APP_PLATFORM === 'web') {
+  module.exports = require('./config.web.js');
+} else {
+  module.exports = require('./config.electron.js');
 }
-
-function set(json) {
-  localStorage.setItem(key, JSON.stringify(json, undefined, 2));
-}
-
-function remove() {
-  localStorage.removeItem(key);
-}
-
-export default { get, set, remove };

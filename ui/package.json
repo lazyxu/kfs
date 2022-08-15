@@ -10,6 +10,7 @@
     "url": "https://github.com/lazyxu/kfs.git"
   },
   "dependencies": {
+    "@electron/remote": "^2.0.8",
     "google-protobuf": "^3.21.0",
     "hox": "^2.0.0",
     "protobufjs": "^7.0.0",
