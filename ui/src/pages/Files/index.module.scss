@@ -1,0 +1,14 @@
+.filesGridview {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: scroll;
+  display: flex;
+  flex-flow:row wrap;
+  align-content:flex-start;
+  background-color: transparent;
+  user-select: auto;
+  :focus {
+    outline: none;
+  }
+}

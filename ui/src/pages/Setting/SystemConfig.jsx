@@ -1,5 +1,5 @@
 import useSysConfig from 'hox/sysConfig';
-import styles from 'components/Page/Setting/index.module.scss';
+import styles from 'pages/Setting/index.module.scss';
 
 export default () => {
   const { sysConfig, setSysConfig, resetSysConfig } = useSysConfig();

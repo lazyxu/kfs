@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 
 import Menu from 'components/Menu/Menu';
 import { Body, Layout, Sider, Content } from 'components/Web/Web';
-import SystemConfig from 'components/Page/Setting/SystemConfig';
+import SystemConfig from 'pages/Setting/SystemConfig';
 import Version from 'components/Version';
 
 import useMenu from 'hox/menu';
 import useSysConfig from 'hox/sysConfig';
+import Files from "./pages/Files";
 
 function App() {
   const { sysConfig } = useSysConfig();
@@ -29,7 +30,7 @@ function App() {
             <Version />
           </Sider>
           <Content>
-            {menu === '文件' && <span>{menu}</span>}
+            {menu === '文件' && <Files />}
             {menu === '传输列表' && <span>{menu}</span>}
             {menu === '设置' && <SystemConfig />}
             {menu === '资源监控' && <span>{menu}</span>}

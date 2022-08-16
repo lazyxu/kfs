@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createGlobalStore } from 'hox';
 
 function useFunc() {
-  const [menu, setMenu] = useState('');
+  const [menu, setMenu] = useState('文件');
   return {
     menu,
     setMenu,

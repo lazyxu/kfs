@@ -80,29 +80,29 @@ export function list(onTotal, onDirItem) {
       try {
         ws.send(new Uint8Array([CommandList]));
         let reqData = await encode("PathReq", { branchName: "master", path: '/' });
-        console.log('reqData', reqData);
+        // console.log('reqData', reqData);
         ws.send(new Int32Array([reqData.length, 0]));
         ws.send(reqData);
 
         let receiver = new WebSocketReceiver(ws);
         let data = await receiver.recv();
         let code = new Int8Array(data)[0];
-        console.log('code', data, code);
+        // console.log('code', data, code);
         data = await receiver.recv();
         let total = new Int32Array(data)[0];
-        console.log('total', data, total);
+        // console.log('total', data, total);
         onTotal && onTotal(total);
         for (let i = 0; i < total; i++) {
           data = await receiver.recv();
-          console.log('length', new Int32Array(data)[0]);
+          // console.log('length', new Int32Array(data)[0]);
           data = await receiver.recv();
           let resp = await decode("DirItem", data);
-          onTotal && onTotal(onDirItem);
-          console.log('resp', resp);
+          onDirItem && onDirItem(resp, i);
+          // console.log('resp', resp);
         }
         data = await receiver.recv();
         code = new Int8Array(data)[0];
-        console.log('exit code', code);
+        // console.log('exit code', code);
         resolve(code);
       } catch (e) {
         reject(e);
