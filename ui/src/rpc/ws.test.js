@@ -1,9 +1,9 @@
-import { describe, expect, test } from '@jest/globals'
+import { expect, test } from '@jest/globals'
 import { list } from './ws';
 
 test('renders src/App.js', () => {
     return new Promise((resolve, reject) => {
-        list((total) => {
+        list('master', [], (total) => {
             console.log('total', total);
         }, (dirItem) => {
             console.log('dirItem', dirItem);

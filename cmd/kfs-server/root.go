@@ -91,7 +91,7 @@ var rootCmd = &cobra.Command{
 			http.Handle("/", http.FileServer(AddPrefix(http.FS(build), "build")))
 			log.Fatal(http.ListenAndServe("0.0.0.0:1125", nil))
 		}()
-		lis, err := net.Listen("tcp", "0.0.0.0:"+portString)
+		lis, err := net.Listen("tcp", "0.0.0.0:1123")
 		if err != nil {
 			panic(err)
 		}

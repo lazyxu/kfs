@@ -1,0 +1,32 @@
+.filePath {
+  padding: 0 0.2em;
+  margin: 0.3em;
+  background-color: var(--header-color);
+  overflow: hidden;
+  .pathElement {
+    padding: 0.2em;
+    color: white;
+    background-color: transparent;
+    border: 1px dashed transparent;
+    //border-color: ${this.state.dragOver && 'white'};
+    border-radius: 0.3em;
+    outline: none;
+    display: inline-block;
+    .pathName {
+      display: inline;
+      border: 1px solid transparent;
+      &:hover {
+        border: 1px solid white;
+        // cursor: pointer;
+      }
+    }
+    .pathNameRight {
+      display: inline;
+      border: 1px solid transparent;
+      &:hover {
+        border: 1px solid white;
+        // cursor: pointer;
+      }
+    }
+  }
+}

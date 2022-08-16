@@ -10,7 +10,7 @@ export function useClick(onClick, onDoubleClick) {
             clearTimeout(handle.current);
         };
     }, []);
-    return e => {
+    return function (e){
         if (e.button === 2) {
             return;
         }

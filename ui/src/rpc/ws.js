@@ -73,13 +73,14 @@ class WebSocketReceiver {
 
 const CommandList = 2;
 
-export function list(onTotal, onDirItem) {
+export function list(branchName, path, onTotal, onDirItem) {
+  console.log('list', branchName, path, path.join('/'))
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(getConfig().wsHost);
     ws.addEventListener('open', async () => {
       try {
         ws.send(new Uint8Array([CommandList]));
-        let reqData = await encode("PathReq", { branchName: "master", path: '/' });
+        let reqData = await encode("PathReq", { branchName, path: path.join('/') });
         // console.log('reqData', reqData);
         ws.send(new Int32Array([reqData.length, 0]));
         ws.send(reqData);

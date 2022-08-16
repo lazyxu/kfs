@@ -1,29 +1,38 @@
-import {useEffect, useState} from 'react';
+import { useEffect } from 'react';
 
-import {list} from "../../rpc/ws";
+import { list } from "../../rpc/ws";
 import File from "../../components/File";
 import styles from './index.module.scss';
+import FilePath from "../../components/FilePath";
+import useResourceManager from 'hox/resourceManager';
 
 function App() {
-    const [dirItems, setDirItems] = useState([]);
+    const [resourceManager, setResourceManager] = useResourceManager();
     useEffect(() => {
-        (async () =>{
-            let newDirItems;
-            await list((total) => {
-                newDirItems = new Array(total);
+        (async () => {
+            let dirItems;
+            let { filePath, branchName } = resourceManager;
+            await list(branchName, filePath, (total) => {
+                dirItems = new Array(total);
             }, (dirItem, i) => {
-                newDirItems[i] = dirItem;
+                dirItems[i] = dirItem;
             });
-            setDirItems(newDirItems);
+            setResourceManager(prev => {
+                return { ...prev, branchName, filePath, dirItems };
+            });
         })()
     }, []);
+    console.log(resourceManager.dirItems)
 
     return (
-        <div className={styles.filesGridview}>
-            {dirItems.map((dirItem, i) => (
-                <File type='dir' name={dirItem.Name} key={dirItem.Name}/>
-            ))}
-        </div>
+        <>
+            <FilePath />
+            <div className={styles.filesGridview}>
+                {resourceManager.dirItems.map((dirItem, i) => (
+                    <File type={dirItem.Mode > 2147483648 ? 'dir' : 'file'} name={dirItem.Name} key={dirItem.Name} />
+                ))}
+            </div>
+        </>
     );
 }
 
