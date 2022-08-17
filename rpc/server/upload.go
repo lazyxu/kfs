@@ -1,7 +1,12 @@
 package server
 
 import (
+	"context"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
+	"github.com/pierrec/lz4"
 	"io"
 
 	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
@@ -115,4 +120,60 @@ func (s *KoalaFSServer) Upload(server pb.KoalaFS_UploadServer) (err error) {
 		},
 	})
 	return
+}
+
+func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+	// time.Sleep(time.Millisecond * time.Duration(rand.Intn(2000)))
+
+	hashBytes := make([]byte, 256/8)
+	err := binary.Read(conn, binary.LittleEndian, hashBytes)
+	if err != nil {
+		println(conn.RemoteAddr().String(), "hashBytes", err.Error())
+		return rpcutil.UnexpectedIfError(err)
+	}
+	hash := hex.EncodeToString(hashBytes)
+	println("hash", hash)
+
+	var size int64
+	err = binary.Read(conn, binary.LittleEndian, &size)
+	if err != nil {
+		println(conn.RemoteAddr().String(), "size", err.Error())
+		return rpcutil.UnexpectedIfError(err)
+	}
+	println(conn.RemoteAddr().String(), "size", size)
+
+	exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) (e error) {
+		_, e = conn.Write([]byte{1}) // not exist
+		if e != nil {
+			return rpcutil.UnexpectedIfError(e)
+		}
+
+		encoder, e := rpcutil.ReadString(conn)
+		println(conn.RemoteAddr().String(), "encoder", len(encoder), encoder)
+
+		w := io.MultiWriter(f, hasher)
+		if encoder == "lz4" {
+			r := lz4.NewReader(conn)
+			_, e = io.CopyN(w, r, size)
+		} else {
+			_, e = io.CopyN(w, conn, size)
+		}
+		println(conn.RemoteAddr().String(), "Copy")
+		return rpcutil.UnexpectedIfError(e)
+	})
+	if err != nil {
+		println(conn.RemoteAddr().String(), "WriteFn", err.Error())
+		return err
+	}
+	if exist {
+		return nil
+	}
+
+	f := sqlite.NewFile(hash, uint64(size))
+	err = kfsCore.Db.WriteFile(context.Background(), f)
+	if err != nil {
+		println(conn.RemoteAddr().String(), "Db.WriteFile", err.Error())
+		return err
+	}
+	return nil
 }

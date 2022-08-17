@@ -23,6 +23,35 @@ import (
 
 const fileChunkSize = 1024 * 1024
 
+func ReqString(socketServerAddr string, commandType rpcutil.CommandType, req string) (err error) {
+	conn, err := net.Dial("tcp", socketServerAddr)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+
+	// write
+	err = rpcutil.WriteCommandType(conn, commandType)
+	if err != nil {
+		return
+	}
+	err = rpcutil.WriteString(conn, req)
+	if err != nil {
+		return
+	}
+
+	// read
+	status, errMsg, err := rpcutil.ReadStatus(conn)
+	if err != nil {
+		return
+	}
+	if status != rpcutil.EOK {
+		err = errors.New(errMsg)
+		return
+	}
+	return nil
+}
+
 func ReqResp(socketServerAddr string, commandType rpcutil.CommandType, req proto.Message, resp proto.Message) (err error) {
 	conn, err := net.Dial("tcp", socketServerAddr)
 	if err != nil {

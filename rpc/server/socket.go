@@ -1,19 +1,12 @@
 package server
 
 import (
-	"context"
-	"encoding/binary"
-	"encoding/hex"
 	"io"
 	"net"
 
 	"github.com/gorilla/websocket"
 
 	"github.com/lazyxu/kfs/rpc/rpcutil"
-
-	"github.com/pierrec/lz4"
-
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
 	"github.com/lazyxu/kfs/core"
 )
@@ -76,79 +69,12 @@ func init() {
 		_, err = conn.Write([]byte{0})
 		return rpcutil.UnexpectedIfError(err)
 	})
-	registerCommand(rpcutil.CommandReset, func(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
-		branchName, err := rpcutil.ReadString(conn)
-		if err != nil {
-			return err
-		}
-		err = kfsCore.Reset(context.TODO(), branchName)
-		if err != nil {
-			println(conn.RemoteAddr().String(), "Reset", err.Error())
-			return err
-		}
-		return nil
-	})
+	registerCommand(rpcutil.CommandReset, handleReset)
 	registerCommand(rpcutil.CommandList, handleList)
 	registerCommand(rpcutil.CommandUpload, handleUpload)
 	registerCommand(rpcutil.CommandTouch, handleTouch)
 	registerCommand(rpcutil.CommandDownload, handleDownload)
 	registerCommand(rpcutil.CommandCat, handleCat)
-}
-
-func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
-	// time.Sleep(time.Millisecond * time.Duration(rand.Intn(2000)))
-
-	hashBytes := make([]byte, 256/8)
-	err := binary.Read(conn, binary.LittleEndian, hashBytes)
-	if err != nil {
-		println(conn.RemoteAddr().String(), "hashBytes", err.Error())
-		return rpcutil.UnexpectedIfError(err)
-	}
-	hash := hex.EncodeToString(hashBytes)
-	println("hash", hash)
-
-	var size int64
-	err = binary.Read(conn, binary.LittleEndian, &size)
-	if err != nil {
-		println(conn.RemoteAddr().String(), "size", err.Error())
-		return rpcutil.UnexpectedIfError(err)
-	}
-	println(conn.RemoteAddr().String(), "size", size)
-
-	exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) (e error) {
-		_, e = conn.Write([]byte{1}) // not exist
-		if e != nil {
-			return rpcutil.UnexpectedIfError(e)
-		}
-
-		encoder, e := rpcutil.ReadString(conn)
-		println(conn.RemoteAddr().String(), "encoder", len(encoder), encoder)
-
-		w := io.MultiWriter(f, hasher)
-		if encoder == "lz4" {
-			r := lz4.NewReader(conn)
-			_, e = io.CopyN(w, r, size)
-		} else {
-			_, e = io.CopyN(w, conn, size)
-		}
-		println(conn.RemoteAddr().String(), "Copy")
-		return rpcutil.UnexpectedIfError(e)
-	})
-	if err != nil {
-		println(conn.RemoteAddr().String(), "WriteFn", err.Error())
-		return err
-	}
-	if exist {
-		return nil
-	}
-
-	f := sqlite.NewFile(hash, uint64(size))
-	err = kfsCore.Db.WriteFile(context.Background(), f)
-	if err != nil {
-		println(conn.RemoteAddr().String(), "Db.WriteFile", err.Error())
-		return err
-	}
-	return nil
 }
 
 func Socket(listener net.Listener, kfsCore *core.KFS) error {

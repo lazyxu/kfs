@@ -9,11 +9,7 @@ service KoalaFS {
   }
   rpc branchInfo (BranchInfoReq) returns (BranchInfoResp) {
   }
-  rpc download (DownloadReq) returns (stream DownloadResp) {
-  }
   rpc upload (stream UploadReq) returns (stream UploadResp) {
-  }
-  rpc reset (BranchReq) returns (Void) {
   }
 }
 

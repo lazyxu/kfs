@@ -2,17 +2,9 @@ package client
 
 import (
 	"context"
-
-	"github.com/lazyxu/kfs/pb"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
 )
 
 func (fs *RpcFs) Reset(ctx context.Context, branchName string) error {
-	conn, c, err := getGRPCClient(fs)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	_, err = c.Reset(ctx, &pb.BranchReq{BranchName: branchName})
-	return err
+	return ReqString(fs.SocketServerAddr, rpcutil.CommandReset, branchName)
 }
