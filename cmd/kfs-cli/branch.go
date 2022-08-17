@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"
@@ -52,7 +50,7 @@ func runCheckoutBranch(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
-	fmt.Printf("switch to branch '%s'\n", branchName)
+	cmd.Printf("switch to branch '%s'\n", branchName)
 	viper.Set(BranchNameStr, branchName)
 	err = viper.WriteConfig()
 }
@@ -83,11 +81,12 @@ func runBranchInfo(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fmt.Printf("description: %s\n", branch.GetDescription())
-	fmt.Printf("commitId: %d\n", branch.GetCommitId())
-	fmt.Printf("size: %d\n", branch.GetSize())
-	fmt.Printf("count: %d\n", branch.GetCount())
+	cmd.Printf("description: %s\n", branch.GetDescription())
+	cmd.Printf("commitId: %d\n", branch.GetCommitId())
+	cmd.Printf("size: %d\n", branch.GetSize())
+	cmd.Printf("count: %d\n", branch.GetCount())
 }
+
 func branchUpdateCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:     "update",
