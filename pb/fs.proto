@@ -5,10 +5,6 @@ package pb;
 option go_package = "github.com/lazyxu/kfs/pb";
 
 service KoalaFS {
-  rpc branchCheckout (BranchReq) returns (BranchResp) {
-  }
-  rpc branchInfo (BranchInfoReq) returns (BranchInfoResp) {
-  }
   rpc upload (stream UploadReq) returns (stream UploadResp) {
   }
 }

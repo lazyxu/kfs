@@ -2,34 +2,59 @@ package server
 
 import (
 	"context"
-	"fmt"
-
+	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/pb"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
 )
 
-func (s *KoalaFSServer) BranchCheckout(ctx context.Context, req *pb.BranchReq) (resp *pb.BranchResp, err error) {
-	resp = new(pb.BranchResp)
-	fmt.Println("BranchCheckout", req)
-	resp.Exist, err = s.kfsCore.Checkout(ctx, req.BranchName)
+func handleBranchCheckout(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
+	// read
+	branchName, err := rpcutil.ReadString(conn)
 	if err != nil {
-		return
+		return err
 	}
-	return
+	exist, err := kfsCore.Checkout(context.TODO(), branchName)
+	if err != nil {
+		return err
+	}
+
+	// write
+	err = rpcutil.WriteOK(conn)
+	if err != nil {
+		return err
+	}
+	err = rpcutil.WriteProto(conn, &pb.BranchResp{Exist: exist})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (s *KoalaFSServer) BranchInfo(ctx context.Context, req *pb.BranchInfoReq) (resp *pb.BranchInfoResp, err error) {
-	resp = new(pb.BranchInfoResp)
-	fmt.Println("BranchInfo", req)
-	branch, err := s.kfsCore.BranchInfo(ctx, req.BranchName)
+func handleBranchInfo(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
+	// read
+	branchName, err := rpcutil.ReadString(conn)
+	if err != nil {
+		return err
+	}
+	branch, err := kfsCore.BranchInfo(context.TODO(), branchName)
 	if err != nil {
 		return
 	}
-	resp = &pb.BranchInfoResp{
+
+	// write
+	err = rpcutil.WriteOK(conn)
+	if err != nil {
+		return err
+	}
+	err = rpcutil.WriteProto(conn, &pb.BranchInfoResp{
 		Name:        branch.GetName(),
 		Description: branch.GetDescription(),
 		CommitId:    branch.GetCommitId(),
 		Size:        branch.GetSize(),
 		Count:       branch.GetCount(),
+	})
+	if err != nil {
+		return err
 	}
-	return
+	return nil
 }

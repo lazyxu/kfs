@@ -96,6 +96,50 @@ func ReqResp(socketServerAddr string, commandType rpcutil.CommandType, req proto
 	return nil
 }
 
+func ReqStringResp(socketServerAddr string, commandType rpcutil.CommandType, req string, resp proto.Message) (err error) {
+	conn, err := net.Dial("tcp", socketServerAddr)
+	if err != nil {
+		return
+	}
+	defer conn.Close()
+
+	// write
+	err = rpcutil.WriteCommandType(conn, commandType)
+	if err != nil {
+		return
+	}
+	err = rpcutil.WriteString(conn, req)
+	if err != nil {
+		return
+	}
+
+	// read
+	status, errMsg, err := rpcutil.ReadStatus(conn)
+	if err != nil {
+		return
+	}
+	if status != rpcutil.EOK {
+		err = errors.New(errMsg)
+		return
+	}
+
+	err = rpcutil.ReadProto(conn, resp)
+	if err != nil {
+		return
+	}
+
+	// exit
+	status, errMsg, err = rpcutil.ReadStatus(conn)
+	if err != nil {
+		return
+	}
+	if status != rpcutil.EOK {
+		err = errors.New(errMsg)
+		return
+	}
+	return nil
+}
+
 func ReqRespN(socketServerAddr string, commandType rpcutil.CommandType, req proto.Message, resp proto.Message,
 	onLength func(int64) error, onDirItem func() error) (err error) {
 	conn, err := net.Dial("tcp", socketServerAddr)

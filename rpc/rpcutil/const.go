@@ -15,6 +15,9 @@ const (
 	CommandDownload
 
 	CommandCat
+
+	CommandBranchCheckout
+	CommandBranchInfo
 )
 
 type Status = int8

@@ -22,6 +22,7 @@ var commandHandlers = make(map[rpcutil.CommandType]CommandHandler)
 
 func registerCommand(commandType rpcutil.CommandType, handler CommandHandler) {
 	commandHandlers[commandType] = func(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+		println("handle command", commandType)
 		err := handler(kfsCore, conn)
 		if e, ok := err.(*rpcutil.UnexpectedError); ok {
 			return e
@@ -75,6 +76,8 @@ func init() {
 	registerCommand(rpcutil.CommandTouch, handleTouch)
 	registerCommand(rpcutil.CommandDownload, handleDownload)
 	registerCommand(rpcutil.CommandCat, handleCat)
+	registerCommand(rpcutil.CommandBranchCheckout, handleBranchCheckout)
+	registerCommand(rpcutil.CommandBranchInfo, handleBranchInfo)
 }
 
 func Socket(listener net.Listener, kfsCore *core.KFS) error {
