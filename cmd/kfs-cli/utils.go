@@ -15,14 +15,12 @@ import (
 func loadFs(cmd *cobra.Command) (*client.RpcFs, string, bool) {
 	loadConfigFile(cmd)
 	verbose := cmd.Flag(VerboseStr).Value.String() != "false"
-	grpcServerAddr := viper.GetString(GrpcServerStr)
 	serverServerAddr := viper.GetString(SocketServerStr)
 	branchName := viper.GetString(BranchNameStr)
 	if verbose {
 		fmt.Printf("%s: %s\n", BranchNameStr, branchName)
 	}
 	return &client.RpcFs{
-		GrpcServerAddr:   grpcServerAddr,
 		SocketServerAddr: serverServerAddr,
 	}, branchName, verbose
 }

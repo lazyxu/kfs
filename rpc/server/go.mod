@@ -2,8 +2,6 @@ module github.com/lazyxu/kfs/rpc/server
 
 go 1.18
 
-require google.golang.org/grpc v1.46.2
-
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect

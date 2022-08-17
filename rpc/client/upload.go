@@ -16,18 +16,12 @@ import (
 )
 
 func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, srcPath string, config core.UploadConfig) (commit sqlite.Commit, branch sqlite.Branch, err error) {
-	conn, c, err := getGRPCClient(fs)
-	if err != nil {
-		return
-	}
-	defer conn.Close()
 
 	srcPath, err = filepath.Abs(srcPath)
 	if err != nil {
 		return
 	}
 	handlers := &uploadHandlers{
-		c:                c,
 		uploadProcess:    config.UploadProcess,
 		encoder:          config.Encoder,
 		verbose:          config.Verbose,

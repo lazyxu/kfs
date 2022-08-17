@@ -4,14 +4,6 @@ package pb;
 
 option go_package = "github.com/lazyxu/kfs/pb";
 
-service KoalaFS {
-  rpc upload (stream UploadReq) returns (stream UploadResp) {
-  }
-}
-
-message Void {
-}
-
 message DownloadReq {
   string branchName = 1;
   string path = 2;
@@ -21,20 +13,12 @@ message DownloadResp {
   bytes bytes = 1;
 }
 
-message BranchInfoReq {
-  string branchName = 1;
-}
-
 message BranchInfoResp {
   string name = 1;
   string description = 2;
   uint64 commitId = 3;
   uint64 size = 4;
   uint64 count = 5;
-}
-
-message BranchReq {
-  string branchName = 1;
 }
 
 message BranchResp {

@@ -18,7 +18,6 @@ const kfsRoot = "test-root-dir"
 
 var (
 	socketPort int
-	grpcPort   int
 )
 
 func initServer() error {
@@ -32,17 +31,6 @@ func initServer() error {
 		return err
 	}
 	socketPort = socketLis.Addr().(*net.TCPAddr).Port
-	grpcLis, err := net.Listen("tcp", "0.0.0.0:0")
-	if err != nil {
-		return err
-	}
-	grpcPort = grpcLis.Addr().(*net.TCPAddr).Port
-	go func() {
-		err = server.Grpc(grpcLis, kfsCore)
-		if err != nil {
-			return
-		}
-	}()
 	go func() {
 		err = server.Socket(socketLis, kfsCore)
 		if err != nil {
@@ -58,7 +46,6 @@ func init() {
 		panic(err)
 	}
 	stdout, stderr, err := execute([]string{"init",
-		"--grpc-server", "localhost:" + strconv.Itoa(grpcPort),
 		"--socket-server", "localhost:" + strconv.Itoa(socketPort),
 		"--config-file", ".kfs.json"})
 	if err != nil {

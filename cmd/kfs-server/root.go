@@ -24,15 +24,14 @@ import (
 )
 
 const (
-	kfsRootStr    = "kfs-root"
-	backupPathStr = "backup-path"
-	branchNameStr = "branch-name"
-	pathStr       = "path"
-	portStr       = "port"
+	kfsRootStr      = "kfs-root"
+	SocketServerStr = "socket-server"
+	WebServerStr    = "web-server"
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringP(portStr, "p", "0", "grpc port")
+	rootCmd.PersistentFlags().String(SocketServerStr, "1123", "socket server port")
+	rootCmd.PersistentFlags().String(WebServerStr, "1124", "web server port")
 }
 
 //go:embed build/*
@@ -51,13 +50,22 @@ var rootCmd = &cobra.Command{
 			}
 		}()
 		kfsRoot := args[0]
-		portString := cmd.Flag(portStr).Value.String()
-		port, err := strconv.Atoi(portString)
+		socketPortString := cmd.Flag(SocketServerStr).Value.String()
+		socketPort, err := strconv.Atoi(socketPortString)
 		if err != nil {
 			return
 		}
-		if port != 0 && port < 1024 || port > 65535 {
-			err = errors.New("port should be between 1024 and 15535, actual " + portString)
+		if socketPort != 0 && socketPort < 1024 || socketPort > 65535 {
+			err = errors.New("socketPort should be between 1024 and 65535, actual " + socketPortString)
+			return
+		}
+		webPortString := cmd.Flag(SocketServerStr).Value.String()
+		webPort, err := strconv.Atoi(webPortString)
+		if err != nil {
+			return
+		}
+		if webPort != 0 && webPort < 1024 || webPort > 65535 {
+			err = errors.New("webPort should be between 1024 and 65535, actual " + webPortString)
 			return
 		}
 		kfsCore, _, err := core.New(kfsRoot)
@@ -75,7 +83,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		go func() {
-			lis, err := net.Listen("tcp", "0.0.0.0:1124")
+			lis, err := net.Listen("tcp", "0.0.0.0:"+socketPortString)
 			if err != nil {
 				panic(err)
 			}
@@ -84,21 +92,11 @@ var rootCmd = &cobra.Command{
 				panic(err)
 			}
 		}()
-		go func() {
-			http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-				wsHandler(w, r, kfsCore)
-			})
-			http.Handle("/", http.FileServer(AddPrefix(http.FS(build), "build")))
-			log.Fatal(http.ListenAndServe("0.0.0.0:1125", nil))
-		}()
-		lis, err := net.Listen("tcp", "0.0.0.0:1123")
-		if err != nil {
-			panic(err)
-		}
-		err = server.Grpc(lis, kfsCore)
-		if err != nil {
-			return
-		}
+		http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+			wsHandler(w, r, kfsCore)
+		})
+		http.Handle("/", http.FileServer(AddPrefix(http.FS(build), "build")))
+		log.Fatal(http.ListenAndServe("0.0.0.0:"+webPortString, nil))
 	},
 }
 

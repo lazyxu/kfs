@@ -3,11 +3,6 @@ module github.com/lazyxu/kfs/rpc/client
 go 1.18
 
 require (
-	github.com/silenceper/pool v1.0.0
-	google.golang.org/grpc v1.46.2
-)
-
-require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

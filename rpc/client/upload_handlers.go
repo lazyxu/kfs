@@ -15,7 +15,6 @@ import (
 
 type uploadHandlers struct {
 	core.DefaultWalkHandlers[fileResp]
-	c                pb.KoalaFSClient
 	uploadProcess    core.UploadProcess
 	concurrent       int
 	encoder          string
