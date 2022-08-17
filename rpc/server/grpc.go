@@ -18,6 +18,6 @@ func Grpc(listener net.Listener, kfsCore *core.KFS) error {
 	server := &KoalaFSServer{kfsCore: kfsCore}
 	s := grpc.NewServer()
 	pb.RegisterKoalaFSServer(s, server)
-	println("GRPC listening on", listener.Addr().String())
+	println("GRPC server listening at:", listener.Addr().String())
 	return s.Serve(listener)
 }

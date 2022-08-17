@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	"io"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -59,11 +59,9 @@ func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, 
 	}
 	fileOrDir := walkResp.fileOrDir
 	modifyTime := uint64(info.ModTime().UnixNano())
-	client, err := c.Upload(ctx)
-	if err != nil {
-		return
-	}
-	err = client.Send(&pb.UploadReq{
+
+	var resp pb.UploadResp
+	err = ReqResp(fs.SocketServerAddr, rpcutil.CommandUploadDirItem, &pb.UploadReq{
 		Root: &pb.UploadReqRoot{
 			BranchName: branchName,
 			Path:       dstPath,
@@ -80,18 +78,7 @@ func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, 
 				AccessTime: modifyTime,
 			},
 		},
-	})
-	if err == io.EOF {
-		err = nil
-	}
-	if err != nil {
-		return
-	}
-	resp, err := client.Recv()
-	if err != nil {
-		return
-	}
-	err = client.CloseSend()
+	}, &resp)
 	if err != nil {
 		return
 	}

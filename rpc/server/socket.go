@@ -73,6 +73,7 @@ func init() {
 	registerCommand(rpcutil.CommandReset, handleReset)
 	registerCommand(rpcutil.CommandList, handleList)
 	registerCommand(rpcutil.CommandUpload, handleUpload)
+	registerCommand(rpcutil.CommandUploadDirItem, handleUploadDirItem)
 	registerCommand(rpcutil.CommandTouch, handleTouch)
 	registerCommand(rpcutil.CommandDownload, handleDownload)
 	registerCommand(rpcutil.CommandCat, handleCat)
@@ -81,7 +82,7 @@ func init() {
 }
 
 func Socket(listener net.Listener, kfsCore *core.KFS) error {
-	println("Socket listening on", listener.Addr().String())
+	println("Socket server listening at:", listener.Addr().String())
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -79,20 +80,11 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 				AccessTime: modifyTime,
 			}
 		}
-		var client pb.KoalaFS_UploadClient
-		client, err = h.c.Upload(ctx)
-		if err != nil {
-			return
-		}
-		err = client.Send(&pb.UploadReq{
+
+		var resp pb.UploadResp
+		err = ReqResp(h.socketServerAddr, rpcutil.CommandUploadDirItem, &pb.UploadReq{
 			Dir: &pb.UploadReqDir{DirItem: dirItems},
-		})
-		var resp *pb.UploadResp
-		resp, err = client.Recv()
-		if err != nil {
-			return
-		}
-		err = client.CloseSend()
+		}, &resp)
 		if err != nil {
 			return
 		}

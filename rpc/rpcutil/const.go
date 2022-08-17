@@ -10,6 +10,7 @@ const (
 	CommandList
 
 	CommandUpload
+	CommandUploadDirItem
 	CommandTouch
 
 	CommandDownload
