@@ -82,7 +82,6 @@ func init() {
 }
 
 func Socket(listener net.Listener, kfsCore *core.KFS) error {
-	println("Socket server listening at:", listener.Addr().String())
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

@@ -59,7 +59,7 @@ var rootCmd = &cobra.Command{
 			err = errors.New("socketPort should be between 1024 and 65535, actual " + socketPortString)
 			return
 		}
-		webPortString := cmd.Flag(SocketServerStr).Value.String()
+		webPortString := cmd.Flag(WebServerStr).Value.String()
 		webPort, err := strconv.Atoi(webPortString)
 		if err != nil {
 			return
@@ -87,6 +87,7 @@ var rootCmd = &cobra.Command{
 			if err != nil {
 				panic(err)
 			}
+			println("Socket server listening at:", lis.Addr().String())
 			err = server.Socket(lis, kfsCore)
 			if err != nil {
 				panic(err)
@@ -96,7 +97,15 @@ var rootCmd = &cobra.Command{
 			wsHandler(w, r, kfsCore)
 		})
 		http.Handle("/", http.FileServer(AddPrefix(http.FS(build), "build")))
-		log.Fatal(http.ListenAndServe("0.0.0.0:"+webPortString, nil))
+		lis, err := net.Listen("tcp", "0.0.0.0:"+webPortString)
+		if err != nil {
+			panic(err)
+		}
+		println("Web server listening at:", lis.Addr().String())
+		err = http.Serve(lis, nil)
+		if err != nil {
+			panic(err)
+		}
 	},
 }
 
