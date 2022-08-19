@@ -24,7 +24,7 @@ module.exports = {
         // Customize your rules
         "max-params": "off",
         "prefer-arrow-callback": "off",
-        "no-unused-vars": "warn",
+        "no-unused-vars": "off",
         "react/no-unescaped-entities": "off"
     },
 };
