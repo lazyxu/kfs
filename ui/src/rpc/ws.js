@@ -141,9 +141,16 @@ export function open(branchName, path, onFile, onTotal, onDirItem) {
           let size = new Int32Array(data)[0];
           console.log('size', data, size);
           if (size !== 0) {
-            data = await receiver.recv();
-            console.log('file', data);
-            onFile && onFile(data);
+            let buf = new Uint8Array(size);
+            let offset = 0;
+            while (offset < size) {
+              data = await receiver.recv();
+              console.log('file', buf, data, offset, offset + data.byteLength, size);
+              buf.set(new Uint8Array(data), offset);
+              console.log('buf', buf);
+              offset += data.byteLength;
+            }
+            onFile && onFile(buf);
           }
           resolve(0);
           return;
