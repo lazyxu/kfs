@@ -8,6 +8,7 @@ const (
 	CommandReset
 
 	CommandList
+	CommandOpen
 
 	CommandUpload
 	CommandUploadDirItem

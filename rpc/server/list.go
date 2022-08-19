@@ -22,12 +22,12 @@ func handleList(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
 	}
 
 	// write
-	err = rpcutil.WriteOK(conn)
-	if err != nil {
-		return err
-	}
 	fmt.Println("Socket.List", req.String())
 	err = kfsCore.List(context.TODO(), req.BranchName, req.Path, func(n int) error {
+		err = rpcutil.WriteOK(conn)
+		if err != nil {
+			return err
+		}
 		return binary.Write(conn, binary.LittleEndian, int64(n))
 	}, func(dirItem sqlite.IDirItem) error {
 		return rpcutil.WriteProto(conn, &pb.DirItem{

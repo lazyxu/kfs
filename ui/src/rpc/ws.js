@@ -71,7 +71,10 @@ class WebSocketReceiver {
   }
 }
 
+const CommandPing = 0;
+const CommandReset = 1;
 const CommandList = 2;
+const CommandOpen = 3;
 
 export function list(branchName, path, onTotal, onDirItem) {
   console.log('list', branchName, path, path.join('/'))
@@ -105,6 +108,62 @@ export function list(branchName, path, onTotal, onDirItem) {
         code = new Int8Array(data)[0];
         // console.log('exit code', code);
         resolve(code);
+      } catch (e) {
+        reject(e);
+      } finally {
+        ws.close();
+      }
+    });
+  });
+}
+
+export function open(branchName, path, onFile, onTotal, onDirItem) {
+  console.log('open', branchName, path, path.join('/'))
+  return new Promise((resolve, reject) => {
+    const ws = new WebSocket(getConfig().wsHost);
+    ws.addEventListener('open', async () => {
+      try {
+        ws.send(new Uint8Array([CommandOpen]));
+        let reqData = await encode("PathReq", { branchName, path: path.join('/') });
+        // console.log('reqData', reqData);
+        ws.send(new Int32Array([reqData.length, 0]));
+        ws.send(reqData);
+
+        let receiver = new WebSocketReceiver(ws);
+        let data = await receiver.recv();
+        let code = new Int8Array(data)[0];
+        // console.log('code', data, code);
+        data = await receiver.recv();
+        let mode = new Int32Array(data)[0];
+        console.log('mode', data, mode);
+        if (mode >= 0) {
+          data = await receiver.recv();
+          let size = new Int32Array(data)[0];
+          console.log('size', data, size);
+          if (size !== 0) {
+            data = await receiver.recv();
+            console.log('file', data);
+            onFile && onFile(data);
+          }
+          resolve(0);
+          return;
+        }
+        data = await receiver.recv();
+        let total = new Int32Array(data)[0];
+        // console.log('total', data, total);
+        onTotal && onTotal(total);
+        for (let i = 0; i < total; i++) {
+          data = await receiver.recv();
+          // console.log('length', new Int32Array(data)[0]);
+          data = await receiver.recv();
+          let resp = await decode("DirItem", data);
+          onDirItem && onDirItem(resp, i);
+          // console.log('resp', resp);
+        }
+        data = await receiver.recv();
+        code = new Int8Array(data)[0];
+        // console.log('exit code', code);
+        resolve(1);
       } catch (e) {
         reject(e);
       } finally {

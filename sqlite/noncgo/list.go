@@ -1,6 +1,8 @@
 package noncgo
 
-import "context"
+import (
+	"context"
+)
 
 func (db *DB) List(ctx context.Context, branchName string, splitPath []string) (dirItems []DirItem, err error) {
 	conn := db.getConn()

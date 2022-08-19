@@ -79,6 +79,7 @@ func init() {
 	registerCommand(rpcutil.CommandCat, handleCat)
 	registerCommand(rpcutil.CommandBranchCheckout, handleBranchCheckout)
 	registerCommand(rpcutil.CommandBranchInfo, handleBranchInfo)
+	registerCommand(rpcutil.CommandOpen, handleOpen)
 }
 
 func Socket(listener net.Listener, kfsCore *core.KFS) error {

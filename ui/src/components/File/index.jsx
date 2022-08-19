@@ -1,11 +1,24 @@
 import './index.scss';
 import Icon from "components/Icon/Icon";
-import { useClick } from "use";;
-
-import { list } from "rpc/ws";
+import {useClick} from "use";
+import {open} from "rpc/ws";
 import useResourceManager from 'hox/resourceManager';
 
-export default ({ name, type }) => {
+function downloadURI(uri, name) {
+    let link = document.createElement("a");
+    link.download = name;
+    link.href = uri;
+    link.click();
+}
+
+function downloader(data, name) {
+    let blob = new Blob([data]);
+    let url = window.URL.createObjectURL(blob);
+    downloadURI(url, name);
+    window.URL.revokeObjectURL(url);
+}
+
+export default ({name, type}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     const onClick = e => {
         console.log('onClick')
@@ -13,28 +26,32 @@ export default ({ name, type }) => {
     const onDoubleClick = e => {
         console.log('onDoubleClick')
     }
-    const open = name => {
+    const onOpen = name => {
         console.log(name);
         (async () => {
             let dirItems;
-            let { filePath, branchName } = resourceManager;
-            filePath.push(name);
-            await list(branchName, filePath, (total) => {
+            let {filePath, branchName} = resourceManager;
+            filePath = [...filePath, name];
+            let isDir = await open(branchName, filePath, (data) => {
+                downloader(data, name);
+            }, (total) => {
                 dirItems = new Array(total);
             }, (dirItem, i) => {
                 dirItems[i] = dirItem;
             });
-            setResourceManager(prev => {
-                return { ...prev, branchName, filePath, dirItems };
-            });
+            if (isDir) {
+                setResourceManager(prev => {
+                    return {...prev, branchName, filePath, dirItems};
+                });
+            }
         })()
     }
     return (
         <div className='file-normal'>
             <div onMouseDown={useClick(onClick, () => {
-                open(name);
+                onOpen(name);
             })}>
-                <Icon icon={type === 'dir' ? 'floderblue' : 'file3'} className='file-icon' />
+                <Icon icon={type === 'dir' ? 'floderblue' : 'file3'} className='file-icon'/>
             </div>
             <div className='file-name-wrapper'>
                 <p className='file-name' onMouseDown={useClick(onClick, onDoubleClick)}>{name}</p>
