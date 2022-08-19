@@ -1,9 +1,10 @@
 import { expect, test } from '@jest/globals'
 import { list } from './ws';
+import sysConfig from '../kfsConfig/default';
 
 test('renders src/App.js', () => {
     return new Promise((resolve, reject) => {
-        list('master', [], (total) => {
+        list(sysConfig, 'master', [], (total) => {
             console.log('total', total);
         }, (dirItem) => {
             console.log('dirItem', dirItem);

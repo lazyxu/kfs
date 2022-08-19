@@ -20,32 +20,24 @@ export default () => {
                 <span>主题</span>
               </div>
               <div className={styles.configs_item_values}>
-                <input type="radio" name="theme" checked={sysConfig.theme === 'light'} onChange={() => setSysConfig(c => ({ ...c, theme: 'light' }))} />
+                <input type="radio" name="theme" checked={sysConfig.theme === 'light'} onChange={() => setSysConfig(c => ({ ...c, theme: 'light' }))} disabled />
                 <span> 浅色 </span>
                 <input type="radio" name="theme" checked={sysConfig.theme === 'dark'} onChange={() => setSysConfig(c => ({ ...c, theme: 'dark' }))} />
                 <span> 深色 </span>
-                  {process.env.REACT_APP_PLATFORM === 'web' ? [] : <>
-                      <input type="radio" name="theme" checked={sysConfig.theme === 'system'}
-                             onChange={() => setSysConfig(c => ({...c, theme: 'system'}))}/>
-                      <span> 跟随系统 </span>
-                  </>
-                  }
+                {process.env.REACT_APP_PLATFORM === 'web' ? [] : <>
+                  <input type="radio" name="theme" checked={sysConfig.theme === 'system'}
+                    onChange={() => setSysConfig(c => ({ ...c, theme: 'system' }))} disabled />
+                  <span> 跟随系统 </span>
+                </>
+                }
               </div>
             </li>
             <li className={styles.configs_item}>
               <div className={styles.configs_item_key}>
-                <span>用户名</span>
+                <span>服务器</span>
               </div>
               <div className={styles.configs_item_values}>
-                <input type="text" value={sysConfig.username} onChange={e => setSysConfig(c => ({ ...c, username: e.target.value }))} />
-              </div>
-            </li>
-            <li className={styles.configs_item}>
-              <div className={styles.configs_item_key}>
-                <span>refreshToken</span>
-              </div>
-              <div className={styles.configs_item_values}>
-                <input type="text" value={sysConfig.refreshToken} onChange={e => setSysConfig(c => ({ ...c, refreshToken: e.target.value }))} />
+                <input type="text" value={sysConfig.webServer} onChange={e => setSysConfig(c => ({ ...c, webServer: e.target.value }))} />
               </div>
             </li>
           </ul>

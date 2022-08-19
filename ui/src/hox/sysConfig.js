@@ -2,12 +2,7 @@ import { useState, useEffect } from 'react';
 import { createGlobalStore } from 'hox';
 
 import kfsConfig from 'kfsConfig/localStorage';
-
-const defaultConfig = {
-  theme: 'dark',
-  username: '17161951517',
-  refreshToken: '96246b97eb994fcaa4e8abb553d502bb',
-};
+import defaultConfig from 'kfsConfig/default';
 
 function useFunc() {
   const [sysConfig, setSysConfig] = useState(kfsConfig.get() || defaultConfig);

@@ -1,8 +1,9 @@
 import './index.scss';
 import Icon from "components/Icon/Icon";
-import {useClick} from "use";
-import {open} from "rpc/ws";
+import { useClick } from "use";
+import { open } from "rpc/ws";
 import useResourceManager from 'hox/resourceManager';
+import useSysConfig from 'hox/sysConfig';
 
 function downloadURI(uri, name) {
     let link = document.createElement("a");
@@ -18,8 +19,9 @@ function downloader(data, name) {
     window.URL.revokeObjectURL(url);
 }
 
-export default ({name, type}) => {
+export default ({ name, type }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
+    const { sysConfig } = useSysConfig();
     const onClick = e => {
         console.log('onClick')
     }
@@ -30,9 +32,9 @@ export default ({name, type}) => {
         console.log(name);
         (async () => {
             let dirItems;
-            let {filePath, branchName} = resourceManager;
+            let { filePath, branchName } = resourceManager;
             filePath = [...filePath, name];
-            let isDir = await open(branchName, filePath, (data) => {
+            let isDir = await open(sysConfig, branchName, filePath, (data) => {
                 downloader(data, name);
             }, (total) => {
                 dirItems = new Array(total);
@@ -41,7 +43,7 @@ export default ({name, type}) => {
             });
             if (isDir) {
                 setResourceManager(prev => {
-                    return {...prev, branchName, filePath, dirItems};
+                    return { ...prev, branchName, filePath, dirItems };
                 });
             }
         })()
@@ -51,7 +53,7 @@ export default ({name, type}) => {
             <div onMouseDown={useClick(onClick, () => {
                 onOpen(name);
             })}>
-                <Icon icon={type === 'dir' ? 'floderblue' : 'file3'} className='file-icon'/>
+                <Icon icon={type === 'dir' ? 'floderblue' : 'file3'} className='file-icon' />
             </div>
             <div className='file-name-wrapper'>
                 <p className='file-name' onMouseDown={useClick(onClick, onDoubleClick)}>{name}</p>

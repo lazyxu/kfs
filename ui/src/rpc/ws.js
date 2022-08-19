@@ -76,10 +76,10 @@ const CommandReset = 1;
 const CommandList = 2;
 const CommandOpen = 3;
 
-export function list(branchName, path, onTotal, onDirItem) {
+export function list(sysConfig, branchName, path, onTotal, onDirItem) {
   console.log('list', branchName, path, path.join('/'))
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(getConfig().wsHost);
+    const ws = new WebSocket(`ws://${sysConfig.webServer}/ws`);
     ws.addEventListener('open', async () => {
       try {
         ws.send(new Uint8Array([CommandList]));
@@ -117,10 +117,10 @@ export function list(branchName, path, onTotal, onDirItem) {
   });
 }
 
-export function open(branchName, path, onFile, onTotal, onDirItem) {
+export function open(sysConfig, branchName, path, onFile, onTotal, onDirItem) {
   console.log('open', branchName, path, path.join('/'))
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(getConfig().wsHost);
+    const ws = new WebSocket(`ws://${sysConfig.webServer}/ws`);
     ws.addEventListener('open', async () => {
       try {
         ws.send(new Uint8Array([CommandOpen]));

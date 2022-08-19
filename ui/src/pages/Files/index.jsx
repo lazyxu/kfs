@@ -5,14 +5,16 @@ import File from "../../components/File";
 import styles from './index.module.scss';
 import FilePath from "../../components/FilePath";
 import useResourceManager from 'hox/resourceManager';
+import useSysConfig from 'hox/sysConfig';
 
 function App() {
     const [resourceManager, setResourceManager] = useResourceManager();
+    const { sysConfig } = useSysConfig();
     useEffect(() => {
         (async () => {
             let dirItems;
             let { filePath, branchName } = resourceManager;
-            await list(branchName, filePath, (total) => {
+            await list(sysConfig, branchName, filePath, (total) => {
                 dirItems = new Array(total);
             }, (dirItem, i) => {
                 dirItems[i] = dirItem;
