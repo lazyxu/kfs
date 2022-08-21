@@ -32,14 +32,35 @@ export default () => {
                 }
               </div>
             </li>
-            <li className={styles.configs_item}>
-              <div className={styles.configs_item_key}>
-                <span>服务器</span>
-              </div>
-              <div className={styles.configs_item_values}>
-                <input type="text" value={sysConfig.webServer} onChange={e => setSysConfig(c => ({ ...c, webServer: e.target.value }))} />
-              </div>
-            </li>
+            {process.env.NODE_ENV === 'production' ? [] :
+              <li className={styles.configs_item}>
+                <div className={styles.configs_item_key}>
+                  <span>Web服务器</span>
+                </div>
+                <div className={styles.configs_item_values}>
+                  <input type="text" value={sysConfig.webServer} onChange={e => setSysConfig(c => ({ ...c, webServer: e.target.value }))} />
+                </div>
+              </li>
+            }
+            {process.env.REACT_APP_PLATFORM === 'web' ? [] : <>
+              <li className={styles.configs_item}>
+                <div className={styles.configs_item_key}>
+                  <span>Socket服务器</span>
+                </div>
+                <div className={styles.configs_item_values}>
+                  <input type="text" value={sysConfig.socketServer} onChange={e => setSysConfig(c => ({ ...c, socketServer: e.target.value }))} />
+                </div>
+              </li>
+              <li className={styles.configs_item}>
+                <div className={styles.configs_item_key}>
+                  <span>客户端端口</span>
+                </div>
+                <div className={styles.configs_item_values}>
+                  <input type="text" value={sysConfig.port} disabled />
+                </div>
+              </li>
+            </>
+            }
           </ul>
         )}
     </div>

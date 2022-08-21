@@ -1,3 +1,4 @@
+kfs-client
 *.proto
 electron-*
 

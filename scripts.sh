@@ -87,6 +87,10 @@ case $1 in
         ;;
 
       electron)
+        cd $root/cmd/kfs-client
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-client
+        cp kfs-client $root/ui
         cd $root/ui
         yarn
         NODE_ENV=production REACT_APP_PLATFORM=$(go env GOOS) BUILD_PATH=electron-production PUBLIC_URL=. yarn build

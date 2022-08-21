@@ -19,8 +19,8 @@ func main() {
 
 func rootCmd() *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "kfs",
-		Short: "Kfs is file system used to backup files.",
+		Use:   "kfs-cli",
+		Short: "Kfs-cli is file system used to backup files.",
 	}
 	home, err := homedir.Dir()
 	if err != nil {

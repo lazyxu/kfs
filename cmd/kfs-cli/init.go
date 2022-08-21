@@ -13,13 +13,13 @@ func initCmd() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use: "init",
 		Example: `
-kfs-cli init -b master --socket-server localhost:1123
+kfs-cli init -b master --socket-server localhost:1124
 `,
 		Args: cobra.RangeArgs(0, 0),
 		Run:  runInit,
 	}
 	cmd.PersistentFlags().StringP(BranchNameStr, "b", "master", "default branch name")
-	cmd.PersistentFlags().String(SocketServerStr, "localhost:1123", "socket server address")
+	cmd.PersistentFlags().String(SocketServerStr, "localhost:1124", "socket server address")
 	return cmd
 }
 

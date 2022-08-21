@@ -1,11 +1,39 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { app, BrowserWindow, dialog, ipcMain, Menu } = require('electron');
+const path = require('path');
+const fs = require('fs');
 
 if (!app.isPackaged) {
   require('electron-reloader')(module);
 }
 
-const path = require('path');
+if (app.isPackaged) {
+  let spawn = require('child_process').spawn;
+  let configFilename = 'kfs-config.json';
+  let configPath = path.join(process.resourcesPath, configFilename);
+  console.log('spawn kfs-electron');
+  let child = spawn('./kfs-electron', [
+    '127.0.0.1:1124',
+  ]);
+  let regex = new RegExp(/^Websocket server listening at: .+:(\d+)\n$/);
+  child.stdout.on('data', function (chunk) {
+    let stdout = chunk.toString();
+    console.log('kfs-electron stdout', stdout);
+    let results = regex.exec(stdout);
+    if (results && results[1]) {
+      const port = results[1];
+      console.log('port', results[1]);
+      const config = fs.readFileSync(configPath).toString();
+      const json = JSON.parse(config);
+      json.port = port;
+      fs.writeFileSync(configPath, JSON.stringify(json, undefined, 2), { flag: 'w+' });
+    }
+  });
+  child.stderr.on('data', function (chunk) {
+    console.log('kfs-electron stderr', chunk.toString());
+  });
+}
+
 const { getProcesses } = require('./processManager');
 
 const publicPath = 'electron-' + (app.isPackaged ? 'production' : 'development');
@@ -29,7 +57,7 @@ function createWindow() {
       nativeWindowOpen: true,
       remote: true,
       sandbox: false,
-      nodeIntegrationInSubFrames: true, //for subContent nodeIntegration Enable
+      nodeIntegrationInSubFrames: true, // for subContent nodeIntegration Enable
       // webviewTag:true //for webView
     },
     icon: 'public/icon512.png',

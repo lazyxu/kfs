@@ -30,8 +30,8 @@ const (
 )
 
 func init() {
-	rootCmd.PersistentFlags().String(SocketServerStr, "1123", "socket server port")
-	rootCmd.PersistentFlags().String(WebServerStr, "1124", "web server port")
+	rootCmd.PersistentFlags().String(SocketServerStr, "1124", "socket server port")
+	rootCmd.PersistentFlags().String(WebServerStr, "1123", "web server port")
 }
 
 //go:embed build/*
