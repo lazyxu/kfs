@@ -67,6 +67,9 @@ func download(ctx context.Context, kfsCore *core.KFS, conn AddrReadWriteCloser, 
 		return nil
 	}
 	rc, err := kfsCore.S.ReadWithSize(hash)
+	if err != nil {
+		return err
+	}
 	defer rc.Close()
 	err = binary.Write(conn, binary.LittleEndian, rc.Size())
 	if err != nil {

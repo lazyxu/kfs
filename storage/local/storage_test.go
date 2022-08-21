@@ -10,14 +10,14 @@ import (
 
 const testDir = "tmp"
 
-func TestNew(t *testing.T) {
+func testNew(t *testing.T, newStorage func(string) (Storage, error)) {
 	os.RemoveAll(testDir)
-	_, err := New(testDir)
+	_, err := newStorage(testDir)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	_, err = New(testDir)
+	_, err = newStorage(testDir)
 	if err != nil {
 		t.Error(err)
 		return
@@ -27,36 +27,36 @@ func TestNew(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	_, err = New(testDir)
+	_, err = newStorage(testDir)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 }
 
-func TestErrorHash(t *testing.T) {
+func testErrorHash(t *testing.T, newStorage func(string) (Storage, error)) {
 	os.RemoveAll(testDir)
-	s, err := New(testDir)
+	s, err := newStorage(testDir)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	_, err = s.Write("error-hash", bytes.NewReader([]byte("abc")))
+	_, err = Write(s, "error-hash", bytes.NewReader([]byte("abc")))
 	if err == nil {
 		t.Error("should have invalid hash")
 		return
 	}
 }
 
-func TestWriteTwice(t *testing.T) {
+func testWriteTwice(t *testing.T, newStorage func(string) (Storage, error)) {
 	os.RemoveAll(testDir)
-	s, err := New("tmp")
+	s, err := newStorage("tmp")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	hash, content := NewContent("abc")
-	exist, err := s.Write(hash, bytes.NewReader(content))
+	exist, err := Write(s, hash, bytes.NewReader(content))
 	if err != nil {
 		t.Error(err)
 		return
@@ -65,7 +65,7 @@ func TestWriteTwice(t *testing.T) {
 		t.Error("should not exist")
 		return
 	}
-	exist, err = s.Write(hash, bytes.NewReader(content))
+	exist, err = Write(s, hash, bytes.NewReader(content))
 	if err != nil {
 		t.Error(err)
 		return
@@ -76,9 +76,9 @@ func TestWriteTwice(t *testing.T) {
 	}
 }
 
-func TestConcurrentWrite(t *testing.T) {
+func testConcurrentWrite(t *testing.T, newStorage func(string) (Storage, error)) {
 	os.RemoveAll(testDir)
-	s, err := New("tmp")
+	s, err := newStorage("tmp")
 	if err != nil {
 		t.Error(err)
 		return
@@ -91,7 +91,7 @@ func TestConcurrentWrite(t *testing.T) {
 	for i := 0; i < n; i++ {
 		wg.Add(1)
 		go func() {
-			exist, err := s.Write(hash, bytes.NewReader(content))
+			exist, err := Write(s, hash, bytes.NewReader(content))
 			if err != nil {
 				errCnt += 1
 			}

@@ -10,12 +10,12 @@ import (
 
 type KFS struct {
 	Db   *sqlite.DB
-	S    *storage.Storage
+	S    storage.Storage
 	root string
 }
 
 func New(root string) (*KFS, bool, error) {
-	s, err := storage.New(root)
+	s, err := storage.NewStorage1(root)
 	if err != nil {
 		return nil, false, err
 	}

@@ -27,21 +27,21 @@ func TestSqlite(t *testing.T) {
 
 	ctx := context.Background()
 
-	s, err := storage.New("tmp")
+	s, err := storage.NewStorage0("tmp")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
 	hash1, content1 := storage.NewContent("")
-	_, err = s.Write(hash1, bytes.NewReader(content1))
+	_, err = storage.Write(s, hash1, bytes.NewReader(content1))
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
 	hash2, content2 := storage.NewContent("abc")
-	_, err = s.Write(hash2, bytes.NewReader(content2))
+	_, err = storage.Write(s, hash2, bytes.NewReader(content2))
 	if err != nil {
 		t.Error(err)
 		return
