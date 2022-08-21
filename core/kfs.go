@@ -8,6 +8,13 @@ import (
 	storage "github.com/lazyxu/kfs/storage/local"
 )
 
+type UploadConfig struct {
+	Encoder       string
+	UploadProcess UploadProcess
+	Concurrent    int
+	Verbose       bool
+}
+
 type KFS struct {
 	Db   *sqlite.DB
 	S    storage.Storage
