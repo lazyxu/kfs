@@ -138,7 +138,7 @@ func (db *DB) WriteDir(ctx context.Context, dirItems []DirItem) (dir Dir, err er
 	defer func() {
 		err = commitAndRollback(tx, err)
 	}()
-	return db.writeDir(ctx, tx, dirItems)
+	return db.writeDir(ctx, tx, dirItems, nil)
 }
 
 type TxOrDb interface {
@@ -146,7 +146,7 @@ type TxOrDb interface {
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
 }
 
-func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir Dir, err error) {
+func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem, insertDirItems []DirItem) (dir Dir, err error) {
 	dir.Cal(dirItems)
 	// TODO: error if size or count is not equal
 	_, err = tx.ExecContext(ctx, `
@@ -181,7 +181,7 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []DirItem) (dir 
 			err = stmt.Close()
 		}
 	}()
-	for _, dirItem := range dirItems {
+	for _, dirItem := range insertDirItems {
 		// TODO: override if duplicated
 		_, err = stmt.ExecContext(ctx,
 			dir.hash,
@@ -336,7 +336,7 @@ func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string)
 	defer func() {
 		err = commitAndRollback(tx, err)
 	}()
-	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]DirItem) error {
+	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]DirItem) ([]DirItem, error) {
 		i := len(dirItemsList) - 1
 		find := false
 		for j, dirItem := range dirItemsList[i] {
@@ -348,13 +348,13 @@ func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string)
 			}
 		}
 		if !find {
-			return errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
+			return nil, errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
 		}
-		return nil
+		return nil, nil
 	})
 }
 
-func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func([][]DirItem) error) (commit Commit, branch Branch, err error) {
+func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func([][]DirItem) ([]DirItem, error)) (commit Commit, branch Branch, err error) {
 	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
 		return
@@ -375,12 +375,12 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 		}
 		dirItemsList = append(dirItemsList, dirItems)
 	}
-	err = fn(dirItemsList)
+	insertDirItems, err := fn(dirItemsList)
 	if err != nil {
 		return
 	}
 	i := len(dirItemsList) - 1
-	dir, err := db.writeDir(ctx, tx, dirItemsList[i])
+	dir, err := db.writeDir(ctx, tx, dirItemsList[i], nil)
 	if err != nil {
 		return
 	}
@@ -393,7 +393,7 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 				break
 			}
 		}
-		dir, err = db.writeDir(ctx, tx, dirItemsList[i])
+		dir, err = db.writeDir(ctx, tx, dirItemsList[i], insertDirItems)
 		if err != nil {
 			return
 		}

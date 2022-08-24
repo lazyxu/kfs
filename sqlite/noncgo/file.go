@@ -65,7 +65,7 @@ func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []
 		err = db.writeBranch(ctx, tx, branch)
 		return
 	}
-	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]DirItem) error {
+	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]DirItem) ([]DirItem, error) {
 		i := len(dirItemsList) - 1
 		item.Name = splitPath[i]
 		find := false
@@ -79,7 +79,7 @@ func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []
 		if !find {
 			dirItemsList[i] = append(dirItemsList[i], item) // insert
 		}
-		return nil
+		return []DirItem{item}, nil
 	})
 }
 

@@ -80,7 +80,7 @@ func (db *DB) NewBranch(ctx context.Context, branchName string) (exist bool, err
 	defer func() {
 		err = commitAndRollback(tx, err)
 	}()
-	dir, err := db.writeDir(ctx, tx, nil)
+	dir, err := db.writeDir(ctx, tx, nil, nil)
 	if err != nil {
 		return
 	}
