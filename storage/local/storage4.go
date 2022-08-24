@@ -36,7 +36,7 @@ func NewStorage4(root string) (Storage, error) {
 var openedFiles [256]*os.File
 
 func (s *Storage4) getFile(hash string) (*os.File, error) {
-	id, err := strconv.Atoi(hash[:2])
+	id, err := strconv.ParseUint(hash[:2], 16, 8)
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +49,7 @@ func (s *Storage4) getFile(hash string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
+	openedFiles[id] = f
 	return f, nil
 }
 

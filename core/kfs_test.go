@@ -70,12 +70,12 @@ func storageUploadFiles(b *testing.B, newStorage func(root string) (storage.Stor
 		b.ResetTimer()
 		for j := 0; j < fileCount; j++ {
 			fileName := strconv.Itoa(j)
-			hash, content := storage.NewContent(strings.Repeat("x", fileSize+j))
+			hash, content := storage.NewContent(strconv.Itoa(j) + strings.Repeat("y", fileSize) + "\n")
 			mode := uint64(os.FileMode(0o700))
 			now := uint64(time.Now().UnixNano())
 			exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) (e error) {
 				w := io.MultiWriter(f, hasher)
-				_, e = io.CopyN(w, bytes.NewBuffer(content), int64(fileSize))
+				_, e = io.CopyN(w, bytes.NewBuffer(content), int64(len(content)))
 				return rpcutil.UnexpectedIfError(e)
 			})
 			if exist {

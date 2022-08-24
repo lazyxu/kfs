@@ -138,7 +138,7 @@ func (db *DB) WriteDir(ctx context.Context, dirItems []DirItem) (dir Dir, err er
 	defer func() {
 		err = commitAndRollback(tx, err)
 	}()
-	return db.writeDir(ctx, tx, dirItems, nil)
+	return db.writeDir(ctx, tx, dirItems, dirItems)
 }
 
 type TxOrDb interface {
@@ -380,7 +380,7 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 		return
 	}
 	i := len(dirItemsList) - 1
-	dir, err := db.writeDir(ctx, tx, dirItemsList[i], nil)
+	dir, err := db.writeDir(ctx, tx, dirItemsList[i], insertDirItems)
 	if err != nil {
 		return
 	}
@@ -393,7 +393,7 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 				break
 			}
 		}
-		dir, err = db.writeDir(ctx, tx, dirItemsList[i], insertDirItems)
+		dir, err = db.writeDir(ctx, tx, dirItemsList[i], nil)
 		if err != nil {
 			return
 		}
