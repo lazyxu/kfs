@@ -3,9 +3,11 @@ package noncgo
 import (
 	"context"
 	"os"
+
+	"github.com/lazyxu/kfs/dao"
 )
 
-func (db *DB) Open(ctx context.Context, branchName string, splitPath []string) (hash string, mode os.FileMode, dirItems []DirItem, err error) {
+func (db *DB) Open(ctx context.Context, branchName string, splitPath []string) (hash string, mode os.FileMode, dirItems []dao.DirItem, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	tx, err := conn.Begin()

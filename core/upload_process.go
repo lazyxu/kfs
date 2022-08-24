@@ -3,10 +3,9 @@ package core
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"github.com/lazyxu/kfs/dao"
 	"io"
 	"os"
-
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 )
 
 type UploadProcess interface {
@@ -27,23 +26,23 @@ func (process *EmptyUploadProcess) Close() error {
 	return nil
 }
 
-func NewFileByName(process UploadProcess, filename string) (sqlite.File, error) {
+func NewFileByName(process UploadProcess, filename string) (dao.File, error) {
 	f, err := os.Open(filename)
 	if err != nil {
-		return sqlite.File{}, err
+		return dao.File{}, err
 	}
 	defer f.Close()
 	info, err := f.Stat()
 	if err != nil {
-		return sqlite.File{}, err
+		return dao.File{}, err
 	}
 	hash := sha256.New()
 	w := process.MultiWriter(hash)
 	_, err = io.Copy(w, f)
 	if err != nil {
-		return sqlite.File{}, err
+		return dao.File{}, err
 	}
-	return sqlite.NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(info.Size())), nil
+	return dao.NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(info.Size())), nil
 }
 
 func (process *EmptyUploadProcess) BeforeContent(hash string, filename string) {

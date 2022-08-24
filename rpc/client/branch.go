@@ -2,10 +2,9 @@ package client
 
 import (
 	"context"
-	"github.com/lazyxu/kfs/rpc/rpcutil"
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
-
+	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/pb"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
 )
 
 func (fs *RpcFs) Checkout(ctx context.Context, branchName string) (bool, error) {
@@ -17,7 +16,7 @@ func (fs *RpcFs) Checkout(ctx context.Context, branchName string) (bool, error) 
 	return resp.Exist, nil
 }
 
-func (fs *RpcFs) BranchInfo(ctx context.Context, branchName string) (sqlite.IBranch, error) {
+func (fs *RpcFs) BranchInfo(ctx context.Context, branchName string) (dao.IBranch, error) {
 	var resp pb.BranchInfoResp
 	err := ReqStringResp(fs.SocketServerAddr, rpcutil.CommandBranchInfo, branchName, &resp)
 	if err != nil {

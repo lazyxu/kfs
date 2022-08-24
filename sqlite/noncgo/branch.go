@@ -3,62 +3,24 @@ package noncgo
 import (
 	"context"
 	"errors"
+
+	"github.com/lazyxu/kfs/dao"
 )
 
-type Branch struct {
-	Name        string
-	Description string
-	CommitId    uint64
-	Size        uint64
-	Count       uint64
-}
-
-type IBranch interface {
-	GetName() string
-	GetDescription() string
-	GetCommitId() uint64
-	GetSize() uint64
-	GetCount() uint64
-}
-
-func (b Branch) GetName() string {
-	return b.Name
-}
-
-func (b Branch) GetDescription() string {
-	return b.Description
-}
-
-func (b Branch) GetCommitId() uint64 {
-	return b.CommitId
-}
-
-func (b Branch) GetSize() uint64 {
-	return b.Size
-}
-
-func (b Branch) GetCount() uint64 {
-	return b.Count
-}
-
-func NewBranch(name string, commit Commit, dir Dir) Branch {
-	return Branch{name, "", commit.Id, dir.size, dir.totalCount}
-}
-
-func (db *DB) WriteBranch(ctx context.Context, branch Branch) error {
+func (db *DB) WriteBranch(ctx context.Context, branch dao.Branch) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return db.writeBranch(ctx, conn, branch)
 }
 
-func (db *DB) writeBranch(ctx context.Context, txOrDb TxOrDb, branch Branch) error {
+func (db *DB) writeBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	REPLACE INTO branch VALUES (?, ?, ?, ?, ?);
 	`, branch.Name, branch.Description, branch.CommitId, branch.Size, branch.Count)
 	return err
 }
 
-func (db *DB) insertBranch(ctx context.Context, txOrDb TxOrDb, branch Branch) error {
+func (db *DB) insertBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO branch (
 		name,
@@ -84,12 +46,12 @@ func (db *DB) NewBranch(ctx context.Context, branchName string) (exist bool, err
 	if err != nil {
 		return
 	}
-	commit := NewCommit(dir, branchName, "")
+	commit := dao.NewCommit(dir, branchName, "")
 	err = db.writeCommit(ctx, tx, &commit)
 	if err != nil {
 		return
 	}
-	branch := NewBranch(branchName, commit, dir)
+	branch := dao.NewBranch(branchName, commit, dir)
 	err = db.insertBranch(ctx, tx, branch)
 	if isUniqueConstraintError(err) {
 		exist = true
@@ -98,7 +60,7 @@ func (db *DB) NewBranch(ctx context.Context, branchName string) (exist bool, err
 	return
 }
 
-func (db *DB) BranchInfo(ctx context.Context, branchName string) (branch Branch, err error) {
+func (db *DB) BranchInfo(ctx context.Context, branchName string) (branch dao.Branch, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	rows, err := conn.QueryContext(ctx, `

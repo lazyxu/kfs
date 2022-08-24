@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 	"net"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"github.com/lazyxu/kfs/core"
 
 	"github.com/lazyxu/kfs/pb"
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 )
 
 type uploadHandlers struct {
@@ -25,7 +25,7 @@ type uploadHandlers struct {
 }
 
 type fileResp struct {
-	fileOrDir sqlite.FileOrDir
+	fileOrDir dao.IFileOrDir
 	info      os.FileInfo
 }
 
@@ -87,7 +87,7 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 		if err != nil {
 			return
 		}
-		fileResp.fileOrDir = sqlite.NewDir(resp.Dir.Hash, resp.Dir.Size, resp.Dir.Count, resp.Dir.TotalCount)
+		fileResp.fileOrDir = dao.NewDir(resp.Dir.Hash, resp.Dir.Size, resp.Dir.Count, resp.Dir.TotalCount)
 		return
 	}
 	return

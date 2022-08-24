@@ -1,13 +1,7 @@
 package noncgo
 
 import (
-	"errors"
-
 	"modernc.org/sqlite"
-)
-
-var (
-	ErrExpectedDir = errors.New("expected dir")
 )
 
 func isUniqueConstraintError(err error) bool {

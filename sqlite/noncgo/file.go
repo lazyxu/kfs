@@ -2,35 +2,21 @@ package noncgo
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"os"
+
+	"github.com/lazyxu/kfs/dao"
 )
 
-type File struct {
-	fileOrDir
-}
-
-func NewFile(hash string, size uint64) File {
-	return File{fileOrDir{hash, size}}
-}
-
-func NewFileByBytes(bytes []byte) File {
-	hash := sha256.New()
-	hash.Write(bytes)
-	return NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(len(bytes)))
-}
-
-func (db *DB) WriteFile(ctx context.Context, file File) error {
+func (db *DB) WriteFile(ctx context.Context, file dao.File) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return db.writeFile(ctx, conn, file)
 }
 
-func (db *DB) writeFile(ctx context.Context, txOrDb TxOrDb, file File) error {
+func (db *DB) writeFile(ctx context.Context, txOrDb TxOrDb, file dao.File) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO file VALUES (?, ?);
-	`, file.hash, file.size)
+	`, file.Hash(), file.Size())
 	if err != nil {
 		if isUniqueConstraintError(err) {
 			return nil
@@ -40,7 +26,7 @@ func (db *DB) writeFile(ctx context.Context, txOrDb TxOrDb, file File) error {
 	return err
 }
 
-func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []string, item DirItem) (commit Commit, branch Branch, err error) {
+func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []string, item dao.DirItem) (commit dao.Commit, branch dao.Branch, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	tx, err := conn.Begin()
@@ -51,21 +37,21 @@ func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []
 		err = commitAndRollback(tx, err)
 	}()
 	if len(splitPath) == 0 {
-		var dir Dir
-		dir, err = NewDirFromDirItem(item)
+		var dir dao.Dir
+		dir, err = dao.NewDirFromDirItem(item)
 		if err != nil {
 			return
 		}
-		commit = NewCommit(dir, branchName, "")
+		commit = dao.NewCommit(dir, branchName, "")
 		err = db.writeCommit(ctx, tx, &commit)
 		if err != nil {
 			return
 		}
-		branch = NewBranch(branchName, commit, dir)
+		branch = dao.NewBranch(branchName, commit, dir)
 		err = db.writeBranch(ctx, tx, branch)
 		return
 	}
-	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]DirItem) ([]DirItem, error) {
+	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]dao.DirItem) ([]dao.DirItem, error) {
 		i := len(dirItemsList) - 1
 		item.Name = splitPath[i]
 		find := false
@@ -79,7 +65,7 @@ func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []
 		if !find {
 			dirItemsList[i] = append(dirItemsList[i], item) // insert
 		}
-		return []DirItem{item}, nil
+		return []dao.DirItem{item}, nil
 	})
 }
 

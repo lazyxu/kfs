@@ -3,8 +3,8 @@ package core
 import (
 	"bytes"
 	"context"
+	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 	storage "github.com/lazyxu/kfs/storage/local"
 	"io"
 	"os"
@@ -82,7 +82,7 @@ func storageUploadFiles(b *testing.B, newStorage func(root string) (storage.Stor
 				b.Error("should not exist")
 				return
 			}
-			_, _, err = kfsCore.Db.UpsertDirItem(ctx, branchName, FormatPath(fileName), sqlite.DirItem{
+			_, _, err = kfsCore.Db.UpsertDirItem(ctx, branchName, FormatPath(fileName), dao.DirItem{
 				Hash:       hash,
 				Name:       fileName,
 				Mode:       mode,

@@ -7,13 +7,12 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/lazyxu/kfs/dao"
 	"io"
 	"net"
 	"os"
 
 	"github.com/lazyxu/kfs/rpc/rpcutil"
-
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
 	"github.com/pierrec/lz4"
 )
@@ -41,19 +40,19 @@ func (h *uploadHandlers) copyFile(conn net.Conn, filePath string, size int64) er
 	return nil
 }
 
-func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *Process) (sqlite.File, error) {
+func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *Process) (dao.File, error) {
 	if h.verbose {
 		p.label = "stat?"
 		h.ch <- p
 	}
 	f, err := os.Open(filePath)
 	if err != nil {
-		return sqlite.File{}, err
+		return dao.File{}, err
 	}
 	defer f.Close()
 	info, err := f.Stat()
 	if err != nil {
-		return sqlite.File{}, err
+		return dao.File{}, err
 	}
 	if h.verbose {
 		p.label = "hash?"
@@ -63,12 +62,12 @@ func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *Process) (sqlite.
 	hash := sha256.New()
 	_, err = io.Copy(hash, f)
 	if err != nil {
-		return sqlite.File{}, err
+		return dao.File{}, err
 	}
-	return sqlite.NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(info.Size())), nil
+	return dao.NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(info.Size())), nil
 }
 
-func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath string) (file sqlite.File, err error) {
+func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath string) (file dao.File, err error) {
 	var p *Process
 	if h.verbose {
 		p = &Process{

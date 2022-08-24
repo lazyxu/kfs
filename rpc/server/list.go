@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"github.com/lazyxu/kfs/dao"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
-
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
 	"github.com/lazyxu/kfs/pb"
 )
@@ -29,7 +28,7 @@ func handleList(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
 			return err
 		}
 		return binary.Write(conn, binary.LittleEndian, int64(n))
-	}, func(dirItem sqlite.IDirItem) error {
+	}, func(dirItem dao.IDirItem) error {
 		return rpcutil.WriteProto(conn, &pb.DirItem{
 			Hash:       dirItem.GetHash(),
 			Name:       dirItem.GetName(),

@@ -1,11 +1,10 @@
 package main
 
 import (
+	"github.com/lazyxu/kfs/dao"
 	"os"
 	"strconv"
 	"testing"
-
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -19,7 +18,7 @@ func TestUpload(t *testing.T) {
 	{
 		stdout, stderr := exec(t, []string{"upload", "upload_test.go"})
 		assert.Empty(t, stdout)
-		assert.Contains(t, stderr, sqlite.ErrExpectedDir.Error())
+		assert.Contains(t, stderr, dao.ErrExpectedDir.Error())
 	}
 	// 3. upload dir
 	{

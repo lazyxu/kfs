@@ -2,14 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/lazyxu/kfs/dao"
 	"io"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/dustin/go-humanize"
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
-
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +27,7 @@ func formatCount(mode uint64, count uint64) string {
 	return fmt.Sprintf("%5d", count)
 }
 
-func printBody(w io.Writer, dirItem sqlite.IDirItem, isHumanize bool) {
+func printBody(w io.Writer, dirItem dao.IDirItem, isHumanize bool) {
 	modifyTime := time.Unix(0, int64(dirItem.GetModifyTime())).Format("2006-01-02 15:04:05")
 	if isHumanize {
 		fmt.Fprintf(w, "%s\t%s\t     %s\t%s\t%s\t%s\t%s\n",
@@ -74,7 +73,7 @@ func runList(cmd *cobra.Command, args []string) {
 			cmd.Printf("mode      \tcount\ttotalCount\thash\tsize\tmodifyTime         \tname\n")
 		}
 		return nil
-	}, func(item sqlite.IDirItem) error {
+	}, func(item dao.IDirItem) error {
 		printBody(cmd.OutOrStdout(), item, isHumanize)
 		return nil
 	})

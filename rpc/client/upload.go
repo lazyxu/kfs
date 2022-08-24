@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 	"net"
 	"os"
@@ -10,12 +11,10 @@ import (
 
 	"github.com/lazyxu/kfs/core"
 
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
-
 	"github.com/lazyxu/kfs/pb"
 )
 
-func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, srcPath string, config core.UploadConfig) (commit sqlite.Commit, branch sqlite.Branch, err error) {
+func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, srcPath string, config core.UploadConfig) (commit dao.Commit, branch dao.Branch, err error) {
 
 	srcPath, err = filepath.Abs(srcPath)
 	if err != nil {
@@ -76,10 +75,10 @@ func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, 
 	if err != nil {
 		return
 	}
-	return sqlite.Commit{
+	return dao.Commit{
 			Id:   resp.Branch.CommitId,
 			Hash: resp.Branch.Hash,
-		}, sqlite.Branch{
+		}, dao.Branch{
 			Name:     branchName,
 			CommitId: resp.Branch.CommitId,
 			Size:     resp.Branch.Size,

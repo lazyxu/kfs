@@ -10,5 +10,6 @@ use (
 	./rpc/client
 	./rpc/server
 	./sqlite/noncgo
+	./dao
 	./storage/local
 )

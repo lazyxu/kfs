@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -33,9 +32,9 @@ func TestDownloadFile(t *testing.T) {
 		filePath := downloadStdoutRegex.FindStringSubmatch(stdout)
 		assert.Equal(t, 2, len(filePath))
 		assert.Empty(t, stderr)
-		expected, err := ioutil.ReadFile(fileName)
+		expected, err := os.ReadFile(fileName)
 		assert.Nil(t, err)
-		actual, err := ioutil.ReadFile(filePath[1])
+		actual, err := os.ReadFile(filePath[1])
 		assert.Nil(t, err)
 		assert.Equal(t, expected, actual)
 	}

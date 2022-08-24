@@ -2,11 +2,10 @@ package core
 
 import (
 	"context"
-
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
+	"github.com/lazyxu/kfs/dao"
 )
 
-func (fs *KFS) List(ctx context.Context, branchName string, filePath string, onLength func(int) error, onDirItem func(item sqlite.IDirItem) error) error {
+func (fs *KFS) List(ctx context.Context, branchName string, filePath string, onLength func(int) error, onDirItem func(item dao.IDirItem) error) error {
 	dirItems, err := fs.Db.List(ctx, branchName, FormatPath(filePath))
 	if err != nil {
 		return err

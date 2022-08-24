@@ -5,11 +5,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 	"github.com/pierrec/lz4"
 	"io"
-
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/pb"
@@ -25,9 +24,9 @@ func handleUploadDirItem(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	if req.Dir != nil {
 		pbDirItems := req.Dir.DirItem
 		fmt.Println(pbDirItems)
-		dirItems := make([]sqlite.DirItem, len(pbDirItems))
+		dirItems := make([]dao.DirItem, len(pbDirItems))
 		for i, dirItem := range pbDirItems {
-			dirItems[i] = sqlite.DirItem{
+			dirItems[i] = dao.DirItem{
 				Hash:       dirItem.Hash,
 				Name:       dirItem.Name,
 				Mode:       dirItem.Mode,
@@ -62,7 +61,7 @@ func handleUploadDirItem(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	}
 	root := req.Root
 	dirItem := root.DirItem
-	commit, branch, err := kfsCore.Db.UpsertDirItem(context.TODO(), root.BranchName, core.FormatPath(root.Path), sqlite.DirItem{
+	commit, branch, err := kfsCore.Db.UpsertDirItem(context.TODO(), root.BranchName, core.FormatPath(root.Path), dao.DirItem{
 		Hash:       dirItem.Hash,
 		Name:       dirItem.Name,
 		Mode:       dirItem.Mode,
@@ -142,7 +141,7 @@ func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		return nil
 	}
 
-	f := sqlite.NewFile(hash, uint64(size))
+	f := dao.NewFile(hash, uint64(size))
 	err = kfsCore.Db.WriteFile(context.Background(), f)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "Db.WriteFile", err.Error())

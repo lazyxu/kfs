@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lazyxu/kfs/dao"
+
 	storage "github.com/lazyxu/kfs/storage/local"
 )
 
@@ -18,6 +20,8 @@ func TestSqlite(t *testing.T) {
 		t.Error(err)
 		return
 	}
+
+	defer db.Close()
 
 	err = db.Create()
 	if err != nil {
@@ -47,8 +51,8 @@ func TestSqlite(t *testing.T) {
 		return
 	}
 
-	file1 := NewFileByBytes(content1)
-	file2 := NewFileByBytes(content2)
+	file1 := dao.NewFileByBytes(content1)
+	file2 := dao.NewFileByBytes(content2)
 	err = db.WriteFile(ctx, file1)
 	if err != nil {
 		t.Error(err)
@@ -62,17 +66,17 @@ func TestSqlite(t *testing.T) {
 	}
 
 	now := uint64(time.Now().Nanosecond())
-	dir, err := db.WriteDir(ctx, []DirItem{
-		NewDirItem(file1, "emptyFile", 0o700, now, now, now, now),
-		NewDirItem(file2, "aaa.txt", 0o555, now, now, now, now),
+	dir, err := db.WriteDir(ctx, []dao.DirItem{
+		dao.NewDirItem(file1, "emptyFile", 0o700, now, now, now, now),
+		dao.NewDirItem(file2, "aaa.txt", 0o555, now, now, now, now),
 	})
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	root, err := db.WriteDir(ctx, []DirItem{
-		NewDirItem(dir, "data", 0o777, now, now, now, now),
-		NewDirItem(file2, "bbb.txt", 0o555, now, now, now, now),
+	root, err := db.WriteDir(ctx, []dao.DirItem{
+		dao.NewDirItem(dir, "data", 0o777, now, now, now, now),
+		dao.NewDirItem(file2, "bbb.txt", 0o555, now, now, now, now),
 	})
 	if err != nil {
 		t.Error(err)
@@ -80,14 +84,14 @@ func TestSqlite(t *testing.T) {
 	}
 
 	branchName := "default"
-	commit := NewCommit(root, branchName, "")
+	commit := dao.NewCommit(root, branchName, "")
 	err = db.WriteCommit(ctx, &commit)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	err = db.WriteBranch(ctx, NewBranch(branchName, commit, root))
+	err = db.WriteBranch(ctx, dao.NewBranch(branchName, commit, root))
 	if err != nil {
 		t.Error(err)
 		return
@@ -127,11 +131,6 @@ func TestSqlite(t *testing.T) {
 	}
 	if count != 1 {
 		t.Errorf("invalid BranchCount: expected %d, actual %d", 1, count)
-	}
-
-	if err = db.Close(); err != nil {
-		t.Error(err)
-		return
 	}
 
 	fi, err := os.Stat(dbFileName)

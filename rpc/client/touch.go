@@ -2,17 +2,16 @@ package client
 
 import (
 	"context"
+	"github.com/lazyxu/kfs/dao"
 	"os"
 	"time"
 
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
-
 	"github.com/lazyxu/kfs/pb"
 )
 
-func (fs *RpcFs) Touch(ctx context.Context, branchName string, filePath string) (commit sqlite.Commit, branch sqlite.Branch, err error) {
+func (fs *RpcFs) Touch(ctx context.Context, branchName string, filePath string) (commit dao.Commit, branch dao.Branch, err error) {
 	var resp pb.TouchResp
 	err = ReqResp(fs.SocketServerAddr, rpcutil.CommandTouch, &pb.TouchReq{
 		BranchName: branchName,
@@ -23,10 +22,10 @@ func (fs *RpcFs) Touch(ctx context.Context, branchName string, filePath string) 
 	if err != nil {
 		return
 	}
-	return sqlite.Commit{
+	return dao.Commit{
 			Id:   resp.CommitId,
 			Hash: resp.Hash,
-		}, sqlite.Branch{
+		}, dao.Branch{
 			Name:     branchName,
 			CommitId: resp.CommitId,
 			Size:     resp.Size,

@@ -35,34 +35,6 @@ func commitAndRollback(tx *sql.Tx, err error) error {
 	return err
 }
 
-type FileOrDir interface {
-	Hash() string
-	Size() uint64
-	Count() uint64
-	TotalCount() uint64
-}
-
-type fileOrDir struct {
-	hash string
-	size uint64
-}
-
-func (i fileOrDir) Hash() string {
-	return i.hash
-}
-
-func (i fileOrDir) Size() uint64 {
-	return i.size
-}
-
-func (i fileOrDir) Count() uint64 {
-	return 1
-}
-
-func (i fileOrDir) TotalCount() uint64 {
-	return 1
-}
-
 func (db *DB) count(ctx context.Context, tableName string) (int, error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
