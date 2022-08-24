@@ -16,7 +16,7 @@ type Storage0 struct {
 	root string
 }
 
-func NewStorage0(root string) (*Storage0, error) {
+func NewStorage0(root string) (Storage, error) {
 	root, err := filepath.Abs(root)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func NewStorage0(root string) (*Storage0, error) {
 	if err != nil && !os.IsExist(err) {
 		return nil, err
 	}
-	err = createLockFile(root)
+	err = createGlobalLockFile(root)
 	if err != nil && !os.IsExist(err) {
 		return nil, err
 	}
@@ -34,7 +34,10 @@ func NewStorage0(root string) (*Storage0, error) {
 
 func (s *Storage0) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
 	lock := flock.New(path.Join(s.root, lockFileName))
-	lock.Lock()
+	err := lock.Lock()
+	if err != nil {
+		return false, err
+	}
 	defer lock.Unlock()
 	p := path.Join(s.root, files, hash)
 	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE, 0o200)

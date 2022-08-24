@@ -3,25 +3,17 @@ package local
 import "testing"
 
 func TestNewStorage1(t *testing.T) {
-	testNew(t, func(root string) (Storage, error) {
-		return NewStorage1(root)
-	})
+	testNew(t, NewStorage1)
 }
 
 func TestErrorHashStorage1(t *testing.T) {
-	testErrorHash(t, func(root string) (Storage, error) {
-		return NewStorage1(root)
-	})
+	testErrorHash(t, NewStorage1)
 }
 
 func TestWriteTwiceStorage1(t *testing.T) {
-	testWriteTwice(t, func(root string) (Storage, error) {
-		return NewStorage1(root)
-	})
+	testWriteTwice(t, NewStorage1)
 }
 
 func TestConcurrentWriteStorage1(t *testing.T) {
-	testConcurrentWrite(t, func(root string) (Storage, error) {
-		return NewStorage1(root)
-	})
+	testConcurrentWrite(t, NewStorage1)
 }

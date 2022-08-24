@@ -8,15 +8,16 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 
 	"github.com/gofrs/flock"
 )
 
-type Storage1 struct {
+type Storage4 struct {
 	root string
 }
 
-func NewStorage1(root string) (Storage, error) {
+func NewStorage4(root string) (Storage, error) {
 	root, err := filepath.Abs(root)
 	if err != nil {
 		return nil, err
@@ -29,28 +30,40 @@ func NewStorage1(root string) (Storage, error) {
 	if err != nil && !os.IsExist(err) {
 		return nil, err
 	}
-	return &Storage1{root: root}, nil
+	return &Storage4{root: root}, nil
 }
 
-func (s *Storage1) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
+var openedFiles [256]*os.File
+
+func (s *Storage4) getFile(hash string) (*os.File, error) {
+	id, err := strconv.Atoi(hash[:2])
+	if err != nil {
+		return nil, err
+	}
+	f := openedFiles[id]
+	if f != nil {
+		return f, nil
+	}
+	filePath := path.Join(s.root, files, hash[:2])
+	f, err = os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0o200)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
+}
+
+func (s *Storage4) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
 	lock := flock.New(path.Join(s.root, lockFileName))
 	err := lock.Lock()
 	if err != nil {
 		return false, err
 	}
 	defer lock.Unlock()
-	dirPath := path.Join(s.root, files, hash[:2])
-	_, err = os.Stat(dirPath)
-	if os.IsNotExist(err) {
-		err = os.Mkdir(dirPath, dirPerm)
-		if err != nil {
-			return false, err
-		}
-	} else if err != nil {
+	f, err := s.getFile(hash)
+	lastOffset, err := f.Seek(0, io.SeekCurrent)
+	if err != nil {
 		return false, err
 	}
-	p := path.Join(dirPath, hash[2:])
-	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE, 0o200)
 	if err != nil {
 		if os.IsPermission(err) {
 			// file exists
@@ -58,27 +71,27 @@ func (s *Storage1) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) e
 		}
 		return false, err
 	}
-	defer f.Close()
 	hasher := sha256.New()
 	err = fn(f, hasher)
 	if err != nil {
-		os.Remove(p)
+		_, err = f.Seek(lastOffset, io.SeekStart)
+		if err != nil {
+			panic(err)
+		}
 		return false, err
 	}
 	actual := hex.EncodeToString(hasher.Sum(nil))
 	if hash != actual {
-		os.Remove(p)
+		_, err = f.Seek(lastOffset, io.SeekStart)
+		if err != nil {
+			panic(err)
+		}
 		return false, fmt.Errorf("invalid hash: expected %s, actual %s", hash, actual)
-	}
-	err = os.Chmod(p, 0o400) // read only
-	if err != nil {
-		os.Remove(p)
-		return false, fmt.Errorf("failed to change file mode: %s", hash)
 	}
 	return false, nil
 }
 
-func (s *Storage1) ReadWithSize(hash string) (SizedReadCloser, error) {
+func (s *Storage4) ReadWithSize(hash string) (SizedReadCloser, error) {
 	p := path.Join(s.root, files, hash[:2], hash[2:])
 	f, err := os.OpenFile(p, os.O_RDONLY, 0o200)
 	if err != nil {

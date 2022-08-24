@@ -22,7 +22,7 @@ type Storage interface {
 	ReadWithSize(hash string) (SizedReadCloser, error)
 }
 
-func createLockFile(root string) error {
+func createGlobalLockFile(root string) error {
 	lockFile, err := os.Create(path.Join(root, lockFileName))
 	if err != nil {
 		return err

@@ -12,11 +12,11 @@ import (
 	"github.com/gofrs/flock"
 )
 
-type Storage1 struct {
+type Storage2 struct {
 	root string
 }
 
-func NewStorage1(root string) (Storage, error) {
+func NewStorage2(root string) (Storage, error) {
 	root, err := filepath.Abs(root)
 	if err != nil {
 		return nil, err
@@ -29,27 +29,41 @@ func NewStorage1(root string) (Storage, error) {
 	if err != nil && !os.IsExist(err) {
 		return nil, err
 	}
-	return &Storage1{root: root}, nil
+	return &Storage2{root: root}, nil
 }
 
-func (s *Storage1) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
-	lock := flock.New(path.Join(s.root, lockFileName))
-	err := lock.Lock()
+func (s *Storage2) getLocalLock(hash string) (*flock.Flock, error) {
+	globalLock := flock.New(path.Join(s.root, lockFileName))
+	err := globalLock.Lock()
+	if err != nil {
+		return nil, err
+	}
+	defer globalLock.Unlock()
+	localLockFilePath := path.Join(s.root, files, hash[:2]+".lock")
+	_, err = os.Stat(localLockFilePath)
+	if os.IsNotExist(err) {
+		lockFile, err := os.Create(localLockFilePath)
+		if err != nil {
+			return nil, err
+		}
+		defer lockFile.Close()
+	} else if err != nil {
+		return nil, err
+	}
+	return flock.New(localLockFilePath), nil
+}
+
+func (s *Storage2) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
+	localLock, err := s.getLocalLock(hash)
 	if err != nil {
 		return false, err
 	}
-	defer lock.Unlock()
-	dirPath := path.Join(s.root, files, hash[:2])
-	_, err = os.Stat(dirPath)
-	if os.IsNotExist(err) {
-		err = os.Mkdir(dirPath, dirPerm)
-		if err != nil {
-			return false, err
-		}
-	} else if err != nil {
+	err = localLock.Lock()
+	if err != nil {
 		return false, err
 	}
-	p := path.Join(dirPath, hash[2:])
+	defer localLock.Unlock()
+	p := path.Join(s.root, files, hash)
 	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE, 0o200)
 	if err != nil {
 		if os.IsPermission(err) {
@@ -78,8 +92,8 @@ func (s *Storage1) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) e
 	return false, nil
 }
 
-func (s *Storage1) ReadWithSize(hash string) (SizedReadCloser, error) {
-	p := path.Join(s.root, files, hash[:2], hash[2:])
+func (s *Storage2) ReadWithSize(hash string) (SizedReadCloser, error) {
+	p := path.Join(s.root, files, hash)
 	f, err := os.OpenFile(p, os.O_RDONLY, 0o200)
 	if err != nil {
 		return nil, err

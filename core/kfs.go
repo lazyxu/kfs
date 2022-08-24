@@ -16,13 +16,18 @@ type UploadConfig struct {
 }
 
 type KFS struct {
-	Db   *sqlite.DB
-	S    storage.Storage
-	root string
+	Db         *sqlite.DB
+	S          storage.Storage
+	root       string
+	newStorage func(root string) (storage.Storage, error)
 }
 
 func New(root string) (*KFS, bool, error) {
-	s, err := storage.NewStorage1(root)
+	return NewWithStorage(root, storage.NewStorage1)
+}
+
+func NewWithStorage(root string, newStorage func(root string) (storage.Storage, error)) (*KFS, bool, error) {
+	s, err := newStorage(root)
 	if err != nil {
 		return nil, false, err
 	}
@@ -45,7 +50,7 @@ func New(root string) (*KFS, bool, error) {
 			return nil, exist, err
 		}
 	}
-	return &KFS{Db: db, S: s, root: root}, exist, nil
+	return &KFS{Db: db, S: s, root: root, newStorage: newStorage}, exist, nil
 }
 
 func (fs *KFS) Close() error {

@@ -14,7 +14,7 @@ func (fs *KFS) Reset(ctx context.Context, branchName string) error {
 	if err != nil {
 		return err
 	}
-	kfs, _, err := New(fs.root)
+	kfs, _, err := NewWithStorage(fs.root, fs.newStorage)
 	if err != nil {
 		return err
 	}
