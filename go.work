@@ -9,7 +9,7 @@ use (
 	./rpc/rpcutil
 	./rpc/client
 	./rpc/server
-	./sqlite/noncgo
+	./db/gosqlite
 	./dao
 	./storage/local
 )

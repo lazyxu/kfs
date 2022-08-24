@@ -1,4 +1,4 @@
-module github.com/lazyxu/kfs/sqlite/noncgo
+module github.com/lazyxu/kfs/db/gosqlite
 
 go 1.18
 

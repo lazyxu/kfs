@@ -4,7 +4,7 @@ import (
 	"os"
 	"path"
 
-	sqlite "github.com/lazyxu/kfs/sqlite/noncgo"
+	"github.com/lazyxu/kfs/db/gosqlite"
 
 	storage "github.com/lazyxu/kfs/storage/local"
 )
@@ -17,7 +17,7 @@ type UploadConfig struct {
 }
 
 type KFS struct {
-	Db         *sqlite.DB
+	Db         *gosqlite.DB
 	S          storage.Storage
 	root       string
 	newStorage func(root string) (storage.Storage, error)
@@ -41,7 +41,7 @@ func NewWithStorage(root string, newStorage func(root string) (storage.Storage, 
 		}
 		exist = false
 	}
-	db, err := sqlite.Open(dbFileName)
+	db, err := gosqlite.Open(dbFileName)
 	if err != nil {
 		return nil, false, err
 	}

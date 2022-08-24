@@ -1,4 +1,4 @@
-package noncgo
+package gosqlite
 
 import (
 	"context"
