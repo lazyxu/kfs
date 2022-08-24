@@ -10,6 +10,7 @@ use (
 	./rpc/client
 	./rpc/server
 	./db/gosqlite
+	./db/mysql
 	./dao
 	./storage/local
 )
