@@ -57,17 +57,17 @@ func (db *DB) count(ctx context.Context, tableName string) (int, error) {
 }
 
 func (db *DB) FileCount(ctx context.Context) (int, error) {
-	return db.count(ctx, "file")
+	return db.count(ctx, "_file")
 }
 
 func (db *DB) DirCount(ctx context.Context) (int, error) {
-	return db.count(ctx, "dir")
+	return db.count(ctx, "_dir")
 }
 
 func (db *DB) DirItemCount(ctx context.Context) (int, error) {
-	return db.count(ctx, "dirItem")
+	return db.count(ctx, "_dirItem")
 }
 
 func (db *DB) BranchCount(ctx context.Context) (int, error) {
-	return db.count(ctx, "branch")
+	return db.count(ctx, "_branch")
 }

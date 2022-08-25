@@ -15,14 +15,14 @@ func (db *DB) WriteBranch(ctx context.Context, branch dao.Branch) error {
 
 func (db *DB) writeBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error {
 	_, err := txOrDb.ExecContext(ctx, `
-	REPLACE INTO branch VALUES (?, ?, ?, ?, ?);
+	REPLACE INTO _branch VALUES (?, ?, ?, ?, ?);
 	`, branch.Name, branch.Description, branch.CommitId, branch.Size, branch.Count)
 	return err
 }
 
 func (db *DB) insertBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error {
 	_, err := txOrDb.ExecContext(ctx, `
-	INSERT INTO branch (
+	INSERT INTO _branch (
 		name,
 		commitId,
 		size,
@@ -64,7 +64,7 @@ func (db *DB) BranchInfo(ctx context.Context, branchName string) (branch dao.Bra
 	conn := db.getConn()
 	defer db.putConn(conn)
 	rows, err := conn.QueryContext(ctx, `
-	SELECT * FROM branch WHERE name=?;
+	SELECT * FROM _branch WHERE name=?;
 	`, branchName)
 	if err != nil {
 		return

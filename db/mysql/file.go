@@ -15,7 +15,7 @@ func (db *DB) WriteFile(ctx context.Context, file dao.File) error {
 
 func (db *DB) writeFile(ctx context.Context, txOrDb TxOrDb, file dao.File) error {
 	_, err := txOrDb.ExecContext(ctx, `
-	INSERT INTO file VALUES (?, ?);
+	INSERT INTO _file VALUES (?, ?);
 	`, file.Hash(), file.Size())
 	if err != nil {
 		if isUniqueConstraintError(err) {

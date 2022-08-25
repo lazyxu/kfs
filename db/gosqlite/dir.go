@@ -32,7 +32,7 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 	dir.Cal(dirItems)
 	// TODO: error if size or count is not equal
 	_, err = tx.ExecContext(ctx, `
-	INSERT INTO dir VALUES (?, ?, ?, ?);
+	INSERT INTO _dir VALUES (?, ?, ?, ?);
 	`, dir.Hash(), dir.Size(), dir.Count(), dir.TotalCount())
 	if err != nil {
 		if isUniqueConstraintError(err) {
@@ -41,7 +41,7 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 		return
 	}
 	stmt, err := tx.PrepareContext(ctx, `
-	INSERT INTO dirItem (
+	INSERT INTO _dirItem (
 		hash,
 		itemHash,
 		itemName,
@@ -125,7 +125,7 @@ func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []st
 
 func (db *DB) getBranchCommitHash(ctx context.Context, tx *sql.Tx, branchName string) (hash string, err error) {
 	rows, err := tx.QueryContext(ctx, `
-		SELECT [commit].Hash FROM branch INNER JOIN [commit] WHERE branch.name=? and [commit].id=branch.commitId
+		SELECT _commit.Hash FROM _branch INNER JOIN _commit WHERE _branch.name=? and _commit.id=_branch.commitId
 	`, branchName)
 	if err != nil {
 		return
@@ -140,7 +140,7 @@ func (db *DB) getBranchCommitHash(ctx context.Context, tx *sql.Tx, branchName st
 
 func (db *DB) getDirItemHash(ctx context.Context, tx *sql.Tx, hash string, splitPath []string, i int) (itemHash string, err error) {
 	rows, err := tx.QueryContext(ctx, `
-		SELECT itemHash FROM dirItem WHERE Hash=? and itemName=?
+		SELECT itemHash FROM _dirItem WHERE Hash=? and itemName=?
 	`, hash, splitPath[i])
 	if err != nil {
 		return
@@ -155,7 +155,7 @@ func (db *DB) getDirItemHash(ctx context.Context, tx *sql.Tx, hash string, split
 
 func (db *DB) getDirItemHashMode(ctx context.Context, tx *sql.Tx, hash string, splitPath []string, i int) (itemHash string, itemMode uint64, err error) {
 	rows, err := tx.QueryContext(ctx, `
-		SELECT itemHash, itemMode  FROM dirItem WHERE Hash=? and itemName=?
+		SELECT itemHash, itemMode FROM _dirItem WHERE Hash=? and itemName=?
 	`, hash, splitPath[i])
 	if err != nil {
 		return
@@ -181,7 +181,7 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 			itemModifyTime,
 			itemChangeTime,
 			itemAccessTime
-		FROM dirItem WHERE Hash=?
+		FROM _dirItem WHERE Hash=?
 	`, hash)
 	if err != nil {
 		return

@@ -15,8 +15,8 @@ func (db *DB) WriteCommit(ctx context.Context, commit *dao.Commit) error {
 func (db *DB) writeCommit(ctx context.Context, txOrDb TxOrDb, commit *dao.Commit) error {
 	// TODO: if Hash not changed.
 	res, err := txOrDb.ExecContext(ctx, `
-	INSERT INTO [commit] (createTime, Hash, lastId)
-	VALUES (?, ?, ifnull((SELECT commitId FROM branch WHERE branch.name=?), 0));;
+	INSERT INTO _commit (createTime, Hash, lastId)
+	VALUES (?, ?, ifnull((SELECT commitId FROM _branch WHERE _branch.name=?), 0));;
 	`, commit.CreateTime(), commit.Hash, commit.BranchName())
 	if err != nil {
 		return err
