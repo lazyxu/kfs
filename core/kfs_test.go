@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -78,6 +79,15 @@ func BenchmarkMysqlStorage4Upload1000Files1000(b *testing.B) {
 	}, branchName, fileCount, fileSize)
 }
 
+func BenchmarkMysqlStorage5Upload1000Files1000(b *testing.B) {
+	branchName := "master"
+	fileCount := 1000
+	fileSize := 1000
+	storageUploadFiles(b, func() (*KFS, error) {
+		return NewWithMysql(testRootDir, storage.NewStorage5)
+	}, branchName, fileCount, fileSize)
+}
+
 func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName string, fileCount int, fileSize int) {
 	kfsCore, err := newKFS()
 	if err != nil {
@@ -93,37 +103,45 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 			return
 		}
 		b.ResetTimer()
+		wg := sync.WaitGroup{}
+		wg.Add(fileCount)
 		for j := 0; j < fileCount; j++ {
-			fileName := strconv.Itoa(j)
-			hash, content := storage.NewContent(strconv.Itoa(j) + strings.Repeat("y", fileSize) + "\n")
-			mode := uint64(os.FileMode(0o700))
-			now := uint64(time.Now().UnixNano())
-			exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) (e error) {
-				w := io.MultiWriter(f, hasher)
-				_, e = io.CopyN(w, bytes.NewBuffer(content), int64(len(content)))
-				return rpcutil.UnexpectedIfError(e)
-			})
-			if exist {
-				b.Error("should not exist")
-				return
-			}
-			_, _, err = kfsCore.Db.UpsertDirItem(ctx, branchName, FormatPath(fileName), dao.DirItem{
-				Hash:       hash,
-				Name:       fileName,
-				Mode:       mode,
-				Size:       uint64(len(content)),
-				Count:      1,
-				TotalCount: 1,
-				CreateTime: now,
-				ModifyTime: now,
-				ChangeTime: now,
-				AccessTime: now,
-			})
-			if err != nil {
-				b.Error(err)
-				return
-			}
+			go func(j int) {
+				fileName := strconv.Itoa(j)
+				hash, content := storage.NewContent(strconv.Itoa(j) + strings.Repeat("y", fileSize) + "\n")
+				mode := uint64(os.FileMode(0o700))
+				now := uint64(time.Now().UnixNano())
+				exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) (e error) {
+					w := io.MultiWriter(f, hasher)
+					_, e = io.CopyN(w, bytes.NewBuffer(content), int64(len(content)))
+					return rpcutil.UnexpectedIfError(e)
+				})
+				if exist {
+					b.Error("should not exist")
+					return
+				}
+				go func() {
+					defer wg.Done()
+					_, _, err = kfsCore.Db.UpsertDirItem(ctx, branchName, FormatPath(fileName), dao.DirItem{
+						Hash:       hash,
+						Name:       fileName,
+						Mode:       mode,
+						Size:       uint64(len(content)),
+						Count:      1,
+						TotalCount: 1,
+						CreateTime: now,
+						ModifyTime: now,
+						ChangeTime: now,
+						AccessTime: now,
+					})
+					if err != nil {
+						b.Error(err)
+						return
+					}
+				}()
+			}(j)
 		}
+		wg.Wait()
 		b.StopTimer()
 	}
 }

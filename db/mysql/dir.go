@@ -190,6 +190,10 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 	defer rows.Close()
 	for rows.Next() {
 		var dirItem dao.DirItem
+		var createTime time.Time
+		var modifyTime time.Time
+		var changeTime time.Time
+		var accessTime time.Time
 		err = rows.Scan(
 			&dirItem.Hash,
 			&dirItem.Name,
@@ -197,13 +201,17 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 			&dirItem.Size,
 			&dirItem.Count,
 			&dirItem.TotalCount,
-			&dirItem.CreateTime,
-			&dirItem.ModifyTime,
-			&dirItem.ChangeTime,
-			&dirItem.AccessTime)
+			&createTime,
+			&modifyTime,
+			&changeTime,
+			&accessTime)
 		if err != nil {
 			return
 		}
+		dirItem.CreateTime = uint64(createTime.UnixNano())
+		dirItem.ModifyTime = uint64(modifyTime.UnixNano())
+		dirItem.ChangeTime = uint64(changeTime.UnixNano())
+		dirItem.AccessTime = uint64(accessTime.UnixNano())
 		dirItems = append(dirItems, dirItem)
 	}
 	return

@@ -7,27 +7,31 @@ import (
 )
 
 type DB struct {
-	ch chan *sql.DB
+	db *sql.DB
 }
 
 func Open(dataSourceName string) (*DB, error) {
-	conn, err := sql.Open("mysql", dataSourceName)
+	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		return nil, err
 	}
-	db := &DB{
-		ch: make(chan *sql.DB, 1),
+	db.SetMaxOpenConns(100)
+	db.SetMaxIdleConns(10)
+	err = db.Ping()
+	if err != nil {
+		return nil, err
 	}
-	db.ch <- conn
-	return db, err
+	d := &DB{
+		db: db,
+	}
+	return d, err
 }
 
 func (db *DB) getConn() *sql.DB {
-	return <-db.ch
+	return db.db
 }
 
 func (db *DB) putConn(conn *sql.DB) {
-	db.ch <- conn
 }
 
 func (db *DB) Create() error {
@@ -85,10 +89,6 @@ func (db *DB) Create() error {
 }
 
 func (db *DB) Close() error {
-	select {
-	case conn := <-db.ch:
-		return conn.Close()
-	default:
-		return nil
-	}
+	//return db.Close()
+	return nil
 }

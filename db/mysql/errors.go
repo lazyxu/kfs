@@ -1,15 +1,15 @@
 package mysql
 
 import (
-	"modernc.org/sqlite"
+	"github.com/go-sql-driver/mysql"
 )
 
 func isUniqueConstraintError(err error) bool {
 	if err == nil {
 		return false
 	}
-	if e, ok := err.(*sqlite.Error); ok {
-		return e.Code() == 1555
+	if e, ok := err.(*mysql.MySQLError); ok {
+		return e.Number == 1062
 	}
 	return false
 }

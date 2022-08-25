@@ -25,6 +25,7 @@ type KFS struct {
 	S          storage.Storage
 	root       string
 	newStorage func(root string) (storage.Storage, error)
+	isSqlite   bool
 }
 
 func New(root string) (*KFS, bool, error) {
@@ -55,7 +56,7 @@ func NewWithSqlite(root string, newStorage func(root string) (storage.Storage, e
 			return nil, exist, err
 		}
 	}
-	return &KFS{Db: db, S: s, root: root, newStorage: newStorage}, exist, nil
+	return &KFS{Db: db, S: s, root: root, newStorage: newStorage, isSqlite: true}, exist, nil
 }
 
 func NewWithMysql(root string, newStorage func(root string) (storage.Storage, error)) (*KFS, error) {
