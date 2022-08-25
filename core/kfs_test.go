@@ -3,15 +3,16 @@ package core
 import (
 	"bytes"
 	"context"
-	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/rpc/rpcutil"
-	storage "github.com/lazyxu/kfs/storage/local"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
+	storage "github.com/lazyxu/kfs/storage/local"
 )
 
 const (
@@ -22,39 +23,63 @@ func BenchmarkStorage0Upload1000Files1000(b *testing.B) {
 	branchName := "master"
 	fileCount := 1000
 	fileSize := 1000
-	storageUploadFiles(b, storage.NewStorage0, branchName, fileCount, fileSize)
+	storageUploadFiles(b, func() (*KFS, error) {
+		kfs, _, err := NewWithSqlite(testRootDir, storage.NewStorage0)
+		return kfs, err
+	}, branchName, fileCount, fileSize)
 }
 
 func BenchmarkStorage1Upload1000Files1000(b *testing.B) {
 	branchName := "master"
 	fileCount := 1000
 	fileSize := 1000
-	storageUploadFiles(b, storage.NewStorage1, branchName, fileCount, fileSize)
+	storageUploadFiles(b, func() (*KFS, error) {
+		kfs, _, err := NewWithSqlite(testRootDir, storage.NewStorage1)
+		return kfs, err
+	}, branchName, fileCount, fileSize)
 }
 
 func BenchmarkStorage2Upload1000Files1000(b *testing.B) {
 	branchName := "master"
 	fileCount := 1000
 	fileSize := 1000
-	storageUploadFiles(b, storage.NewStorage2, branchName, fileCount, fileSize)
+	storageUploadFiles(b, func() (*KFS, error) {
+		kfs, _, err := NewWithSqlite(testRootDir, storage.NewStorage2)
+		return kfs, err
+	}, branchName, fileCount, fileSize)
 }
 
 func BenchmarkStorage3Upload1000Files1000(b *testing.B) {
 	branchName := "master"
 	fileCount := 1000
 	fileSize := 1000
-	storageUploadFiles(b, storage.NewStorage3, branchName, fileCount, fileSize)
+	storageUploadFiles(b, func() (*KFS, error) {
+		kfs, _, err := NewWithSqlite(testRootDir, storage.NewStorage3)
+		return kfs, err
+	}, branchName, fileCount, fileSize)
 }
 
 func BenchmarkStorage4Upload1000Files1000(b *testing.B) {
 	branchName := "master"
 	fileCount := 1000
 	fileSize := 1000
-	storageUploadFiles(b, storage.NewStorage4, branchName, fileCount, fileSize)
+	storageUploadFiles(b, func() (*KFS, error) {
+		kfs, _, err := NewWithSqlite(testRootDir, storage.NewStorage4)
+		return kfs, err
+	}, branchName, fileCount, fileSize)
 }
 
-func storageUploadFiles(b *testing.B, newStorage func(root string) (storage.Storage, error), branchName string, fileCount int, fileSize int) {
-	kfsCore, _, err := NewWithStorage(testRootDir, newStorage)
+func BenchmarkMysqlStorage4Upload1000Files1000(b *testing.B) {
+	branchName := "master"
+	fileCount := 1000
+	fileSize := 1000
+	storageUploadFiles(b, func() (*KFS, error) {
+		return NewWithMysql(testRootDir, storage.NewStorage4)
+	}, branchName, fileCount, fileSize)
+}
+
+func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName string, fileCount int, fileSize int) {
+	kfsCore, err := newKFS()
 	if err != nil {
 		b.Error(err)
 		return

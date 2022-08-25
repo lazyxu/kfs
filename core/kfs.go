@@ -4,7 +4,11 @@ import (
 	"os"
 	"path"
 
+	"github.com/lazyxu/kfs/db/mysql"
+
 	"github.com/lazyxu/kfs/db/gosqlite"
+
+	"github.com/lazyxu/kfs/dao"
 
 	storage "github.com/lazyxu/kfs/storage/local"
 )
@@ -17,22 +21,22 @@ type UploadConfig struct {
 }
 
 type KFS struct {
-	Db         *gosqlite.DB
+	Db         dao.DB
 	S          storage.Storage
 	root       string
 	newStorage func(root string) (storage.Storage, error)
 }
 
 func New(root string) (*KFS, bool, error) {
-	return NewWithStorage(root, storage.NewStorage1)
+	return NewWithSqlite(root, storage.NewStorage1)
 }
 
-func NewWithStorage(root string, newStorage func(root string) (storage.Storage, error)) (*KFS, bool, error) {
+func NewWithSqlite(root string, newStorage func(root string) (storage.Storage, error)) (*KFS, bool, error) {
+	exist := true
 	s, err := newStorage(root)
 	if err != nil {
 		return nil, false, err
 	}
-	exist := true
 	dbFileName := path.Join(root, "kfs.db")
 	_, err = os.Stat(dbFileName)
 	if err != nil {
@@ -52,6 +56,18 @@ func NewWithStorage(root string, newStorage func(root string) (storage.Storage, 
 		}
 	}
 	return &KFS{Db: db, S: s, root: root, newStorage: newStorage}, exist, nil
+}
+
+func NewWithMysql(root string, newStorage func(root string) (storage.Storage, error)) (*KFS, error) {
+	s, err := newStorage(root)
+	if err != nil {
+		return nil, err
+	}
+	db, err := mysql.Open("root:12345678@/kfs?charset=utf8&parseTime=true&multiStatements=true")
+	if err != nil {
+		return nil, err
+	}
+	return &KFS{Db: db, S: s, root: root, newStorage: newStorage}, nil
 }
 
 func (fs *KFS) Close() error {

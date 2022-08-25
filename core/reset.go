@@ -14,7 +14,8 @@ func (fs *KFS) Reset(ctx context.Context, branchName string) error {
 	if err != nil {
 		return err
 	}
-	kfs, _, err := NewWithStorage(fs.root, fs.newStorage)
+	// TODO: fix reset with mysql
+	kfs, _, err := NewWithSqlite(fs.root, fs.newStorage)
 	if err != nil {
 		return err
 	}
