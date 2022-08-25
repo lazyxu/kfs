@@ -6,17 +6,17 @@ import (
 
 type Commit struct {
 	Id         uint64
-	createTime uint64
+	createTime time.Time
 	Hash       string
 	lastId     uint64
 	branchName string
 }
 
 func NewCommit(dir Dir, branchName string, message string) Commit {
-	return Commit{0, uint64(time.Now().UnixNano()), dir.hash, 0, branchName}
+	return Commit{0, time.Now(), dir.hash, 0, branchName}
 }
 
-func (c *Commit) CreateTime() uint64 {
+func (c *Commit) CreateTime() time.Time {
 	return c.createTime
 }
 

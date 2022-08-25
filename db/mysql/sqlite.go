@@ -3,7 +3,7 @@ package mysql
 import (
 	"database/sql"
 
-	_ "modernc.org/sqlite"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type DB struct {
@@ -11,7 +11,7 @@ type DB struct {
 }
 
 func Open(dataSourceName string) (*DB, error) {
-	conn, err := sql.Open("sqlite", dataSourceName)
+	conn, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (db *DB) Create() error {
 
 	DROP TABLE IF EXISTS _commit;
 	CREATE TABLE _commit (
-		id          INTEGER   NOT NULL PRIMARY KEY AUTOINCREMENT,
+		id          INTEGER   NOT NULL PRIMARY KEY AUTO_INCREMENT,
 		createTime  TIMESTAMP NOT NULL,
 		Hash        CHAR(64)  NOT NULL,
 		lastId      INTEGER   NOT NULL

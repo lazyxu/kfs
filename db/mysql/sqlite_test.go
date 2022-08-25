@@ -3,8 +3,6 @@ package mysql
 import (
 	"bytes"
 	"context"
-	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -14,7 +12,7 @@ import (
 )
 
 func TestSqlite(t *testing.T) {
-	dbFileName := "kfs.db"
+	dbFileName := "root:12345678@/kfs?charset=utf8&parseTime=true&multiStatements=true"
 	db, err := Open(dbFileName)
 	if err != nil {
 		t.Error(err)
@@ -65,7 +63,7 @@ func TestSqlite(t *testing.T) {
 		return
 	}
 
-	now := uint64(time.Now().Nanosecond())
+	now := uint64(time.Now().UnixNano())
 	dir, err := db.WriteDir(ctx, []dao.DirItem{
 		dao.NewDirItem(file1, "emptyFile", 0o700, now, now, now, now),
 		dao.NewDirItem(file2, "aaa.txt", 0o555, now, now, now, now),
@@ -132,12 +130,4 @@ func TestSqlite(t *testing.T) {
 	if count != 1 {
 		t.Errorf("invalid BranchCount: expected %d, actual %d", 1, count)
 	}
-
-	fi, err := os.Stat(dbFileName)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	fmt.Printf("%s size: %v\n", dbFileName, fi.Size())
 }

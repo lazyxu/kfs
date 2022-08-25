@@ -65,7 +65,7 @@ func TestSqlite(t *testing.T) {
 		return
 	}
 
-	now := uint64(time.Now().Nanosecond())
+	now := uint64(time.Now().UnixNano())
 	dir, err := db.WriteDir(ctx, []dao.DirItem{
 		dao.NewDirItem(file1, "emptyFile", 0o700, now, now, now, now),
 		dao.NewDirItem(file2, "aaa.txt", 0o555, now, now, now, now),

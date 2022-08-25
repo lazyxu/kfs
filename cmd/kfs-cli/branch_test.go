@@ -19,7 +19,7 @@ func TestBranch(t *testing.T) {
 		assert.Contains(t, stdout, "size: 0\ncount: 0\n")
 		assert.Empty(t, stderr)
 	}
-	branchName := strconv.Itoa(time.Now().Nanosecond())
+	branchName := strconv.Itoa(int(time.Now().UnixNano()))
 	// 3. checkout branch
 	{
 		stdout, stderr := exec(t, []string{"branch", "checkout", branchName})

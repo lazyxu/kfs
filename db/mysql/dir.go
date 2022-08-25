@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/lazyxu/kfs/dao"
 )
@@ -73,10 +74,10 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 			dirItem.Size,
 			dirItem.Count,
 			dirItem.TotalCount,
-			dirItem.CreateTime,
-			dirItem.ModifyTime,
-			dirItem.ChangeTime,
-			dirItem.AccessTime)
+			time.Unix(0, int64(dirItem.CreateTime)),
+			time.Unix(0, int64(dirItem.ModifyTime)),
+			time.Unix(0, int64(dirItem.ChangeTime)),
+			time.Unix(0, int64(dirItem.AccessTime)))
 		if err != nil {
 			return
 		}
