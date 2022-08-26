@@ -64,7 +64,7 @@ func NewWithMysql(root string, newStorage func(root string) (storage.Storage, er
 	if err != nil {
 		return nil, err
 	}
-	db, err := mysql.Open("root:12345678@/kfs?charset=utf8&parseTime=true&multiStatements=true")
+	db, err := mysql.Open("root:12345678@/kfs?parseTime=true&multiStatements=true")
 	if err != nil {
 		return nil, err
 	}

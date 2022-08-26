@@ -17,6 +17,11 @@ jobs:
           go-version: ^1.19
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
+      - name: install mysql
+        uses: mirromutth/mysql-action@v1.1
+        with:
+          mysql database: 'kfs'
+          mysql root password: '12345678'
       - name: Build
         run: |
           bash scripts.sh unittest go

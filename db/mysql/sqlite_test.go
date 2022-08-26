@@ -12,7 +12,7 @@ import (
 )
 
 func TestSqlite(t *testing.T) {
-	dbFileName := "root:12345678@/kfs?charset=utf8&parseTime=true&multiStatements=true"
+	dbFileName := "root:12345678@/kfs?parseTime=true&multiStatements=true"
 	db, err := Open(dbFileName)
 	if err != nil {
 		t.Error(err)
@@ -89,7 +89,7 @@ func TestSqlite(t *testing.T) {
 		return
 	}
 
-	err = db.WriteBranch(ctx, dao.NewBranch(branchName, commit, root))
+	err = db.insertBranch(ctx, db.db, dao.NewBranch(branchName, commit, root))
 	if err != nil {
 		t.Error(err)
 		return
