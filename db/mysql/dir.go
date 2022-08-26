@@ -296,5 +296,8 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 	}
 	branch = dao.NewBranch(branchName, commit, dir)
 	err = db.writeBranch(ctx, tx, branch)
+	if err != nil {
+		return
+	}
 	return
 }

@@ -22,7 +22,15 @@ func (fs *KFS) Reset(ctx context.Context, branchName string) error {
 		}
 		fs.Db = kfs.Db
 		fs.S = kfs.S
+	} else {
+		err := fs.Db.Create()
+		if err != nil {
+			return err
+		}
 	}
 	_, err := fs.Checkout(ctx, branchName)
+	if err != nil {
+		return err
+	}
 	return err
 }

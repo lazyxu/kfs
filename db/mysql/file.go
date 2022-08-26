@@ -49,6 +49,9 @@ func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []
 		}
 		branch = dao.NewBranch(branchName, commit, dir)
 		err = db.writeBranch(ctx, tx, branch)
+		if err != nil {
+			return
+		}
 		return
 	}
 	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]dao.DirItem) ([]dao.DirItem, error) {

@@ -38,13 +38,13 @@ func (db *DB) Create() error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	_, err := conn.Exec(`
-	DROP TABLE IF EXISTS _file;
+	DROP TABLE IF EXISTS _file, _dir, _dirItem, _commit, _branch;
+
 	CREATE TABLE _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
 		size INTEGER  NOT NULL
 	);
 
-	DROP TABLE IF EXISTS _dir;
 	CREATE TABLE _dir (
 		hash       CHAR(64) NOT NULL PRIMARY KEY,
 		size       INTEGER  NOT NULL,
@@ -52,7 +52,6 @@ func (db *DB) Create() error {
 		totalCount INTEGER  NOT NULL
 	);
 
-	DROP TABLE IF EXISTS _dirItem;
 	CREATE TABLE _dirItem (
 		hash           CHAR(64)     NOT NULL,
 		itemHash       CHAR(64)     NOT NULL,
@@ -68,7 +67,6 @@ func (db *DB) Create() error {
 		PRIMARY KEY(Hash, itemName)
 	);
 
-	DROP TABLE IF EXISTS _commit;
 	CREATE TABLE _commit (
 		id          INTEGER   NOT NULL PRIMARY KEY AUTO_INCREMENT,
 		createTime  TIMESTAMP NOT NULL,
@@ -76,13 +74,13 @@ func (db *DB) Create() error {
 		lastId      INTEGER   NOT NULL
 	);
 
-	DROP TABLE IF EXISTS _branch;
 	CREATE TABLE _branch (
 		name        VARCHAR(256) NOT NULL PRIMARY KEY,
 		description VARCHAR(256) NOT NULL DEFAULT "",
 		commitId    INTEGER      NOT NULL,
 		size        INTEGER      NOT NULL,
-		count       INTEGER      NOT NULL
+		count       INTEGER      NOT NULL,
+		FOREIGN KEY (commitId)   REFERENCES _commit(id)
 	);
 	`)
 	return err

@@ -106,40 +106,38 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 		wg := sync.WaitGroup{}
 		wg.Add(fileCount)
 		for j := 0; j < fileCount; j++ {
-			go func(j int) {
-				fileName := strconv.Itoa(j)
-				hash, content := storage.NewContent(strconv.Itoa(j) + strings.Repeat("y", fileSize) + "\n")
-				mode := uint64(os.FileMode(0o700))
-				now := uint64(time.Now().UnixNano())
-				exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) (e error) {
-					w := io.MultiWriter(f, hasher)
-					_, e = io.CopyN(w, bytes.NewBuffer(content), int64(len(content)))
-					return rpcutil.UnexpectedIfError(e)
+			fileName := strconv.Itoa(j)
+			hash, content := storage.NewContent(strconv.Itoa(j) + strings.Repeat("y", fileSize) + "\n")
+			mode := uint64(os.FileMode(0o700))
+			now := uint64(time.Now().UnixNano())
+			exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) (e error) {
+				w := io.MultiWriter(f, hasher)
+				_, e = io.CopyN(w, bytes.NewBuffer(content), int64(len(content)))
+				return rpcutil.UnexpectedIfError(e)
+			})
+			if exist {
+				b.Error("should not exist")
+				return
+			}
+			go func() {
+				defer wg.Done()
+				_, _, err = kfsCore.Db.UpsertDirItem(ctx, branchName, FormatPath(fileName), dao.DirItem{
+					Hash:       hash,
+					Name:       fileName,
+					Mode:       mode,
+					Size:       uint64(len(content)),
+					Count:      1,
+					TotalCount: 1,
+					CreateTime: now,
+					ModifyTime: now,
+					ChangeTime: now,
+					AccessTime: now,
 				})
-				if exist {
-					b.Error("should not exist")
+				if err != nil {
+					b.Error(err)
 					return
 				}
-				go func() {
-					defer wg.Done()
-					_, _, err = kfsCore.Db.UpsertDirItem(ctx, branchName, FormatPath(fileName), dao.DirItem{
-						Hash:       hash,
-						Name:       fileName,
-						Mode:       mode,
-						Size:       uint64(len(content)),
-						Count:      1,
-						TotalCount: 1,
-						CreateTime: now,
-						ModifyTime: now,
-						ChangeTime: now,
-						AccessTime: now,
-					})
-					if err != nil {
-						b.Error(err)
-						return
-					}
-				}()
-			}(j)
+			}()
 		}
 		wg.Wait()
 		b.StopTimer()
