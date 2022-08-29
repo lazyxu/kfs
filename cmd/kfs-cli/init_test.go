@@ -21,7 +21,7 @@ var (
 )
 
 func initServer() error {
-	kfsCore, _, err := core.New(kfsRoot)
+	kfsCore, err := core.New(kfsRoot)
 	if err != nil {
 		return err
 	}

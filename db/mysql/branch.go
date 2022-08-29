@@ -17,6 +17,10 @@ func (db *DB) writeBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch)
 	_, err := txOrDb.ExecContext(ctx, `
 	UPDATE _branch SET description=?, commitId=?, size=?, count=? WHERE name=?
 	`, branch.Description, branch.CommitId, branch.Size, branch.Count, branch.Name)
+	if err != nil {
+		return err
+	}
+	db.branchCache.Store(branch.Name, branch.CommitId)
 	return err
 }
 
@@ -29,6 +33,9 @@ func (db *DB) insertBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch
 		count
 	) VALUES (?, ?, ?, ?);
 	`, branch.Name, branch.CommitId, branch.Size, branch.Count)
+	if err != nil {
+		return err
+	}
 	return err
 }
 

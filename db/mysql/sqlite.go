@@ -2,12 +2,14 @@ package mysql
 
 import (
 	"database/sql"
+	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type DB struct {
-	db *sql.DB
+	db          *sql.DB
+	branchCache sync.Map
 }
 
 func Open(dataSourceName string) (*DB, error) {
@@ -42,24 +44,24 @@ func (db *DB) Create() error {
 
 	CREATE TABLE _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
-		size INTEGER  NOT NULL
+		size BIGINT  NOT NULL
 	);
 
 	CREATE TABLE _dir (
 		hash       CHAR(64) NOT NULL PRIMARY KEY,
-		size       INTEGER  NOT NULL,
-		count      INTEGER  NOT NULL,
-		totalCount INTEGER  NOT NULL
+		size       BIGINT  NOT NULL,
+		count      BIGINT  NOT NULL,
+		totalCount BIGINT  NOT NULL
 	);
 
 	CREATE TABLE _dirItem (
 		hash           CHAR(64)     NOT NULL,
 		itemHash       CHAR(64)     NOT NULL,
 		itemName       VARCHAR(256) NOT NULL,
-		itemMode       INTEGER      NOT NULL,
-		itemSize       INTEGER      NOT NULL,
-		itemCount      INTEGER      NOT NULL,
-		itemTotalCount INTEGER      NOT NULL,
+		itemMode       BIGINT       NOT NULL,
+		itemSize       BIGINT       NOT NULL,
+		itemCount      BIGINT       NOT NULL,
+		itemTotalCount BIGINT       NOT NULL,
 		itemCreateTime TIMESTAMP    NOT NULL,
 		itemModifyTime TIMESTAMP    NOT NULL,
 		itemChangeTime TIMESTAMP    NOT NULL,
@@ -68,18 +70,18 @@ func (db *DB) Create() error {
 	);
 
 	CREATE TABLE _commit (
-		id          INTEGER   NOT NULL PRIMARY KEY AUTO_INCREMENT,
+		id          BIGINT    NOT NULL PRIMARY KEY AUTO_INCREMENT,
 		createTime  TIMESTAMP NOT NULL,
 		Hash        CHAR(64)  NOT NULL,
-		lastId      INTEGER   NOT NULL
+		lastId      BIGINT    NOT NULL
 	);
 
 	CREATE TABLE _branch (
 		name        VARCHAR(256) NOT NULL PRIMARY KEY,
 		description VARCHAR(256) NOT NULL DEFAULT "",
-		commitId    INTEGER      NOT NULL,
-		size        INTEGER      NOT NULL,
-		count       INTEGER      NOT NULL,
+		commitId    BIGINT       NOT NULL,
+		size        BIGINT       NOT NULL,
+		count       BIGINT       NOT NULL,
 		FOREIGN KEY (commitId)   REFERENCES _commit(id)
 	);
 	`)

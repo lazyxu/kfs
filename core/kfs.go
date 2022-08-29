@@ -28,35 +28,35 @@ type KFS struct {
 	isSqlite   bool
 }
 
-func New(root string) (*KFS, bool, error) {
+func New(root string) (*KFS, error) {
 	return NewWithSqlite(root, storage.NewStorage1)
 }
 
-func NewWithSqlite(root string, newStorage func(root string) (storage.Storage, error)) (*KFS, bool, error) {
+func NewWithSqlite(root string, newStorage func(root string) (storage.Storage, error)) (*KFS, error) {
 	exist := true
 	s, err := newStorage(root)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 	dbFileName := path.Join(root, "kfs.db")
 	_, err = os.Stat(dbFileName)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			return nil, false, err
+			return nil, err
 		}
 		exist = false
 	}
 	db, err := gosqlite.Open(dbFileName)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 	if !exist {
 		err = db.Create()
 		if err != nil {
-			return nil, exist, err
+			return nil, err
 		}
 	}
-	return &KFS{Db: db, S: s, root: root, newStorage: newStorage, isSqlite: true}, exist, nil
+	return &KFS{Db: db, S: s, root: root, newStorage: newStorage, isSqlite: true}, nil
 }
 
 func NewWithMysql(root string, newStorage func(root string) (storage.Storage, error)) (*KFS, error) {

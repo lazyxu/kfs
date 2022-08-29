@@ -12,6 +12,20 @@ func (db *DB) WriteCommit(ctx context.Context, commit *dao.Commit) error {
 	return db.writeCommit(ctx, conn, commit)
 }
 
+func (db *DB) updateBranch(ctx context.Context, txOrDb TxOrDb, dir dao.Dir, branchName string, message string) error {
+	commit := dao.NewCommit(dir, branchName, message)
+	err := db.writeCommit(ctx, txOrDb, &commit)
+	if err != nil {
+		return err
+	}
+	branch := dao.NewBranch(branchName, commit, dir)
+	err = db.insertBranch(ctx, txOrDb, branch)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (db *DB) writeCommit(ctx context.Context, txOrDb TxOrDb, commit *dao.Commit) error {
 	// TODO: if Hash not changed.
 	res, err := txOrDb.ExecContext(ctx, `

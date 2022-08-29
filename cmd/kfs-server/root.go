@@ -68,7 +68,7 @@ var rootCmd = &cobra.Command{
 			err = errors.New("webPort should be between 1024 and 65535, actual " + webPortString)
 			return
 		}
-		kfsCore, _, err := core.New(kfsRoot)
+		kfsCore, err := core.New(kfsRoot)
 		if err != nil {
 			return
 		}

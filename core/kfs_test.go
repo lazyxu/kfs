@@ -25,7 +25,7 @@ func BenchmarkStorage0Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		kfs, _, err := NewWithSqlite(testRootDir, storage.NewStorage0)
+		kfs, err := NewWithSqlite(testRootDir, storage.NewStorage0)
 		return kfs, err
 	}, branchName, fileCount, fileSize)
 }
@@ -35,7 +35,7 @@ func BenchmarkStorage1Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		kfs, _, err := NewWithSqlite(testRootDir, storage.NewStorage1)
+		kfs, err := NewWithSqlite(testRootDir, storage.NewStorage1)
 		return kfs, err
 	}, branchName, fileCount, fileSize)
 }
@@ -45,7 +45,7 @@ func BenchmarkStorage2Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		kfs, _, err := NewWithSqlite(testRootDir, storage.NewStorage2)
+		kfs, err := NewWithSqlite(testRootDir, storage.NewStorage2)
 		return kfs, err
 	}, branchName, fileCount, fileSize)
 }
@@ -55,7 +55,7 @@ func BenchmarkStorage3Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		kfs, _, err := NewWithSqlite(testRootDir, storage.NewStorage3)
+		kfs, err := NewWithSqlite(testRootDir, storage.NewStorage3)
 		return kfs, err
 	}, branchName, fileCount, fileSize)
 }
@@ -65,7 +65,7 @@ func BenchmarkStorage4Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		kfs, _, err := NewWithSqlite(testRootDir, storage.NewStorage4)
+		kfs, err := NewWithSqlite(testRootDir, storage.NewStorage4)
 		return kfs, err
 	}, branchName, fileCount, fileSize)
 }
@@ -106,6 +106,7 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 		wg := sync.WaitGroup{}
 		wg.Add(fileCount)
 		for j := 0; j < fileCount; j++ {
+			//go func(j int) {
 			fileName := strconv.Itoa(j)
 			hash, content := storage.NewContent(strconv.Itoa(j) + strings.Repeat("y", fileSize) + "\n")
 			mode := uint64(os.FileMode(0o700))
@@ -138,6 +139,7 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 					return
 				}
 			}()
+			//}(j)
 		}
 		wg.Wait()
 		b.StopTimer()
