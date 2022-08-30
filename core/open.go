@@ -2,12 +2,12 @@ package core
 
 import (
 	"context"
-	"github.com/lazyxu/kfs/dao"
-	storage "github.com/lazyxu/kfs/storage/local"
 	"os"
+
+	"github.com/lazyxu/kfs/dao"
 )
 
-func (fs *KFS) Open(ctx context.Context, branchName string, filePath string) (mode os.FileMode, rc storage.SizedReadCloser, dirItems []dao.DirItem, err error) {
+func (fs *KFS) Open(ctx context.Context, branchName string, filePath string) (mode os.FileMode, rc dao.SizedReadCloser, dirItems []dao.DirItem, err error) {
 	var hash string
 	hash, mode, dirItems, err = fs.Db.Open(ctx, branchName, FormatPath(filePath))
 	if err != nil {

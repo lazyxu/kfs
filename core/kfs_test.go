@@ -111,7 +111,7 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 			hash, content := storage.NewContent(strconv.Itoa(j) + strings.Repeat("y", fileSize) + "\n")
 			mode := uint64(os.FileMode(0o700))
 			now := uint64(time.Now().UnixNano())
-			exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) (e error) {
+			exist, err := kfsCore.S.Write(hash, func(f io.Writer, hasher io.Writer) (e error) {
 				w := io.MultiWriter(f, hasher)
 				_, e = io.CopyN(w, bytes.NewBuffer(content), int64(len(content)))
 				return rpcutil.UnexpectedIfError(e)

@@ -6,11 +6,13 @@ import (
 	"path"
 	"sync"
 	"testing"
+
+	"github.com/lazyxu/kfs/dao"
 )
 
 const testDir = "tmp"
 
-func testNew(t *testing.T, newStorage func(string) (Storage, error)) {
+func testNew(t *testing.T, newStorage func(string) (dao.Storage, error)) {
 	s, err := newStorage(testDir)
 	if err != nil {
 		t.Error(err)
@@ -63,7 +65,7 @@ func testNew(t *testing.T, newStorage func(string) (Storage, error)) {
 	}
 }
 
-func testErrorHash(t *testing.T, newStorage func(string) (Storage, error)) {
+func testErrorHash(t *testing.T, newStorage func(string) (dao.Storage, error)) {
 	s, err := newStorage(testDir)
 	if err != nil {
 		t.Error(err)
@@ -86,7 +88,7 @@ func testErrorHash(t *testing.T, newStorage func(string) (Storage, error)) {
 	}
 }
 
-func testWriteTwice(t *testing.T, newStorage func(string) (Storage, error)) {
+func testWriteTwice(t *testing.T, newStorage func(string) (dao.Storage, error)) {
 	s, err := newStorage("tmp")
 	if err != nil {
 		t.Error(err)
@@ -123,7 +125,7 @@ func testWriteTwice(t *testing.T, newStorage func(string) (Storage, error)) {
 	}
 }
 
-func testConcurrentWrite(t *testing.T, newStorage func(string) (Storage, error)) {
+func testConcurrentWrite(t *testing.T, newStorage func(string) (dao.Storage, error)) {
 	s, err := newStorage("tmp")
 	if err != nil {
 		t.Error(err)

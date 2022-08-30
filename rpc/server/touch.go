@@ -3,9 +3,10 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/lazyxu/kfs/dao"
 	"io"
 	"path/filepath"
+
+	"github.com/lazyxu/kfs/dao"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/pb"
@@ -20,7 +21,7 @@ func handleTouch(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
 		return err
 	}
 	fileOrDir := dao.NewFileByBytes(nil)
-	_, err = kfsCore.S.WriteFn(fileOrDir.Hash(), func(f io.Writer, hasher io.Writer) error {
+	_, err = kfsCore.S.Write(fileOrDir.Hash(), func(f io.Writer, hasher io.Writer) error {
 		return nil
 	})
 	if err != nil {

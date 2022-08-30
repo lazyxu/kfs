@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"path"
+
+	"github.com/lazyxu/kfs/dao"
 )
 
 const (
@@ -17,8 +19,8 @@ const (
 	files = "files"
 )
 
-func FuncNew(root string, newStorage func(root string) (Storage, error)) func() (Storage, error) {
-	return func() (Storage, error) {
+func FuncNew(root string, newStorage func(root string) (dao.Storage, error)) func() (dao.Storage, error) {
+	return func() (dao.Storage, error) {
 		return newStorage(root)
 	}
 }
@@ -43,10 +45,19 @@ func NewContent(str string) (string, []byte) {
 	return hash, content
 }
 
-func Write(s Storage, hash string, reader io.Reader) (bool, error) {
-	return s.WriteFn(hash, func(f io.Writer, hasher io.Writer) error {
+func Write(s dao.Storage, hash string, reader io.Reader) (bool, error) {
+	return s.Write(hash, func(f io.Writer, hasher io.Writer) error {
 		rr := io.TeeReader(reader, hasher)
 		_, err := io.Copy(f, rr)
 		return err
 	})
+}
+
+type sizedReaderCloser struct {
+	io.ReadCloser
+	size int64
+}
+
+func (rc sizedReaderCloser) Size() int64 {
+	return rc.size
 }

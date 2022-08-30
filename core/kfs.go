@@ -2,8 +2,6 @@ package core
 
 import (
 	"github.com/lazyxu/kfs/dao"
-
-	storage "github.com/lazyxu/kfs/storage/local"
 )
 
 type UploadConfig struct {
@@ -15,13 +13,13 @@ type UploadConfig struct {
 
 type KFS struct {
 	Db         dao.DB
-	S          storage.Storage
+	S          dao.Storage
 	root       string
-	newStorage func(root string) (storage.Storage, error)
+	newStorage func(root string) (dao.Storage, error)
 	isSqlite   bool
 }
 
-func New(funcNewDb func() (dao.DB, error), funcNewStorage func() (storage.Storage, error)) (*KFS, error) {
+func New(funcNewDb func() (dao.DB, error), funcNewStorage func() (dao.Storage, error)) (*KFS, error) {
 	s, err := funcNewStorage()
 	if err != nil {
 		return nil, err

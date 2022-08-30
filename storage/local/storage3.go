@@ -8,13 +8,15 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/lazyxu/kfs/dao"
 )
 
 type Storage3 struct {
 	root string
 }
 
-func NewStorage3(root string) (Storage, error) {
+func NewStorage3(root string) (dao.Storage, error) {
 	root, err := filepath.Abs(root)
 	if err != nil {
 		return nil, err
@@ -22,7 +24,7 @@ func NewStorage3(root string) (Storage, error) {
 	return &Storage3{root: root}, nil
 }
 
-func (s *Storage3) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
+func (s *Storage3) Write(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
 	p := path.Join(s.root, files, hash)
 	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE, 0o200)
 	if err != nil {
@@ -52,7 +54,7 @@ func (s *Storage3) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) e
 	return false, nil
 }
 
-func (s *Storage3) ReadWithSize(hash string) (SizedReadCloser, error) {
+func (s *Storage3) ReadWithSize(hash string) (dao.SizedReadCloser, error) {
 	p := path.Join(s.root, files, hash)
 	f, err := os.OpenFile(p, os.O_RDONLY, 0o200)
 	if err != nil {

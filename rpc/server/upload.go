@@ -5,10 +5,11 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"io"
+
 	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 	"github.com/pierrec/lz4"
-	"io"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/pb"
@@ -114,7 +115,7 @@ func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	}
 	println(conn.RemoteAddr().String(), "size", size)
 
-	exist, err := kfsCore.S.WriteFn(hash, func(f io.Writer, hasher io.Writer) (e error) {
+	exist, err := kfsCore.S.Write(hash, func(f io.Writer, hasher io.Writer) (e error) {
 		_, e = conn.Write([]byte{1}) // not exist
 		if e != nil {
 			return rpcutil.UnexpectedIfError(e)
@@ -134,7 +135,7 @@ func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		return rpcutil.UnexpectedIfError(e)
 	})
 	if err != nil {
-		println(conn.RemoteAddr().String(), "WriteFn", err.Error())
+		println(conn.RemoteAddr().String(), "Write", err.Error())
 		return err
 	}
 	if exist {

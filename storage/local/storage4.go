@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/lazyxu/kfs/dao"
+
 	"github.com/gofrs/flock"
 )
 
@@ -17,7 +19,7 @@ type Storage4 struct {
 	root string
 }
 
-func NewStorage4(root string) (Storage, error) {
+func NewStorage4(root string) (dao.Storage, error) {
 	root, err := filepath.Abs(root)
 	if err != nil {
 		return nil, err
@@ -45,7 +47,7 @@ func (s *Storage4) getFile(hash string) (*os.File, error) {
 	return f, nil
 }
 
-func (s *Storage4) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
+func (s *Storage4) Write(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
 	lock := flock.New(path.Join(s.root, lockFileName))
 	err := lock.Lock()
 	if err != nil {
@@ -84,7 +86,7 @@ func (s *Storage4) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) e
 	return false, nil
 }
 
-func (s *Storage4) ReadWithSize(hash string) (SizedReadCloser, error) {
+func (s *Storage4) ReadWithSize(hash string) (dao.SizedReadCloser, error) {
 	p := path.Join(s.root, files, hash[:2], hash[2:])
 	f, err := os.OpenFile(p, os.O_RDONLY, 0o200)
 	if err != nil {

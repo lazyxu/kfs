@@ -9,6 +9,8 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/lazyxu/kfs/dao"
+
 	"github.com/gofrs/flock"
 )
 
@@ -16,7 +18,7 @@ type Storage0 struct {
 	root string
 }
 
-func NewStorage0(root string) (Storage, error) {
+func NewStorage0(root string) (dao.Storage, error) {
 	root, err := filepath.Abs(root)
 	if err != nil {
 		return nil, err
@@ -24,7 +26,7 @@ func NewStorage0(root string) (Storage, error) {
 	return &Storage0{root: root}, nil
 }
 
-func (s *Storage0) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
+func (s *Storage0) Write(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
 	lock := flock.New(path.Join(s.root, lockFileName))
 	err := lock.Lock()
 	if err != nil {
@@ -60,7 +62,7 @@ func (s *Storage0) WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) e
 	return false, nil
 }
 
-func (s *Storage0) ReadWithSize(hash string) (SizedReadCloser, error) {
+func (s *Storage0) ReadWithSize(hash string) (dao.SizedReadCloser, error) {
 	p := path.Join(s.root, files, hash)
 	f, err := os.OpenFile(p, os.O_RDONLY, 0o200)
 	if err != nil {
