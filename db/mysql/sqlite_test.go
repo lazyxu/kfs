@@ -37,6 +37,16 @@ func TestSqlite(t *testing.T) {
 		t.Error(err)
 		return
 	}
+	err = s.Remove()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Create()
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	hash1, content1 := storage.NewContent("")
 	_, err = storage.Write(s, hash1, bytes.NewReader(content1))
