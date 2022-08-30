@@ -7,10 +7,24 @@ import (
 	"github.com/lazyxu/kfs/dao"
 )
 
-func (db *DB) WriteBranch(ctx context.Context, branch dao.Branch) error {
+func (db *DB) ResetBranch(ctx context.Context, branchName string) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return db.writeBranch(ctx, conn, branch)
+	dir, err := db.writeDir(ctx, conn, nil, nil)
+	if err != nil {
+		return err
+	}
+	commit := dao.NewCommit(dir, branchName, "")
+	err = db.writeCommit(ctx, conn, &commit)
+	if err != nil {
+		return err
+	}
+	branch := dao.NewBranch(branchName, commit, dir)
+	err = db.writeBranch(ctx, conn, branch)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (db *DB) writeBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error {

@@ -22,14 +22,6 @@ func NewStorage5(root string) (Storage, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = os.MkdirAll(path.Join(root, files), dirPerm)
-	if err != nil && !os.IsExist(err) {
-		return nil, err
-	}
-	err = createGlobalLockFile(root)
-	if err != nil && !os.IsExist(err) {
-		return nil, err
-	}
 	return &Storage5{root: root}, nil
 }
 
@@ -127,4 +119,27 @@ func (s *Storage5) ReadWithSize(hash string) (SizedReadCloser, error) {
 		return nil, err
 	}
 	return sizedReaderCloser{f, info.Size()}, nil
+}
+
+func (s *Storage5) Remove() error {
+	return os.RemoveAll(s.root)
+}
+
+func (s *Storage5) Create() error {
+	_, err := os.Stat(s.root)
+	if err == nil {
+		return fmt.Errorf("file or dir already exist: %s", s.root)
+	}
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	err = os.MkdirAll(path.Join(s.root, files), dirPerm)
+	if err != nil && !os.IsExist(err) {
+		return err
+	}
+	err = createGlobalLockFile(s.root)
+	if err != nil && !os.IsExist(err) {
+		return err
+	}
+	return nil
 }

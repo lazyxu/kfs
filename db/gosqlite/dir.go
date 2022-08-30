@@ -208,7 +208,7 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 	return
 }
 
-func (db *DB) Remove(ctx context.Context, branchName string, splitPath []string) (commit dao.Commit, branch dao.Branch, err error) {
+func (db *DB) RemoveDirItem(ctx context.Context, branchName string, splitPath []string) (commit dao.Commit, branch dao.Branch, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	tx, err := conn.Begin()

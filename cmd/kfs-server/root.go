@@ -12,6 +12,10 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/lazyxu/kfs/db/gosqlite"
+
+	storage "github.com/lazyxu/kfs/storage/local"
+
 	"github.com/gorilla/websocket"
 
 	"github.com/lazyxu/kfs/rpc/server"
@@ -68,7 +72,8 @@ var rootCmd = &cobra.Command{
 			err = errors.New("webPort should be between 1024 and 65535, actual " + webPortString)
 			return
 		}
-		kfsCore, err := core.New(kfsRoot)
+		//kfsCore, err := core.New(mysql.FuncNew("root:12345678@/kfs?parseTime=true&multiStatements=true"), storage.FuncNew(kfsRoot, storage.NewStorage1))
+		kfsCore, err := core.New(gosqlite.FuncNew("kfs.db"), storage.FuncNew(kfsRoot, storage.NewStorage1))
 		if err != nil {
 			return
 		}

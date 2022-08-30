@@ -15,7 +15,7 @@ func TestTouch(t *testing.T) {
 	// 2. touch file
 	{
 		stdout, stderr := exec(t, []string{"touch", filePath})
-		assert.Contains(t, stdout, "commitId=2")
+		assert.Contains(t, stdout, "count=1")
 		assert.Empty(t, stderr)
 	}
 	// 3. ls

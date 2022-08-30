@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/lazyxu/kfs/db/gosqlite"
+	storage "github.com/lazyxu/kfs/storage/local"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/lazyxu/kfs/core"
@@ -21,7 +24,8 @@ var (
 )
 
 func initServer() error {
-	kfsCore, err := core.New(kfsRoot)
+	//kfsCore, err := core.New(mysql.FuncNew("root:12345678@/kfs?parseTime=true&multiStatements=true"), storage.FuncNew(kfsRoot, storage.NewStorage1))
+	kfsCore, err := core.New(gosqlite.FuncNew("kfs.db"), storage.FuncNew(kfsRoot, storage.NewStorage1))
 	if err != nil {
 		return err
 	}

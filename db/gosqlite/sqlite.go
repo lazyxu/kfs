@@ -3,11 +3,27 @@ package gosqlite
 import (
 	"database/sql"
 
+	"github.com/lazyxu/kfs/dao"
 	_ "modernc.org/sqlite"
 )
 
 type DB struct {
-	ch chan *sql.DB
+	dataSourceName string
+	ch             chan *sql.DB
+}
+
+func FuncNew(dataSourceName string) func() (dao.DB, error) {
+	return func() (dao.DB, error) {
+		db, err := Open(dataSourceName)
+		if err != nil {
+			return nil, err
+		}
+		err = db.Create()
+		if err != nil {
+			return nil, err
+		}
+		return db, nil
+	}
 }
 
 func Open(dataSourceName string) (*DB, error) {
@@ -30,33 +46,43 @@ func (db *DB) putConn(conn *sql.DB) {
 	db.ch <- conn
 }
 
-func (db *DB) Create() error {
+func (db *DB) Remove() error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	_, err := conn.Exec(`
 	DROP TABLE IF EXISTS _file;
-	CREATE TABLE _file (
+	DROP TABLE IF EXISTS _dir;
+	DROP TABLE IF EXISTS _dirItem;
+	DROP TABLE IF EXISTS _commit;
+	DROP TABLE IF EXISTS _branch;
+	`)
+	return err
+}
+
+func (db *DB) Create() error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	_, err := conn.Exec(`
+	CREATE TABLE IF NOT EXISTS _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
 		size INTEGER  NOT NULL
 	);
 
-	DROP TABLE IF EXISTS _dir;
-	CREATE TABLE _dir (
+	CREATE TABLE IF NOT EXISTS _dir (
 		hash       CHAR(64) NOT NULL PRIMARY KEY,
 		size       INTEGER  NOT NULL,
 		count      INTEGER  NOT NULL,
 		totalCount INTEGER  NOT NULL
 	);
 
-	DROP TABLE IF EXISTS _dirItem;
-	CREATE TABLE _dirItem (
+	CREATE TABLE IF NOT EXISTS _dirItem (
 		hash           CHAR(64)     NOT NULL,
 		itemHash       CHAR(64)     NOT NULL,
 		itemName       VARCHAR(256) NOT NULL,
-		itemMode       INTEGER      NOT NULL,
-		itemSize       INTEGER      NOT NULL,
-		itemCount      INTEGER      NOT NULL,
-		itemTotalCount INTEGER      NOT NULL,
+		itemMode       INTEGER       NOT NULL,
+		itemSize       INTEGER       NOT NULL,
+		itemCount      INTEGER       NOT NULL,
+		itemTotalCount INTEGER       NOT NULL,
 		itemCreateTime TIMESTAMP    NOT NULL,
 		itemModifyTime TIMESTAMP    NOT NULL,
 		itemChangeTime TIMESTAMP    NOT NULL,
@@ -64,21 +90,20 @@ func (db *DB) Create() error {
 		PRIMARY KEY(Hash, itemName)
 	);
 
-	DROP TABLE IF EXISTS _commit;
-	CREATE TABLE _commit (
-		id          INTEGER   NOT NULL PRIMARY KEY AUTOINCREMENT,
+	CREATE TABLE IF NOT EXISTS _commit (
+		id          INTEGER    NOT NULL PRIMARY KEY AUTOINCREMENT,
 		createTime  TIMESTAMP NOT NULL,
 		Hash        CHAR(64)  NOT NULL,
-		lastId      INTEGER   NOT NULL
+		lastId      INTEGER    NOT NULL
 	);
 
-	DROP TABLE IF EXISTS _branch;
-	CREATE TABLE _branch (
+	CREATE TABLE IF NOT EXISTS _branch (
 		name        VARCHAR(256) NOT NULL PRIMARY KEY,
 		description VARCHAR(256) NOT NULL DEFAULT "",
-		commitId    INTEGER      NOT NULL,
-		size        INTEGER      NOT NULL,
-		count       INTEGER      NOT NULL
+		commitId    INTEGER       NOT NULL,
+		size        INTEGER       NOT NULL,
+		count       INTEGER       NOT NULL,
+		FOREIGN KEY (commitId)   REFERENCES _commit(id)
 	);
 	`)
 	return err

@@ -11,13 +11,32 @@ import (
 const testDir = "tmp"
 
 func testNew(t *testing.T, newStorage func(string) (Storage, error)) {
-	os.RemoveAll(testDir)
-	_, err := newStorage(testDir)
+	s, err := newStorage(testDir)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	_, err = newStorage(testDir)
+	err = s.Remove()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Create()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	s, err = newStorage(testDir)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Remove()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Create()
 	if err != nil {
 		t.Error(err)
 		return
@@ -32,11 +51,30 @@ func testNew(t *testing.T, newStorage func(string) (Storage, error)) {
 		t.Error(err)
 		return
 	}
+	err = s.Remove()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Create()
+	if err != nil {
+		t.Error(err)
+		return
+	}
 }
 
 func testErrorHash(t *testing.T, newStorage func(string) (Storage, error)) {
-	os.RemoveAll(testDir)
 	s, err := newStorage(testDir)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Remove()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Create()
 	if err != nil {
 		t.Error(err)
 		return
@@ -49,8 +87,17 @@ func testErrorHash(t *testing.T, newStorage func(string) (Storage, error)) {
 }
 
 func testWriteTwice(t *testing.T, newStorage func(string) (Storage, error)) {
-	os.RemoveAll(testDir)
 	s, err := newStorage("tmp")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Remove()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Create()
 	if err != nil {
 		t.Error(err)
 		return
@@ -77,8 +124,17 @@ func testWriteTwice(t *testing.T, newStorage func(string) (Storage, error)) {
 }
 
 func testConcurrentWrite(t *testing.T, newStorage func(string) (Storage, error)) {
-	os.RemoveAll(testDir)
 	s, err := newStorage("tmp")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Remove()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = s.Create()
 	if err != nil {
 		t.Error(err)
 		return

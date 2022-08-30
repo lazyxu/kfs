@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 )
@@ -11,7 +12,7 @@ func handleReset(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	if err != nil {
 		return err
 	}
-	err = kfsCore.Reset(context.TODO(), branchName)
+	err = kfsCore.ResetBranch(context.TODO(), branchName)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "Reset", err.Error())
 		return err

@@ -20,9 +20,12 @@ func TestSqlite(t *testing.T) {
 		t.Error(err)
 		return
 	}
-
 	defer db.Close()
-
+	err = db.Remove()
+	if err != nil {
+		t.Error(err)
+		return
+	}
 	err = db.Create()
 	if err != nil {
 		t.Error(err)

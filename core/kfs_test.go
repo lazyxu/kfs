@@ -11,6 +11,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lazyxu/kfs/db/gosqlite"
+	"github.com/lazyxu/kfs/db/mysql"
+
 	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 	storage "github.com/lazyxu/kfs/storage/local"
@@ -25,8 +28,7 @@ func BenchmarkStorage0Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		kfs, err := NewWithSqlite(testRootDir, storage.NewStorage0)
-		return kfs, err
+		return New(gosqlite.FuncNew(testRootDir), storage.FuncNew(testRootDir, storage.NewStorage0))
 	}, branchName, fileCount, fileSize)
 }
 
@@ -35,8 +37,7 @@ func BenchmarkStorage1Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		kfs, err := NewWithSqlite(testRootDir, storage.NewStorage1)
-		return kfs, err
+		return New(gosqlite.FuncNew(testRootDir), storage.FuncNew(testRootDir, storage.NewStorage1))
 	}, branchName, fileCount, fileSize)
 }
 
@@ -45,8 +46,7 @@ func BenchmarkStorage2Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		kfs, err := NewWithSqlite(testRootDir, storage.NewStorage2)
-		return kfs, err
+		return New(gosqlite.FuncNew(testRootDir), storage.FuncNew(testRootDir, storage.NewStorage2))
 	}, branchName, fileCount, fileSize)
 }
 
@@ -55,8 +55,7 @@ func BenchmarkStorage3Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		kfs, err := NewWithSqlite(testRootDir, storage.NewStorage3)
-		return kfs, err
+		return New(gosqlite.FuncNew(testRootDir), storage.FuncNew(testRootDir, storage.NewStorage3))
 	}, branchName, fileCount, fileSize)
 }
 
@@ -65,17 +64,18 @@ func BenchmarkStorage4Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		kfs, err := NewWithSqlite(testRootDir, storage.NewStorage4)
-		return kfs, err
+		return New(gosqlite.FuncNew(testRootDir), storage.FuncNew(testRootDir, storage.NewStorage4))
 	}, branchName, fileCount, fileSize)
 }
+
+var dataSourceName = "root:12345678@/kfs?parseTime=true&multiStatements=true"
 
 func BenchmarkMysqlStorage4Upload1000Files1000(b *testing.B) {
 	branchName := "master"
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		return NewWithMysql(testRootDir, storage.NewStorage4)
+		return New(mysql.FuncNew(dataSourceName), storage.FuncNew(testRootDir, storage.NewStorage4))
 	}, branchName, fileCount, fileSize)
 }
 
@@ -84,7 +84,7 @@ func BenchmarkMysqlStorage5Upload1000Files1000(b *testing.B) {
 	fileCount := 1000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
-		return NewWithMysql(testRootDir, storage.NewStorage5)
+		return New(mysql.FuncNew(dataSourceName), storage.FuncNew(testRootDir, storage.NewStorage5))
 	}, branchName, fileCount, fileSize)
 }
 
@@ -97,7 +97,7 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 	defer kfsCore.Close()
 	ctx := context.TODO()
 	for i := 0; i < b.N; i++ {
-		err = kfsCore.Reset(ctx, branchName)
+		err = kfsCore.ResetBranch(ctx, branchName)
 		if err != nil {
 			b.Error(err)
 			return

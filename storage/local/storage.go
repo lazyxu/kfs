@@ -17,9 +17,10 @@ const (
 	files = "files"
 )
 
-type Storage interface {
-	WriteFn(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error)
-	ReadWithSize(hash string) (SizedReadCloser, error)
+func FuncNew(root string, newStorage func(root string) (Storage, error)) func() (Storage, error) {
+	return func() (Storage, error) {
+		return newStorage(root)
+	}
 }
 
 func createGlobalLockFile(root string) error {
@@ -48,18 +49,4 @@ func Write(s Storage, hash string, reader io.Reader) (bool, error) {
 		_, err := io.Copy(f, rr)
 		return err
 	})
-}
-
-type SizedReadCloser interface {
-	io.ReadCloser
-	Size() int64
-}
-
-type sizedReaderCloser struct {
-	io.ReadCloser
-	size int64
-}
-
-func (rc sizedReaderCloser) Size() int64 {
-	return rc.size
 }

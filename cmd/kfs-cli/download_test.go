@@ -20,7 +20,7 @@ func TestDownloadFile(t *testing.T) {
 	// 2. upload file
 	{
 		stdout, stderr := exec(t, []string{"upload", fileName, "-p", fileName})
-		assert.Contains(t, stdout, "commitId=2")
+		assert.Contains(t, stdout, "count=1")
 		assert.Empty(t, stderr)
 	}
 	// 3. download file
@@ -48,7 +48,7 @@ func TestDownloadDir(t *testing.T) {
 	// 2. upload dir
 	{
 		stdout, stderr := exec(t, []string{"upload", "."})
-		assert.Contains(t, stdout, "commitId=2")
+		assert.Contains(t, stdout, "count=")
 		assert.Empty(t, stderr)
 	}
 	// 3. download dir

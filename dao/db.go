@@ -6,10 +6,11 @@ import (
 )
 
 type DB interface {
+	Remove() error
 	Create() error
 	Close() error
 
-	WriteBranch(ctx context.Context, branch Branch) error
+	ResetBranch(ctx context.Context, branchName string) error
 	NewBranch(ctx context.Context, branchName string) (exist bool, err error)
 	BranchInfo(ctx context.Context, branchName string) (branch Branch, err error)
 
@@ -17,7 +18,7 @@ type DB interface {
 
 	WriteDir(ctx context.Context, dirItems []DirItem) (dir Dir, err error)
 	GetFileHash(ctx context.Context, branchName string, splitPath []string) (hash string, err error)
-	Remove(ctx context.Context, branchName string, splitPath []string) (commit Commit, branch Branch, err error)
+	RemoveDirItem(ctx context.Context, branchName string, splitPath []string) (commit Commit, branch Branch, err error)
 
 	WriteFile(ctx context.Context, file File) error
 	UpsertDirItem(ctx context.Context, branchName string, splitPath []string, item DirItem) (commit Commit, branch Branch, err error)

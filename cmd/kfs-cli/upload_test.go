@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/lazyxu/kfs/dao"
 	"os"
 	"strconv"
 	"testing"
+
+	"github.com/lazyxu/kfs/dao"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -23,7 +24,7 @@ func TestUpload(t *testing.T) {
 	// 3. upload dir
 	{
 		stdout, stderr := exec(t, []string{"upload", "."})
-		assert.Contains(t, stdout, "commitId=2")
+		assert.Contains(t, stdout, "count=")
 		assert.Empty(t, stderr)
 	}
 	// 4. ls
