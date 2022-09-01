@@ -26,7 +26,8 @@ usage () {
   echo 'Usage:
   bash scripts.sh start [web|desktop]
   bash scripts.sh build [server|cli|desktop]
-  bash scripts.sh unittest [go|js]'
+  bash scripts.sh unittest [go|js]
+  bash scripts.sh benchmark [go]'
 }
 
 cliTest () {
@@ -135,6 +136,18 @@ case $1 in
         yarn
         yarn test
         kill $backend_process
+        ;;
+
+      *)
+        usage
+        ;;
+    esac
+    ;;
+
+  benchmark)
+    case $2 in
+      go)
+        cd $root/core && go test -bench . | tee output.txt
         ;;
 
       *)
