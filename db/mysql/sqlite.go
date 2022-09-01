@@ -15,7 +15,7 @@ type DB struct {
 }
 
 func New(dataSourceName string) (dao.Database, error) {
-	db, err := Open(dataSourceName)
+	db, err := open(dataSourceName)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func New(dataSourceName string) (dao.Database, error) {
 	return db, nil
 }
 
-func Open(dataSourceName string) (*DB, error) {
+func open(dataSourceName string) (*DB, error) {
 	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		return nil, err

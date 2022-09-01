@@ -13,7 +13,7 @@ import (
 
 func TestSqlite(t *testing.T) {
 	dbFileName := "root:12345678@/kfs?parseTime=true&multiStatements=true"
-	db, err := Open(dbFileName)
+	db, err := open(dbFileName)
 	if err != nil {
 		t.Error(err)
 		return

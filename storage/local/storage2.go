@@ -23,7 +23,12 @@ func NewStorage2(root string) (dao.Storage, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Storage2{root: root}, nil
+	s := &Storage2{root: root}
+	err = s.Create()
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 func (s *Storage2) getLocalLock(hash string) (*flock.Flock, error) {
@@ -105,9 +110,6 @@ func (s *Storage2) Remove() error {
 
 func (s *Storage2) Create() error {
 	_, err := os.Stat(s.root)
-	if err == nil {
-		return fmt.Errorf("file or dir already exist: %s", s.root)
-	}
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}

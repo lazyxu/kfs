@@ -25,7 +25,12 @@ func NewStorage4(root string) (dao.Storage, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Storage4{root: root}, nil
+	s := &Storage4{root: root}
+	err = s.Create()
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 func (s *Storage4) getFile(hash string) (*os.File, error) {
@@ -104,9 +109,6 @@ func (s *Storage4) Remove() error {
 
 func (s *Storage4) Create() error {
 	_, err := os.Stat(s.root)
-	if err == nil {
-		return fmt.Errorf("file or dir already exist: %s", s.root)
-	}
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}

@@ -15,7 +15,7 @@ import (
 
 func TestSqlite(t *testing.T) {
 	dbFileName := "kfs.db"
-	db, err := Open(dbFileName)
+	db, err := open(dbFileName)
 	if err != nil {
 		t.Error(err)
 		return
