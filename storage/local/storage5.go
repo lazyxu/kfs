@@ -123,7 +123,15 @@ func (s *Storage5) ReadWithSize(hash string) (dao.SizedReadCloser, error) {
 }
 
 func (s *Storage5) Remove() error {
-	return os.RemoveAll(s.root)
+	err1 := s.Close()
+	err2 := os.RemoveAll(s.root)
+	if err1 != nil {
+		return err1
+	}
+	if err2 != nil {
+		return err2
+	}
+	return nil
 }
 
 func (s *Storage5) Create() error {
@@ -145,11 +153,15 @@ func (s *Storage5) Create() error {
 	return nil
 }
 
-func (s *Storage5) Close() error {
-	for _, f := range s.openedFiles {
+func (s *Storage5) Close() (err error) {
+	for i, f := range s.openedFiles {
 		if f != nil {
-			_ = f.Close()
+			s.openedFiles[i] = nil
+			err1 := f.Close()
+			if err1 != nil {
+				err = err1
+			}
 		}
 	}
-	return nil
+	return err
 }

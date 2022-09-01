@@ -22,6 +22,7 @@ type Database interface {
 
 	WriteFile(ctx context.Context, file File) error
 	UpsertDirItem(ctx context.Context, branchName string, splitPath []string, item DirItem) (commit Commit, branch Branch, err error)
+	UpsertDirItems(ctx context.Context, branchName string, splitPath []string, items []DirItem) (commit Commit, branch Branch, err error)
 	GetFileHashMode(ctx context.Context, branchName string, splitPath []string) (hash string, mode os.FileMode, err error)
 
 	List(ctx context.Context, branchName string, splitPath []string) (dirItems []DirItem, err error)

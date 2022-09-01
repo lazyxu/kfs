@@ -72,6 +72,34 @@ func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []
 	})
 }
 
+func (db *DB) UpsertDirItems(ctx context.Context, branchName string, splitPath []string, items []dao.DirItem) (commit dao.Commit, branch dao.Branch, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	tx, err := conn.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		err = commitAndRollback(tx, err)
+	}()
+	return db.updateDirItems(ctx, tx, branchName, splitPath, func(dirItems *[]dao.DirItem) ([]dao.DirItem, error) {
+		for _, item := range items {
+			find := false
+			for j, dirItem := range *dirItems {
+				if dirItem.Name == item.Name {
+					(*dirItems)[j] = item // update
+					find = true
+					break
+				}
+			}
+			if !find {
+				*dirItems = append(*dirItems, item) // insert
+			}
+		}
+		return items, nil
+	})
+}
+
 func (db *DB) GetFileHashMode(ctx context.Context, branchName string, splitPath []string) (hash string, mode os.FileMode, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)

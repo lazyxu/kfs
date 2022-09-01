@@ -71,6 +71,15 @@ func BenchmarkStorage4Upload1000Files1000(b *testing.B) {
 
 var mysqlDataSourceName = "root:12345678@/kfs?parseTime=true&multiStatements=true"
 
+func BenchmarkMysqlStorage1Upload1000Files1000(b *testing.B) {
+	branchName := "master"
+	fileCount := 1000
+	fileSize := 1000
+	storageUploadFiles(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(mysqlDataSourceName, mysql.New), dao.StorageNewFunc(testRootDir, storage.NewStorage1))
+	}, branchName, fileCount, fileSize)
+}
+
 func BenchmarkMysqlStorage4Upload1000Files1000(b *testing.B) {
 	branchName := "master"
 	fileCount := 1000
@@ -80,9 +89,27 @@ func BenchmarkMysqlStorage4Upload1000Files1000(b *testing.B) {
 	}, branchName, fileCount, fileSize)
 }
 
+func BenchmarkMysqlStorage4Upload10000Files1000(b *testing.B) {
+	branchName := "master"
+	fileCount := 10000
+	fileSize := 1000
+	storageUploadFiles(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(mysqlDataSourceName, mysql.New), dao.StorageNewFunc(testRootDir, storage.NewStorage4))
+	}, branchName, fileCount, fileSize)
+}
+
 func BenchmarkMysqlStorage5Upload1000Files1000(b *testing.B) {
 	branchName := "master"
 	fileCount := 1000
+	fileSize := 1000
+	storageUploadFiles(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(mysqlDataSourceName, mysql.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
+	}, branchName, fileCount, fileSize)
+}
+
+func BenchmarkMysqlStorage5Upload10000Files1000(b *testing.B) {
+	branchName := "master"
+	fileCount := 10000
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
 		return New(dao.DatabaseNewFunc(mysqlDataSourceName, mysql.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
@@ -122,6 +149,10 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 				_, e = io.CopyN(w, bytes.NewBuffer(content), int64(len(content)))
 				return rpcutil.UnexpectedIfError(e)
 			})
+			if err != nil {
+				b.Error(err)
+				return
+			}
 			if exist {
 				b.Error("should not exist")
 				return
@@ -148,6 +179,77 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 			//}(j)
 		}
 		wg.Wait()
+		b.StopTimer()
+	}
+}
+
+func BenchmarkMysqlStorage5Upload10000Files1000Batch(b *testing.B) {
+	branchName := "master"
+	fileCount := 10000
+	fileSize := 1000
+	storageUploadFilesBatch(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(mysqlDataSourceName, mysql.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
+	}, branchName, fileCount, fileSize)
+}
+
+func storageUploadFilesBatch(b *testing.B, newKFS func() (*KFS, error), branchName string, fileCount int, fileSize int) {
+	kfsCore, err := newKFS()
+	if err != nil {
+		b.Error(err)
+		return
+	}
+	defer kfsCore.Close()
+	ctx := context.TODO()
+	for i := 0; i < b.N; i++ {
+		err = kfsCore.Reset()
+		if err != nil {
+			b.Error(err)
+			return
+		}
+		_, err = kfsCore.Checkout(context.Background(), "master")
+		if err != nil {
+			b.Error(err)
+			return
+		}
+		b.ResetTimer()
+		dirItems := make([]dao.DirItem, fileCount)
+		for j := 0; j < fileCount; j++ {
+			//go func(j int) {
+			fileName := strconv.Itoa(j)
+			hash, content := storage.NewContent(strconv.Itoa(j) + strings.Repeat("y", fileSize) + "\n")
+			mode := uint64(os.FileMode(0o700))
+			now := uint64(time.Now().UnixNano())
+			exist, err := kfsCore.S.Write(hash, func(f io.Writer, hasher io.Writer) (e error) {
+				w := io.MultiWriter(f, hasher)
+				_, e = io.CopyN(w, bytes.NewBuffer(content), int64(len(content)))
+				return rpcutil.UnexpectedIfError(e)
+			})
+			if err != nil {
+				b.Error(err)
+				return
+			}
+			if exist {
+				b.Error("should not exist")
+				return
+			}
+			dirItems[j] = dao.DirItem{
+				Hash:       hash,
+				Name:       fileName,
+				Mode:       mode,
+				Size:       uint64(len(content)),
+				Count:      1,
+				TotalCount: 1,
+				CreateTime: now,
+				ModifyTime: now,
+				ChangeTime: now,
+				AccessTime: now,
+			}
+		}
+		_, _, err = kfsCore.Db.UpsertDirItems(ctx, branchName, []string{}, dirItems)
+		if err != nil {
+			b.Error(err)
+			return
+		}
 		b.StopTimer()
 	}
 }

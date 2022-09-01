@@ -292,3 +292,60 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 	}
 	return
 }
+
+func (db *DB) updateDirItems(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func(*[]dao.DirItem) ([]dao.DirItem, error)) (commit dao.Commit, branch dao.Branch, err error) {
+	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
+	if err != nil {
+		return
+	}
+	dirItems, err := db.getDirItems(ctx, tx, hash)
+	if err != nil {
+		return
+	}
+	dirItemsList := [][]dao.DirItem{dirItems}
+	for i := range splitPath {
+		hash, err = db.getDirItemHash(ctx, tx, hash, splitPath, i)
+		if err != nil {
+			return
+		}
+		dirItems, err = db.getDirItems(ctx, tx, hash)
+		if err != nil {
+			return
+		}
+		dirItemsList = append(dirItemsList, dirItems)
+	}
+	insertDirItems, err := fn(&dirItems)
+	if err != nil {
+		return
+	}
+	i := len(dirItemsList) - 1
+	dir, err := db.writeDir(ctx, tx, dirItems, insertDirItems)
+	if err != nil {
+		return
+	}
+	for i--; i >= 0; i-- {
+		for j := range dirItemsList[i] {
+			if dirItemsList[i][j].Name == splitPath[i] {
+				dirItemsList[i][j].Hash = dir.Hash()
+				dirItemsList[i][j].Size = dir.Size()
+				dirItemsList[i][j].Count = dir.Count()
+				break
+			}
+		}
+		dir, err = db.writeDir(ctx, tx, dirItemsList[i], nil)
+		if err != nil {
+			return
+		}
+	}
+	commit = dao.NewCommit(dir, branchName, "")
+	err = db.writeCommit(ctx, tx, &commit)
+	if err != nil {
+		return
+	}
+	branch = dao.NewBranch(branchName, commit, dir)
+	err = db.writeBranch(ctx, tx, branch)
+	if err != nil {
+		return
+	}
+	return
+}
