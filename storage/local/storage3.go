@@ -89,3 +89,7 @@ func (s *Storage3) Create() error {
 	}
 	return nil
 }
+
+func (s *Storage3) Close() error {
+	return nil
+}

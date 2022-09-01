@@ -8,9 +8,16 @@ type Storage interface {
 
 	Remove() error
 	Create() error
+	Close() error
 }
 
 type SizedReadCloser interface {
 	io.ReadCloser
 	Size() int64
+}
+
+func StorageNewFunc(root string, newStorage func(root string) (Storage, error)) func() (Storage, error) {
+	return func() (Storage, error) {
+		return newStorage(root)
+	}
 }

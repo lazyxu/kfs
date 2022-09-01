@@ -12,19 +12,19 @@ type UploadConfig struct {
 }
 
 type KFS struct {
-	Db         dao.DB
+	Db         dao.Database
 	S          dao.Storage
 	root       string
 	newStorage func(root string) (dao.Storage, error)
 	isSqlite   bool
 }
 
-func New(funcNewDb func() (dao.DB, error), funcNewStorage func() (dao.Storage, error)) (*KFS, error) {
-	s, err := funcNewStorage()
+func New(newDatabase func() (dao.Database, error), newStorage func() (dao.Storage, error)) (*KFS, error) {
+	s, err := newStorage()
 	if err != nil {
 		return nil, err
 	}
-	db, err := funcNewDb()
+	db, err := newDatabase()
 	if err != nil {
 		return nil, err
 	}
@@ -32,5 +32,33 @@ func New(funcNewDb func() (dao.DB, error), funcNewStorage func() (dao.Storage, e
 }
 
 func (fs *KFS) Close() error {
-	return fs.Db.Close()
+	err1 := fs.S.Close()
+	err2 := fs.Db.Close()
+	if err1 != nil {
+		return err1
+	}
+	if err2 != nil {
+		return err2
+	}
+	return nil
+}
+
+func (fs *KFS) Reset() error {
+	err := fs.S.Remove()
+	if err != nil {
+		return err
+	}
+	err = fs.S.Create()
+	if err != nil {
+		return err
+	}
+	err = fs.Db.Remove()
+	if err != nil {
+		return err
+	}
+	err = fs.Db.Create()
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -12,18 +12,16 @@ type DB struct {
 	ch             chan *sql.DB
 }
 
-func FuncNew(dataSourceName string) func() (dao.DB, error) {
-	return func() (dao.DB, error) {
-		db, err := Open(dataSourceName)
-		if err != nil {
-			return nil, err
-		}
-		err = db.Create()
-		if err != nil {
-			return nil, err
-		}
-		return db, nil
+func New(dataSourceName string) (dao.Database, error) {
+	db, err := Open(dataSourceName)
+	if err != nil {
+		return nil, err
 	}
+	err = db.Create()
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 func Open(dataSourceName string) (*DB, error) {

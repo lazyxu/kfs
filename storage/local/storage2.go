@@ -121,3 +121,7 @@ func (s *Storage2) Create() error {
 	}
 	return nil
 }
+
+func (s *Storage2) Close() error {
+	return nil
+}

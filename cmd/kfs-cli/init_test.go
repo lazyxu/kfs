@@ -3,11 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/db/gosqlite"
 	"net"
 	"strconv"
 	"testing"
 
-	"github.com/lazyxu/kfs/db/gosqlite"
 	storage "github.com/lazyxu/kfs/storage/local"
 
 	"github.com/stretchr/testify/assert"
@@ -24,8 +25,8 @@ var (
 )
 
 func initServer() error {
-	//kfsCore, err := core.New(mysql.FuncNew("root:12345678@/kfs?parseTime=true&multiStatements=true"), storage.FuncNew(kfsRoot, storage.NewStorage1))
-	kfsCore, err := core.New(gosqlite.FuncNew("kfs.db"), storage.FuncNew(kfsRoot, storage.NewStorage1))
+	//kfsCore, err := core.New(dao.DatabaseNewFunc("root:12345678@/kfs?parseTime=true&multiStatements=true", mysql.New), dao.StorageNewFunc(kfsRoot, storage.NewStorage1))
+	kfsCore, err := core.New(dao.DatabaseNewFunc("kfs.db", gosqlite.New), dao.StorageNewFunc(kfsRoot, storage.NewStorage1))
 	if err != nil {
 		return err
 	}

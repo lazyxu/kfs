@@ -16,7 +16,8 @@ import (
 )
 
 type Storage4 struct {
-	root string
+	root        string
+	openedFiles [256]*os.File
 }
 
 func NewStorage4(root string) (dao.Storage, error) {
@@ -27,14 +28,12 @@ func NewStorage4(root string) (dao.Storage, error) {
 	return &Storage4{root: root}, nil
 }
 
-var openedFiles [256]*os.File
-
 func (s *Storage4) getFile(hash string) (*os.File, error) {
 	id, err := strconv.ParseUint(hash[:2], 16, 8)
 	if err != nil {
 		return nil, err
 	}
-	f := openedFiles[id]
+	f := s.openedFiles[id]
 	if f != nil {
 		return f, nil
 	}
@@ -43,7 +42,7 @@ func (s *Storage4) getFile(hash string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	openedFiles[id] = f
+	s.openedFiles[id] = f
 	return f, nil
 }
 
@@ -118,6 +117,15 @@ func (s *Storage4) Create() error {
 	err = createGlobalLockFile(s.root)
 	if err != nil && !os.IsExist(err) {
 		return err
+	}
+	return nil
+}
+
+func (s *Storage4) Close() error {
+	for _, f := range s.openedFiles {
+		if f != nil {
+			_ = f.Close()
+		}
 	}
 	return nil
 }

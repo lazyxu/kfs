@@ -19,12 +19,6 @@ const (
 	files = "files"
 )
 
-func FuncNew(root string, newStorage func(root string) (dao.Storage, error)) func() (dao.Storage, error) {
-	return func() (dao.Storage, error) {
-		return newStorage(root)
-	}
-}
-
 func createGlobalLockFile(root string) error {
 	lockFile, err := os.Create(path.Join(root, lockFileName))
 	if err != nil {

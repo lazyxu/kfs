@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-type DB interface {
+type Database interface {
 	Remove() error
 	Create() error
 	Close() error
@@ -33,4 +33,10 @@ type DB interface {
 	DirCount(ctx context.Context) (int, error)
 	DirItemCount(ctx context.Context) (int, error)
 	BranchCount(ctx context.Context) (int, error)
+}
+
+func DatabaseNewFunc(dataSourceName string, newDB func(dataSourceName string) (Database, error)) func() (Database, error) {
+	return func() (Database, error) {
+		return newDB(dataSourceName)
+	}
 }
