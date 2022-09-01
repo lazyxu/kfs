@@ -35,20 +35,21 @@ func (db *DB) WriteBranch(ctx context.Context, branch dao.Branch) error {
 
 func (db *DB) writeBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error {
 	_, err := txOrDb.ExecContext(ctx, `
-	REPLACE INTO _branch VALUES (?, ?, ?, ?, ?);
-	`, branch.Name, branch.Description, branch.CommitId, branch.Size, branch.Count)
-	return err
-}
-
-func (db *DB) insertBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error {
-	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _branch (
 		name,
+		description,
 		commitId,
 		size,
 		count
-	) VALUES (?, ?, ?, ?);
-	`, branch.Name, branch.CommitId, branch.Size, branch.Count)
+	) VALUES (?, ?, ?, ?, ?) ON CONFLICT(name) DO UPDATE SET
+		commitId=?,
+		size=?,
+		count=?;
+	`, branch.Name, branch.Description, branch.CommitId, branch.Size, branch.Count,
+		branch.CommitId, branch.Size, branch.Count)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -72,7 +73,7 @@ func (db *DB) NewBranch(ctx context.Context, branchName string) (exist bool, err
 		return
 	}
 	branch := dao.NewBranch(branchName, commit, dir)
-	err = db.insertBranch(ctx, tx, branch)
+	err = db.writeBranch(ctx, tx, branch)
 	if isUniqueConstraintError(err) {
 		exist = true
 		err = nil

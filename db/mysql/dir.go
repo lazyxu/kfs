@@ -93,16 +93,7 @@ func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []st
 		return
 	}
 	defer func() {
-		if err == nil {
-			err = tx.Commit()
-			if err != nil {
-				err1 := tx.Rollback()
-				if err1 != nil {
-					panic(err1) // should not happen
-				}
-				return
-			}
-		}
+		err = commitAndRollback(tx, err)
 	}()
 	hash, err = db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {

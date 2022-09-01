@@ -29,24 +29,18 @@ func (db *DB) ResetBranch(ctx context.Context, branchName string) error {
 
 func (db *DB) writeBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error {
 	_, err := txOrDb.ExecContext(ctx, `
-	UPDATE _branch SET description=?, commitId=?, size=?, count=? WHERE name=?
-	`, branch.Description, branch.CommitId, branch.Size, branch.Count, branch.Name)
-	if err != nil {
-		return err
-	}
-	db.branchCache.Store(branch.Name, branch.CommitId)
-	return err
-}
-
-func (db *DB) insertBranch(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error {
-	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _branch (
 		name,
+		description,
 		commitId,
 		size,
 		count
-	) VALUES (?, ?, ?, ?);
-	`, branch.Name, branch.CommitId, branch.Size, branch.Count)
+	) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE 
+		commitId=?,
+		size=?,
+		count=?;
+	`, branch.Name, branch.Description, branch.CommitId, branch.Size, branch.Count,
+		branch.CommitId, branch.Size, branch.Count)
 	if err != nil {
 		return err
 	}
@@ -66,10 +60,9 @@ func (db *DB) NewBranch(ctx context.Context, branchName string) (exist bool, err
 		return
 	}
 	branch := dao.NewBranch(branchName, commit, dir)
-	err = db.insertBranch(ctx, conn, branch)
-	if isUniqueConstraintError(err) {
-		exist = true
-		err = nil
+	err = db.writeBranch(ctx, conn, branch)
+	if err != nil {
+		return
 	}
 	return
 }

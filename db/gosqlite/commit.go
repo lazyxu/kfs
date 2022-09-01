@@ -19,7 +19,7 @@ func (db *DB) updateBranch(ctx context.Context, txOrDb TxOrDb, dir dao.Dir, bran
 		return err
 	}
 	branch := dao.NewBranch(branchName, commit, dir)
-	err = db.insertBranch(ctx, txOrDb, branch)
+	err = db.writeBranch(ctx, txOrDb, branch)
 	if err != nil {
 		return err
 	}

@@ -102,7 +102,7 @@ func TestSqlite(t *testing.T) {
 		return
 	}
 
-	err = db.insertBranch(ctx, db.db, dao.NewBranch(branchName, commit, root))
+	err = db.writeBranch(ctx, db.db, dao.NewBranch(branchName, commit, root))
 	if err != nil {
 		t.Error(err)
 		return
