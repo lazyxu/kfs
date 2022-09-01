@@ -29,6 +29,13 @@ usage () {
   bash scripts.sh unittest [go|js]'
 }
 
+cliTest () {
+  echo "-------- kfs-cli-test: storage $1, database: $2 --------"
+  export kfs_test_storage_type=$1
+  export kfs_test_database_type=$2
+  cd $root/cmd/kfs-cli && go test -v ./...
+}
+
 case $1 in
   start)
     case $2 in
@@ -110,7 +117,14 @@ case $1 in
         cd $root/db/gosqlite && go test -v ./...
         cd $root/db/mysql && go test -v ./...
         cd $root/core && go test -v ./...
-        cd $root/cmd/kfs-cli && go test -v ./...
+        cliTest 0 sqlite
+        cliTest 1 sqlite
+        cliTest 2 sqlite
+        cliTest 3 sqlite
+        cliTest 0 mysql
+        cliTest 1 mysql
+        cliTest 2 mysql
+        cliTest 3 mysql
         ;;
 
       js)

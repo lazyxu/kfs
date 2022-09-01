@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/db/gosqlite"
+	"github.com/lazyxu/kfs/db/mysql"
+	storage "github.com/lazyxu/kfs/storage/local"
 	"net"
+	"os"
 	"strconv"
 	"testing"
-
-	storage "github.com/lazyxu/kfs/storage/local"
 
 	"github.com/stretchr/testify/assert"
 
@@ -25,8 +26,31 @@ var (
 )
 
 func initServer() error {
-	//kfsCore, err := core.New(dao.DatabaseNewFunc("root:12345678@/kfs?parseTime=true&multiStatements=true", mysql.New), dao.StorageNewFunc(kfsRoot, storage.NewStorage1))
-	kfsCore, err := core.New(dao.DatabaseNewFunc("kfs.db", gosqlite.New), dao.StorageNewFunc(kfsRoot, storage.NewStorage1))
+	storageType := os.Getenv("kfs_test_storage_type")
+	var newStorage func() (dao.Storage, error)
+	if storageType == "0" {
+		newStorage = dao.StorageNewFunc(kfsRoot, storage.NewStorage0)
+	} else if storageType == "1" {
+		newStorage = dao.StorageNewFunc(kfsRoot, storage.NewStorage1)
+	} else if storageType == "2" {
+		newStorage = dao.StorageNewFunc(kfsRoot, storage.NewStorage2)
+	} else if storageType == "3" {
+		newStorage = dao.StorageNewFunc(kfsRoot, storage.NewStorage3)
+	} else if storageType == "4" {
+		newStorage = dao.StorageNewFunc(kfsRoot, storage.NewStorage4)
+	} else {
+		newStorage = dao.StorageNewFunc(kfsRoot, storage.NewStorage5)
+	}
+
+	databaseType := os.Getenv("kfs_test_database_type")
+	var newDatabase func() (dao.Database, error)
+	if databaseType == "mysql" {
+		newDatabase = dao.DatabaseNewFunc("root:12345678@/kfs?parseTime=true&multiStatements=true", mysql.New)
+	} else {
+		newDatabase = dao.DatabaseNewFunc("kfs.db", gosqlite.New)
+	}
+
+	kfsCore, err := core.New(newDatabase, newStorage)
 	if err != nil {
 		return err
 	}
