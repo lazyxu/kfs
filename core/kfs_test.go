@@ -117,14 +117,12 @@ func BenchmarkMysqlStorage5Upload10000Files1000(b *testing.B) {
 }
 
 func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName string, fileCount int, fileSize int) {
-	kfsCore, err := newKFS()
-	if err != nil {
-		b.Error(err)
-		return
-	}
-	defer kfsCore.Close()
-	ctx := context.TODO()
 	for i := 0; i < b.N; i++ {
+		kfsCore, err := newKFS()
+		if err != nil {
+			b.Error(err)
+			return
+		}
 		err = kfsCore.Reset()
 		if err != nil {
 			b.Error(err)
@@ -159,7 +157,7 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 			}
 			go func() {
 				defer wg.Done()
-				_, _, err = kfsCore.Db.UpsertDirItem(ctx, branchName, FormatPath(fileName), dao.DirItem{
+				_, _, err = kfsCore.Db.UpsertDirItem(context.TODO(), branchName, FormatPath(fileName), dao.DirItem{
 					Hash:       hash,
 					Name:       fileName,
 					Mode:       mode,
@@ -183,6 +181,15 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 	}
 }
 
+func BenchmarkSqliteStorage5Upload10000Files1000Batch(b *testing.B) {
+	branchName := "master"
+	fileCount := 10000
+	fileSize := 1000
+	storageUploadFilesBatch(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(sqliteDataSource, gosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
+	}, branchName, fileCount, fileSize)
+}
+
 func BenchmarkMysqlStorage5Upload10000Files1000Batch(b *testing.B) {
 	branchName := "master"
 	fileCount := 10000
@@ -192,15 +199,31 @@ func BenchmarkMysqlStorage5Upload10000Files1000Batch(b *testing.B) {
 	}, branchName, fileCount, fileSize)
 }
 
+func BenchmarkSqliteStorage5Upload100000Files1000Batch(b *testing.B) {
+	branchName := "master"
+	fileCount := 100000
+	fileSize := 1000
+	storageUploadFilesBatch(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(sqliteDataSource, gosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
+	}, branchName, fileCount, fileSize)
+}
+
+func BenchmarkMysqlStorage5Upload100000Files1000Batch(b *testing.B) {
+	branchName := "master"
+	fileCount := 100000
+	fileSize := 1000
+	storageUploadFilesBatch(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(mysqlDataSourceName, mysql.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
+	}, branchName, fileCount, fileSize)
+}
+
 func storageUploadFilesBatch(b *testing.B, newKFS func() (*KFS, error), branchName string, fileCount int, fileSize int) {
-	kfsCore, err := newKFS()
-	if err != nil {
-		b.Error(err)
-		return
-	}
-	defer kfsCore.Close()
-	ctx := context.TODO()
 	for i := 0; i < b.N; i++ {
+		kfsCore, err := newKFS()
+		if err != nil {
+			b.Error(err)
+			return
+		}
 		err = kfsCore.Reset()
 		if err != nil {
 			b.Error(err)
@@ -245,7 +268,7 @@ func storageUploadFilesBatch(b *testing.B, newKFS func() (*KFS, error), branchNa
 				AccessTime: now,
 			}
 		}
-		_, _, err = kfsCore.Db.UpsertDirItems(ctx, branchName, []string{}, dirItems)
+		_, _, err = kfsCore.Db.UpsertDirItems(context.TODO(), branchName, []string{}, dirItems)
 		if err != nil {
 			b.Error(err)
 			return

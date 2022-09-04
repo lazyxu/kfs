@@ -79,20 +79,18 @@ func (db *DB) UpsertDirItems(ctx context.Context, branchName string, splitPath [
 	defer func() {
 		err = commitAndRollback(tx, err)
 	}()
-	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]dao.DirItem) ([]dao.DirItem, error) {
-		i := len(dirItemsList) - 1
+	return db.updateDirItems(ctx, tx, branchName, splitPath, func(dirItems *[]dao.DirItem) ([]dao.DirItem, error) {
 		for _, item := range items {
-			item.Name = splitPath[i]
 			find := false
-			for j, dirItem := range dirItemsList[i] {
-				if dirItem.Name == splitPath[i] {
-					dirItemsList[i][j] = item // update
+			for j, dirItem := range *dirItems {
+				if dirItem.Name == item.Name {
+					(*dirItems)[j] = item // update
 					find = true
 					break
 				}
 			}
 			if !find {
-				dirItemsList[i] = append(dirItemsList[i], item) // insert
+				*dirItems = append(*dirItems, item) // insert
 			}
 		}
 		return items, nil
