@@ -3,7 +3,6 @@ package core
 import (
 	"bytes"
 	"context"
-	"github.com/lazyxu/kfs/db/gosqlite"
 	"io"
 	"os"
 	"strconv"
@@ -12,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lazyxu/kfs/db/cgosqlite"
+	"github.com/lazyxu/kfs/db/gosqlite"
 	"github.com/lazyxu/kfs/db/mysql"
 
 	"github.com/lazyxu/kfs/dao"
@@ -66,6 +67,15 @@ func BenchmarkStorage4Upload1000Files1000(b *testing.B) {
 	fileSize := 1000
 	storageUploadFiles(b, func() (*KFS, error) {
 		return New(dao.DatabaseNewFunc(sqliteDataSource, gosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage4))
+	}, branchName, fileCount, fileSize)
+}
+
+func BenchmarkCgoSqliteStorage4Upload1000Files1000(b *testing.B) {
+	branchName := "master"
+	fileCount := 1000
+	fileSize := 1000
+	storageUploadFiles(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(sqliteDataSource, cgosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage4))
 	}, branchName, fileCount, fileSize)
 }
 
@@ -196,6 +206,15 @@ func BenchmarkMysqlStorage5Upload10000Files1000Batch(b *testing.B) {
 	fileSize := 1000
 	storageUploadFilesBatch(b, func() (*KFS, error) {
 		return New(dao.DatabaseNewFunc(mysqlDataSourceName, mysql.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
+	}, branchName, fileCount, fileSize)
+}
+
+func BenchmarkCgoSqliteStorage5Upload100000Files1000Batch(b *testing.B) {
+	branchName := "master"
+	fileCount := 100000
+	fileSize := 1000
+	storageUploadFilesBatch(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(sqliteDataSource, cgosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
 	}, branchName, fileCount, fileSize)
 }
 

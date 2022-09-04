@@ -9,6 +9,7 @@ use (
 	./rpc/rpcutil
 	./rpc/client
 	./rpc/server
+	./db/cgosqlite
 	./db/gosqlite
 	./db/mysql
 	./dao
