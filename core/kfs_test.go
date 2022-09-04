@@ -79,6 +79,15 @@ func BenchmarkCgoSqliteStorage4Upload1000Files1000(b *testing.B) {
 	}, branchName, fileCount, fileSize)
 }
 
+func BenchmarkCgoSqliteStorage4Upload10000Files1000(b *testing.B) {
+	branchName := "master"
+	fileCount := 10000
+	fileSize := 1000
+	storageUploadFiles(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(sqliteDataSource, cgosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage4))
+	}, branchName, fileCount, fileSize)
+}
+
 var mysqlDataSourceName = "root:12345678@/kfs?parseTime=true&multiStatements=true"
 
 func BenchmarkMysqlStorage1Upload1000Files1000(b *testing.B) {
@@ -191,7 +200,16 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 	}
 }
 
-func BenchmarkSqliteStorage5Upload10000Files1000Batch(b *testing.B) {
+func BenchmarkCgoSqliteStorage5Upload10000Files1000Batch(b *testing.B) {
+	branchName := "master"
+	fileCount := 10000
+	fileSize := 1000
+	storageUploadFilesBatch(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(sqliteDataSource, cgosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
+	}, branchName, fileCount, fileSize)
+}
+
+func BenchmarkGoSqliteStorage5Upload10000Files1000Batch(b *testing.B) {
 	branchName := "master"
 	fileCount := 10000
 	fileSize := 1000
@@ -218,7 +236,7 @@ func BenchmarkCgoSqliteStorage5Upload100000Files1000Batch(b *testing.B) {
 	}, branchName, fileCount, fileSize)
 }
 
-func BenchmarkSqliteStorage5Upload100000Files1000Batch(b *testing.B) {
+func BenchmarkGoSqliteStorage5Upload100000Files1000Batch(b *testing.B) {
 	branchName := "master"
 	fileCount := 100000
 	fileSize := 1000

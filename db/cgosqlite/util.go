@@ -3,8 +3,6 @@ package cgosqlite
 import (
 	"context"
 	"database/sql"
-
-	"modernc.org/sqlite"
 )
 
 func commitAndRollback(tx *sql.Tx, err error) error {
@@ -12,15 +10,6 @@ func commitAndRollback(tx *sql.Tx, err error) error {
 		err1 := tx.Rollback()
 		if err1 != nil {
 			return err1
-		}
-		if e, ok := err.(*sqlite.Error); ok {
-			if e.Code() == 5 {
-				return nil
-			}
-			// constraint failed: UNIQUE constraint failed: hash.hashval (1555)
-			if e.Code() == 1555 {
-				return nil
-			}
 		}
 		return err
 	}

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/lazyxu/kfs/dao"
 )
@@ -52,39 +51,42 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 	if totalRow > maxRow {
 		repeat = totalRow / maxRow
 		remainRow = totalRow - repeat*maxRow
-	}
-	query, err := getInsertDirItemQuery(maxRow)
-	if err != nil {
-		return
-	}
-	stmt, err := tx.PrepareContext(ctx, query)
-	defer func() {
-		if err == nil {
-			err = stmt.Close()
-		}
-	}()
-	for i := 0; i < repeat; i++ {
-		args := make([]interface{}, maxRow*column)
-		for i, dirItem := range insertDirItems[i*maxRow : (i+1)*maxRow] {
-			args[i*column] = dir.Hash()
-			args[i*column+1] = dirItem.Hash
-			args[i*column+2] = dirItem.Name
-			args[i*column+3] = dirItem.Mode
-			args[i*column+4] = dirItem.Size
-			args[i*column+5] = dirItem.Count
-			args[i*column+6] = dirItem.TotalCount
-			args[i*column+7] = time.Unix(0, int64(dirItem.CreateTime))
-			args[i*column+8] = time.Unix(0, int64(dirItem.ModifyTime))
-			args[i*column+9] = time.Unix(0, int64(dirItem.ChangeTime))
-			args[i*column+10] = time.Unix(0, int64(dirItem.AccessTime))
-		}
-		// TODO: override if duplicated
-		_, err = stmt.ExecContext(ctx, args...)
+		var query string
+		query, err = getInsertDirItemQuery(maxRow)
 		if err != nil {
 			return
 		}
+		var stmt *sql.Stmt
+		stmt, err = tx.PrepareContext(ctx, query)
+		defer func() {
+			if err == nil {
+				err = stmt.Close()
+			}
+		}()
+		for i := 0; i < repeat; i++ {
+			args := make([]interface{}, maxRow*column)
+			for i, dirItem := range insertDirItems[i*maxRow : (i+1)*maxRow] {
+				args[i*column] = dir.Hash()
+				args[i*column+1] = dirItem.Hash
+				args[i*column+2] = dirItem.Name
+				args[i*column+3] = dirItem.Mode
+				args[i*column+4] = dirItem.Size
+				args[i*column+5] = dirItem.Count
+				args[i*column+6] = dirItem.TotalCount
+				args[i*column+7] = dirItem.CreateTime
+				args[i*column+8] = dirItem.ModifyTime
+				args[i*column+9] = dirItem.ChangeTime
+				args[i*column+10] = dirItem.AccessTime
+			}
+			// TODO: override if duplicated
+			_, err = stmt.ExecContext(ctx, args...)
+			if err != nil {
+				return
+			}
+		}
 	}
 	if remainRow > 0 {
+		var query string
 		query, err = getInsertDirItemQuery(remainRow)
 		if err != nil {
 			return
@@ -98,10 +100,10 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 			args[i*column+4] = dirItem.Size
 			args[i*column+5] = dirItem.Count
 			args[i*column+6] = dirItem.TotalCount
-			args[i*column+7] = time.Unix(0, int64(dirItem.CreateTime))
-			args[i*column+8] = time.Unix(0, int64(dirItem.ModifyTime))
-			args[i*column+9] = time.Unix(0, int64(dirItem.ChangeTime))
-			args[i*column+10] = time.Unix(0, int64(dirItem.AccessTime))
+			args[i*column+7] = dirItem.CreateTime
+			args[i*column+8] = dirItem.ModifyTime
+			args[i*column+9] = dirItem.ChangeTime
+			args[i*column+10] = dirItem.AccessTime
 		}
 		// TODO: override if duplicated
 		_, err = tx.ExecContext(ctx, query, args...)
@@ -240,10 +242,6 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 	defer rows.Close()
 	for rows.Next() {
 		var dirItem dao.DirItem
-		var createTime time.Time
-		var modifyTime time.Time
-		var changeTime time.Time
-		var accessTime time.Time
 		err = rows.Scan(
 			&dirItem.Hash,
 			&dirItem.Name,
@@ -251,17 +249,13 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 			&dirItem.Size,
 			&dirItem.Count,
 			&dirItem.TotalCount,
-			&createTime,
-			&modifyTime,
-			&changeTime,
-			&accessTime)
+			&dirItem.CreateTime,
+			&dirItem.ModifyTime,
+			&dirItem.ChangeTime,
+			&dirItem.AccessTime)
 		if err != nil {
 			return
 		}
-		dirItem.CreateTime = uint64(createTime.UnixNano())
-		dirItem.ModifyTime = uint64(modifyTime.UnixNano())
-		dirItem.ChangeTime = uint64(changeTime.UnixNano())
-		dirItem.AccessTime = uint64(accessTime.UnixNano())
 		dirItems = append(dirItems, dirItem)
 	}
 	return

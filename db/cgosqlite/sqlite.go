@@ -25,7 +25,7 @@ func New(dataSourceName string) (dao.Database, error) {
 }
 
 func open(dataSourceName string) (*DB, error) {
-	conn, err := sql.Open("sqlite", dataSourceName)
+	conn, err := sql.Open("sqlite3", dataSourceName)
 	if err != nil {
 		return nil, err
 	}

@@ -40,7 +40,86 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 		}
 		return
 	}
-	stmt, err := tx.PrepareContext(ctx, `
+	if len(insertDirItems) == 0 {
+		return
+	}
+	column := 11
+	totalRow := len(insertDirItems)
+	repeat := 0
+	remainRow := totalRow
+	maxRow := 65536 / column
+	if totalRow > maxRow {
+		repeat = totalRow / maxRow
+		remainRow = totalRow - repeat*maxRow
+		var query string
+		query, err = getInsertDirItemQuery(maxRow)
+		if err != nil {
+			return
+		}
+		var stmt *sql.Stmt
+		stmt, err = tx.PrepareContext(ctx, query)
+		defer func() {
+			if err == nil {
+				err = stmt.Close()
+			}
+		}()
+		for i := 0; i < repeat; i++ {
+			args := make([]interface{}, maxRow*column)
+			for i, dirItem := range insertDirItems[i*maxRow : (i+1)*maxRow] {
+				args[i*column] = dir.Hash()
+				args[i*column+1] = dirItem.Hash
+				args[i*column+2] = dirItem.Name
+				args[i*column+3] = dirItem.Mode
+				args[i*column+4] = dirItem.Size
+				args[i*column+5] = dirItem.Count
+				args[i*column+6] = dirItem.TotalCount
+				args[i*column+7] = dirItem.CreateTime
+				args[i*column+8] = dirItem.ModifyTime
+				args[i*column+9] = dirItem.ChangeTime
+				args[i*column+10] = dirItem.AccessTime
+			}
+			// TODO: override if duplicated
+			_, err = stmt.ExecContext(ctx, args...)
+			if err != nil {
+				return
+			}
+		}
+	}
+	if remainRow > 0 {
+		var query string
+		query, err = getInsertDirItemQuery(remainRow)
+		if err != nil {
+			return
+		}
+		args := make([]interface{}, remainRow*column)
+		for i, dirItem := range insertDirItems[repeat*maxRow:] {
+			args[i*column] = dir.Hash()
+			args[i*column+1] = dirItem.Hash
+			args[i*column+2] = dirItem.Name
+			args[i*column+3] = dirItem.Mode
+			args[i*column+4] = dirItem.Size
+			args[i*column+5] = dirItem.Count
+			args[i*column+6] = dirItem.TotalCount
+			args[i*column+7] = dirItem.CreateTime
+			args[i*column+8] = dirItem.ModifyTime
+			args[i*column+9] = dirItem.ChangeTime
+			args[i*column+10] = dirItem.AccessTime
+		}
+		// TODO: override if duplicated
+		_, err = tx.ExecContext(ctx, query, args...)
+		if err != nil {
+			return
+		}
+	}
+	if err != nil {
+		return
+	}
+	return
+}
+
+func getInsertDirItemQuery(row int) (string, error) {
+	var qs strings.Builder
+	_, err := qs.WriteString(`
 	INSERT INTO _dirItem (
 		hash,
 		itemHash,
@@ -53,35 +132,18 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 		itemModifyTime,
 		itemChangeTime,
 		itemAccessTime
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-	`)
+	) VALUES `)
 	if err != nil {
-		return
+		return "", err
 	}
-	defer func() {
-		if err == nil {
-			err = stmt.Close()
+	for i := 0; i < row; i++ {
+		if i != 0 {
+			qs.WriteString(", ")
 		}
-	}()
-	for _, dirItem := range insertDirItems {
-		// TODO: override if duplicated
-		_, err = stmt.ExecContext(ctx,
-			dir.Hash(),
-			dirItem.Hash,
-			dirItem.Name,
-			dirItem.Mode,
-			dirItem.Size,
-			dirItem.Count,
-			dirItem.TotalCount,
-			dirItem.CreateTime,
-			dirItem.ModifyTime,
-			dirItem.ChangeTime,
-			dirItem.AccessTime)
-		if err != nil {
-			return
-		}
+		qs.WriteString("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	}
-	return
+	qs.WriteString(";")
+	return qs.String(), err
 }
 
 func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []string) (hash string, err error) {
@@ -278,6 +340,9 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 	}
 	branch = dao.NewBranch(branchName, commit, dir)
 	err = db.writeBranch(ctx, tx, branch)
+	if err != nil {
+		return
+	}
 	return
 }
 

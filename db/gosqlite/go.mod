@@ -2,12 +2,18 @@ module github.com/lazyxu/kfs/db/gosqlite
 
 go 1.18
 
-require modernc.org/sqlite v1.17.1
+require (
+	github.com/lazyxu/kfs/dao v0.0.0-20220904170928-8953c13791f7
+	github.com/lazyxu/kfs/storage/local v0.0.0-20220904170928-8953c13791f7
+	modernc.org/sqlite v1.17.1
+)
 
 require (
+	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	golang.org/x/mod v0.3.0 // indirect
