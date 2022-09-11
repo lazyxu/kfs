@@ -47,7 +47,7 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 	totalRow := len(insertDirItems)
 	repeat := 0
 	remainRow := totalRow
-	maxRow := 65536 / column
+	maxRow := 32766 / column
 	if totalRow > maxRow {
 		repeat = totalRow / maxRow
 		remainRow = totalRow - repeat*maxRow
@@ -58,6 +58,9 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 		}
 		var stmt *sql.Stmt
 		stmt, err = tx.PrepareContext(ctx, query)
+		if err != nil {
+			return
+		}
 		defer func() {
 			if err == nil {
 				err = stmt.Close()

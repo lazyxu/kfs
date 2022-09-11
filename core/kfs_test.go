@@ -136,6 +136,7 @@ func BenchmarkMysqlStorage5Upload10000Files1000(b *testing.B) {
 }
 
 func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName string, fileCount int, fileSize int) {
+	b.StopTimer()
 	for i := 0; i < b.N; i++ {
 		kfsCore, err := newKFS()
 		if err != nil {
@@ -152,7 +153,7 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 			b.Error(err)
 			return
 		}
-		b.ResetTimer()
+		b.StartTimer()
 		wg := sync.WaitGroup{}
 		wg.Add(fileCount)
 		for j := 0; j < fileCount; j++ {
@@ -196,6 +197,11 @@ func storageUploadFiles(b *testing.B, newKFS func() (*KFS, error), branchName st
 			//}(j)
 		}
 		wg.Wait()
+		err = kfsCore.Close()
+		if err != nil {
+			b.Error(err)
+			return
+		}
 		b.StopTimer()
 	}
 }
@@ -255,6 +261,7 @@ func BenchmarkMysqlStorage5Upload100000Files1000Batch(b *testing.B) {
 }
 
 func storageUploadFilesBatch(b *testing.B, newKFS func() (*KFS, error), branchName string, fileCount int, fileSize int) {
+	b.StopTimer()
 	for i := 0; i < b.N; i++ {
 		kfsCore, err := newKFS()
 		if err != nil {
@@ -271,7 +278,7 @@ func storageUploadFilesBatch(b *testing.B, newKFS func() (*KFS, error), branchNa
 			b.Error(err)
 			return
 		}
-		b.ResetTimer()
+		b.StartTimer()
 		dirItems := make([]dao.DirItem, fileCount)
 		for j := 0; j < fileCount; j++ {
 			//go func(j int) {
@@ -306,6 +313,11 @@ func storageUploadFilesBatch(b *testing.B, newKFS func() (*KFS, error), branchNa
 			}
 		}
 		_, _, err = kfsCore.Db.UpsertDirItems(context.TODO(), branchName, []string{}, dirItems)
+		if err != nil {
+			b.Error(err)
+			return
+		}
+		err = kfsCore.Close()
 		if err != nil {
 			b.Error(err)
 			return

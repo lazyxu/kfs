@@ -81,16 +81,16 @@ func (db *DB) Create() error {
 		itemSize       INTEGER       NOT NULL,
 		itemCount      INTEGER       NOT NULL,
 		itemTotalCount INTEGER       NOT NULL,
-		itemCreateTime TIMESTAMP    NOT NULL,
-		itemModifyTime TIMESTAMP    NOT NULL,
-		itemChangeTime TIMESTAMP    NOT NULL,
-		itemAccessTime TIMESTAMP    NOT NULL,
+		itemCreateTime INTEGER    NOT NULL,
+		itemModifyTime INTEGER    NOT NULL,
+		itemChangeTime INTEGER    NOT NULL,
+		itemAccessTime INTEGER    NOT NULL,
 		PRIMARY KEY(Hash, itemName)
 	);
 
 	CREATE TABLE IF NOT EXISTS _commit (
 		id          INTEGER    NOT NULL PRIMARY KEY AUTOINCREMENT,
-		createTime  TIMESTAMP NOT NULL,
+		createTime  INTEGER NOT NULL,
 		Hash        CHAR(64)  NOT NULL,
 		lastId      INTEGER    NOT NULL
 	);

@@ -2,6 +2,7 @@ package cgosqlite
 
 import (
 	"context"
+	"errors"
 
 	"github.com/lazyxu/kfs/dao"
 )
@@ -35,10 +36,31 @@ func (db *DB) writeCommit(ctx context.Context, txOrDb TxOrDb, commit *dao.Commit
 	if err != nil {
 		return err
 	}
-	id, err := res.LastInsertId()
+	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		return err
 	}
-	commit.Id = uint64(id)
+	if rowsAffected == 0 {
+		rows, err := txOrDb.QueryContext(ctx, `
+	SELECT id FROM _commit ORDER BY id DESC LIMIT 1
+	`, commit.CreateTime(), commit.Hash, commit.BranchName())
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		if !rows.Next() {
+			return errors.New("no commit")
+		}
+		err = rows.Scan(&commit.Id)
+		if err != nil {
+			return err
+		}
+	} else {
+		id, err := res.LastInsertId()
+		if err != nil {
+			return err
+		}
+		commit.Id = uint64(id)
+	}
 	return err
 }

@@ -83,16 +83,16 @@ func (db *DB) Create() error {
 		itemSize       BIGINT       NOT NULL,
 		itemCount      BIGINT       NOT NULL,
 		itemTotalCount BIGINT       NOT NULL,
-		itemCreateTime TIMESTAMP    NOT NULL,
-		itemModifyTime TIMESTAMP    NOT NULL,
-		itemChangeTime TIMESTAMP    NOT NULL,
-		itemAccessTime TIMESTAMP    NOT NULL,
+		itemCreateTime BIGINT    NOT NULL,
+		itemModifyTime BIGINT    NOT NULL,
+		itemChangeTime BIGINT    NOT NULL,
+		itemAccessTime BIGINT    NOT NULL,
 		PRIMARY KEY(Hash, itemName)
 	);
 
 	CREATE TABLE IF NOT EXISTS _commit (
 		id          BIGINT    NOT NULL PRIMARY KEY AUTO_INCREMENT,
-		createTime  TIMESTAMP NOT NULL,
+		createTime  BIGINT NOT NULL,
 		Hash        CHAR(64)  NOT NULL,
 		lastId      BIGINT    NOT NULL
 	);

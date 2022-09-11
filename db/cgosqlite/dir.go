@@ -26,6 +26,7 @@ func (db *DB) WriteDir(ctx context.Context, dirItems []dao.DirItem) (dir dao.Dir
 type TxOrDb interface {
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }
 
 func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, insertDirItems []dao.DirItem) (dir dao.Dir, err error) {
@@ -47,7 +48,7 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 	totalRow := len(insertDirItems)
 	repeat := 0
 	remainRow := totalRow
-	maxRow := 65536 / column
+	maxRow := 32766 / column
 	if totalRow > maxRow {
 		repeat = totalRow / maxRow
 		remainRow = totalRow - repeat*maxRow
@@ -58,6 +59,9 @@ func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, i
 		}
 		var stmt *sql.Stmt
 		stmt, err = tx.PrepareContext(ctx, query)
+		if err != nil {
+			return
+		}
 		defer func() {
 			if err == nil {
 				err = stmt.Close()
