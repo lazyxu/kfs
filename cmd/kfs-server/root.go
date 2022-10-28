@@ -77,7 +77,7 @@ func getDatabaseByType(typ string) (func(string) (dao.Database, error), error) {
 var rootCmd = &cobra.Command{
 	Use:   "kfs-server",
 	Short: "Kfs is file system used to backup files.",
-	Args:  cobra.RangeArgs(1, 1),
+	Args:  cobra.RangeArgs(0, 0),
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 		defer func() {
@@ -138,7 +138,7 @@ var rootCmd = &cobra.Command{
 			if err != nil {
 				panic(err)
 			}
-			println("Socket server listening at:", lis.Addr().String())
+			println("KFS socket server listening at:", lis.Addr().String())
 			err = server.Socket(lis, kfsCore)
 			if err != nil {
 				panic(err)
@@ -153,7 +153,7 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		println("Web server listening at:", lis.Addr().String())
+		println("KFS web server listening at:", lis.Addr().String())
 		err = http.Serve(lis, nil)
 		if err != nil {
 			panic(err)

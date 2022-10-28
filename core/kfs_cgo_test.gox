@@ -1,0 +1,44 @@
+package core
+
+import (
+	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/db/cgosqlite"
+	storage "github.com/lazyxu/kfs/storage/local"
+	"testing"
+)
+
+func BenchmarkCgoSqliteStorage4Upload1000Files1000(b *testing.B) {
+	branchName := "master"
+	fileCount := 1000
+	fileSize := 1000
+	storageUploadFiles(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(sqliteDataSource, cgosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage4))
+	}, branchName, fileCount, fileSize)
+}
+
+func BenchmarkCgoSqliteStorage4Upload10000Files1000(b *testing.B) {
+	branchName := "master"
+	fileCount := 10000
+	fileSize := 1000
+	storageUploadFiles(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(sqliteDataSource, cgosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage4))
+	}, branchName, fileCount, fileSize)
+}
+
+func BenchmarkCgoSqliteStorage5Upload10000Files1000Batch(b *testing.B) {
+	branchName := "master"
+	fileCount := 10000
+	fileSize := 1000
+	storageUploadFilesBatch(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(sqliteDataSource, cgosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
+	}, branchName, fileCount, fileSize)
+}
+
+func BenchmarkCgoSqliteStorage5Upload100000Files1000Batch(b *testing.B) {
+	branchName := "master"
+	fileCount := 100000
+	fileSize := 1000
+	storageUploadFilesBatch(b, func() (*KFS, error) {
+		return New(dao.DatabaseNewFunc(sqliteDataSource, cgosqlite.New), dao.StorageNewFunc(testRootDir, storage.NewStorage5))
+	}, branchName, fileCount, fileSize)
+}
