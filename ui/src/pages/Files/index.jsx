@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { list } from "../../rpc/ws";
+import { list } from "../../api/api";
 import File from "../../components/File";
 import styles from './index.module.scss';
 import FilePath from "../../components/FilePath";

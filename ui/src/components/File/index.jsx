@@ -1,7 +1,7 @@
 import './index.scss';
 import Icon from "components/Icon/Icon";
 import { useClick } from "use";
-import { open } from "rpc/ws";
+import { open } from "api/api";
 import useResourceManager from 'hox/resourceManager';
 import useSysConfig from 'hox/sysConfig';
 
@@ -43,7 +43,10 @@ export default ({ name, type }) => {
             });
             if (isDir) {
                 setResourceManager(prev => {
-                    return { ...prev, branchName, filePath, dirItems };
+                    return {
+                        ...prev, branchName, filePath,
+                        dirItems: dirItems ? dirItems : prev.dirItems
+                    };
                 });
             }
         })()
