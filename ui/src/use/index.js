@@ -1,5 +1,6 @@
 import React from 'react';
 
+// can only have one useClick in one component.
 export function useClick(onClick, onDoubleClick) {
     // const [clicked, setClicked] = React.useState();
     const handle = React.useRef();

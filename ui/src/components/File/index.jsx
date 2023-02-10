@@ -31,24 +31,9 @@ export default ({ name, type }) => {
     const onOpen = name => {
         console.log(name);
         (async () => {
-            let dirItems;
             let { filePath, branchName } = resourceManager;
             filePath = [...filePath, name];
-            let isDir = await open(sysConfig, branchName, filePath, (data) => {
-                downloader(data, name);
-            }, (total) => {
-                dirItems = new Array(total);
-            }, (dirItem, i) => {
-                dirItems[i] = dirItem;
-            });
-            if (isDir) {
-                setResourceManager(prev => {
-                    return {
-                        ...prev, branchName, filePath,
-                        dirItems: dirItems ? dirItems : prev.dirItems
-                    };
-                });
-            }
+            await open(sysConfig, setResourceManager, branchName, filePath);
         })()
     }
     return (

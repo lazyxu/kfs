@@ -4,7 +4,8 @@ import { createGlobalStore } from 'hox';
 const initialState = {
   branchName: 'master',
   filePath: [],
-  dirItems: []
+  dirItems: [],
+  content: null,
 };
 
 const [useResourceManager] = createGlobalStore(() => useState(initialState));

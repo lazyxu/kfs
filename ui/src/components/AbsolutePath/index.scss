@@ -2,31 +2,39 @@
   padding: 0 0.2em;
   margin: 0.3em;
   background-color: var(--header-color);
-  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  outline-style: none;
+
   .pathElement {
+    max-width: 80%;
     padding: 0.2em;
-    color: white;
+    color: rgba(204, 204, 204, 0.8);
     background-color: transparent;
     border: 1px dashed transparent;
     //border-color: ${this.state.dragOver && 'white'};
     border-radius: 0.3em;
     outline: none;
     display: inline-block;
+
     .pathName {
       display: inline;
       border: 1px solid transparent;
-      &:hover {
-        border: 1px solid white;
-        // cursor: pointer;
-      }
+
     }
+
     .pathNameRight {
       display: inline;
       border: 1px solid transparent;
-      &:hover {
-        border: 1px solid white;
-        // cursor: pointer;
-      }
+    }
+
+    &:hover {
+      color: white;
+      cursor: pointer;
     }
   }
 }
