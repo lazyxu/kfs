@@ -9,7 +9,7 @@ export default () => {
     const [contextMenu, setContextMenu] = useContextMenu();
     const [resourceManager, setResourceManager] = useResourceManager();
     const {sysConfig} = useSysConfig();
-    if (contextMenu === null) {
+    if (contextMenu === null || contextMenu.type !== "default") {
         return <div/>
     }
     let left = contextMenu.clientX;
