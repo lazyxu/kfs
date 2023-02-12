@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './index.module.scss';
+import {ListItemText, MenuItem, MenuList, Paper} from "@mui/material";
 
 const onFinishList = {};
 let id = 0;
@@ -25,13 +26,13 @@ export default ({left, top, right, bottom, maxWidth, maxHeight, options, onFinis
         top = bottom - maxHeight;
     }
     return (
-        <div className={styles.contextMenu}
+        <Paper className={styles.contextMenu}
              style={{left: `${left}px`, top: `${top}px`,}}
              onMouseDown={(e) => e.stopPropagation()}
              onClick={e => {
                  e.stopPropagation();
              }}
-        >
+        >   <MenuList>
             {Object.keys(options).map((o) => {
                 const option = options[o];
                 let fn = option;
@@ -39,28 +40,31 @@ export default ({left, top, right, bottom, maxWidth, maxHeight, options, onFinis
                     fn = option.fn;
                     if (!option.enabled) {
                         return (
-                            <div className={styles.disable} key={o}>{o}</div>
+                            <MenuItem key={o} disabled={true}>
+                                <ListItemText>{o}</ListItemText>
+                            </MenuItem>
                         );
                     }
                 }
                 if (option?.type?.name === 'component') {
                     return (
-                        <div className={styles.option} key={o}>{option}</div>
+                        <MenuItem key={o}>{option}</MenuItem>
                     );
                 }
                 return (
-                    <div className={styles.option}
+                    <MenuItem
                          key={o}
                          onMouseDown={(e) => {
-                             fn(e);
-                             onFinish && onFinish();
                              e.stopPropagation();
+                             fn(e);
+                             onFinish?.();
                          }}
                     >
-                        {o}
-                    </div>
+                        <ListItemText>{o}</ListItemText>
+                    </MenuItem>
                 );
             })}
-        </div>
+        </MenuList>
+        </Paper>
     );
 };

@@ -11,8 +11,13 @@
   },
   "dependencies": {
     "@electron/remote": "^2.0.8",
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@mui/material": "^5.11.8",
     "google-protobuf": "^3.21.0",
     "hox": "^2.0.0",
+    "humanize": "^0.0.9",
+    "moment": "^2.29.4",
     "protobufjs": "^7.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

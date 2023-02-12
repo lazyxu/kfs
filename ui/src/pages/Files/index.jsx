@@ -1,20 +1,23 @@
 import {useEffect, useRef} from 'react';
 
-import {list} from "../../api/api";
-import File from "../../components/File";
+import {list} from "api/api";
+import File from "components/File";
 import styles from './index.module.scss';
-import AbsolutePath from "../../components/AbsolutePath";
+import AbsolutePath from "components/AbsolutePath";
 import useResourceManager from 'hox/resourceManager';
 import useSysConfig from 'hox/sysConfig';
-import DefaultContextMenu from "../../components/ContextMenu/DefaultContextMenu";
-import useContextMenu from "../../hox/contextMenu";
-import FileContextMenu from "../../components/ContextMenu/FileContextMenu";
+import DefaultContextMenu from "components/ContextMenu/DefaultContextMenu";
+import useContextMenu from "hox/contextMenu";
+import FileContextMenu from "components/ContextMenu/FileContextMenu";
 import FileViewer from "./FileViewer/FileViewer";
+import Dialog from "components/Dialog";
+import useDialog from "hox/dialog";
 
 function App() {
     const [resourceManager, setResourceManager] = useResourceManager();
     const {sysConfig} = useSysConfig();
     const [contextMenu, setContextMenu] = useContextMenu();
+    const [dialog, setDialog] = useDialog();
     const filesElm = useRef(null);
     useEffect(() => {
         console.log("mount");
@@ -23,7 +26,7 @@ function App() {
             await list(sysConfig, setResourceManager, branchName, filePath);
         })()
     }, []);
-    console.log("resourceManager", resourceManager)
+    console.log("resourceManager", resourceManager, "contextMenu", contextMenu, "dialog", dialog)
 
     return (
         <div className={styles.right}>
@@ -50,6 +53,7 @@ function App() {
             }
             <DefaultContextMenu/>
             <FileContextMenu/>
+            <Dialog/>
         </div>
     );
 }

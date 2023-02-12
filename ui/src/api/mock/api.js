@@ -1,4 +1,5 @@
 import {modeIsDir} from "../utils/api";
+import moment from "moment";
 
 export const testRootDir = {
     "DirItems": [
@@ -18,7 +19,7 @@ export const testRootDir = {
                     "Hash": "ee6b3b8a13c0aa770f3b422362aa3e8c57cba7e2c9a5b6635a2eac2fea10dbf8",
                     "Name": "a.js",
                     "Mode": 438,
-                    "Size": 913,
+                    "Size": 101 * 1024 * 1024,
                     "Count": 1,
                     "TotalCount": 1,
                     "CreateTime": 1661133306379099400,
@@ -46,7 +47,7 @@ export const testRootDir = {
 }
 
 export function open(branchName, filePath, onFile, onTotal, onDirItem) {
-    console.log('mock.open', branchName, filePath, filePath.join('/'))
+    console.log('mock.open', branchName, filePath)
     let item = listR(testRootDir, filePath.slice());
     if (item.DirItems) {
         let total = item.DirItems.length;
@@ -80,7 +81,7 @@ function listR(dir, filePath) {
 }
 
 export function list(branchName, filePath, onTotal, onDirItem) {
-    console.log('mock.list', branchName, filePath, filePath.join('/'))
+    console.log('mock.list', branchName, filePath)
     let item = listR(testRootDir, filePath.slice());
     if (item.DirItems) {
         let total = item.DirItems.length;
@@ -95,22 +96,23 @@ export function list(branchName, filePath, onTotal, onDirItem) {
 }
 
 function newFileItem(name, mode) {
+    let now = moment().valueOf() * 1000 * 1000;
     let file = {
         "Hash": "ee6b3b8a13c0aa770f3b422362aa3e8c57cba7e2c9a5b6635a2eac2fea10dbf8",
         "Name": name,
         "Mode": mode,
-        "Size": 913,
+        "Size": 0,
         "Count": 1,
         "TotalCount": 1,
-        "CreateTime": 1661133306379099400,
-        "ModifyTime": 1661133306379099400,
-        "ChangeTime": 1661133306379099400,
-        "AccessTime": 1661133306379099400,
+        "CreateTime": now,
+        "ModifyTime": now,
+        "ChangeTime": now,
+        "AccessTime": now,
     }
     if (modeIsDir(mode)) {
         file.DirItems = [];
     } else {
-        file.Content = '';
+        file.Content = new TextEncoder("utf-8").encode("");
     }
     return file;
 }
@@ -135,24 +137,25 @@ function addNewFile(item, name, mode) {
     item.DirItems.push(newFileItem(tempName, mode));
 }
 
-export function newFile(branchName, filePath) {
-    console.log('mock.newFile', branchName, filePath, filePath.join('/'))
-    let item = listR(testRootDir, filePath.slice());
+export function newFile(branchName, dirPath, fileName) {
+    console.log('mock.newFile', branchName, dirPath, fileName)
+    let item = listR(testRootDir, dirPath.slice());
     if (item.DirItems) {
-        addNewFile(item, "新建文件", 438);
+        item.DirItems.push(newFileItem(fileName, 438));
     }
 }
 
-export function newDir(branchName, filePath) {
-    console.log('mock.newDir', branchName, filePath, filePath.join('/'))
-    let item = listR(testRootDir, filePath.slice());
+export function newDir(branchName, dirPath, fileName) {
+    console.log('mock.newDir', branchName, dirPath, fileName)
+    let item = listR(testRootDir, dirPath.slice());
+    // TODO: empty or duplicate
     if (item.DirItems) {
-        addNewFile(item, "新建文件夹", 2147484159);
+        item.DirItems.push(newFileItem(fileName, 2147484159));
     }
 }
 
 export function download(branchName, filePath) {
-    console.log('mock.download', branchName, filePath, filePath.join('/'))
+    console.log('mock.download', branchName, filePath)
     let item = listR(testRootDir, filePath.slice());
     if (item.Content) {
         return item.Content;

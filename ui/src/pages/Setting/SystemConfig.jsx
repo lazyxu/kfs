@@ -20,7 +20,7 @@ export default () => {
                 <span>主题</span>
               </div>
               <div className={styles.configs_item_values}>
-                <input type="radio" name="theme" checked={sysConfig.theme === 'light'} onChange={() => setSysConfig(c => ({ ...c, theme: 'light' }))} disabled />
+                <input type="radio" name="theme" checked={sysConfig.theme === 'light'} onChange={() => setSysConfig(c => ({ ...c, theme: 'light' }))} />
                 <span> 浅色 </span>
                 <input type="radio" name="theme" checked={sysConfig.theme === 'dark'} onChange={() => setSysConfig(c => ({ ...c, theme: 'dark' }))} />
                 <span> 深色 </span>

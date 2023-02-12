@@ -1,5 +1,19 @@
+.fileHeaderViewer {
+    margin: 16px;
+    margin-bottom: 0;
+    border: 1px solid #333942;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    padding: 16px;
+    background-color: #2d333b;
+}
+
 .fileViewer {
-  position: relative;
-  height: 100%;
-  width: 100%;
+    margin: 16px;
+    margin-top: 0;
+    border: 1px solid #333942;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-top-radius: 0;
+    padding: 32px;
 }

@@ -1,11 +1,7 @@
-import Icon from "components/Icon/Icon";
-import {useClick} from "use";
-import {open} from "api/api";
-import {modeIsDir} from "api/utils/api";
-import useResourceManager from 'hox/resourceManager';
-import useSysConfig from 'hox/sysConfig';
-import useContextMenu from "hox/contextMenu";
-import styles from "./index.module.scss";
+import TextFileViewer from "./TextFileViewer";
+import styles from './index.module.scss';
+import moment from 'moment';
+import humanize from 'humanize';
 
 export default ({file}) => {
     // const [resourceManager, setResourceManager] = useResourceManager();
@@ -20,10 +16,16 @@ export default ({file}) => {
     // let {filePath, branchName} = resourceManager;
     // const {Name, Mode} = dirItem;
     // filePath = filePath.concat(Name);
-    console.log("FileViewer", file);
+    console.log("FileViewer", typeof file.Content, file);
+    let time = moment(file.ModifyTime / 1000 / 1000).format("YYYY-MM-DD HH:mm:ss");
     return (
-        <div className={styles.fileViewer}>
-            {(new TextDecoder("utf-8")).decode((file.Content))}
-        </div>
+        <>
+            <div className={styles.fileHeaderViewer}>
+                {humanize.filesize(file.Size)} | {time}
+            </div>
+            <div className={styles.fileViewer}>
+                <TextFileViewer file={file}/>
+            </div>
+        </>
     )
 };

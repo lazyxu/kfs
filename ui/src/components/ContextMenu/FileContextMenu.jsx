@@ -1,10 +1,11 @@
 import React from 'react';
 import ContextMenu from './index';
-import useContextMenu from "../../hox/contextMenu";
-import useSysConfig from "../../hox/sysConfig";
-import useResourceManager from "../../hox/resourceManager";
-import {download, open} from "../../api/api";
-import {modeIsDir} from "../../api/utils/api";
+import useContextMenu from "hox/contextMenu";
+import useSysConfig from "hox/sysConfig";
+import useResourceManager from "hox/resourceManager";
+import {download, open} from "api/api";
+import {modeIsDir} from "api/utils/api";
+import useDialog from "hox/dialog";
 
 export default () => {
     const [contextMenu, setContextMenu] = useContextMenu();

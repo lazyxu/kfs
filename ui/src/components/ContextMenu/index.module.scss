@@ -1,38 +1,4 @@
 .contextMenu {
-  background-color: #322f32;
-  border: 1px solid #504d51;
-  border-radius: 0.5em;
-  padding: 0.5em 0;
   position: fixed;
   z-index: 100000;
-  user-select: none;
-  width: 200px;
-}
-
-.disable {
-  color: gray;
-  padding: 0.2em 5em 0.2em 1.5em;
-  cursor: default;
-
-  :last-child {
-    margin-bottom: 0;
-  }
-}
-
-.option {
-  color: #ffffff;
-  padding: 0.2em 5em 0.2em 1.5em;
-  cursor: default;
-
-  :last-child {
-    margin-bottom: 0;
-  }
-
-  :hover {
-    background-color: #1367cd;
-  }
-}
-
-.option:hover {
-  background-color: #1367cd;
 }
