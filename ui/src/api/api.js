@@ -51,3 +51,23 @@ export async function newDir(sysConfig, setResourceManager, branchName, filePath
     await mockApi.newDir(branchName, filePath);
     await list(sysConfig, setResourceManager, branchName, filePath)
 }
+
+function downloadURI(uri, name) {
+    let link = document.createElement("a");
+    link.download = name;
+    link.href = uri;
+    link.click();
+}
+
+function downloader(data, name) {
+    let blob = new Blob([data]);
+    let url = window.URL.createObjectURL(blob);
+    downloadURI(url, name);
+    window.URL.revokeObjectURL(url);
+}
+
+export async function download(sysConfig, branchName, filePath) {
+    console.log('api.download', branchName, filePath, filePath.join('/'));
+    let data = await mockApi.download(branchName, filePath);
+    downloader(data, filePath[filePath.length - 1]);
+}

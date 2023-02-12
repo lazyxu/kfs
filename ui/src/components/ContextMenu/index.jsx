@@ -10,9 +10,7 @@ document.addEventListener('click', function () {
     });
 }, false);
 
-export default ({
-                    left, top, options, onFinish,
-                }) => {
+export default ({left, top, right, bottom, maxWidth, maxHeight, options, onFinish}) => {
     React.useEffect(() => {
         id++;
         onFinishList[id] = onFinish;
@@ -20,6 +18,12 @@ export default ({
             delete onFinishList[id];
         };
     }, []);
+    if (left + maxWidth > right) {
+        left = right - maxWidth;
+    }
+    if (top + maxHeight > bottom) {
+        top = bottom - maxHeight;
+    }
     return (
         <div className={styles.contextMenu}
              style={{left: `${left}px`, top: `${top}px`,}}

@@ -2,25 +2,12 @@ import './index.scss';
 import Icon from "components/Icon/Icon";
 import {useClick} from "use";
 import {open} from "api/api";
+import {modeIsDir} from "api/utils/api";
 import useResourceManager from 'hox/resourceManager';
 import useSysConfig from 'hox/sysConfig';
 import useContextMenu from "../../hox/contextMenu";
 
-function downloadURI(uri, name) {
-    let link = document.createElement("a");
-    link.download = name;
-    link.href = uri;
-    link.click();
-}
-
-function downloader(data, name) {
-    let blob = new Blob([data]);
-    let url = window.URL.createObjectURL(blob);
-    downloadURI(url, name);
-    window.URL.revokeObjectURL(url);
-}
-
-export default ({name, type, filesElm}) => {
+export default ({dirItem, filesElm}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     const {sysConfig} = useSysConfig();
     const [contextMenu, setContextMenu] = useContextMenu();
@@ -30,14 +17,9 @@ export default ({name, type, filesElm}) => {
     const onDoubleClick = e => {
         console.log('onDoubleClick')
     }
-    const onOpen = name => {
-        console.log(name);
-        (async () => {
-            let {filePath, branchName} = resourceManager;
-            filePath = [...filePath, name];
-            await open(sysConfig, setResourceManager, branchName, filePath);
-        })()
-    }
+    let {filePath, branchName} = resourceManager;
+    const {Name, Mode} = dirItem;
+    filePath = filePath.concat(Name);
     return (
         <div className='file-normal' onContextMenu={(e) => {
             e.preventDefault();
@@ -46,18 +28,18 @@ export default ({name, type, filesElm}) => {
             let {x, y, width, height} = filesElm.current.getBoundingClientRect();
             setContextMenu({
                 type: 'file',
-                name,
+                dirItem,
                 clientX, clientY,
                 x, y, width, height,
             })
         }}>
-            <div onMouseDown={useClick(onClick, () => {
-                onOpen(name);
+            <div onMouseDown={useClick(null, () => {
+                open(sysConfig, setResourceManager, branchName, filePath);
             })}>
-                <Icon icon={type === 'dir' ? 'floderblue' : 'file3'} className='file-icon'/>
+                <Icon icon={modeIsDir(Mode) ? 'floderblue' : 'file3'} className='file-icon'/>
             </div>
             <div className='file-name-wrapper'>
-                <p kfs-attr="file" className='file-name' onMouseDown={useClick(onClick, onDoubleClick)}>{name}</p>
+                <p kfs-attr="file" className='file-name' onMouseDown={useClick(onClick, onDoubleClick)}>{Name}</p>
             </div>
         </div>
     )

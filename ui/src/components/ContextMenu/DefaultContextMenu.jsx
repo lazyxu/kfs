@@ -12,20 +12,14 @@ export default () => {
     if (contextMenu === null || contextMenu.type !== "default") {
         return <div/>
     }
-    let left = contextMenu.clientX;
-    let top = contextMenu.clientY;
-    let maxWidth = 200;
-    let maxHeight = 200;
-    if (left + maxWidth > contextMenu.x + contextMenu.width) {
-        left = contextMenu.x + contextMenu.width - maxWidth;
-    }
-    if (top + maxHeight > contextMenu.y + contextMenu.height) {
-        top = contextMenu.y + contextMenu.height - maxHeight;
-    }
     let {filePath, branchName} = resourceManager;
     return <ContextMenu
-        left={left}
-        top={top}
+        left={contextMenu.clientX}
+        top={contextMenu.clientY}
+        right={contextMenu.x + contextMenu.width}
+        bottom={contextMenu.y + contextMenu.height}
+        maxWidth={200}
+        maxHeight={150}
         options={{
             // 上传文件: <UploadFile/>,
             新建文件: () => {

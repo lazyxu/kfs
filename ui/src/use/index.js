@@ -32,6 +32,6 @@ export function useClick(onClick, onDoubleClick) {
             handle.current = undefined;
         }, 200);
         // console.log('--33--', clicked);
-        onClick(e);
+        onClick?.(e);
     };
 }

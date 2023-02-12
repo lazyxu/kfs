@@ -22,7 +22,7 @@ function App() {
             await list(sysConfig, setResourceManager, branchName, filePath);
         })()
     }, []);
-    console.log(resourceManager)
+    console.log("resourceManager", resourceManager)
 
     return (
         <div className={styles.right}>
@@ -30,7 +30,7 @@ function App() {
             {resourceManager.content === null ?
                 <div ref={filesElm} className={styles.filesGridview} onContextMenu={(e) => {
                     e.preventDefault();
-                    console.log(e.target, e.currentTarget, e.target === e.currentTarget);
+                    // console.log(e.target, e.currentTarget, e.target === e.currentTarget);
                     // if (e.target === e.currentTarget) {
                     const {clientX, clientY} = e;
                     let {x, y, width, height} = e.currentTarget.getBoundingClientRect();
@@ -42,8 +42,7 @@ function App() {
                     // }
                 }}>
                     {resourceManager.dirItems.map((dirItem, i) => (
-                        <File filesElm={filesElm} type={dirItem.Mode > 2147483648 ? 'dir' : 'file'} name={dirItem.Name}
-                              key={dirItem.Name}/>
+                        <File filesElm={filesElm} dirItem={dirItem} key={dirItem.Name}/>
                     ))}
                 </div> :
                 <div className={styles.filesGridview}>

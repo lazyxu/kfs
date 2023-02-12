@@ -1,3 +1,5 @@
+import {modeIsDir} from "../utils/api";
+
 export const testRootDir = {
     "DirItems": [
         {
@@ -64,10 +66,6 @@ export function open(branchName, filePath, onFile, onTotal, onDirItem) {
     }
     onFile(getFileContent(item.Content));
     return false;
-}
-
-function modeIsDir(mode) {
-    return mode >= 2147483648;
 }
 
 // returns isDir
@@ -159,4 +157,13 @@ export function newDir(branchName, filePath) {
     if (item.DirItems) {
         addNewFile(item, "新建文件夹", 2147484159);
     }
+}
+
+export function download(branchName, filePath) {
+    console.log('mock.download', branchName, filePath, filePath.join('/'))
+    let item = listR(testRootDir, filePath.slice());
+    if (item.Content) {
+        return getFileContent(item.Content);
+    }
+    return null;
 }
