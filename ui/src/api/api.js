@@ -3,12 +3,12 @@ let mockApi = require("./mock/api");
 export async function open(sysConfig, setResourceManager, branchName, filePath) {
     console.log('api.open', branchName, filePath, filePath.join('/'));
     let dirItems;
-    let isDir = await mockApi.open(branchName, filePath, (content) => {
+    let isDir = await mockApi.open(branchName, filePath, (file) => {
         setResourceManager(prev => {
             return {
                 ...prev, branchName, filePath,
                 dirItems: null,
-                content,
+                file,
             };
         });
     }, (total) => {
@@ -21,7 +21,7 @@ export async function open(sysConfig, setResourceManager, branchName, filePath) 
             return {
                 ...prev, branchName, filePath,
                 dirItems: dirItems ? dirItems : prev.dirItems,
-                content: null,
+                file: null,
             };
         });
     }
@@ -36,7 +36,7 @@ export async function list(sysConfig, setResourceManager, branchName, filePath) 
         dirItems[i] = dirItem;
     });
     setResourceManager(prev => {
-        return {...prev, branchName, filePath, dirItems, content: null};
+        return {...prev, branchName, filePath, dirItems, file: null};
     });
 }
 

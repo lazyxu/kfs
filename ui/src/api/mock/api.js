@@ -25,7 +25,7 @@ export const testRootDir = {
                     "ModifyTime": 1661133306379099400,
                     "ChangeTime": 1661133306379099400,
                     "AccessTime": 1661133306379099400,
-                    "Content": "console.log(\"in a.js\\n\")",
+                    "Content": new TextEncoder("utf-8").encode("console.log(\"in a.js\\n\")"),
                 }
             ],
         },
@@ -40,17 +40,9 @@ export const testRootDir = {
             "ModifyTime": 1661133306379099400,
             "ChangeTime": 1661133306379099400,
             "AccessTime": 1661133306379099400,
-            "Content": "console.log(\"hello, world\\n\")",
+            "Content": new TextEncoder("utf-8").encode("console.log(\"hello, world\\n\")"),
         },
     ]
-}
-
-function getFileContent(content) {
-    if (typeof content === 'string') {
-        let enc = new TextEncoder("utf-8");
-        content = enc.encode(content);
-    }
-    return content;
 }
 
 export function open(branchName, filePath, onFile, onTotal, onDirItem) {
@@ -64,7 +56,7 @@ export function open(branchName, filePath, onFile, onTotal, onDirItem) {
         }
         return true;
     }
-    onFile(getFileContent(item.Content));
+    onFile(item);
     return false;
 }
 
@@ -84,7 +76,7 @@ function listR(dir, filePath) {
             }
         }
     }
-    return undefined;
+    return null;
 }
 
 export function list(branchName, filePath, onTotal, onDirItem) {
@@ -163,7 +155,7 @@ export function download(branchName, filePath) {
     console.log('mock.download', branchName, filePath, filePath.join('/'))
     let item = listR(testRootDir, filePath.slice());
     if (item.Content) {
-        return getFileContent(item.Content);
+        return item.Content;
     }
     return null;
 }
