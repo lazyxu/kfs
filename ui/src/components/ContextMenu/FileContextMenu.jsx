@@ -6,11 +6,13 @@ import useResourceManager from "hox/resourceManager";
 import {download, open} from "api/api";
 import {modeIsDir} from "api/utils/api";
 import useDialog from "hox/dialog";
+import useDialog2 from "../../hox/dialog";
 
 export default () => {
     const [contextMenu, setContextMenu] = useContextMenu();
     const [resourceManager, setResourceManager] = useResourceManager();
     const {sysConfig} = useSysConfig();
+    const [dialog, setDialog] = useDialog2();
     if (contextMenu === null || contextMenu.type !== "file") {
         return <div/>
     }
@@ -53,9 +55,11 @@ export default () => {
             // }),
             // 删除: () => this.context.remove(pathList),
             // 重命名: () => this.context.setState({ chosen: (_chosen) => _chosen[pathList[0]] = 2 }),
-            属性: {
-                enabled: false, fn: () => {
-                }
+            属性: () => {
+                setDialog({
+                    title: "属性",
+                    dirItem: contextMenu.dirItem,
+                })
             },
             历史版本: {
                 enabled: false, fn: () => {

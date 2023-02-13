@@ -2,6 +2,7 @@ import React from 'react';
 import NewFile from "./NewFile";
 import useDialog from "hox/dialog";
 import NewDir from "./NewDir";
+import DialogAttribute from "./DialogAttribute";
 
 export default () => {
     const [dialog, setDialog] = useDialog();
@@ -15,6 +16,8 @@ export default () => {
             return <NewFile/>;
         case "新建文件夹":
             return <NewDir/>;
+        case "属性":
+            return <DialogAttribute/>;
     }
     return <div/>;
 };

@@ -13,6 +13,7 @@
     "@electron/remote": "^2.0.8",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@mui/icons-material": "^5.11.0",
     "@mui/material": "^5.11.8",
     "google-protobuf": "^3.21.0",
     "hox": "^2.0.0",

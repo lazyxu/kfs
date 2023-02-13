@@ -1,6 +1,6 @@
 import {useEffect, useRef} from 'react';
 
-import {list} from "api/api";
+import {open} from "api/api";
 import File from "components/File";
 import styles from './index.module.scss';
 import AbsolutePath from "components/AbsolutePath";
@@ -23,7 +23,7 @@ function App() {
         console.log("mount");
         (async () => {
             let {filePath, branchName} = resourceManager;
-            await list(sysConfig, setResourceManager, branchName, filePath);
+            await open(sysConfig, setResourceManager, branchName, filePath);
         })()
     }, []);
     console.log("resourceManager", resourceManager, "contextMenu", contextMenu, "dialog", dialog)
