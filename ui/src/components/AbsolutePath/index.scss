@@ -1,40 +1,4 @@
 .filePath {
-  padding: 0 0.2em;
+  padding: 0 1em;
   margin: 0.3em;
-  background-color: var(--header-color);
-  user-select: none;
-  -webkit-user-select: none;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  outline-style: none;
-
-  .pathElement {
-    max-width: 80%;
-    padding: 0.2em;
-    color: rgba(204, 204, 204, 0.8);
-    background-color: transparent;
-    border: 1px dashed transparent;
-    //border-color: ${this.state.dragOver && 'white'};
-    border-radius: 0.3em;
-    outline: none;
-    display: inline-block;
-
-    .pathName {
-      display: inline;
-      border: 1px solid transparent;
-
-    }
-
-    .pathNameRight {
-      display: inline;
-      border: 1px solid transparent;
-    }
-
-    &:hover {
-      color: white;
-      cursor: pointer;
-    }
-  }
 }
