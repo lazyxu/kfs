@@ -1,6 +1,6 @@
 import * as mockApi from "./mock/api";
 
-export async function open(sysConfig, setResourceManager, branchName, filePath) {
+export async function open(setResourceManager, branchName, filePath) {
     console.log('api.open', branchName, filePath);
     let dirItems;
     let isDir = await mockApi.open(branchName, filePath, (file) => {
@@ -27,7 +27,7 @@ export async function open(sysConfig, setResourceManager, branchName, filePath) 
     }
 }
 
-export async function list(sysConfig, setResourceManager, branchName, filePath) {
+export async function list(setResourceManager, branchName, filePath) {
     console.log('api.list', branchName, filePath);
     let dirItems;
     await mockApi.list(branchName, filePath, (total) => {
@@ -40,16 +40,16 @@ export async function list(sysConfig, setResourceManager, branchName, filePath) 
     });
 }
 
-export async function newFile(sysConfig, setResourceManager, branchName, dirPath, fileName) {
+export async function newFile(setResourceManager, branchName, dirPath, fileName) {
     console.log('api.newFile', branchName, dirPath, fileName);
     await mockApi.newFile(branchName, dirPath, fileName);
-    await list(sysConfig, setResourceManager, branchName, dirPath)
+    await list(setResourceManager, branchName, dirPath)
 }
 
-export async function newDir(sysConfig, setResourceManager, branchName, dirPath, fileName) {
+export async function newDir(setResourceManager, branchName, dirPath, fileName) {
     console.log('api.newDir', branchName, dirPath, fileName);
     await mockApi.newDir(branchName, dirPath, fileName);
-    await list(sysConfig, setResourceManager, branchName, dirPath)
+    await list(setResourceManager, branchName, dirPath)
 }
 
 function downloadURI(uri, name) {
@@ -66,7 +66,7 @@ function downloader(data, name) {
     window.URL.revokeObjectURL(url);
 }
 
-export async function download(sysConfig, branchName, filePath) {
+export async function download(branchName, filePath) {
     console.log('api.download', branchName, filePath);
     let data = await mockApi.download(branchName, filePath);
     downloader(data, filePath[filePath.length - 1]);

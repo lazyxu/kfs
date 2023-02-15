@@ -1,7 +1,6 @@
 import React from 'react';
 import ContextMenu from './index';
 import useContextMenu from "hox/contextMenu";
-import useSysConfig from "hox/sysConfig";
 import useResourceManager from "hox/resourceManager";
 import {download, open} from "api/api";
 import {modeIsDir} from "api/utils/api";
@@ -11,7 +10,6 @@ import useDialog2 from "../../hox/dialog";
 export default () => {
     const [contextMenu, setContextMenu] = useContextMenu();
     const [resourceManager, setResourceManager] = useResourceManager();
-    const {sysConfig} = useSysConfig();
     const [dialog, setDialog] = useDialog2();
     if (contextMenu === null || contextMenu.type !== "file") {
         return <div/>
@@ -28,11 +26,11 @@ export default () => {
         maxHeight={200}
         options={{
             打开: () => {
-                open(sysConfig, setResourceManager, branchName, filePath);
+                open(setResourceManager, branchName, filePath);
             },
             下载: {
                 enabled: !modeIsDir(Mode) , fn: () => {
-                    download(sysConfig, branchName, filePath);
+                    download(branchName, filePath);
                 }
             },
             // 剪切: () => setState({

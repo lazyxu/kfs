@@ -1,7 +1,6 @@
 import React from 'react';
 import ContextMenu from './index';
 import useContextMenu from "hox/contextMenu";
-import useSysConfig from "hox/sysConfig";
 import useResourceManager from "hox/resourceManager";
 import useDialog2 from "hox/dialog";
 
@@ -11,7 +10,6 @@ export default () => {
     let {filePath, branchName} = resourceManager;
     const [dialog, setDialog] = useDialog2();
     console.log('useDialog2()', useDialog2());
-    const {sysConfig} = useSysConfig();
     if (contextMenu === null || contextMenu.type !== "default") {
         return <div/>
     }

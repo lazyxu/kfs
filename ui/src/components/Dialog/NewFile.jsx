@@ -3,14 +3,12 @@ import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} fr
 import useDialog from "hox/dialog";
 import {newFile} from "api/api";
 import useResourceManager from "hox/resourceManager";
-import useSysConfig from "hox/sysConfig";
 
 export default () => {
     const [dialog, setDialog] = useDialog();
     let [name, setName] = useState("");
     const [resourceManager, setResourceManager] = useResourceManager();
     let {filePath, branchName} = resourceManager;
-    const {sysConfig} = useSysConfig();
     return (
         <Dialog open={true} onClose={() => {
             setDialog(null)
@@ -34,7 +32,7 @@ export default () => {
                     setDialog(null);
                 }}>取消</Button>
                 <Button onClick={async () => {
-                    await newFile(sysConfig, setResourceManager, branchName, filePath, name);
+                    await newFile(setResourceManager, branchName, filePath, name);
                     setDialog(null);
                 }}>确定</Button>
             </DialogActions>

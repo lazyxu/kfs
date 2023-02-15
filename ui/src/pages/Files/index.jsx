@@ -15,7 +15,6 @@ import useDialog from "hox/dialog";
 
 function App() {
     const [resourceManager, setResourceManager] = useResourceManager();
-    const {sysConfig} = useSysConfig();
     const [contextMenu, setContextMenu] = useContextMenu();
     const [dialog, setDialog] = useDialog();
     const filesElm = useRef(null);
@@ -23,7 +22,7 @@ function App() {
         console.log("mount");
         (async () => {
             let {filePath, branchName} = resourceManager;
-            await open(sysConfig, setResourceManager, branchName, filePath);
+            await open(setResourceManager, branchName, filePath);
         })()
     }, []);
     console.log("resourceManager", resourceManager, "contextMenu", contextMenu, "dialog", dialog)

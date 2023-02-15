@@ -3,7 +3,6 @@ import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} fr
 import useDialog from "hox/dialog";
 import {newDir} from "api/api";
 import useResourceManager from "hox/resourceManager";
-import useSysConfig from "hox/sysConfig";
 
 export default () => {
     console.log("NewDir")
@@ -11,7 +10,6 @@ export default () => {
     let [name, setName] = useState("");
     const [resourceManager, setResourceManager] = useResourceManager();
     let {filePath, branchName} = resourceManager;
-    const {sysConfig} = useSysConfig();
     const inputRef = useRef(null);
     // useEffect(() => {
     //     console.log("inputRef.current", inputRef.current)
@@ -46,7 +44,7 @@ export default () => {
                 }}>取消</Button>
                 <Button onClick={() => {
                     setDialog(null);
-                    newDir(sysConfig, setResourceManager, branchName, filePath, name);
+                    newDir(setResourceManager, branchName, filePath, name);
                 }}>确定</Button>
             </DialogActions>
         </Dialog>

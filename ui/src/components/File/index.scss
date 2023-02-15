@@ -6,18 +6,6 @@
   z-index: 1;
   border: 1px solid transparent;
 
-  &:hover {
-    background-color: #343537;
-  }
-  &:focus {
-    background-color: #343537;
-    border: 1px solid #f5f5f6;
-  }
-  &:active {
-    background-color: #343537;
-    border: 1px solid #f5f5f6;
-  }
-
   .file-icon {
     padding: 0.3em;
     margin: 0 0.3em;
@@ -30,13 +18,6 @@
     width: 100%;
     text-align: center;
     background-color: transparent;
-    .file-name-in-edit {
-      font-size: 1em;
-      width: 100%;
-      margin: 0.3em 0;
-      color: white;
-      background-color: transparent;
-    }
     .file-name {
       height: 100%;
       width: 100%;
