@@ -1,25 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { HoxRoot } from 'hox';
+import {HoxRoot} from 'hox';
 
 import 'reset.scss';
 import 'normalize.css';
 import 'color.scss';
 import 'index.scss';
 
-import App from './App';
 import reportWebVitals from './reportWebVitals';
-import {Experimental_CssVarsProvider as CssVarsProvider} from '@mui/material/styles';
+import ThemeApp from "./ThemeApp";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  // <React.StrictMode>
+    // <React.StrictMode>
     <HoxRoot>
-        <CssVarsProvider>
-      <App />
-        </CssVarsProvider>
+        <ThemeApp/>
     </HoxRoot>
-  // </React.StrictMode>,
+    // </React.StrictMode>,
 );
 
 // If you want to start measuring performance in your app, pass a function

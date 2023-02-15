@@ -1,14 +1,12 @@
-import {useEffect} from 'react';
-
 import Menu from 'components/Menu/Menu';
 import {Body, Content, Layout, Sider} from 'components/Web/Web';
 import SystemConfig from 'pages/Setting/SystemConfig';
 import Version from 'components/Version';
-
-import useMenu from 'hox/menu';
-import useSysConfig from 'hox/sysConfig';
 import Files from "./pages/Files";
 import {useColorScheme} from "@mui/material";
+import React, {useEffect} from "react";
+import useMenu from "./hox/menu";
+import useSysConfig from "./hox/sysConfig";
 
 function App() {
     const {sysConfig} = useSysConfig();

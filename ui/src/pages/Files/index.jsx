@@ -12,6 +12,7 @@ import FileContextMenu from "components/ContextMenu/FileContextMenu";
 import FileViewer from "./FileViewer/FileViewer";
 import Dialog from "components/Dialog";
 import useDialog from "hox/dialog";
+import {Box} from "@mui/material";
 
 function App() {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -28,7 +29,7 @@ function App() {
     console.log("resourceManager", resourceManager, "contextMenu", contextMenu, "dialog", dialog)
 
     return (
-        <div className={styles.right}>
+        <Box className={styles.right}>
             <AbsolutePath/>
             {resourceManager.file ?
                 <FileViewer file={resourceManager.file}/>:
@@ -53,7 +54,7 @@ function App() {
             <DefaultContextMenu/>
             <FileContextMenu/>
             <Dialog/>
-        </div>
+        </Box>
     );
 }
 

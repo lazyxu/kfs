@@ -4,7 +4,7 @@ import moment from 'moment';
 import humanize from 'humanize';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import IconButton from "@mui/material/IconButton";
-import {Stack, Tooltip, useColorScheme} from "@mui/material";
+import {Box, Paper, Stack, Tooltip, useColorScheme} from "@mui/material";
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {download} from "../../../api/api";
@@ -22,6 +22,7 @@ export default ({file}) => {
         content = (new TextDecoder("utf-8")).decode((file.Content));
     }
     const {mode} = useColorScheme();
+    console.log("mode", mode)
     return (
         <>
             <Stack
@@ -30,8 +31,6 @@ export default ({file}) => {
                 justifyContent="space-between"
                 alignItems="center"
                 spacing={0.5}
-                bgcolor={mode === 'dark' ? '#333942' : '#d0d7de'}
-                borderColor={mode === 'dark' ? '#333942' : '#d0d7de'}
             >
                 {humanize.filesize(file.Size)} | {time}
                 <Stack
@@ -66,10 +65,9 @@ export default ({file}) => {
                     </Tooltip>
                 </Stack>
             </Stack>
-            <Stack className={styles.fileViewer}
-                 borderColor={mode === 'dark' ? '#333942' : '#d0d7de'}>
+            <Box className={styles.fileViewer}>
                 <TextFileViewer file={file}/>
-            </Stack>
+            </Box>
         </>
     )
 };

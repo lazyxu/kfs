@@ -1,4 +1,3 @@
-import './index.module.scss';
 import SvgIcon from "@mui/material/SvgIcon";
 
 export default function ({icon, color, className}) {

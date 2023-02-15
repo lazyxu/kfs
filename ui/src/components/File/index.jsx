@@ -36,7 +36,10 @@ export default ({dirItem, filesElm}) => {
             <div onMouseDown={useClick(null, () => {
                 open(setResourceManager, branchName, filePath);
             })}>
-                <SvgIcon icon={modeIsDir(Mode) ? 'floderblue' : 'file3'} className='file-icon'/>
+                {modeIsDir(Mode) ?
+                    <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit"/> :
+                    <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit"/>
+                }
             </div>
             <div className='file-name-wrapper'>
                 <p kfs-attr="file" className='file-name' onMouseDown={useClick(onClick, onDoubleClick)}>{Name}</p>

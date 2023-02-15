@@ -1,9 +1,9 @@
 import useResourceManager from 'hox/resourceManager';
 import './index.scss';
 import PathElement from "./PathElement";
-import Icon from "../Icon/Icon";
 import {Breadcrumbs, Link, Stack, Typography} from "@mui/material";
 import {open} from "../../api/api";
+import SvgIcon from "../Icon/SvgIcon";
 
 export default () => {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -16,7 +16,7 @@ export default () => {
         >
             <Link onClick={() => {
                 open(setResourceManager, resourceManager.branchName, []);
-            }} size="small"><Icon icon="wangpan"/></Link>
+            }} size="small"><SvgIcon icon="wangpan"/></Link>
             <Typography> ></Typography>
             <Breadcrumbs separator="/" maxItems={5}>
                 <PathElement name={resourceManager.branchName} filePath={[]} icon="git"/>

@@ -1,12 +1,12 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogTitle, Grid } from "@mui/material";
+import {Dialog, DialogContent, DialogTitle, Divider, Grid, Typography} from "@mui/material";
 import useDialog from "hox/dialog";
 import useResourceManager from "hox/resourceManager";
 import IconButton from "@mui/material/IconButton";
 import CloseIcon from '@mui/icons-material/Close';
 import moment from "moment/moment";
 import humanize from "humanize";
-import { getPerm, modeIsDir } from "../../api/utils/api";
+import {getPerm, modeIsDir} from "../../api/utils/api";
 import styles from "./DialogAttribute.module.scss"
 
 function formatTime(t) {
@@ -15,23 +15,26 @@ function formatTime(t) {
 
 function Attr({k, children}) {
     return <>
-        <Grid xs={4} item={true} className={styles.attrubute} sx={{color: (theme) => theme.palette.grey[500]}}>{k}：</Grid>
-        <Grid xs={8} item={true} className={styles.attrubute} sx={{color: (theme) => theme.palette.grey[500]}}>{children}</Grid>
+        <Grid xs={4} item={true} className={styles.attrubute}>{k}：</Grid>
+        <Grid xs={8} item={true} className={styles.attrubute}>{children}</Grid>
     </>
 }
 
 export default () => {
     const [dialog, setDialog] = useDialog();
     const [resourceManager, setResourceManager] = useResourceManager();
-    let { filePath, branchName } = resourceManager;
+    let {filePath, branchName} = resourceManager;
     filePath = filePath.slice()
     filePath.push(dialog.dirItem.Name);
     const isDir = modeIsDir(dialog.dirItem.Mode)
     return (
-        <Dialog sx={{ m: 0, p: 2 }} open={true} fullWidth={true} onClose={() => {
+        <Dialog open={true} fullWidth={true} onClose={() => {
             setDialog(null)
         }}>
-            <DialogTitle>
+            <DialogTitle sx={{
+                backgroundColor: (theme) => theme.palette.background.default,
+                color: (theme) => theme.palette.text.primary,
+            }}>
                 {dialog.title}
                 <IconButton
                     aria-label="close"
@@ -45,10 +48,13 @@ export default () => {
                         color: (theme) => theme.palette.grey[500],
                     }}
                 >
-                    <CloseIcon />
+                    <CloseIcon/>
                 </IconButton>
             </DialogTitle>
-            <DialogContent>
+            <DialogContent sx={{
+                backgroundColor: (theme) => theme.palette.background.default,
+                color: (theme) => theme.palette.text.secondary,
+            }}>
                 <Grid container spacing={1.5}>
                     <Attr k="名称">{dialog.dirItem.Name}</Attr>
                     <Attr k="分支">{branchName}</Attr>
