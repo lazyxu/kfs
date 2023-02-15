@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1676467521306,
+  "lastUpdate": 1676473108839,
   "repoUrl": "https://github.com/lazyxu/kfs",
   "entries": {
     "Benchmark": [
@@ -1426,6 +1426,114 @@ window.BENCHMARK_DATA = {
           {
             "name": "BenchmarkMysqlStorage5Upload100000Files1000Batch",
             "value": 41079832586,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "isxuliang@gmail.com",
+            "name": "Xu Liang",
+            "username": "lazyxu"
+          },
+          "committer": {
+            "email": "isxuliang@gmail.com",
+            "name": "Xu Liang",
+            "username": "lazyxu"
+          },
+          "distinct": true,
+          "id": "02817c97df2c739beb5a1f634476c7cacbaf6908",
+          "message": "use CssVarsProvider",
+          "timestamp": "2023-02-15T22:54:15+08:00",
+          "tree_id": "a5eaa2af2e57965d44a6aa18e97bd0aa77de4b59",
+          "url": "https://github.com/lazyxu/kfs/commit/02817c97df2c739beb5a1f634476c7cacbaf6908"
+        },
+        "date": 1676473108188,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkStorage0Upload1000Files1000",
+            "value": 1716386256,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkStorage1Upload1000Files1000",
+            "value": 1689603312,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkStorage2Upload1000Files1000",
+            "value": 1665906371,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkStorage3Upload1000Files1000",
+            "value": 1602839296,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkStorage4Upload1000Files1000",
+            "value": 1603451095,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkMysqlStorage1Upload1000Files1000",
+            "value": 2327520277,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkMysqlStorage4Upload1000Files1000",
+            "value": 2284534154,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkMysqlStorage4Upload10000Files1000",
+            "value": 22437215440,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkMysqlStorage5Upload1000Files1000",
+            "value": 2204538765,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkMysqlStorage5Upload10000Files1000",
+            "value": 21680473866,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGoSqliteStorage5Upload10000Files1000Batch",
+            "value": 3513153601,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkMysqlStorage5Upload10000Files1000Batch",
+            "value": 930421598,
+            "unit": "ns/op",
+            "extra": "2 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkGoSqliteStorage5Upload100000Files1000Batch",
+            "value": 68605705378,
+            "unit": "ns/op",
+            "extra": "1 times\n2 procs"
+          },
+          {
+            "name": "BenchmarkMysqlStorage5Upload100000Files1000Batch",
+            "value": 39198770320,
             "unit": "ns/op",
             "extra": "1 times\n2 procs"
           }
