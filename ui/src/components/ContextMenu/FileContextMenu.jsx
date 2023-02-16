@@ -23,7 +23,7 @@ export default () => {
         right={contextMenu.x + contextMenu.width}
         bottom={contextMenu.y + contextMenu.height}
         maxWidth={200}
-        maxHeight={200}
+        maxHeight={10*50}
         options={{
             打开: () => {
                 open(setResourceManager, branchName, filePath);
@@ -33,26 +33,11 @@ export default () => {
                     download(branchName, filePath);
                 }
             },
-            // 剪切: () => setState({
-            //   clipboard: {
-            //     cut: true,
-            //     file: {
-            //       branch: this.context.state.branch,
-            //       pathList,
-            //     },
-            //   },
-            // }),
-            // 复制: () => setState({
-            //   clipboard: {
-            //     copy: true,
-            //     file: {
-            //       branch: this.context.state.branch,
-            //       pathList,
-            //     },
-            //   },
-            // }),
-            // 删除: () => this.context.remove(pathList),
-            // 重命名: () => this.context.setState({ chosen: (_chosen) => _chosen[pathList[0]] = 2 }),
+            分享: null,
+            剪切: null,
+            复制: null,
+            删除: null,
+            重命名: null,
             属性: () => {
                 setDialog({
                     title: "属性",
@@ -63,6 +48,7 @@ export default () => {
                 enabled: false, fn: () => {
                 }
             },
+            添加书签: null,
         }}
         onFinish={() => setContextMenu(null)}
     />

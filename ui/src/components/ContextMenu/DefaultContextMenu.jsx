@@ -19,9 +19,10 @@ export default () => {
         right={contextMenu.x + contextMenu.width}
         bottom={contextMenu.y + contextMenu.height}
         maxWidth={200}
-        maxHeight={150}
+        maxHeight={7*50}
         options={{
-            // 上传文件: <UploadFile/>,
+            上传文件: null,
+            上传文件夹: null,
             新建文件: () => {
                 console.log("新建文件1")
                 console.log(dialog, setDialog, useDialog2, setContextMenu, useContextMenu, setResourceManager)
@@ -35,24 +36,13 @@ export default () => {
                     title: "新建文件夹",
                 })
             },
-            // 刷新: () => this.context.cd(branch, pwd),
-            // 粘贴: {
-            //     enabled: clipboard && clipboard.file,
-            //     fn: () => {
-            //         const {branch: srcBranch, pathList} = clipboard.file;
-            //         if (clipboard.cut) {
-            //             this.context.mv(srcBranch, pathList, branch, pwd);
-            //             this.context.setState({clipboard: undefined});
-            //             return;
-            //         }
-            //         this.context.cp(srcBranch, pathList, branch, pwd);
-            //         this.context.setState({clipboard: undefined});
-            //     },
-            // },
+            刷新: null,
+            粘贴: null,
             历史版本: {
                 enabled: false, fn: () => {
                 }
             },
+            添加书签: null,
         }}
         onFinish={() => {
             // console.log("onFinish")

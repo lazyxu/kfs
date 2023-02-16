@@ -35,6 +35,13 @@ export default ({left, top, right, bottom, maxWidth, maxHeight, options, onFinis
         >   <MenuList>
             {Object.keys(options).map((o) => {
                 const option = options[o];
+                if (!option) {
+                    return (
+                        <MenuItem key={o} disabled={true}>
+                            <ListItemText>{o}</ListItemText>
+                        </MenuItem>
+                    );
+                }
                 let fn = option;
                 if (option.fn) {
                     fn = option.fn;

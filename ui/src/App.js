@@ -23,16 +23,20 @@ function App() {
                 <Layout>
                     <Sider>
                         <Menu items={[
-                            {icon: 'wangpan', name: '文件'},
+                            {icon: 'wangpan', name: '我的文件'},
                             {icon: 'tongbu', name: '传输列表'},
                             {icon: 'peizhi', name: '设置'},
                             {icon: 'system', name: '资源监控'},
+                            {icon: '', name: '我的书签'},
+                            {icon: '', name: '分享历史'},
+                            {icon: '', name: '操作历史'},
+                            {icon: '', name: '搜索'},
                         ]}
                         />
                         <Version/>
                     </Sider>
                     <Content>
-                        {menu === '文件' && <Files/>}
+                        {menu === '我的文件' && <Files/>}
                         {menu === '传输列表' && <span>{menu}</span>}
                         {menu === '设置' && <SystemConfig/>}
                         {menu === '资源监控' && <span>{menu}</span>}

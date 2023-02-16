@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createGlobalStore } from 'hox';
 
 const initialState = {
-  branchName: 'master',
+  branchName: '默认文件夹',
   filePath: [],
   dirItems: [],
   content: null,

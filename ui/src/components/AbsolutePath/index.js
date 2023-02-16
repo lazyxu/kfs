@@ -14,12 +14,9 @@ export default () => {
                alignItems="center"
                spacing={1}
         >
-            <Link onClick={() => {
-                open(setResourceManager, resourceManager.branchName, []);
-            }} size="small"><SvgIcon icon="wangpan"/></Link>
-            <Typography> ></Typography>
-            <Breadcrumbs separator="/" maxItems={5}>
-                <PathElement name={resourceManager.branchName} filePath={[]} icon="git"/>
+            <Breadcrumbs separator=">" maxItems={5}>
+                <PathElement name="我的文件" icon="wangpan"/>
+                <PathElement name={resourceManager.branchName} filePath={[]}/>
                 {resourceManager.filePath.map((elemName, i) =>
                     <PathElement key={i} name={elemName} filePath={resourceManager.filePath.slice(0, i + 1)}/>
                 )}
