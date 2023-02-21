@@ -1,11 +1,11 @@
 package dao
 
 type Branch struct {
-	Name        string
-	Description string
-	CommitId    uint64
-	Size        uint64
-	Count       uint64
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	CommitId    uint64 `json:"commitId"`
+	Size        uint64 `json:"size"`
+	Count       uint64 `json:"count"`
 }
 
 type IBranch interface {

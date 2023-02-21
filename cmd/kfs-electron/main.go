@@ -32,10 +32,10 @@ func rootCmd() *cobra.Command {
 }
 
 func runRoot(cmd *cobra.Command, args []string) {
-	server := args[0]
+	serverAddr := args[0]
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		wsHandler(w, r, server)
+		wsHandler(w, r, serverAddr)
 	})
 	lis, err := net.Listen("tcp", "0.0.0.0:0")
 	if err != nil {
@@ -81,7 +81,7 @@ var upgrader = websocket.Upgrader{
 	},
 } // use default options
 
-func wsHandler(w http.ResponseWriter, r *http.Request, server string) {
+func wsHandler(w http.ResponseWriter, r *http.Request, serverAddr string) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)

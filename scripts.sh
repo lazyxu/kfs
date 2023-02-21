@@ -15,12 +15,25 @@ if ! is_command_exist protoc-gen-go; then
   GOOS= GOARCH= go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 fi
 
+if ! is_command_exist protoc-gen-go-grpc; then
+  GOOS= GOARCH= go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+fi
+
 export GO111MODULE=on
 export PATH="$PATH:$(go env GOPATH)/bin"
 
 rm -f pb/*.g
 
-protoc --go_out=paths=source_relative:. pb/fs.proto
+protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. pb/fs.proto
+
+export PATH="$PATH:/c/Users/dell/lib"
+
+#OUTPUT_DIR=./ui/src/pb
+#protoc -I=pb fs.proto \
+#  --js_out=import_style=commonjs:. \
+#  --grpc-web_out=import_style=commonjs,mode=grpcwebtext:"${OUTPUT_DIR}"
+# sed -i "" "1i\\"$'\n'" /* eslint-disable */"$'\n' ${OUTPUT_DIR}/fs_pb.js
+# sed -i "" "1i\\"$'\n'" /* eslint-disable */"$'\n' ${OUTPUT_DIR}/fs_pb_service.js
 
 usage () {
   echo 'Usage:

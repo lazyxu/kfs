@@ -74,6 +74,8 @@ func getDatabaseByType(typ string) (func(string) (dao.Database, error), error) {
 	return nil, fmt.Errorf("no such databse type: %s", typ)
 }
 
+var kfsCore *core.KFS
+
 var rootCmd = &cobra.Command{
 	Use:   "kfs-server",
 	Short: "Kfs is file system used to backup files.",
@@ -122,7 +124,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		kfsCore, err := core.New(dao.DatabaseNewFunc(dataSourceName, newDatabase), dao.StorageNewFunc(storageDir, newStorage))
+		kfsCore, err = core.New(dao.DatabaseNewFunc(dataSourceName, newDatabase), dao.StorageNewFunc(storageDir, newStorage))
 		if err != nil {
 			return
 		}
@@ -148,16 +150,7 @@ var rootCmd = &cobra.Command{
 		http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 			wsHandler(w, r, kfsCore)
 		})
-		http.Handle("/", http.FileServer(AddPrefix(http.FS(build), "build")))
-		lis, err := net.Listen("tcp", "0.0.0.0:"+webPortString)
-		if err != nil {
-			panic(err)
-		}
-		println("KFS web server listening at:", lis.Addr().String())
-		err = http.Serve(lis, nil)
-		if err != nil {
-			panic(err)
-		}
+		webServer(webPortString)
 	},
 }
 

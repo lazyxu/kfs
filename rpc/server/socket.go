@@ -79,6 +79,7 @@ func init() {
 	registerCommand(rpcutil.CommandCat, handleCat)
 	registerCommand(rpcutil.CommandBranchCheckout, handleBranchCheckout)
 	registerCommand(rpcutil.CommandBranchInfo, handleBranchInfo)
+	registerCommand(rpcutil.CommandBranchList, handleBranchList)
 	registerCommand(rpcutil.CommandOpen, handleOpen)
 }
 

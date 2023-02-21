@@ -20,6 +20,7 @@ const (
 
 	CommandBranchCheckout
 	CommandBranchInfo
+	CommandBranchList
 )
 
 type Status = int8

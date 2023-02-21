@@ -100,3 +100,24 @@ func (db *DB) BranchInfo(ctx context.Context, branchName string) (branch dao.Bra
 	}
 	return
 }
+
+func (db *DB) BranchList(ctx context.Context) (branches []dao.IBranch, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	rows, err := conn.QueryContext(ctx, `
+	SELECT * FROM _branch;
+	`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var branch dao.Branch
+		err = rows.Scan(&branch.Name, &branch.Description, &branch.CommitId, &branch.Size, &branch.Count)
+		if err != nil {
+			return
+		}
+		branches = append(branches, branch)
+	}
+	return
+}

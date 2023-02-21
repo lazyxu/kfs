@@ -13,6 +13,7 @@ type Database interface {
 	ResetBranch(ctx context.Context, branchName string) error
 	NewBranch(ctx context.Context, branchName string) (exist bool, err error)
 	BranchInfo(ctx context.Context, branchName string) (branch Branch, err error)
+	BranchList(ctx context.Context) (branches []IBranch, err error)
 
 	WriteCommit(ctx context.Context, commit *Commit) error
 

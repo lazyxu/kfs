@@ -17,3 +17,29 @@ func (fs *KFS) ResetBranch(ctx context.Context, branchName string) error {
 func (fs *KFS) BranchInfo(ctx context.Context, branchName string) (branch dao.IBranch, err error) {
 	return fs.Db.BranchInfo(ctx, branchName)
 }
+
+func (fs *KFS) BranchList(ctx context.Context) ([]dao.IBranch, error) {
+	return fs.Db.BranchList(ctx)
+}
+
+func (fs *KFS) BranchListCb(ctx context.Context, onLength func(int) error, onElement func(item dao.IBranch) error) error {
+	list, err := fs.Db.BranchList(ctx)
+	if err != nil {
+		return err
+	}
+	if onLength != nil {
+		err = onLength(len(list))
+		if err != nil {
+			return err
+		}
+	}
+	if onElement != nil {
+		for _, element := range list {
+			err = onElement(element)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}

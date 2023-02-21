@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"encoding/binary"
 	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/pb"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 )
@@ -52,6 +54,28 @@ func handleBranchInfo(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
 		CommitId:    branch.GetCommitId(),
 		Size:        branch.GetSize(),
 		Count:       branch.GetCount(),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func handleBranchList(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
+	err = kfsCore.BranchListCb(context.TODO(), func(n int) error {
+		err = rpcutil.WriteOK(conn)
+		if err != nil {
+			return err
+		}
+		return binary.Write(conn, binary.LittleEndian, int64(n))
+	}, func(branch dao.IBranch) error {
+		return rpcutil.WriteProto(conn, &pb.BranchInfoResp{
+			Name:        branch.GetName(),
+			Description: branch.GetDescription(),
+			CommitId:    branch.GetCommitId(),
+			Size:        branch.GetSize(),
+			Count:       branch.GetCount(),
+		})
 	})
 	if err != nil {
 		return err
