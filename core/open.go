@@ -1,10 +1,11 @@
 package core
 
 import (
+	"bytes"
 	"context"
-	"os"
-
 	"github.com/lazyxu/kfs/dao"
+	"io"
+	"os"
 )
 
 func (fs *KFS) Open(ctx context.Context, branchName string, filePath string) (mode os.FileMode, rc dao.SizedReadCloser, dirItems []dao.DirItem, err error) {
@@ -15,6 +16,32 @@ func (fs *KFS) Open(ctx context.Context, branchName string, filePath string) (mo
 	}
 	if mode.IsRegular() {
 		rc, err = fs.S.ReadWithSize(hash)
+	}
+	return
+}
+
+func (fs *KFS) Open2(ctx context.Context, branchName string, filePath string, maxContentSize int64) (dirItemOpened dao.DirItemOpened, err error) {
+	dirItemOpened.DirItem, dirItemOpened.DirItems, err = fs.Db.Open2(ctx, branchName, FormatPath(filePath))
+	if err != nil {
+		return
+	}
+	if os.FileMode(dirItemOpened.DirItem.Mode).IsRegular() {
+		if dirItemOpened.DirItem.Size > uint64(maxContentSize) {
+			dirItemOpened.ContentTooLarge = true
+			return
+		}
+		var rc dao.SizedReadCloser
+		rc, err = fs.S.ReadWithSize(dirItemOpened.Hash)
+		if err != nil {
+			return
+		}
+		defer rc.Close()
+		buf := bytes.NewBuffer(nil)
+		_, err = io.CopyN(buf, rc, rc.Size())
+		if err != nil {
+			return
+		}
+		dirItemOpened.Content = buf.Bytes()
 	}
 	return
 }

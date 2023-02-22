@@ -1,11 +1,10 @@
 package main
 
 import (
-	"context"
-	"errors"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"net/http"
+	"strconv"
 )
 
 func webServer(webPortString string) {
@@ -41,19 +40,27 @@ func ok(c echo.Context, data interface{}) error {
 
 // Handler
 func apiBranches(c echo.Context) error {
-	branches, err := kfsCore.BranchList(context.TODO())
+	branches, err := kfsCore.BranchList(c.Request().Context())
 	if err != nil {
-		c.Logger().Error(errors.New("test"))
+		c.Logger().Error(err)
 		return err
 	}
 	return ok(c, branches)
 }
 
 func apiOpen(c echo.Context) error {
-	branches, err := kfsCore.Open(context.TODO())
+	branchName := c.QueryParam("branchName")
+	filePath := c.QueryParam("filePath")
+	maxContentSizeStr := c.QueryParam("maxContentSize")
+	maxContentSize, err := strconv.ParseInt(maxContentSizeStr, 10, 0)
 	if err != nil {
-		c.Logger().Error(errors.New("test"))
+		return c.String(http.StatusBadRequest, "maxContentSize should be a number")
+	}
+	dirItemOpened, err := kfsCore.Open2(c.Request().Context(), branchName, filePath, maxContentSize)
+	if err != nil {
+		println(err.Error())
+		c.Logger().Error(err)
 		return err
 	}
-	return ok(c, branches)
+	return ok(c, dirItemOpened)
 }

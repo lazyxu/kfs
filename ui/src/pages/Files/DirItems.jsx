@@ -36,7 +36,7 @@ export default function () {
                     // }
                 }}>
                     {resourceManager.dirItems.map((dirItem, i) => (
-                        <File filesElm={filesElm} dirItem={dirItem} key={dirItem.Name}/>
+                        <File filesElm={filesElm} dirItem={dirItem} key={dirItem.name}/>
                     ))}
                 </div>
             }

@@ -15,11 +15,12 @@ const size1M = 1024 * 1024;
 
 export default ({file}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
-    console.log("FileViewer", typeof file.Content, file);
-    let time = moment(file.ModifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
+    console.log("FileViewer", typeof file.content, file);
+    let time = moment(file.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
     let content = null;
-    if (file.Size > 0 && file.Size < size1M) {
-        content = (new TextDecoder("utf-8")).decode((file.Content));
+    if (file.size > 0 && file.size < size1M) {
+        // content = (new TextDecoder("utf-8")).decode((file.content));
+        content = file.content;
     }
     const {mode} = useColorScheme();
     console.log("mode", mode)
@@ -32,7 +33,7 @@ export default ({file}) => {
                 alignItems="center"
                 spacing={0.5}
             >
-                {humanize.filesize(file.Size)} | {time}
+                {humanize.filesize(file.size)} | {time}
                 <Stack
                     direction="row"
                     justifyContent="flex-end"

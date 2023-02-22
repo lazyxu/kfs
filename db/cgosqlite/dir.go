@@ -195,6 +195,42 @@ func (db *DB) getBranchCommitHash(ctx context.Context, tx *sql.Tx, branchName st
 	return
 }
 
+func (db *DB) getDirItem(ctx context.Context, tx *sql.Tx, hash string, splitPath []string, i int) (dirItem dao.DirItem, err error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT itemHash,
+			itemName,
+			itemMode,
+			itemSize,
+			itemCount,
+			itemTotalCount,
+			itemCreateTime,
+			itemModifyTime,
+			itemChangeTime,
+			itemAccessTime
+		FROM _dirItem WHERE Hash=? and itemName=?
+	`, hash, splitPath[i])
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		err = errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
+		return
+	}
+	err = rows.Scan(
+		&dirItem.Hash,
+		&dirItem.Name,
+		&dirItem.Mode,
+		&dirItem.Size,
+		&dirItem.Count,
+		&dirItem.TotalCount,
+		&dirItem.CreateTime,
+		&dirItem.ModifyTime,
+		&dirItem.ChangeTime,
+		&dirItem.AccessTime)
+	return
+}
+
 func (db *DB) getDirItemHash(ctx context.Context, tx *sql.Tx, hash string, splitPath []string, i int) (itemHash string, err error) {
 	rows, err := tx.QueryContext(ctx, `
 		SELECT itemHash FROM _dirItem WHERE Hash=? and itemName=?
@@ -244,6 +280,7 @@ func (db *DB) getDirItems(ctx context.Context, tx *sql.Tx, hash string) (dirItem
 		return
 	}
 	defer rows.Close()
+	dirItems = make([]dao.DirItem, 0)
 	for rows.Next() {
 		var dirItem dao.DirItem
 		err = rows.Scan(

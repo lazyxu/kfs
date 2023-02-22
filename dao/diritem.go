@@ -15,16 +15,16 @@ type IDirItem interface {
 
 // https://zhuanlan.zhihu.com/p/343682839
 type DirItem struct {
-	Hash       string
-	Name       string
-	Mode       uint64
-	Size       uint64
-	Count      uint64
-	TotalCount uint64
-	CreateTime uint64 // linux does not support it.
-	ModifyTime uint64
-	ChangeTime uint64 // windows does not support it.
-	AccessTime uint64
+	Hash       string `json:"hash"`
+	Name       string `json:"name"`
+	Mode       uint64 `json:"mode"`
+	Size       uint64 `json:"size"`
+	Count      uint64 `json:"count"`
+	TotalCount uint64 `json:"totalCount"`
+	CreateTime uint64 `json:"createTime"` // linux does not support it.
+	ModifyTime uint64 `json:"modifyTime"`
+	ChangeTime uint64 `json:"changeTime"` // windows does not support it.
+	AccessTime uint64 `json:"accessTime"`
 }
 
 func (d DirItem) GetHash() string {
@@ -69,4 +69,11 @@ func (d DirItem) GetAccessTime() uint64 {
 
 func NewDirItem(fileOrDir IFileOrDir, name string, mode uint64, createTime uint64, modifyTime uint64, changeTime uint64, accessTime uint64) DirItem {
 	return DirItem{fileOrDir.Hash(), name, mode, fileOrDir.Size(), fileOrDir.Count(), fileOrDir.TotalCount(), createTime, modifyTime, changeTime, accessTime}
+}
+
+type DirItemOpened struct {
+	DirItem
+	DirItems        []DirItem `json:"dirItems"`
+	Content         []byte    `json:"content,omitempty"`
+	ContentTooLarge bool      `json:"contentTooLarge"`
 }

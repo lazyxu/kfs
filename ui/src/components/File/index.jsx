@@ -5,7 +5,7 @@ import {modeIsDir} from "api/utils/api";
 import useResourceManager from 'hox/resourceManager';
 import useContextMenu from "../../hox/contextMenu";
 import SvgIcon from "../Icon/SvgIcon";
-import {Box} from "@mui/material";
+import {Box, Stack} from "@mui/material";
 
 export default ({dirItem, filesElm}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -17,11 +17,15 @@ export default ({dirItem, filesElm}) => {
         console.log('onDoubleClick')
     }
     let {filePath, branchName} = resourceManager;
-    const {Name, Mode} = dirItem;
-    filePath = filePath.concat(Name);
+    const {name, mode} = dirItem;
+    filePath = filePath.concat(name);
     return (
-        <Box component="span" sx={{":hover": {backgroundColor: (theme) => theme.palette.action.hover}}}
-             className='file-normal' onContextMenu={(e) => {
+        <Stack component="span" sx={{":hover": {backgroundColor: (theme) => theme.palette.action.hover}}}
+             className='file-normal'
+               justifyContent="flex-start"
+               alignItems="center"
+               spacing={1}
+               onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
             const {clientX, clientY} = e;
@@ -36,14 +40,14 @@ export default ({dirItem, filesElm}) => {
             <div onMouseDown={useClick(null, () => {
                 open(setResourceManager, branchName, filePath);
             })}>
-                {modeIsDir(Mode) ?
+                {modeIsDir(mode) ?
                     <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit"/> :
                     <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit"/>
                 }
             </div>
             <div className='file-name-wrapper'>
-                <p kfs-attr="file" className='file-name' onMouseDown={useClick(onClick, onDoubleClick)}>{Name}</p>
+                <p kfs-attr="file" className='file-name' onMouseDown={useClick(onClick, onDoubleClick)}>{name}</p>
             </div>
-        </Box>
+        </Stack>
     )
 };

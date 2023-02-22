@@ -25,8 +25,8 @@ export default () => {
     const [resourceManager, setResourceManager] = useResourceManager();
     let {filePath, branchName} = resourceManager;
     filePath = filePath.slice()
-    filePath.push(dialog.dirItem.Name);
-    const isDir = modeIsDir(dialog.dirItem.Mode)
+    filePath.push(dialog.dirItem.name);
+    const isDir = modeIsDir(dialog.dirItem.mode)
     return (
         <Dialog open={true} fullWidth={true} onClose={() => {
             setDialog(null)
@@ -56,22 +56,22 @@ export default () => {
                 color: (theme) => theme.palette.text.secondary,
             }}>
                 <Grid container spacing={1.5}>
-                    <Attr k="名称">{dialog.dirItem.Name}</Attr>
+                    <Attr k="名称">{dialog.dirItem.name}</Attr>
                     <Attr k="分支">{branchName}</Attr>
                     <Attr k="路径">{"/" + filePath.join("/")}</Attr>
-                    <Attr k="哈希值">{dialog.dirItem.Hash}</Attr>
+                    <Attr k="哈希值">{dialog.dirItem.hash}</Attr>
                     <Attr k="类型">{isDir ? "文件夹" : "文件"}</Attr>
-                    <Attr k="文件大小">{humanize.filesize(dialog.dirItem.Size)}</Attr>
-                    <Attr k="文件权限">{getPerm(dialog.dirItem.Mode).toString(8)}</Attr>
+                    <Attr k="文件大小">{humanize.filesize(dialog.dirItem.size)}</Attr>
+                    <Attr k="文件权限">{getPerm(dialog.dirItem.mode).toString(8)}</Attr>
                     {isDir && <>
-                        <Attr k="文件数量">{dialog.dirItem.Count}</Attr>
-                        <Attr k="文件总数量">{dialog.dirItem.TotalCount}</Attr>
+                        <Attr k="文件数量">{dialog.dirItem.count}</Attr>
+                        <Attr k="文件总数量">{dialog.dirItem.totalCount}</Attr>
                     </>
                     }
-                    <Attr k="创建时间">{formatTime(dialog.dirItem.CreateTime)}</Attr>
-                    <Attr k="属性修改时间">{formatTime(dialog.dirItem.ChangeTime)}</Attr>
-                    <Attr k="内容修改时间">{formatTime(dialog.dirItem.ModifyTime)}</Attr>
-                    <Attr k="访问时间">{formatTime(dialog.dirItem.AccessTime)}</Attr>
+                    <Attr k="创建时间">{formatTime(dialog.dirItem.createTime)}</Attr>
+                    <Attr k="属性修改时间">{formatTime(dialog.dirItem.changeTime)}</Attr>
+                    <Attr k="内容修改时间">{formatTime(dialog.dirItem.modifyTime)}</Attr>
+                    <Attr k="访问时间">{formatTime(dialog.dirItem.accessTime)}</Attr>
                 </Grid>
             </DialogContent>
         </Dialog>

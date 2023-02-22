@@ -12,8 +12,8 @@ function getBranch(name) {
     return null;
 }
 
-export async function open(branchName, filePath, onFile, onTotal, onDirItem) {
-    console.log('mock.open', branchName, filePath);
+export async function openCb(branchName, filePath, onFile, onTotal, onDirItem) {
+    console.log('mock.openCb', branchName, filePath);
     const branch = getBranch(branchName);
     if (!branch) {
         return false;
@@ -29,6 +29,15 @@ export async function open(branchName, filePath, onFile, onTotal, onDirItem) {
     }
     onFile(item);
     return false;
+}
+
+export async function open(branchName, filePath, onFile, onTotal, onDirItem) {
+    console.log('mock.open', branchName, filePath);
+    const branch = getBranch(branchName);
+    if (!branch) {
+        return false;
+    }
+    return listR(branch, filePath.slice());
 }
 
 // returns isDir

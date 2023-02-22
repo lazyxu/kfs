@@ -30,6 +30,7 @@ type Database interface {
 	ListByHash(ctx context.Context, hash string) (dirItems []DirItem, err error)
 
 	Open(ctx context.Context, branchName string, splitPath []string) (hash string, mode os.FileMode, dirItems []DirItem, err error)
+	Open2(ctx context.Context, branchName string, splitPath []string) (dirItem DirItem, dirItems []DirItem, err error)
 
 	FileCount(ctx context.Context) (int, error)
 	DirCount(ctx context.Context) (int, error)

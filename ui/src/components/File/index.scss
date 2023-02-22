@@ -1,19 +1,20 @@
 .file-normal {
-  margin: 0.5em;
+  width: 5em;
   border: 1px solid transparent;
 
   .file-icon {
-    padding: 0.3em;
-    margin: 0 0.3em;
+    margin: 0.3em;
     height: 4em;
     width: 4em;
     border-radius: 0.3em;
   }
   .file-icon-file {
     color: var(--mui-palette-file);
+    //border: 1px solid var(--mui-palette-file);
   }
   .file-icon-folder {
     color: var(--mui-palette-folder);
+    //border: 1px solid var(--mui-palette-folder);
   }
   .file-name-wrapper {
     margin-top: 0.2em;

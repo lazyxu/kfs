@@ -8,28 +8,26 @@ function getFsApi() {
 
 export async function open(setResourceManager, branchName, filePath) {
     console.log('api.open', branchName, filePath);
-    let dirItems;
-    let isDir = await getFsApi().open(branchName, filePath, (file) => {
+    let dirItem = await getFsApi().open(branchName, filePath);
+    if (dirItem.dirItems) {
+        setResourceManager(prev => {
+            return {
+                ...prev, branchName, filePath,
+                dirItems: dirItem.dirItems,
+                file: null, branches: null,
+            };
+        });
+        return;
+    }
+    if (dirItem.content) {
         setResourceManager(prev => {
             return {
                 ...prev, branchName, filePath,
                 dirItems: null, branches: null,
-                file,
+                file: dirItem,
             };
         });
-    }, (total) => {
-        dirItems = new Array(total);
-    }, (dirItem, i) => {
-        dirItems[i] = dirItem;
-    });
-    if (isDir) {
-        setResourceManager(prev => {
-            return {
-                ...prev, branchName, filePath,
-                dirItems: dirItems ? dirItems : prev.dirItems,
-                file: null, branches: null,
-            };
-        });
+        return;
     }
 }
 
