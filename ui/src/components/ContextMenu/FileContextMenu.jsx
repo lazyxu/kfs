@@ -2,7 +2,7 @@ import React from 'react';
 import ContextMenu from './index';
 import useContextMenu from "hox/contextMenu";
 import useResourceManager from "hox/resourceManager";
-import {download, open} from "api/fs";
+import {download, list, open} from "api/fs";
 import {modeIsDir} from "api/utils/api";
 import useDialog from "hox/dialog";
 import useDialog2 from "../../hox/dialog";
@@ -15,8 +15,8 @@ export default () => {
         return <div/>
     }
     let {filePath, branchName} = resourceManager;
-    let {Name, Mode } = contextMenu.dirItem;
-    filePath = filePath.concat(Name);
+    let {name, mode } = contextMenu.dirItem;
+    filePath = filePath.concat(name);
     return <ContextMenu
         left={contextMenu.clientX}
         top={contextMenu.clientY}
@@ -26,10 +26,14 @@ export default () => {
         maxHeight={10*50}
         options={{
             打开: () => {
-                open(setResourceManager, branchName, filePath);
+                if (modeIsDir(mode)) {
+                    list(setResourceManager, branchName, filePath);
+                } else {
+                    open(setResourceManager, branchName, filePath);
+                }
             },
             下载: {
-                enabled: !modeIsDir(Mode) , fn: () => {
+                enabled: !modeIsDir(mode) , fn: () => {
                     download(branchName, filePath);
                 }
             },

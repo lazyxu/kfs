@@ -1,11 +1,11 @@
 import './index.scss';
 import {useClick} from "use";
-import {open} from "api/fs";
+import {list, openFile} from "api/fs";
 import {modeIsDir} from "api/utils/api";
 import useResourceManager from 'hox/resourceManager';
 import useContextMenu from "../../hox/contextMenu";
 import SvgIcon from "../Icon/SvgIcon";
-import {Box, Stack} from "@mui/material";
+import {Stack} from "@mui/material";
 
 export default ({dirItem, filesElm}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -21,24 +21,28 @@ export default ({dirItem, filesElm}) => {
     filePath = filePath.concat(name);
     return (
         <Stack component="span" sx={{":hover": {backgroundColor: (theme) => theme.palette.action.hover}}}
-             className='file-normal'
+               className='file-normal'
                justifyContent="flex-start"
                alignItems="center"
                spacing={1}
                onContextMenu={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const {clientX, clientY} = e;
-            let {x, y, width, height} = filesElm.current.getBoundingClientRect();
-            setContextMenu({
-                type: 'file',
-                dirItem,
-                clientX, clientY,
-                x, y, width, height,
-            })
-        }}>
+                   e.preventDefault();
+                   e.stopPropagation();
+                   const {clientX, clientY} = e;
+                   let {x, y, width, height} = filesElm.current.getBoundingClientRect();
+                   setContextMenu({
+                       type: 'file',
+                       dirItem,
+                       clientX, clientY,
+                       x, y, width, height,
+                   })
+               }}>
             <div onMouseDown={useClick(null, () => {
-                open(setResourceManager, branchName, filePath);
+                if (modeIsDir(mode)) {
+                    list(setResourceManager, branchName, filePath);
+                } else {
+                    openFile(setResourceManager, branchName, filePath, dirItem);
+                }
             })}>
                 {modeIsDir(mode) ?
                     <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit"/> :

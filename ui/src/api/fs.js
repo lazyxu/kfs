@@ -27,20 +27,29 @@ export async function open(setResourceManager, branchName, filePath) {
                 file: dirItem,
             };
         });
-        return;
+
     }
 }
 
 export async function list(setResourceManager, branchName, filePath) {
     console.log('api.list', branchName, filePath);
-    let dirItems;
-    await getFsApi().list(branchName, filePath, (total) => {
-        dirItems = new Array(total);
-    }, (dirItem, i) => {
-        dirItems[i] = dirItem;
-    });
+    let dirItems = await getFsApi().list(branchName, filePath);
     setResourceManager(prev => {
         return {...prev, branchName, filePath, dirItems, file: null, branches: null};
+    });
+}
+
+export async function openFile(setResourceManager, branchName, filePath, dirItem) {
+    console.log('api.openFile', branchName, filePath);
+    let {content, tooLarge} = await getFsApi().openFile(branchName, filePath);
+    dirItem.content = content;
+    dirItem.tooLarge = tooLarge;
+    setResourceManager(prev => {
+        return {
+            ...prev, branchName, filePath,
+            dirItems: null, branches: null,
+            file: dirItem,
+        };
     });
 }
 

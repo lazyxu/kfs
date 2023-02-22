@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+
 	"github.com/lazyxu/kfs/dao"
 
 	"github.com/lazyxu/kfs/core"
@@ -22,7 +23,7 @@ func handleList(kfsCore *core.KFS, conn AddrReadWriteCloser) (err error) {
 
 	// write
 	fmt.Println("Socket.List", req.String())
-	err = kfsCore.List(context.TODO(), req.BranchName, req.Path, func(n int) error {
+	err = kfsCore.ListCb(context.TODO(), req.BranchName, req.Path, func(n int) error {
 		err = rpcutil.WriteOK(conn)
 		if err != nil {
 			return err

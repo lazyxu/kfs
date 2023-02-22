@@ -19,11 +19,11 @@ export async function openCb(branchName, filePath, onFile, onTotal, onDirItem) {
         return false;
     }
     let item = listR(branch, filePath.slice());
-    if (item.DirItems) {
-        let total = item.DirItems.length;
+    if (item.dirItems) {
+        let total = item.dirItems.length;
         onTotal?.(total);
         for (let i = 0; i < total; i++) {
-            onDirItem?.(item.DirItems[i], i);
+            onDirItem?.(item.dirItems[i], i);
         }
         return true;
     }
@@ -45,8 +45,8 @@ function listR(dir, filePath) {
     if (filePath.length === 0) {
         return dir;
     }
-    for (let i = 0; i < dir.DirItems.length; i++) {
-        let item = dir.DirItems[i];
+    for (let i = 0; i < dir.dirItems.length; i++) {
+        let item = dir.dirItems[i];
         if (item.Name === filePath[0]) {
             if (modeIsDir(item.Mode)) {
                 filePath.shift()
@@ -59,24 +59,34 @@ function listR(dir, filePath) {
     return null;
 }
 
-export async function list(branchName, filePath, onTotal, onDirItem) {
-    console.log('mock.list', branchName, filePath)
+export async function listCb(branchName, filePath, onTotal, onDirItem) {
+    console.log('mock.listCb', branchName, filePath)
     const branch = getBranch(branchName);
     if (!branch) {
         onTotal?.(0);
         return;
     }
     let item = listR(branch, filePath.slice());
-    if (item.DirItems) {
-        let total = item.DirItems.length;
+    if (item.dirItems) {
+        let total = item.dirItems.length;
         onTotal?.(total);
         for (let i = 0; i < total; i++) {
-            onDirItem?.(item.DirItems[i], i);
+            onDirItem?.(item.dirItems[i], i);
         }
         return;
     }
     // TODO: no such dir.
     onTotal?.(0);
+}
+
+export async function list(branchName, filePath, onTotal, onDirItem) {
+    console.log('mock.list', branchName, filePath)
+    const branch = getBranch(branchName);
+    if (!branch) {
+        return [];
+    }
+    let item = listR(branch, filePath.slice());
+    return item.dirItems;
 }
 
 function newFileItem(name, mode) {
@@ -94,7 +104,7 @@ function newFileItem(name, mode) {
         "AccessTime": now,
     }
     if (modeIsDir(mode)) {
-        file.DirItems = [];
+        file.dirItems = [];
     } else {
         file.Content = new TextEncoder("utf-8").encode("");
     }
@@ -103,8 +113,8 @@ function newFileItem(name, mode) {
 
 function addNewFile(item, name, mode) {
     let names = {};
-    for (let i = 0; i < item.DirItems.length; i++) {
-        names[item.DirItems[i].Name] = true;
+    for (let i = 0; i < item.dirItems.length; i++) {
+        names[item.dirItems[i].Name] = true;
     }
     let id = 0;
     let tempName;
@@ -118,7 +128,7 @@ function addNewFile(item, name, mode) {
         }
         id++;
     }
-    item.DirItems.push(newFileItem(tempName, mode));
+    item.dirItems.push(newFileItem(tempName, mode));
 }
 
 export async function newFile(branchName, dirPath, fileName) {
@@ -128,8 +138,8 @@ export async function newFile(branchName, dirPath, fileName) {
         return;
     }
     let item = listR(branch, dirPath.slice());
-    if (item.DirItems) {
-        item.DirItems.push(newFileItem(fileName, 438));
+    if (item.dirItems) {
+        item.dirItems.push(newFileItem(fileName, 438));
     }
 }
 
@@ -141,8 +151,8 @@ export async function newDir(branchName, dirPath, fileName) {
     }
     let item = listR(branch, dirPath.slice());
     // TODO: empty or duplicate
-    if (item.DirItems) {
-        item.DirItems.push(newFileItem(fileName, 2147484159));
+    if (item.dirItems) {
+        item.dirItems.push(newFileItem(fileName, 2147484159));
     }
 }
 

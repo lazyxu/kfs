@@ -9,3 +9,4 @@ export async function httpGet(path, params) {
     }
     return json.data;
 }
+

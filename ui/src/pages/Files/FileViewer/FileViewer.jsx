@@ -4,24 +4,17 @@ import moment from 'moment';
 import humanize from 'humanize';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import IconButton from "@mui/material/IconButton";
-import {Box, Paper, Stack, Tooltip, useColorScheme} from "@mui/material";
+import {Box, Stack, Tooltip, useColorScheme} from "@mui/material";
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {download} from "../../../api/fs";
 import useResourceManager from "../../../hox/resourceManager";
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
-const size1M = 1024 * 1024;
-
 export default ({file}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     console.log("FileViewer", typeof file.content, file);
     let time = moment(file.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
-    let content = null;
-    if (file.size > 0 && file.size < size1M) {
-        // content = (new TextDecoder("utf-8")).decode((file.content));
-        content = file.content;
-    }
     const {mode} = useColorScheme();
     console.log("mode", mode)
     return (
@@ -47,8 +40,8 @@ export default ({file}) => {
                     </Tooltip>
                     <Tooltip title="复制文本内容">
                     <span><IconButton onClick={() => {
-                        navigator.clipboard.writeText(content);
-                    }} disabled={content === null}>
+                        navigator.clipboard.writeText(file.content);
+                    }} disabled={file.tooLarge}>
                     <ContentCopyIcon fontSize="small"/>
                     </IconButton></span>
                     </Tooltip>

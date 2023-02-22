@@ -3,9 +3,10 @@ package core
 import (
 	"bytes"
 	"context"
-	"github.com/lazyxu/kfs/dao"
 	"io"
 	"os"
+
+	"github.com/lazyxu/kfs/dao"
 )
 
 func (fs *KFS) Open(ctx context.Context, branchName string, filePath string) (mode os.FileMode, rc dao.SizedReadCloser, dirItems []dao.DirItem, err error) {
@@ -43,5 +44,18 @@ func (fs *KFS) Open2(ctx context.Context, branchName string, filePath string, ma
 		}
 		dirItemOpened.Content = buf.Bytes()
 	}
+	return
+}
+
+func (fs *KFS) OpenFile(ctx context.Context, branchName string, filePath string, maxContentSize int64) (rc dao.SizedReadCloser, tooLarge bool, err error) {
+	dirItem, err := fs.Db.GetFile(ctx, branchName, FormatPath(filePath))
+	if err != nil {
+		return
+	}
+	if dirItem.Size > uint64(maxContentSize) {
+		tooLarge = true
+		return
+	}
+	rc, err = fs.S.ReadWithSize(dirItem.Hash)
 	return
 }

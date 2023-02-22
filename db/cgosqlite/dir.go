@@ -150,7 +150,7 @@ func getInsertDirItemQuery(row int) (string, error) {
 	return qs.String(), err
 }
 
-func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []string) (hash string, err error) {
+func (db *DB) GetFile(ctx context.Context, branchName string, splitPath []string) (dirItem dao.DirItem, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	tx, err := conn.Begin()
@@ -160,7 +160,11 @@ func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []st
 	defer func() {
 		err = commitAndRollback(tx, err)
 	}()
-	hash, err = db.getBranchCommitHash(ctx, tx, branchName)
+	if len(splitPath) == 0 {
+		err = errors.New("/: Is a directory")
+		return
+	}
+	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
 		return
 	}
@@ -170,12 +174,13 @@ func (db *DB) GetFileHash(ctx context.Context, branchName string, splitPath []st
 			return
 		}
 	}
-	hash, mode, err := db.getDirItemHashMode(ctx, tx, hash, splitPath, len(splitPath)-1)
+	dirItem, err = db.getDirItem(ctx, tx, hash, splitPath, len(splitPath)-1)
 	if err != nil {
 		return
 	}
-	if os.FileMode(mode).IsDir() {
-		return "", errors.New("/" + strings.Join(splitPath, "/") + ": Is a directory")
+	if os.FileMode(dirItem.Mode).IsDir() {
+		err = errors.New("/" + strings.Join(splitPath, "/") + ": Is a directory")
+		return
 	}
 	return
 }

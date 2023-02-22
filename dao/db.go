@@ -18,7 +18,7 @@ type Database interface {
 	WriteCommit(ctx context.Context, commit *Commit) error
 
 	WriteDir(ctx context.Context, dirItems []DirItem) (dir Dir, err error)
-	GetFileHash(ctx context.Context, branchName string, splitPath []string) (hash string, err error)
+	GetFile(ctx context.Context, branchName string, splitPath []string) (dirItem DirItem, err error)
 	RemoveDirItem(ctx context.Context, branchName string, splitPath []string) (commit Commit, branch Branch, err error)
 
 	WriteFile(ctx context.Context, file File) error

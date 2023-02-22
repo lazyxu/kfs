@@ -2,10 +2,11 @@ package core
 
 import (
 	"context"
+
 	"github.com/lazyxu/kfs/dao"
 )
 
-func (fs *KFS) List(ctx context.Context, branchName string, filePath string, onLength func(int) error, onDirItem func(item dao.IDirItem) error) error {
+func (fs *KFS) ListCb(ctx context.Context, branchName string, filePath string, onLength func(int) error, onDirItem func(item dao.IDirItem) error) error {
 	dirItems, err := fs.Db.List(ctx, branchName, FormatPath(filePath))
 	if err != nil {
 		return err
@@ -25,4 +26,8 @@ func (fs *KFS) List(ctx context.Context, branchName string, filePath string, onL
 		}
 	}
 	return nil
+}
+
+func (fs *KFS) List(ctx context.Context, branchName string, filePath string) ([]dao.DirItem, error) {
+	return fs.Db.List(ctx, branchName, FormatPath(filePath))
 }

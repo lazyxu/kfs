@@ -1,6 +1,4 @@
-import {useEffect, useRef} from 'react';
-
-import {open} from "api/fs";
+import {useRef} from 'react';
 import File from "components/File";
 import styles from './index.module.scss';
 import AbsolutePath from "components/AbsolutePath";
@@ -10,7 +8,6 @@ import useContextMenu from "hox/contextMenu";
 import FileContextMenu from "components/ContextMenu/FileContextMenu";
 import FileViewer from "./FileViewer/FileViewer";
 import Dialog from "components/Dialog";
-import useDialog from "hox/dialog";
 
 export default function () {
     const [resourceManager, setResourceManager] = useResourceManager();
