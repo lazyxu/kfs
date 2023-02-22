@@ -2,7 +2,7 @@ import React from 'react';
 import ContextMenu from './index';
 import useContextMenu from "hox/contextMenu";
 import useResourceManager from "hox/resourceManager";
-import {download, open} from "api/api";
+import {download, open} from "api/fs";
 import {modeIsDir} from "api/utils/api";
 import useDialog from "hox/dialog";
 import useDialog2 from "../../hox/dialog";

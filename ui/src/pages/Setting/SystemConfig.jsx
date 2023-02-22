@@ -34,6 +34,19 @@ export default () => {
                                 }
                             </div>
                         </li>
+                        <li className={styles.configs_item}>
+                            <div className={styles.configs_item_key}>
+                                <span>API</span>
+                            </div>
+                            <div className={styles.configs_item_values}>
+                                <input type="radio" name="api" checked={sysConfig.api === 'mock'}
+                                       onChange={() => setSysConfig(c => ({...c, api: 'mock'}))}/>
+                                <span> mock </span>
+                                <input type="radio" name="api" checked={sysConfig.api === 'web'}
+                                       onChange={() => setSysConfig(c => ({...c, api: 'web'}))}/>
+                                <span> web </span>
+                            </div>
+                        </li>
                         {process.env.NODE_ENV === 'production' ? [] :
                             <li className={styles.configs_item}>
                                 <div className={styles.configs_item_key}>

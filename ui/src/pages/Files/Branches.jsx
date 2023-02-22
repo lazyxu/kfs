@@ -9,13 +9,7 @@ import Branch from "../../components/File/Branch";
 
 export default function () {
     const [resourceManager, setResourceManager] = useResourceManager();
-    const [contextMenu, setContextMenu] = useContextMenu();
-    const [dialog, setDialog] = useDialog();
     const filesElm = useRef(null);
-    useEffect(() => {
-        listBranch(setResourceManager);
-    }, []);
-    console.log("branches.resourceManager", resourceManager, "contextMenu", contextMenu, "dialog", dialog)
 
     return (
         <>

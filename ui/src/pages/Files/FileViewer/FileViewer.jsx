@@ -7,7 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import {Box, Paper, Stack, Tooltip, useColorScheme} from "@mui/material";
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {download} from "../../../api/api";
+import {download} from "../../../api/fs";
 import useResourceManager from "../../../hox/resourceManager";
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 

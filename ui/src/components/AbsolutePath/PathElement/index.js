@@ -1,6 +1,6 @@
 import useResourceManager from 'hox/resourceManager';
 import {useClick} from "use";
-import {open} from "api/api";
+import {open} from "api/fs";
 import {Link, Stack} from "@mui/material";
 import SvgIcon from "../../Icon/SvgIcon";
 import {listBranch} from "api/branch";

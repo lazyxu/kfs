@@ -1,4 +1,4 @@
-import {download} from "../../../api/api";
+import {download} from "../../../api/fs";
 import useResourceManager from "../../../hox/resourceManager";
 import {Link} from "@mui/material";
 

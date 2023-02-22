@@ -12,7 +12,7 @@ function getBranch(name) {
     return null;
 }
 
-export function open(branchName, filePath, onFile, onTotal, onDirItem) {
+export async function open(branchName, filePath, onFile, onTotal, onDirItem) {
     console.log('mock.open', branchName, filePath);
     const branch = getBranch(branchName);
     if (!branch) {
@@ -50,7 +50,7 @@ function listR(dir, filePath) {
     return null;
 }
 
-export function list(branchName, filePath, onTotal, onDirItem) {
+export async function list(branchName, filePath, onTotal, onDirItem) {
     console.log('mock.list', branchName, filePath)
     const branch = getBranch(branchName);
     if (!branch) {
@@ -112,7 +112,7 @@ function addNewFile(item, name, mode) {
     item.DirItems.push(newFileItem(tempName, mode));
 }
 
-export function newFile(branchName, dirPath, fileName) {
+export async function newFile(branchName, dirPath, fileName) {
     console.log('mock.newFile', branchName, dirPath, fileName)
     const branch = getBranch(branchName);
     if (!branch) {
@@ -124,7 +124,7 @@ export function newFile(branchName, dirPath, fileName) {
     }
 }
 
-export function newDir(branchName, dirPath, fileName) {
+export async function newDir(branchName, dirPath, fileName) {
     console.log('mock.newDir', branchName, dirPath, fileName)
     const branch = getBranch(branchName);
     if (!branch) {
@@ -137,7 +137,7 @@ export function newDir(branchName, dirPath, fileName) {
     }
 }
 
-export function download(branchName, filePath) {
+export async function download(branchName, filePath) {
     console.log('mock.download', branchName, filePath)
     const branch = getBranch(branchName);
     if (!branch) {

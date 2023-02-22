@@ -1,6 +1,6 @@
 import {useEffect, useRef} from 'react';
 
-import {open} from "api/api";
+import {open} from "api/fs";
 import File from "components/File";
 import styles from './index.module.scss';
 import AbsolutePath from "components/AbsolutePath";
@@ -15,16 +15,7 @@ import useDialog from "hox/dialog";
 export default function () {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
-    const [dialog, setDialog] = useDialog();
     const filesElm = useRef(null);
-    useEffect(() => {
-        console.log("mount");
-        (async () => {
-            let {filePath, branchName} = resourceManager;
-            await open(setResourceManager, branchName, filePath);
-        })()
-    }, []);
-    console.log("resourceManager", resourceManager, "contextMenu", contextMenu, "dialog", dialog)
 
     return (
         <>

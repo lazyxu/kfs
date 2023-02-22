@@ -16,6 +16,6 @@ function useFunc() {
   };
 }
 
-const [useSysConfig] = createGlobalStore(useFunc);
+export const [useSysConfig, getSysConfig] = createGlobalStore(useFunc);
 
 export default useSysConfig;

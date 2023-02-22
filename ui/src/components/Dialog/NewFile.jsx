@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 import useDialog from "hox/dialog";
-import {newFile} from "api/api";
+import {newFile} from "api/fs";
 import useResourceManager from "hox/resourceManager";
 
 export default () => {

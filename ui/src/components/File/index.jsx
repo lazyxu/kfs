@@ -1,6 +1,6 @@
 import './index.scss';
 import {useClick} from "use";
-import {open} from "api/api";
+import {open} from "api/fs";
 import {modeIsDir} from "api/utils/api";
 import useResourceManager from 'hox/resourceManager';
 import useContextMenu from "../../hox/contextMenu";

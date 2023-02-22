@@ -1,6 +1,6 @@
 import {branches} from './data';
 
-export function listBranch() {
+export async function listBranch() {
   console.log('mock.listBranch');
   return branches;
 }
