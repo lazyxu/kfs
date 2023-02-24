@@ -23,7 +23,6 @@ func webServer(webPortString string) {
 
 	// Routes
 	e.GET("/api/v1/branches", apiBranches)
-	e.GET("/api/v1/open", apiOpen)
 	e.GET("/api/v1/list", apiList)
 	e.GET("/api/v1/openFile", apiOpenFile)
 	e.GET("/api/v1/downloadFile", apiDownloadFile)
@@ -51,23 +50,6 @@ func apiBranches(c echo.Context) error {
 		return err
 	}
 	return ok(c, branches)
-}
-
-func apiOpen(c echo.Context) error {
-	branchName := c.QueryParam("branchName")
-	filePath := c.QueryParam("filePath")
-	maxContentSizeStr := c.QueryParam("maxContentSize")
-	maxContentSize, err := strconv.ParseInt(maxContentSizeStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "maxContentSize should be a number")
-	}
-	dirItemOpened, err := kfsCore.Open2(c.Request().Context(), branchName, filePath, maxContentSize)
-	if err != nil {
-		println(err.Error())
-		c.Logger().Error(err)
-		return err
-	}
-	return ok(c, dirItemOpened)
 }
 
 func apiList(c echo.Context) error {

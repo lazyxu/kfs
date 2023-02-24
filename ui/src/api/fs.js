@@ -6,31 +6,6 @@ function getFsApi() {
     return getSysConfig().sysConfig.api === "web" ? webApi : mockApi;
 }
 
-export async function open(setResourceManager, branchName, filePath) {
-    console.log('api.open', branchName, filePath);
-    let dirItem = await getFsApi().open(branchName, filePath);
-    if (dirItem.dirItems) {
-        setResourceManager(prev => {
-            return {
-                ...prev, branchName, filePath,
-                dirItems: dirItem.dirItems,
-                file: null, branches: null,
-            };
-        });
-        return;
-    }
-    if (dirItem.content) {
-        setResourceManager(prev => {
-            return {
-                ...prev, branchName, filePath,
-                dirItems: null, branches: null,
-                file: dirItem,
-            };
-        });
-
-    }
-}
-
 export async function list(setResourceManager, branchName, filePath) {
     console.log('api.list', branchName, filePath);
     let dirItems = await getFsApi().list(branchName, filePath);

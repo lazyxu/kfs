@@ -1,16 +1,19 @@
 import useResourceManager from 'hox/resourceManager';
-import {useClick} from "use";
-import {list} from "api/fs";
+import {list, openFile} from "api/fs";
 import {Link, Stack} from "@mui/material";
 import SvgIcon from "../../Icon/SvgIcon";
 import {listBranch} from "api/branch";
 
-export default ({name, icon, filePath}) => {
+export default ({type, name, icon, filePath}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     return (
-        <Link color="inherit" underline="hover" onMouseDown={useClick(() => {
+        <Link color="inherit" underline="hover" onClick={(() => {
             if (filePath) {
-                list(setResourceManager, resourceManager.branchName, filePath);
+                if (type === "file") {
+                    openFile(setResourceManager, resourceManager.branchName, filePath, resourceManager.file);
+                } else {
+                    list(setResourceManager, resourceManager.branchName, filePath);
+                }
             } else {
                 listBranch(setResourceManager);
             }

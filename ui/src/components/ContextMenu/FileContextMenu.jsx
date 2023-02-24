@@ -2,9 +2,8 @@ import React from 'react';
 import ContextMenu from './index';
 import useContextMenu from "hox/contextMenu";
 import useResourceManager from "hox/resourceManager";
-import {download, list, open} from "api/fs";
+import {download, list, openFile} from "api/fs";
 import {modeIsDir} from "api/utils/api";
-import useDialog from "hox/dialog";
 import useDialog2 from "../../hox/dialog";
 
 export default () => {
@@ -15,7 +14,8 @@ export default () => {
         return <div/>
     }
     let {filePath, branchName} = resourceManager;
-    let {name, mode } = contextMenu.dirItem;
+    let {dirItem} = contextMenu;
+    let {name, mode} = dirItem;
     filePath = filePath.concat(name);
     return <ContextMenu
         left={contextMenu.clientX}
@@ -23,17 +23,17 @@ export default () => {
         right={contextMenu.x + contextMenu.width}
         bottom={contextMenu.y + contextMenu.height}
         maxWidth={200}
-        maxHeight={10*50}
+        maxHeight={10 * 50}
         options={{
             打开: () => {
                 if (modeIsDir(mode)) {
                     list(setResourceManager, branchName, filePath);
                 } else {
-                    open(setResourceManager, branchName, filePath);
+                    openFile(setResourceManager, branchName, filePath, dirItem);
                 }
             },
             下载: {
-                enabled: !modeIsDir(mode) , fn: () => {
+                enabled: !modeIsDir(mode), fn: () => {
                     download(branchName, filePath);
                 }
             },
@@ -45,7 +45,7 @@ export default () => {
             属性: () => {
                 setDialog({
                     title: "属性",
-                    dirItem: contextMenu.dirItem,
+                    dirItem,
                 })
             },
             历史版本: {

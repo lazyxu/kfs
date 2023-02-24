@@ -1,6 +1,6 @@
 import styles from './index.module.scss';
 import useResourceManager from 'hox/resourceManager';
-import {Box} from "@mui/material";
+import {Stack} from "@mui/material";
 import DirItems from "./DirItems";
 import Branches from "./Branches";
 import React, {useEffect} from "react";
@@ -12,10 +12,10 @@ function App() {
         listBranch(setResourceManager);
     }, []);
     return (
-        <Box className={styles.right}>
+        <Stack className={styles.right}>
             {resourceManager.branches && <Branches/>}
             {resourceManager.branchName && <DirItems/>}
-        </Box>
+        </Stack>
     );
 }
 

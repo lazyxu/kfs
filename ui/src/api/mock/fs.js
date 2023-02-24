@@ -12,34 +12,6 @@ function getBranch(name) {
     return null;
 }
 
-export async function openCb(branchName, filePath, onFile, onTotal, onDirItem) {
-    console.log('mock.openCb', branchName, filePath);
-    const branch = getBranch(branchName);
-    if (!branch) {
-        return false;
-    }
-    let item = listR(branch, filePath.slice());
-    if (item.dirItems) {
-        let total = item.dirItems.length;
-        onTotal?.(total);
-        for (let i = 0; i < total; i++) {
-            onDirItem?.(item.dirItems[i], i);
-        }
-        return true;
-    }
-    onFile(item);
-    return false;
-}
-
-export async function open(branchName, filePath, onFile, onTotal, onDirItem) {
-    console.log('mock.open', branchName, filePath);
-    const branch = getBranch(branchName);
-    if (!branch) {
-        return false;
-    }
-    return listR(branch, filePath.slice());
-}
-
 // returns isDir
 function listR(dir, filePath) {
     if (filePath.length === 0) {

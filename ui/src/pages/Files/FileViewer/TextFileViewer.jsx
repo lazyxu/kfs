@@ -14,7 +14,7 @@ export default ({file}) => {
                     download(resourceManager.branchName, resourceManager.filePath)
                 }}>下载该文件</Link>。
             </> :
-            <Typography style={{whiteSpace: "pre-wrap"}}>
+            <Typography style={{whiteSpace: "pre-wrap", overflowWrap: "anywhere"}}>
                 {file.content}
             </Typography>
     )

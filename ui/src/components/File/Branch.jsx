@@ -1,25 +1,26 @@
 import './index.scss';
 import {useClick} from "use";
-import {open} from "api/fs";
-import {modeIsDir} from "api/utils/api";
+import {list} from "api/fs";
 import useResourceManager from 'hox/resourceManager';
-import useContextMenu from "../../hox/contextMenu";
 import SvgIcon from "../Icon/SvgIcon";
-import {Box} from "@mui/material";
+import {Stack} from "@mui/material";
 
 export default ({branch}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     return (
-        <Box component="span" sx={{":hover": {backgroundColor: (theme) => theme.palette.action.hover}}}
-             className='file-normal'>
+        <Stack component="span" sx={{":hover": {backgroundColor: (theme) => theme.palette.action.hover}}}
+               className='file-normal'
+               justifyContent="flex-start"
+               alignItems="center"
+               spacing={1}>
             <div onMouseDown={useClick(null, () => {
-                open(setResourceManager, branch.name, []);
+                list(setResourceManager, branch.name, []);
             })}>
                 <SvgIcon icon="wangpan" className='file-icon file-icon-file' fontSize="inherit"/>
             </div>
             <div className='file-name-wrapper'>
                 <p className='file-name'>{branch.name}</p>
             </div>
-        </Box>
+        </Stack>
     )
 };

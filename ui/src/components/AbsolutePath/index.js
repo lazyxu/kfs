@@ -13,10 +13,13 @@ export default () => {
                spacing={1}
         >
             <Breadcrumbs separator=">" maxItems={5}>
-                <PathElement name="我的文件"/>
+                <PathElement type="branch" name="我的文件"/>
                 <PathElement name={resourceManager.branchName} filePath={[]}/>
                 {resourceManager.filePath.map((elemName, i) =>
-                    <PathElement key={i} name={elemName} filePath={resourceManager.filePath.slice(0, i + 1)}/>
+                    <PathElement
+                        type={i === resourceManager.filePath.length-1 && !resourceManager.dirItems ? "file" : "dir"}
+                        key={i} name={elemName}
+                        filePath={resourceManager.filePath.slice(0, i + 1)}/>
                 )}
             </Breadcrumbs>
         </Stack>

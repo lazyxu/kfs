@@ -1,6 +1,5 @@
 import {useRef} from 'react';
 import File from "components/File";
-import styles from './index.module.scss';
 import AbsolutePath from "components/AbsolutePath";
 import useResourceManager from 'hox/resourceManager';
 import DefaultContextMenu from "components/ContextMenu/DefaultContextMenu";
@@ -8,6 +7,7 @@ import useContextMenu from "hox/contextMenu";
 import FileContextMenu from "components/ContextMenu/FileContextMenu";
 import FileViewer from "./FileViewer/FileViewer";
 import Dialog from "components/Dialog";
+import {Grid} from "@mui/material";
 
 export default function () {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -19,7 +19,11 @@ export default function () {
             <AbsolutePath/>
             {resourceManager.file ?
                 <FileViewer file={resourceManager.file}/> :
-                <div ref={filesElm} className={styles.filesGridview} onContextMenu={(e) => {
+                <Grid container margin={1} spacing={1}
+                      style={{overflowY: "scroll"}}
+                      bottom="0"
+                      position="relative"
+                      ref={filesElm} onContextMenu={(e) => {
                     e.preventDefault();
                     // console.log(e.target, e.currentTarget, e.target === e.currentTarget);
                     // if (e.target === e.currentTarget) {
@@ -33,9 +37,11 @@ export default function () {
                     // }
                 }}>
                     {resourceManager.dirItems.map((dirItem, i) => (
-                        <File filesElm={filesElm} dirItem={dirItem} key={dirItem.name}/>
+                        <Grid item={true} key={dirItem.name}>
+                            <File filesElm={filesElm} dirItem={dirItem} key={dirItem.name}/>
+                        </Grid>
                     ))}
-                </div>
+                </Grid>
             }
             <DefaultContextMenu/>
             <FileContextMenu/>

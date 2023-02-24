@@ -18,7 +18,9 @@ export default ({file}) => {
     const {mode} = useColorScheme();
     console.log("mode", mode)
     return (
-        <>
+        <Stack style={{overflowY: "scroll"}}
+               bottom="0"
+               position="relative">
             <Stack
                 className={styles.fileHeaderViewer}
                 direction="row"
@@ -62,6 +64,6 @@ export default ({file}) => {
             <Box className={styles.fileViewer}>
                 <TextFileViewer file={file}/>
             </Box>
-        </>
+        </Stack>
     )
 };
