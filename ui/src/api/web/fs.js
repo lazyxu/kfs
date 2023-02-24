@@ -27,6 +27,7 @@ export async function openFile(branchName, filePath) {
             filePath: filePath.join("/"),
             maxContentSize: getSysConfig().sysConfig.maxContentSize,
         },
+        transformResponse: x=>x,
     });
     let tooLarge = resp.headers.get("Kfs-Too-Large");
     return {tooLarge, content: resp.data}
