@@ -7,7 +7,7 @@ import useContextMenu from "../../hox/contextMenu";
 import SvgIcon from "../Icon/SvgIcon";
 import {Stack} from "@mui/material";
 
-export default ({dirItem, filesElm}) => {
+export default function ({dirItem, filesElm}) {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
     const onClick = e => {
