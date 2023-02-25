@@ -15,7 +15,7 @@ func (db *DB) Open(ctx context.Context, branchName string, splitPath []string) (
 		return
 	}
 	defer func() {
-		err = commitAndRollback(tx, err)
+		err = CommitAndRollback(tx, err)
 	}()
 	hash, err = db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
@@ -46,7 +46,7 @@ func (db *DB) Open2(ctx context.Context, branchName string, splitPath []string) 
 		return
 	}
 	defer func() {
-		err = commitAndRollback(tx, err)
+		err = CommitAndRollback(tx, err)
 	}()
 	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {

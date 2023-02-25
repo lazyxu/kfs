@@ -18,18 +18,12 @@ func (db *DB) WriteDir(ctx context.Context, dirItems []dao.DirItem) (dir dao.Dir
 		return
 	}
 	defer func() {
-		err = commitAndRollback(tx, err)
+		err = CommitAndRollback(tx, err)
 	}()
-	return db.writeDir(ctx, tx, dirItems, dirItems)
+	return db.InsertDirWithTx(ctx, tx, dirItems, dirItems)
 }
 
-type TxOrDb interface {
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-}
-
-func (db *DB) writeDir(ctx context.Context, tx TxOrDb, dirItems []dao.DirItem, insertDirItems []dao.DirItem) (dir dao.Dir, err error) {
+func (db *DB) InsertDirWithTx(ctx context.Context, tx *sql.Tx, dirItems []dao.DirItem, insertDirItems []dao.DirItem) (dir dao.Dir, err error) {
 	dir.Cal(dirItems)
 	// TODO: error if size or count is not equal
 	_, err = tx.ExecContext(ctx, `
@@ -158,7 +152,7 @@ func (db *DB) GetFile(ctx context.Context, branchName string, splitPath []string
 		return
 	}
 	defer func() {
-		err = commitAndRollback(tx, err)
+		err = CommitAndRollback(tx, err)
 	}()
 	if len(splitPath) == 0 {
 		err = errors.New("/: Is a directory")
@@ -315,9 +309,9 @@ func (db *DB) RemoveDirItem(ctx context.Context, branchName string, splitPath []
 		return
 	}
 	defer func() {
-		err = commitAndRollback(tx, err)
+		err = CommitAndRollback(tx, err)
 	}()
-	return db.updateDirItem(ctx, tx, branchName, splitPath, func(dirItemsList [][]dao.DirItem) ([]dao.DirItem, error) {
+	return db.UpdateDirItemWithTx(ctx, tx, branchName, splitPath, func(dirItemsList [][]dao.DirItem) ([]dao.DirItem, error) {
 		i := len(dirItemsList) - 1
 		find := false
 		for j, dirItem := range dirItemsList[i] {
@@ -335,7 +329,7 @@ func (db *DB) RemoveDirItem(ctx context.Context, branchName string, splitPath []
 	})
 }
 
-func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func([][]dao.DirItem) ([]dao.DirItem, error)) (commit dao.Commit, branch dao.Branch, err error) {
+func (db *DB) UpdateDirItemWithTx(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func([][]dao.DirItem) ([]dao.DirItem, error)) (commit dao.Commit, branch dao.Branch, err error) {
 	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
 		return
@@ -361,7 +355,7 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 		return
 	}
 	i := len(dirItemsList) - 1
-	dir, err := db.writeDir(ctx, tx, dirItemsList[i], insertDirItems)
+	dir, err := db.InsertDirWithTx(ctx, tx, dirItemsList[i], insertDirItems)
 	if err != nil {
 		return
 	}
@@ -374,25 +368,25 @@ func (db *DB) updateDirItem(ctx context.Context, tx *sql.Tx, branchName string, 
 				break
 			}
 		}
-		dir, err = db.writeDir(ctx, tx, dirItemsList[i], nil)
+		dir, err = db.InsertDirWithTx(ctx, tx, dirItemsList[i], nil)
 		if err != nil {
 			return
 		}
 	}
 	commit = dao.NewCommit(dir, branchName, "")
-	err = db.writeCommit(ctx, tx, &commit)
+	err = db.InsertCommitWithTxOrDb(ctx, tx, &commit)
 	if err != nil {
 		return
 	}
 	branch = dao.NewBranch(branchName, commit, dir)
-	err = db.writeBranch(ctx, tx, branch)
+	err = db.UpsertBranchWithTxOrDb(ctx, tx, branch)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (db *DB) updateDirItems(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func(*[]dao.DirItem) ([]dao.DirItem, error)) (commit dao.Commit, branch dao.Branch, err error) {
+func (db *DB) UpdateDirItemsWithTx(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func(*[]dao.DirItem) ([]dao.DirItem, error)) (commit dao.Commit, branch dao.Branch, err error) {
 	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
 		return
@@ -418,7 +412,7 @@ func (db *DB) updateDirItems(ctx context.Context, tx *sql.Tx, branchName string,
 		return
 	}
 	i := len(dirItemsList) - 1
-	dir, err := db.writeDir(ctx, tx, dirItems, insertDirItems)
+	dir, err := db.InsertDirWithTx(ctx, tx, dirItems, insertDirItems)
 	if err != nil {
 		return
 	}
@@ -431,18 +425,18 @@ func (db *DB) updateDirItems(ctx context.Context, tx *sql.Tx, branchName string,
 				break
 			}
 		}
-		dir, err = db.writeDir(ctx, tx, dirItemsList[i], nil)
+		dir, err = db.InsertDirWithTx(ctx, tx, dirItemsList[i], nil)
 		if err != nil {
 			return
 		}
 	}
 	commit = dao.NewCommit(dir, branchName, "")
-	err = db.writeCommit(ctx, tx, &commit)
+	err = db.InsertCommitWithTxOrDb(ctx, tx, &commit)
 	if err != nil {
 		return
 	}
 	branch = dao.NewBranch(branchName, commit, dir)
-	err = db.writeBranch(ctx, tx, branch)
+	err = db.UpsertBranchWithTxOrDb(ctx, tx, branch)
 	if err != nil {
 		return
 	}

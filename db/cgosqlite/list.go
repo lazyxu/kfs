@@ -14,7 +14,7 @@ func (db *DB) List(ctx context.Context, branchName string, splitPath []string) (
 		return
 	}
 	defer func() {
-		err = commitAndRollback(tx, err)
+		err = CommitAndRollback(tx, err)
 	}()
 	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
@@ -41,7 +41,7 @@ func (db *DB) ListByHash(ctx context.Context, hash string) (dirItems []dao.DirIt
 		return
 	}
 	defer func() {
-		err = commitAndRollback(tx, err)
+		err = CommitAndRollback(tx, err)
 	}()
 	dirItems, err = db.getDirItems(ctx, tx, hash)
 	if err != nil {

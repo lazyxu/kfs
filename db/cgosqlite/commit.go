@@ -2,7 +2,7 @@ package cgosqlite
 
 import (
 	"context"
-	"errors"
+	"github.com/lazyxu/kfs/db/dbBase"
 
 	"github.com/lazyxu/kfs/dao"
 )
@@ -10,57 +10,9 @@ import (
 func (db *DB) WriteCommit(ctx context.Context, commit *dao.Commit) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return db.writeCommit(ctx, conn, commit)
+	return db.InsertCommitWithTxOrDb(ctx, conn, commit)
 }
 
-func (db *DB) updateBranch(ctx context.Context, txOrDb TxOrDb, dir dao.Dir, branchName string, message string) error {
-	commit := dao.NewCommit(dir, branchName, message)
-	err := db.writeCommit(ctx, txOrDb, &commit)
-	if err != nil {
-		return err
-	}
-	branch := dao.NewBranch(branchName, commit, dir)
-	err = db.writeBranch(ctx, txOrDb, branch)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (db *DB) writeCommit(ctx context.Context, txOrDb TxOrDb, commit *dao.Commit) error {
-	// TODO: if Hash not changed.
-	res, err := txOrDb.ExecContext(ctx, `
-	INSERT INTO _commit (createTime, Hash, lastId)
-	VALUES (?, ?, ifnull((SELECT commitId FROM _branch WHERE _branch.name=?), 0));;
-	`, commit.CreateTime(), commit.Hash, commit.BranchName())
-	if err != nil {
-		return err
-	}
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rowsAffected == 0 {
-		rows, err := txOrDb.QueryContext(ctx, `
-	SELECT id FROM _commit ORDER BY id DESC LIMIT 1
-	`, commit.CreateTime(), commit.Hash, commit.BranchName())
-		if err != nil {
-			return err
-		}
-		defer rows.Close()
-		if !rows.Next() {
-			return errors.New("no commit")
-		}
-		err = rows.Scan(&commit.Id)
-		if err != nil {
-			return err
-		}
-	} else {
-		id, err := res.LastInsertId()
-		if err != nil {
-			return err
-		}
-		commit.Id = uint64(id)
-	}
-	return err
+func (db *DB) InsertCommitWithTxOrDb(ctx context.Context, txOrDb dbBase.TxOrDb, commit *dao.Commit) error {
+	return dbBase.InsertCommitWithTxOrDbCgoSqlite(ctx, txOrDb, commit)
 }

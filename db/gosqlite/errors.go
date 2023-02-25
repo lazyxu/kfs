@@ -4,7 +4,7 @@ import (
 	"modernc.org/sqlite"
 )
 
-func isUniqueConstraintError(err error) bool {
+func (db *DB) IsUniqueConstraintError(err error) bool {
 	if err == nil {
 		return false
 	}

@@ -12,6 +12,7 @@ use (
 	./db/cgosqlite
 	./db/gosqlite
 	./db/mysql
+	./db/dbBase
 	./dao
 	./storage/local
 )

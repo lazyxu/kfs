@@ -1,15 +1,13 @@
-package cgosqlite
+package dbBase
 
 import (
 	"context"
-	"os"
-
+	"database/sql"
 	"github.com/lazyxu/kfs/dao"
+	"os"
 )
 
-func (db *DB) Open(ctx context.Context, branchName string, splitPath []string) (hash string, mode os.FileMode, dirItems []dao.DirItem, err error) {
-	conn := db.getConn()
-	defer db.putConn(conn)
+func Open(ctx context.Context, conn *sql.DB, branchName string, splitPath []string) (hash string, mode os.FileMode, dirItems []dao.DirItem, err error) {
 	tx, err := conn.Begin()
 	if err != nil {
 		return
@@ -17,20 +15,20 @@ func (db *DB) Open(ctx context.Context, branchName string, splitPath []string) (
 	defer func() {
 		err = CommitAndRollback(tx, err)
 	}()
-	hash, err = db.getBranchCommitHash(ctx, tx, branchName)
+	hash, err = getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
 		return
 	}
 	var m uint64
 	for i := range splitPath {
-		hash, m, err = db.getDirItemHashMode(ctx, tx, hash, splitPath, i)
+		hash, m, err = getDirItemHashMode(ctx, tx, hash, splitPath, i)
 		if err != nil {
 			return
 		}
 	}
 	mode = os.FileMode(m)
 	if mode.IsDir() {
-		dirItems, err = db.getDirItems(ctx, tx, hash)
+		dirItems, err = getDirItems(ctx, tx, hash)
 		if err != nil {
 			return
 		}
@@ -38,9 +36,7 @@ func (db *DB) Open(ctx context.Context, branchName string, splitPath []string) (
 	return
 }
 
-func (db *DB) Open2(ctx context.Context, branchName string, splitPath []string) (dirItem dao.DirItem, dirItems []dao.DirItem, err error) {
-	conn := db.getConn()
-	defer db.putConn(conn)
+func Open2(ctx context.Context, conn *sql.DB, branchName string, splitPath []string) (dirItem dao.DirItem, dirItems []dao.DirItem, err error) {
 	tx, err := conn.Begin()
 	if err != nil {
 		return
@@ -48,16 +44,17 @@ func (db *DB) Open2(ctx context.Context, branchName string, splitPath []string) 
 	defer func() {
 		err = CommitAndRollback(tx, err)
 	}()
-	hash, err := db.getBranchCommitHash(ctx, tx, branchName)
+	hash, err := getBranchCommitHash(ctx, tx, branchName)
 	if err != nil {
 		return
 	}
 	if len(splitPath) != 0 {
 		for i := range splitPath {
-			dirItem, err = db.getDirItem(ctx, tx, hash, splitPath, i)
+			dirItem, err = getDirItem(ctx, tx, hash, splitPath, i)
 			if err != nil {
 				return
 			}
+			hash = dirItem.Hash
 		}
 		mode := os.FileMode(dirItem.Mode)
 		if mode.IsRegular() {
@@ -65,7 +62,7 @@ func (db *DB) Open2(ctx context.Context, branchName string, splitPath []string) 
 		}
 	}
 	dirItem.Mode = uint64(os.ModeDir | os.ModePerm)
-	dirItems, err = db.getDirItems(ctx, tx, hash)
+	dirItems, err = getDirItems(ctx, tx, hash)
 	if err != nil {
 		return
 	}

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 )
 
-func commitAndRollback(tx *sql.Tx, err error) error {
+func CommitAndRollback(tx *sql.Tx, err error) error {
 	if err != nil {
 		err1 := tx.Rollback()
 		if err1 != nil {
