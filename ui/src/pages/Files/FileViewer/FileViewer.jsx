@@ -4,7 +4,7 @@ import moment from 'moment';
 import humanize from 'humanize';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import IconButton from "@mui/material/IconButton";
-import {Box, Stack, Tooltip, useColorScheme} from "@mui/material";
+import {Box, Grid, Stack, Tooltip, useColorScheme} from "@mui/material";
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {download} from "../../../api/fs";
@@ -15,12 +15,8 @@ export default ({file}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     console.log("FileViewer", typeof file.content, file);
     let time = moment(file.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
-    const {mode} = useColorScheme();
-    console.log("mode", mode)
     return (
-        <Stack style={{overflowY: "scroll"}}
-               bottom="0"
-               position="relative">
+        <>
             <Stack
                 className={styles.fileHeaderViewer}
                 direction="row"
@@ -61,9 +57,9 @@ export default ({file}) => {
                     </Tooltip>
                 </Stack>
             </Stack>
-            <Box className={styles.fileViewer}>
+            <Box style={{flex: "auto"}} className={styles.fileViewer}>
                 <TextFileViewer file={file}/>
             </Box>
-        </Stack>
+        </>
     )
 };

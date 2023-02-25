@@ -1,11 +1,13 @@
 import {download} from "../../../api/fs";
 import humanize from 'humanize';
 import useResourceManager from "../../../hox/resourceManager";
-import {Link, Typography} from "@mui/material";
+import {Link} from "@mui/material";
 import {getSysConfig} from "../../../hox/sysConfig";
+import Editor from "@monaco-editor/react";
 
 export default ({file}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
+    console.log("fileViewer", file)
     return (
         file.tooLarge ?
             <>
@@ -14,8 +16,10 @@ export default ({file}) => {
                     download(resourceManager.branchName, resourceManager.filePath)
                 }}>下载该文件</Link>。
             </> :
-            <Typography style={{whiteSpace: "pre-wrap", overflowWrap: "anywhere"}}>
-                {file.content}
-            </Typography>
+            <Editor
+                height="100%"
+                defaultValue={file.content}
+                defaultPath={file.name}
+            />
     )
 };

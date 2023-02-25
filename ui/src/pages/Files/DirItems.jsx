@@ -7,22 +7,19 @@ import useContextMenu from "hox/contextMenu";
 import FileContextMenu from "components/ContextMenu/FileContextMenu";
 import FileViewer from "./FileViewer/FileViewer";
 import Dialog from "components/Dialog";
-import {Grid} from "@mui/material";
+import {Grid, Stack} from "@mui/material";
 
 export default function () {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
     const filesElm = useRef(null);
-
     return (
         <>
             <AbsolutePath/>
             {resourceManager.file ?
                 <FileViewer file={resourceManager.file}/> :
-                <Grid container margin={1} spacing={1}
-                      style={{overflowY: "scroll"}}
-                      bottom="0"
-                      position="relative"
+                <Grid container padding={1} spacing={1}
+                      style={{flex: "auto", overflowY: "scroll"}}
                       ref={filesElm} onContextMenu={(e) => {
                     e.preventDefault();
                     // console.log(e.target, e.currentTarget, e.target === e.currentTarget);
@@ -43,6 +40,15 @@ export default function () {
                     ))}
                 </Grid>
             }
+            {resourceManager.dirItems &&
+                <Stack className='filePath'
+                       direction="row"
+                       justifyContent="flex-start"
+                       alignItems="center"
+                       spacing={1}
+                >
+                    共{resourceManager.dirItems.length}个项目
+                </Stack>}
             <DefaultContextMenu/>
             <FileContextMenu/>
             <Dialog/>
