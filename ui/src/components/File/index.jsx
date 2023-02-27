@@ -5,17 +5,11 @@ import {modeIsDir} from "api/utils/api";
 import useResourceManager from 'hox/resourceManager';
 import useContextMenu from "../../hox/contextMenu";
 import SvgIcon from "../Icon/SvgIcon";
-import {Stack} from "@mui/material";
+import {Box, Stack} from "@mui/material";
 
 export default function ({dirItem, filesElm}) {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
-    const onClick = e => {
-        console.log('onClick')
-    }
-    const onDoubleClick = e => {
-        console.log('onDoubleClick')
-    }
     let {filePath, branchName} = resourceManager;
     const {name, mode} = dirItem;
     filePath = filePath.concat(name);
@@ -37,7 +31,7 @@ export default function ({dirItem, filesElm}) {
                        x, y, width, height,
                    })
                }}>
-            <div onMouseDown={useClick(null, () => {
+            <Box onMouseDown={useClick(null, () => {
                 if (modeIsDir(mode)) {
                     list(setResourceManager, branchName, filePath);
                 } else {
@@ -48,10 +42,8 @@ export default function ({dirItem, filesElm}) {
                     <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit"/> :
                     <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit"/>
                 }
-            </div>
-            <div className='file-name-wrapper'>
-                <p kfs-attr="file" className='file-name' onMouseDown={useClick(onClick, onDoubleClick)}>{name}</p>
-            </div>
+            </Box>
+            <Box kfs-attr="file" style={{width: "100%", overflowWrap: "break-word", textAlign: "center"}}>{name}</Box>
         </Stack>
     )
 };

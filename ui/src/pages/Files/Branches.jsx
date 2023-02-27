@@ -16,7 +16,7 @@ export default function () {
                   style={{flex: "auto", overflowY: "scroll"}}
                   ref={branchesElm}>
                 {resourceManager.branches.map((branch, i) => (
-                    <Grid item={true} key={branch.name}>
+                    <Grid item key={branch.name}>
                         <Branch branchesElm={branchesElm} branch={branch}>{branch.name}</Branch>
                     </Grid>
                 ))}

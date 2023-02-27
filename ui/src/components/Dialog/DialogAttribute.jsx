@@ -15,8 +15,8 @@ function formatTime(t) {
 
 function Attr({k, children}) {
     return <>
-        <Grid xs={4} item={true} className={styles.attrubute}>{k}：</Grid>
-        <Grid xs={8} item={true} className={styles.attrubute}>{children}</Grid>
+        <Grid xs={4} item className={styles.attrubute}>{k}：</Grid>
+        <Grid xs={8} item className={styles.attrubute}>{children}</Grid>
     </>
 }
 
