@@ -25,9 +25,7 @@ func CommitAndRollback(tx *sql.Tx, err error) error {
 }
 
 func (db *DB) count(ctx context.Context, tableName string) (int, error) {
-	conn := db.getConn()
-	defer db.putConn(conn)
-	rows, err := conn.QueryContext(ctx, "SELECT COUNT(1) FROM "+tableName+";")
+	rows, err := db.db.QueryContext(ctx, "SELECT COUNT(1) FROM "+tableName+";")
 	if err != nil {
 		return 0, err
 	}

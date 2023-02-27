@@ -81,7 +81,7 @@ func UpsertDirItem(ctx context.Context, conn *sql.DB, db DbImpl, branchName stri
 		}
 		return
 	}
-	return db.UpdateDirItemWithTx(ctx, tx, branchName, splitPath, func(dirItemsList [][]dao.DirItem) ([]dao.DirItem, error) {
+	return updateDirItemWithTx(ctx, tx, db, branchName, splitPath, func(dirItemsList [][]dao.DirItem) ([]dao.DirItem, error) {
 		i := len(dirItemsList) - 1
 		item.Name = splitPath[i]
 		find := false
@@ -107,7 +107,7 @@ func UpsertDirItems(ctx context.Context, conn *sql.DB, db DbImpl, branchName str
 	defer func() {
 		err = CommitAndRollback(tx, err)
 	}()
-	return db.UpdateDirItemsWithTx(ctx, tx, branchName, splitPath, func(dirItems *[]dao.DirItem) ([]dao.DirItem, error) {
+	return updateDirItemsWithTx(ctx, tx, db, branchName, splitPath, func(dirItems *[]dao.DirItem) ([]dao.DirItem, error) {
 		for _, item := range items {
 			find := false
 			for j, dirItem := range *dirItems {

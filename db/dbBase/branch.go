@@ -7,24 +7,6 @@ import (
 	"github.com/lazyxu/kfs/dao"
 )
 
-type TxOrDb interface {
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-}
-
-type DbImpl interface {
-	InsertDirWithTx(ctx context.Context, tx *sql.Tx, dirItems []dao.DirItem, insertDirItems []dao.DirItem) (dir dao.Dir, err error)
-	InsertCommitWithTxOrDb(ctx context.Context, txOrDb TxOrDb, commit *dao.Commit) error
-	UpsertBranchWithTxOrDb(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error
-	InsertBranchWithTxOrDb(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error
-
-	UpdateDirItemWithTx(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func([][]dao.DirItem) ([]dao.DirItem, error)) (commit dao.Commit, branch dao.Branch, err error)
-	UpdateDirItemsWithTx(ctx context.Context, tx *sql.Tx, branchName string, splitPath []string, fn func(*[]dao.DirItem) ([]dao.DirItem, error)) (commit dao.Commit, branch dao.Branch, err error)
-
-	IsUniqueConstraintError(error) bool
-}
-
 func ResetBranch(ctx context.Context, conn *sql.DB, db DbImpl, branchName string) (err error) {
 	tx, err := conn.Begin()
 	if err != nil {
@@ -33,7 +15,7 @@ func ResetBranch(ctx context.Context, conn *sql.DB, db DbImpl, branchName string
 	defer func() {
 		err = CommitAndRollback(tx, err)
 	}()
-	dir, err := db.InsertDirWithTx(ctx, tx, nil, nil)
+	dir, err := InsertDirWithTx(ctx, tx, db, nil, nil)
 	if err != nil {
 		return err
 	}
@@ -58,7 +40,7 @@ func NewBranch(ctx context.Context, conn *sql.DB, db DbImpl, branchName string) 
 	defer func() {
 		err = CommitAndRollback(tx, err)
 	}()
-	dir, err := db.InsertDirWithTx(ctx, tx, nil, nil)
+	dir, err := InsertDirWithTx(ctx, tx, db, nil, nil)
 	if err != nil {
 		return
 	}
@@ -68,7 +50,7 @@ func NewBranch(ctx context.Context, conn *sql.DB, db DbImpl, branchName string) 
 		return
 	}
 	branch := dao.NewBranch(branchName, commit, dir)
-	err = db.InsertBranchWithTxOrDb(ctx, tx, branch)
+	err = InsertBranchWithTxOrDb(ctx, tx, branch)
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
@@ -84,9 +66,7 @@ func InsertBranchWithTxOrDb(ctx context.Context, txOrDb TxOrDb, branch dao.Branc
 		commitId,
 		size,
 		count
-	) VALUES (?, ?, ?, ?, ?)
-	`, branch.Name, branch.Description, branch.CommitId, branch.Size, branch.Count,
-		branch.CommitId, branch.Size, branch.Count)
+	) VALUES (?, ?, ?, ?, ?)`, branch.Name, branch.Description, branch.CommitId, branch.Size, branch.Count)
 	if err != nil {
 		return err
 	}

@@ -43,26 +43,15 @@ func open(dataSourceName string) (*DB, error) {
 	return d, err
 }
 
-func (db *DB) getConn() *sql.DB {
-	return db.db
-}
-
-func (db *DB) putConn(conn *sql.DB) {
-}
-
 func (db *DB) Remove() error {
-	conn := db.getConn()
-	defer db.putConn(conn)
-	_, err := conn.Exec(`
+	_, err := db.db.Exec(`
 	DROP TABLE IF EXISTS _file, _dir, _dirItem, _commit, _branch;
 	`)
 	return err
 }
 
 func (db *DB) Create() error {
-	conn := db.getConn()
-	defer db.putConn(conn)
-	_, err := conn.Exec(`
+	_, err := db.db.Exec(`
 	CREATE TABLE IF NOT EXISTS _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
 		size BIGINT  NOT NULL

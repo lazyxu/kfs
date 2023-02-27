@@ -40,7 +40,3 @@ func (db *DB) BranchList(ctx context.Context) (branches []dao.IBranch, err error
 func (db *DB) UpsertBranchWithTxOrDb(ctx context.Context, txOrDb dbBase.TxOrDb, branch dao.Branch) error {
 	return dbBase.UpsertBranchWithTxOrDb(ctx, txOrDb, branch)
 }
-
-func (db *DB) InsertBranchWithTxOrDb(ctx context.Context, txOrDb dbBase.TxOrDb, branch dao.Branch) error {
-	return dbBase.InsertBranchWithTxOrDb(ctx, txOrDb, branch)
-}
