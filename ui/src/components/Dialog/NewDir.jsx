@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
 import useDialog from "hox/dialog";
 import {newDir} from "api/fs";
@@ -15,13 +15,23 @@ export default () => {
     //     console.log("inputRef.current", inputRef.current)
     //     inputRef.current?.focus();
     // });
-    const autoFocusFn = useCallback(element => {console.log(element); window.xxx = element; element?.focus();}, []);
+    const autoFocusFn = useCallback(element => {
+        console.log(element);
+        window.xxx = element;
+        element?.focus();
+    }, []);
     return (
         <Dialog open={true} onClose={() => {
             setDialog(null)
         }}>
-            <DialogTitle>{dialog.title}</DialogTitle>
-            <DialogContent>
+            <DialogTitle sx={{
+                backgroundColor: theme => theme.background.primary,
+                color: theme => theme.context.secondary
+            }}>{dialog.title}</DialogTitle>
+            <DialogContent sx={{
+                backgroundColor: theme => theme.background.primary,
+                color: theme => theme.context.primary
+            }}>
                 <TextField
                     // focused={true}
                     autoFocus
@@ -32,13 +42,16 @@ export default () => {
                     id="name"
                     placeholder="请输入文件夹的名字"
                     fullWidth
-                    variant="standard"
+                    variant="outlined"
                     onChange={e => {
                         setName(e.target.value)
                     }}
                 />
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={{
+                backgroundColor: theme => theme.background.primary,
+                color: theme => theme.context.primary
+            }}>
                 <Button onClick={() => {
                     setDialog(null);
                 }}>取消</Button>

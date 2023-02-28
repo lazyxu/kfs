@@ -27,7 +27,7 @@ export default function () {
             },
             删除: null,
             重命名: null,
-            设置: () => {
+            属性: () => {
                 setDialog({
                     title: "属性",
                     branch,

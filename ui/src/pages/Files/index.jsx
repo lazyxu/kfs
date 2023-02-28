@@ -1,22 +1,21 @@
-import styles from './index.module.scss';
 import useResourceManager from 'hox/resourceManager';
 import {Stack} from "@mui/material";
 import DirItems from "./DirItems";
 import Branches from "./Branches";
-import React, {useEffect} from "react";
-import {listBranch} from "../../api/branch";
+import {useEffect} from "react";
+import {listBranch} from "api/branch";
+import File from "./File";
 
-function App() {
+export default function () {
     const [resourceManager, setResourceManager] = useResourceManager();
     useEffect(() => {
         listBranch(setResourceManager);
     }, []);
     return (
-        <Stack className={styles.right}>
+        <Stack style={{width: "100%", height: "100%"}}>
             {resourceManager.branches && <Branches/>}
-            {resourceManager.branchName && <DirItems/>}
+            {resourceManager.file && <File file={resourceManager.file}/>}
+            {resourceManager.dirItems && <DirItems dirItems={resourceManager.dirItems}/>}
         </Stack>
     );
 }
-
-export default App;

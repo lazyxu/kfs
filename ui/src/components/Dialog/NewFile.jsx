@@ -13,21 +13,30 @@ export default () => {
         <Dialog open={true} onClose={() => {
             setDialog(null)
         }}>
-            <DialogTitle>{dialog.title}</DialogTitle>
-            <DialogContent>
+            <DialogTitle sx={{
+                backgroundColor: theme => theme.background.primary,
+                color: theme => theme.context.secondary
+            }}>{dialog.title}</DialogTitle>
+            <DialogContent sx={{
+                backgroundColor: theme => theme.background.primary,
+                color: theme => theme.context.primary
+            }}>
                 <TextField
                     autoFocus={true}
                     margin="dense"
                     id="name"
                     placeholder="请输入文件的名字"
                     fullWidth
-                    variant="standard"
+                    variant="outlined"
                     onChange={e => {
                         setName(e.target.value)
                     }}
                 />
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={{
+                backgroundColor: theme => theme.background.primary,
+                color: theme => theme.context.primary
+            }}>
                 <Button onClick={() => {
                     setDialog(null);
                 }}>取消</Button>

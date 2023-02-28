@@ -1,7 +1,13 @@
-import styles from './index.module.scss';
+import {Box, Typography} from "@mui/material";
 
 export default () => (
-  <div className={styles.version}>
-    {process.env.REACT_APP_PLATFORM}.{process.env.NODE_ENV}
-  </div>
+    <Box sx={{
+        position: 'absolute',
+        bottom: "0",
+        fontFamily: "KaiTi, STKaiti;",
+    }}>
+        <Typography>
+            {process.env.REACT_APP_PLATFORM}.{process.env.NODE_ENV}
+        </Typography>
+    </Box>
 );

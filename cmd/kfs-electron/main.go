@@ -21,6 +21,8 @@ func main() {
 	}
 }
 
+const PortStr = "port"
+
 func rootCmd() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:  "kfs-electron",
@@ -28,6 +30,7 @@ func rootCmd() *cobra.Command {
 		Run:  runRoot,
 	}
 	cmd.PersistentFlags().BoolP("verbose", "v", false, "verbose")
+	cmd.PersistentFlags().String(PortStr, "0", "local web server port")
 	return cmd
 }
 
@@ -37,7 +40,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		wsHandler(w, r, serverAddr)
 	})
-	lis, err := net.Listen("tcp", "0.0.0.0:0")
+
+	portStr := cmd.Flag(PortStr).Value.String()
+	lis, err := net.Listen("tcp", "0.0.0.0:"+portStr)
 	if err != nil {
 		panic(err)
 	}

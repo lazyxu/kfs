@@ -4,7 +4,7 @@ import useDialog from "hox/dialog";
 import NewDir from "./NewDir";
 import DialogAttribute from "./DialogAttribute";
 
-export default () => {
+export default function () {
     const [dialog, setDialog] = useDialog();
     console.log("dialog", dialog);
     // if (dialog === null || dialog === undefined) {

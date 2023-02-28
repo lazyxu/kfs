@@ -1,5 +1,5 @@
 import React from 'react';
-import {Dialog, DialogContent, DialogTitle, Divider, Grid, Typography} from "@mui/material";
+import {Dialog, DialogContent, DialogTitle, Grid} from "@mui/material";
 import useDialog from "hox/dialog";
 import useResourceManager from "hox/resourceManager";
 import IconButton from "@mui/material/IconButton";
@@ -7,7 +7,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import moment from "moment/moment";
 import humanize from "humanize";
 import {getPerm, modeIsDir} from "../../api/utils/api";
-import styles from "./DialogAttribute.module.scss"
 
 function formatTime(t) {
     return moment(t / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
@@ -15,8 +14,8 @@ function formatTime(t) {
 
 function Attr({k, children}) {
     return <>
-        <Grid xs={4} item className={styles.attrubute}>{k}：</Grid>
-        <Grid xs={8} item className={styles.attrubute}>{children}</Grid>
+        <Grid xs={4} item sx={{overflowWrap: "anywhere"}}>{k}：</Grid>
+        <Grid xs={8} item sx={{overflowWrap: "anywhere"}}>{children}</Grid>
     </>
 }
 
@@ -32,8 +31,8 @@ export default () => {
             setDialog(null)
         }}>
             <DialogTitle sx={{
-                backgroundColor: (theme) => theme.palette.background.default,
-                color: (theme) => theme.palette.text.primary,
+                backgroundColor: theme => theme.background.primary,
+                color: theme => theme.context.secondary
             }}>
                 {dialog.title}
                 <IconButton
@@ -52,8 +51,8 @@ export default () => {
                 </IconButton>
             </DialogTitle>
             <DialogContent sx={{
-                backgroundColor: (theme) => theme.palette.background.default,
-                color: (theme) => theme.palette.text.secondary,
+                backgroundColor: theme => theme.background.primary,
+                color: theme => theme.context.primary
             }}>
                 <Grid container spacing={1.5}>
                     <Attr k="名称">{dialog.dirItem.name}</Attr>

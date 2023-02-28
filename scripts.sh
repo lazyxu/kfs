@@ -37,8 +37,8 @@ export PATH="$PATH:/c/Users/dell/lib"
 
 usage () {
   echo 'Usage:
-  bash scripts.sh start [web|desktop]
-  bash scripts.sh build [server|cli|desktop]
+  bash scripts.sh start [web|electron]
+  bash scripts.sh build [server|cli|electron]
   bash scripts.sh unittest [go|js]
   bash scripts.sh benchmark [go]'
 }
