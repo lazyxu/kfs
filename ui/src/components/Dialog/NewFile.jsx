@@ -27,7 +27,7 @@ export default () => {
                     id="name"
                     placeholder="请输入文件的名字"
                     fullWidth
-                    variant="outlined"
+                    variant="standard"
                     onChange={e => {
                         setName(e.target.value)
                     }}

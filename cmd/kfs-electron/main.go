@@ -1,14 +1,19 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/gorilla/websocket"
+	"github.com/lazyxu/kfs/core"
+	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
-
-	"github.com/gorilla/websocket"
+	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -93,5 +98,111 @@ func wsHandler(w http.ResponseWriter, r *http.Request, serverAddr string) {
 		return
 	}
 	defer c.Close()
-	//server.Process(kfsCore, ToAddrReadWriteCloser(c))
+	process(r.Context(), c)
+}
+
+type WsReq struct {
+	Type string      `json:"type"`
+	Id   int         `json:"id"`
+	Data interface{} `json:"data"`
+}
+
+type WsResp struct {
+	Id       int         `json:"id"`
+	Finished bool        `json:"finished"`
+	Data     interface{} `json:"data"`
+	ErrMsg   string      `json:"errMsg"`
+}
+
+func process(ctx context.Context, conn *websocket.Conn) {
+	println(conn.RemoteAddr().String(), "Process")
+	//defer func() {
+	//	if err := recover(); err != nil {
+	//		println("recover", err)
+	//		conn.Close()
+	//	}
+	//}()
+
+	for {
+		println(conn.RemoteAddr().String(), "ReadJSON")
+		var req WsReq
+		err := conn.ReadJSON(&req)
+		if err == io.EOF || websocket.IsUnexpectedCloseError(err) {
+			conn.Close()
+			return
+		}
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%+v\n", req)
+		switch req.Type {
+		case "calculateBackupSize":
+			go func() {
+				err := calculateBackupSize(ctx, req.Data.(map[string]interface{})["backupDir"].(string), func(finished bool, data interface{}) error {
+					var resp WsResp
+					resp.Id = req.Id
+					resp.Finished = finished
+					resp.Data = data
+					return conn.WriteJSON(resp)
+				}, func(err error) error {
+					var resp WsResp
+					resp.Id = req.Id
+					resp.ErrMsg = err.Error()
+					return conn.WriteJSON(resp)
+				})
+				if err != nil {
+					fmt.Printf("%+v %+v\n", req, err)
+				}
+			}()
+		}
+	}
+}
+
+type SizeWalkerHandlers struct {
+	core.DefaultWalkHandlers[int64]
+	onResp func(finished bool, data interface{}) error
+	tick   <-chan time.Time
+	total  int64
+}
+
+func (h SizeWalkerHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []int64) int64 {
+	var size int64
+	if !info.IsDir() {
+		h.total += info.Size()
+		size = info.Size()
+		return size
+	}
+	for _, child := range children {
+		size += child
+	}
+
+	select {
+	case <-h.tick:
+		err := h.onResp(false, h.total)
+		if err != nil {
+			panic(err)
+		}
+	case <-ctx.Done():
+		return size
+	}
+	return size
+}
+
+func calculateBackupSize(ctx context.Context, backupDir string, onResp func(finished bool, data interface{}) error, onErr func(error) error) error {
+	if !filepath.IsAbs(backupDir) {
+		return onErr(errors.New("请输入绝对路径"))
+	}
+	err := onResp(false, 0)
+	if err != nil {
+		return err
+	}
+	handlers := SizeWalkerHandlers{
+		tick:   time.Tick(time.Millisecond * 500),
+		onResp: onResp,
+	}
+	resp, err := core.Walk[int64](ctx, backupDir, 15, handlers)
+	if err != nil {
+		return onErr(errors.New("请输入绝对路径"))
+	}
+	return onResp(true, resp)
 }

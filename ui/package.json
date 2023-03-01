@@ -24,6 +24,7 @@
     "protobufjs": "^7.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-use-websocket": "^4.3.1",
     "reconnecting-websocket": "^4.4.0",
     "web-vitals": "^2.1.0",
     "ws": "^8.8.1"

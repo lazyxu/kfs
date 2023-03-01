@@ -13,7 +13,7 @@ function App() {
     const {menu} = useMenu();
     const {mode, setMode} = useColorScheme();
     useEffect(() => {
-        document.body.setAttribute('data-theme', sysConfig.theme);
+        // document.body.setAttribute('data-theme', sysConfig.theme);
         console.log("mode:", mode, "=>", sysConfig.theme);
         setMode(sysConfig.theme);
     }, [sysConfig.theme]);

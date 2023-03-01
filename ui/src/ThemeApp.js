@@ -43,21 +43,12 @@ const theme = experimental_extendTheme({
     },
 });
 
-const useEnhancedEffect =
-    typeof window !== 'undefined' ? React.useLayoutEffect : React.useEffect;
-
 export default function () {
-    // the `node` is used for attaching CSS variables to this demo, you might not need it in your application.
-    const [node, setNode] = useState(null);
-    useEnhancedEffect(() => {
-        setNode(document.getElementById('css-vars-custom-theme'));
-    }, []);
     return (
         <div id="css-vars-custom-theme">
             <CssVarsProvider
+                enableColorScheme={true}
                 theme={theme}
-                colorSchemeNode={node || null}
-                colorSchemeSelector="#css-vars-custom-theme"
                 colorSchemeStorageKey="custom-theme-color-scheme"
                 modeStorageKey="custom-theme-mode"
             >

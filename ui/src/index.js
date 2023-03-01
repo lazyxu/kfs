@@ -4,7 +4,6 @@ import {HoxRoot} from 'hox';
 
 import 'reset.scss';
 import 'normalize.css';
-import 'color.scss';
 import 'index.scss';
 
 import reportWebVitals from './reportWebVitals';

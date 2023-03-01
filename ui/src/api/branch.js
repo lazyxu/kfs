@@ -2,7 +2,7 @@ import * as mockApi from "./mock/branch";
 import * as webApi from "./web/branch";
 import {getSysConfig} from "../hox/sysConfig";
 
-function getBranchApi() {
+export function getBranchApi() {
     return getSysConfig().sysConfig.api === "web" ? webApi : mockApi;
 }
 

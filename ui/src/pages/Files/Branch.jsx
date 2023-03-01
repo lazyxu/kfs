@@ -1,7 +1,7 @@
 import {list} from "api/fs";
 import useResourceManager from 'hox/resourceManager';
 import SvgIcon from "components/Icon/SvgIcon";
-import {Button, Card, CardActions, CardContent, Link, Stack, Typography} from "@mui/material";
+import {Box, Button, Card, CardActions, CardContent, Link, Stack, Typography} from "@mui/material";
 import useContextMenu from "hox/contextMenu";
 import humanize from 'humanize';
 import {deleteBranch} from "../../api/branch";
@@ -12,7 +12,7 @@ export default ({branchesElm, branch}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
     return (
-        <Card sx={{width: 275}}>
+        <Card sx={{width: 275}} variant="outlined">
             <CardContent>
                 <Link underline="hover" onClick={() => list(setResourceManager, branch.name, [])}>
                     <Stack
@@ -22,18 +22,18 @@ export default ({branchesElm, branch}) => {
                         spacing={2}
                     >
                         <SvgIcon icon="wangpan" fontSize="inherit"/>
-                        <Typography sx={{flex: 1}}>{branch.name}</Typography>
+                        <Box sx={{flex: 1}}>{branch.name}</Box>
                     </Stack>
                 </Link>
-                <Typography variant="body2">
-                    <Typography>文件总数：{branch.count}</Typography>
-                    <Typography>总大小：{humanize.filesize(branch.size)}</Typography>
+                <Box variant="body">
+                    <Box>文件总数：{branch.count}</Box>
+                    <Box>总大小：{humanize.filesize(branch.size)}</Box>
                     {/* <Typography>可修改该云盘的设备：any</Typography> */}
                     {/* <Typography>可读取该云盘的设备：any</Typography> */}
-                </Typography>
-                <Typography color="text.secondary">
+                </Box>
+                <Box color="text.secondary">
                     描述：{branch.description}
-                </Typography>
+                </Box>
             </CardContent>
             <CardActions>
                 <Button size="small" color="error" startIcon={<DeleteIcon/>} variant="outlined"
