@@ -6,6 +6,7 @@ import {Box, Stack, useColorScheme} from "@mui/material";
 import React, {useEffect} from "react";
 import useMenu from "./hox/menu";
 import useSysConfig from "./hox/sysConfig";
+import BackupTask from "./pages/BackupTask";
 
 function App() {
     const {sysConfig} = useSysConfig();
@@ -20,8 +21,10 @@ function App() {
         <Stack sx={{width: "100%", height: "100%", position: "fixed"}} direction="row">
             <Box sx={{backgroundColor: theme => theme.background.secondary, color: theme => theme.context.secondary}}>
                 <Menu items={[
-                    {icon: 'wangpan', name: '我的文件'},
-                    {icon: 'tongbu', name: '传输列表'},
+                    {icon: 'wangpan', name: '我的云盘'},
+                    {icon: 'devices', name: '设备列表'},
+                    {icon: 'yuntongbu', name: '备份任务'},
+                    {icon: 'swapVertical', name: '传输列表'},
                     {icon: 'peizhi', name: '设置'},
                     {icon: 'system', name: '资源监控'},
                     {icon: '', name: '我的书签'},
@@ -37,7 +40,8 @@ function App() {
                 backgroundColor: theme => theme.background.primary,
                 color: theme => theme.context.primary
             }}>
-                {menu === '我的文件' && <Files/>}
+                {menu === '我的云盘' && <Files/>}
+                {menu === '备份任务' && <BackupTask/>}
                 {menu === '传输列表' && <span>{menu}</span>}
                 {menu === '设置' && <SystemConfig/>}
                 {menu === '资源监控' && <span>{menu}</span>}

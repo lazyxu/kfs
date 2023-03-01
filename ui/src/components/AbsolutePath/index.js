@@ -13,7 +13,7 @@ export default () => {
                spacing={1}
         >
             <Breadcrumbs separator=">" maxItems={5}>
-                <PathElement type="branch" name="我的文件"/>
+                <PathElement type="branch" name="我的云盘"/>
                 <PathElement name={resourceManager.branchName} filePath={[]}/>
                 {resourceManager.filePath.map((elemName, i) =>
                     <PathElement

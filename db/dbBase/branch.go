@@ -148,6 +148,7 @@ func BranchList(ctx context.Context, txOrDb TxOrDb) (branches []dao.IBranch, err
 		return
 	}
 	defer rows.Close()
+	branches = []dao.IBranch{}
 	for rows.Next() {
 		var branch dao.Branch
 		err = rows.Scan(&branch.Name, &branch.Description, &branch.CommitId, &branch.Size, &branch.Count)
