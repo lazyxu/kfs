@@ -7,7 +7,6 @@ export default function ({file}) {
         <>
             <AbsolutePath/>
             <FileViewer file={file}/>
-            <Dialog/>
         </>
     );
 }

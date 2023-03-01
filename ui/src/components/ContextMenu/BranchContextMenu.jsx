@@ -4,6 +4,7 @@ import useContextMenu from "hox/contextMenu";
 import useResourceManager from "hox/resourceManager";
 import {list} from "api/fs";
 import useDialog2 from "../../hox/dialog";
+import {deleteBranch} from "../../api/branch";
 
 export default function () {
     const [contextMenu, setContextMenu] = useContextMenu();
@@ -22,10 +23,12 @@ export default function () {
         maxWidth={200}
         maxHeight={10 * 50}
         options={{
-            打开: () => {
-                list(setResourceManager, name, []);
+            打开: async () => {
+                await list(setResourceManager, name, []);
             },
-            删除: null,
+            删除: async () => {
+                await deleteBranch(setResourceManager, name);
+            },
             重命名: null,
             属性: () => {
                 setDialog({

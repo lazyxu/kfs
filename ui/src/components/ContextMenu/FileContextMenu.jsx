@@ -25,16 +25,16 @@ export default () => {
         maxWidth={200}
         maxHeight={10 * 50}
         options={{
-            打开: () => {
+            打开: async () => {
                 if (modeIsDir(mode)) {
-                    list(setResourceManager, branchName, filePath);
+                    await list(setResourceManager, branchName, filePath);
                 } else {
-                    openFile(setResourceManager, branchName, filePath, dirItem);
+                    await openFile(setResourceManager, branchName, filePath, dirItem);
                 }
             },
             下载: {
-                enabled: !modeIsDir(mode), fn: () => {
-                    download(branchName, filePath);
+                enabled: !modeIsDir(mode), fn: async () => {
+                    await download(branchName, filePath);
                 }
             },
             分享: null,

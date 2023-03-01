@@ -19,6 +19,10 @@ func (db *DB) NewBranch(ctx context.Context, branchName string) (exist bool, err
 	return dbBase.NewBranch(ctx, db.db, db, branchName)
 }
 
+func (db *DB) DeleteBranch(ctx context.Context, branchName string) error {
+	return dbBase.DeleteBranch(ctx, db.db, branchName)
+}
+
 func (db *DB) BranchInfo(ctx context.Context, branchName string) (branch dao.Branch, err error) {
 	return dbBase.BranchInfo(ctx, db.db, branchName)
 }

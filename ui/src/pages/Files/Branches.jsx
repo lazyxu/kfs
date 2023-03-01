@@ -6,6 +6,7 @@ import {Grid} from "@mui/material";
 import BranchContextMenu from "../../components/ContextMenu/BranchContextMenu";
 import BranchesContextMenu from "../../components/ContextMenu/BranchesContextMenu";
 import useContextMenu from "../../hox/contextMenu";
+import Dialog from "../../components/Dialog";
 
 export default function () {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -38,6 +39,7 @@ export default function () {
             </Grid>
             <BranchContextMenu/>
             <BranchesContextMenu/>
+            <Dialog/>
         </>
     );
 }

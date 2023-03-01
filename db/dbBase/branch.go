@@ -73,6 +73,15 @@ func InsertBranchWithTxOrDb(ctx context.Context, txOrDb TxOrDb, branch dao.Branc
 	return err
 }
 
+func DeleteBranch(ctx context.Context, conn *sql.DB, name string) error {
+	_, err := conn.ExecContext(ctx, `
+	DELETE FROM _branch WHERE name = ?`, name)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 func UpsertBranchWithTxOrDb(ctx context.Context, txOrDb TxOrDb, branch dao.Branch) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _branch (

@@ -3,6 +3,7 @@ import ContextMenu from './index';
 import useContextMenu from "hox/contextMenu";
 import useResourceManager from "hox/resourceManager";
 import useDialog2 from "hox/dialog";
+import {listBranch} from "../../api/branch";
 
 export default () => {
     const [contextMenu, setContextMenu] = useContextMenu();
@@ -19,10 +20,16 @@ export default () => {
         right={contextMenu.x + contextMenu.width}
         bottom={contextMenu.y + contextMenu.height}
         maxWidth={200}
-        maxHeight={2*50}
+        maxHeight={2 * 50}
         options={{
-            新建同步文件夹: null,
-            刷新: null,
+            新建同步文件夹: () => {
+                setDialog({
+                    title: "新建同步文件夹",
+                })
+            },
+            刷新: async () => {
+                await listBranch(setResourceManager)
+            },
         }}
         onFinish={() => {
             // console.log("onFinish")

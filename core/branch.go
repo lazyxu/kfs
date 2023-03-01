@@ -14,6 +14,10 @@ func (fs *KFS) ResetBranch(ctx context.Context, branchName string) error {
 	return fs.Db.ResetBranch(ctx, branchName)
 }
 
+func (fs *KFS) DeleteBranch(ctx context.Context, branchName string) error {
+	return fs.Db.DeleteBranch(ctx, branchName)
+}
+
 func (fs *KFS) BranchInfo(ctx context.Context, branchName string) (branch dao.IBranch, err error) {
 	return fs.Db.BranchInfo(ctx, branchName)
 }

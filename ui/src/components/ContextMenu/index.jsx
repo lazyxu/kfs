@@ -61,9 +61,9 @@ export default ({left, top, right, bottom, maxWidth, maxHeight, options, onFinis
                 return (
                     <MenuItem
                          key={o}
-                         onMouseDown={(e) => {
+                         onMouseDown={async (e) => {
                              e.stopPropagation();
-                             fn(e);
+                             await fn(e);
                              onFinish?.();
                          }}
                     >

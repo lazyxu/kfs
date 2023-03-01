@@ -13,3 +13,16 @@ export async function listBranch(setResourceManager) {
         return {...prev, branches, branchName: null, filePath: [], dirItems: null, file: null};
     });
 }
+
+export async function newBranch(setResourceManager, name) {
+    console.log('api.newBranch', name);
+    // TODO: exist
+    await getBranchApi().newBranch(name);
+    await listBranch(setResourceManager);
+}
+
+export async function deleteBranch(setResourceManager, name) {
+    console.log('api.deleteBranch', name);
+    await getBranchApi().deleteBranch(name);
+    await listBranch(setResourceManager);
+}

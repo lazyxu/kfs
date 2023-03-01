@@ -25,6 +25,12 @@ func (db *DB) NewBranch(ctx context.Context, branchName string) (exist bool, err
 	return dbBase.NewBranch(ctx, conn, db, branchName)
 }
 
+func (db *DB) DeleteBranch(ctx context.Context, branchName string) error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.DeleteBranch(ctx, conn, branchName)
+}
+
 func (db *DB) BranchInfo(ctx context.Context, branchName string) (branch dao.Branch, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)

@@ -23,6 +23,8 @@ func webServer(webPortString string) {
 
 	// Routes
 	e.GET("/api/v1/branches", apiBranches)
+	e.POST("/api/v1/branches", apiNewBranch)
+	e.DELETE("/api/v1/branches", apiDeleteBranch)
 	e.GET("/api/v1/list", apiList)
 	e.GET("/api/v1/openFile", apiOpenFile)
 	e.GET("/api/v1/downloadFile", apiDownloadFile)
@@ -50,6 +52,24 @@ func apiBranches(c echo.Context) error {
 		return err
 	}
 	return ok(c, branches)
+}
+
+func apiNewBranch(c echo.Context) error {
+	exist, err := kfsCore.Checkout(c.Request().Context(), c.QueryParam("name"))
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, exist)
+}
+
+func apiDeleteBranch(c echo.Context) error {
+	err := kfsCore.DeleteBranch(c.Request().Context(), c.QueryParam("name"))
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return c.String(http.StatusOK, "")
 }
 
 func apiList(c echo.Context) error {
