@@ -3,6 +3,7 @@ import {useEffect, useState} from "react";
 import {getBranchApi} from "../../api/branch";
 import useWebSocket, {ReadyState} from "react-use-websocket";
 import useSysConfig from "../../hox/sysConfig";
+import BackupSizeStatus from "./BackupSizeStatus";
 
 function isInvalidBackupDir(backupDir) {
     return backupDir === "";
@@ -43,7 +44,8 @@ export default function () {
                 <Button variant="outlined" sx={{width: "10em"}}
                         disabled={isInvalidBackupDir(backupDir)}
                         onClick={e => {
-                            const newId = ++lastId;
+                            sendJsonMessage({type: "calculateBackupSize.cancel", id, data: {backupDir: backupDir}});
+                            const newId = id + 1;
                             setId(newId);
                             console.log("calculateBackupSize", newId, backupDir);
                             sendJsonMessage({type: "calculateBackupSize", id: newId, data: {backupDir: backupDir}});
@@ -51,7 +53,15 @@ export default function () {
                 >
                     检测总大小
                 </Button>
-                <Typography>{JSON.stringify(lastJsonMessage)}</Typography>
+                <Button variant="outlined" sx={{width: "10em"}}
+                        disabled={isInvalidBackupDir(backupDir)}
+                        onClick={e => {
+                            sendJsonMessage({type: "calculateBackupSize.cancel", id, data: {backupDir: backupDir}});
+                        }}
+                >
+                    取消
+                </Button>
+                <BackupSizeStatus json={lastJsonMessage}/>
                 <FormControl sx={{width: "10em"}}>
                     <InputLabel id="demo-simple-select-label">备份分支</InputLabel>
                     <Select

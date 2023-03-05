@@ -5,15 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/lazyxu/kfs/core"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
+	"sync/atomic"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/lazyxu/kfs/core"
 
 	"github.com/spf13/cobra"
 )
@@ -35,7 +38,7 @@ func rootCmd() *cobra.Command {
 		Run:  runRoot,
 	}
 	cmd.PersistentFlags().BoolP("verbose", "v", false, "verbose")
-	cmd.PersistentFlags().String(PortStr, "0", "local web server port")
+	cmd.PersistentFlags().StringP(PortStr, "p", "0", "local web server port")
 	return cmd
 }
 
@@ -116,6 +119,8 @@ type WsResp struct {
 
 func process(ctx context.Context, conn *websocket.Conn) {
 	println(conn.RemoteAddr().String(), "Process")
+	var calculateBackupSizeCancelFunctions sync.Map
+	var lock sync.Mutex
 	//defer func() {
 	//	if err := recover(); err != nil {
 	//		println("recover", err)
@@ -136,73 +141,92 @@ func process(ctx context.Context, conn *websocket.Conn) {
 		}
 		fmt.Printf("%+v\n", req)
 		switch req.Type {
+		case "calculateBackupSize.cancel":
+			cancelFunc, ok := calculateBackupSizeCancelFunctions.Load(req.Id)
+			if !ok {
+				continue
+			}
+			cancelFunc.(context.CancelFunc)()
 		case "calculateBackupSize":
+			newCtx, cancelFunc := context.WithCancel(ctx)
+			calculateBackupSizeCancelFunctions.Store(req.Id, cancelFunc)
 			go func() {
-				err := calculateBackupSize(ctx, req.Data.(map[string]interface{})["backupDir"].(string), func(finished bool, data interface{}) error {
+				err := calculateBackupSize(newCtx, req, req.Data.(map[string]interface{})["backupDir"].(string), func(finished bool, data interface{}) error {
 					var resp WsResp
 					resp.Id = req.Id
 					resp.Finished = finished
 					resp.Data = data
+					lock.Lock()
+					defer lock.Unlock()
 					return conn.WriteJSON(resp)
 				}, func(err error) error {
 					var resp WsResp
 					resp.Id = req.Id
 					resp.ErrMsg = err.Error()
+					lock.Lock()
+					defer lock.Unlock()
 					return conn.WriteJSON(resp)
 				})
 				if err != nil {
 					fmt.Printf("%+v %+v\n", req, err)
 				}
+				calculateBackupSizeCancelFunctions.Delete(req.Id)
 			}()
 		}
 	}
 }
 
-type SizeWalkerHandlers struct {
-	core.DefaultWalkHandlers[int64]
-	onResp func(finished bool, data interface{}) error
-	tick   <-chan time.Time
-	total  int64
+type FileSizeResp struct {
+	FileSize  int64 `json:"fileSize"`
+	FileCount int64 `json:"fileCount"`
+	DirCount  int64 `json:"dirCount"`
 }
 
-func (h SizeWalkerHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []int64) int64 {
-	var size int64
-	if !info.IsDir() {
-		h.total += info.Size()
-		size = info.Size()
-		return size
-	}
-	for _, child := range children {
-		size += child
+type SizeWalkerHandlers struct {
+	FileSizeResp
+	core.DefaultWalkHandlers[int64]
+	req    WsReq
+	onResp func(finished bool, data interface{}) error
+	tick   <-chan time.Time
+}
+
+func (h *SizeWalkerHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []int64) int64 {
+	if info.IsDir() {
+		atomic.AddInt64(&h.DirCount, 1)
+	} else {
+		atomic.AddInt64(&h.FileCount, 1)
+		atomic.AddInt64(&h.FileSize, info.Size())
 	}
 
 	select {
 	case <-h.tick:
-		err := h.onResp(false, h.total)
+		fmt.Printf("tick: %+v\n", h.FileSizeResp)
+		err := h.onResp(false, h.FileSizeResp)
 		if err != nil {
-			panic(err)
+			fmt.Printf("%+v %+v\n", h.req, err)
 		}
 	case <-ctx.Done():
-		return size
+	default:
 	}
-	return size
+	return 0
 }
 
-func calculateBackupSize(ctx context.Context, backupDir string, onResp func(finished bool, data interface{}) error, onErr func(error) error) error {
+func calculateBackupSize(ctx context.Context, req WsReq, backupDir string, onResp func(finished bool, data interface{}) error, onErr func(error) error) error {
 	if !filepath.IsAbs(backupDir) {
 		return onErr(errors.New("请输入绝对路径"))
 	}
-	err := onResp(false, 0)
-	if err != nil {
-		return err
-	}
 	handlers := SizeWalkerHandlers{
+		req:    req,
 		tick:   time.Tick(time.Millisecond * 500),
 		onResp: onResp,
 	}
-	resp, err := core.Walk[int64](ctx, backupDir, 15, handlers)
+	err := onResp(false, handlers.FileSizeResp)
 	if err != nil {
-		return onErr(errors.New("请输入绝对路径"))
+		return err
 	}
-	return onResp(true, resp)
+	_, err = core.Walk[int64](ctx, backupDir, 15, &handlers)
+	if err != nil {
+		return onErr(err)
+	}
+	return onResp(true, handlers.FileSizeResp)
 }
