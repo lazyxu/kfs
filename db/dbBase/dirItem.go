@@ -255,16 +255,38 @@ func InsertDirWithTx(ctx context.Context, tx *sql.Tx, db DbImpl, dirItems []dao.
 	if len(insertDirItems) == 0 {
 		return
 	}
-	column := 11
-	totalRow := len(insertDirItems)
+	err = InsertBatch[dao.DirItem](ctx, tx, db.MaxBatchSize(), insertDirItems, 11, getInsertDirItemQuery, func(args []interface{}, start int, dirItem dao.DirItem) {
+		args[start] = dir.Hash()
+		args[start+1] = dirItem.Hash
+		args[start+2] = dirItem.Name
+		args[start+3] = dirItem.Mode
+		args[start+4] = dirItem.Size
+		args[start+5] = dirItem.Count
+		args[start+6] = dirItem.TotalCount
+		args[start+7] = dirItem.CreateTime
+		args[start+8] = dirItem.ModifyTime
+		args[start+9] = dirItem.ChangeTime
+		args[start+10] = dirItem.AccessTime
+	})
+	if err != nil {
+		return
+	}
+	return
+}
+
+func InsertBatch[T any](ctx context.Context, tx TxOrDb, maxBatchSize int, insertItems []T, column int, getInsertItemQuery func(row int) (string, error), fillArgs func(args []interface{}, start int, item T)) (err error) {
+	if len(insertItems) == 0 {
+		return
+	}
+	totalRow := len(insertItems)
 	repeat := 0
 	remainRow := totalRow
-	maxRow := db.MaxBatchSize() / column
+	maxRow := maxBatchSize / column
 	if totalRow > maxRow {
 		repeat = totalRow / maxRow
 		remainRow = totalRow - repeat*maxRow
 		var query string
-		query, err = getInsertDirItemQuery(maxRow)
+		query, err = getInsertItemQuery(maxRow)
 		if err != nil {
 			return
 		}
@@ -280,18 +302,8 @@ func InsertDirWithTx(ctx context.Context, tx *sql.Tx, db DbImpl, dirItems []dao.
 		}()
 		for i := 0; i < repeat; i++ {
 			args := make([]interface{}, maxRow*column)
-			for i, dirItem := range insertDirItems[i*maxRow : (i+1)*maxRow] {
-				args[i*column] = dir.Hash()
-				args[i*column+1] = dirItem.Hash
-				args[i*column+2] = dirItem.Name
-				args[i*column+3] = dirItem.Mode
-				args[i*column+4] = dirItem.Size
-				args[i*column+5] = dirItem.Count
-				args[i*column+6] = dirItem.TotalCount
-				args[i*column+7] = dirItem.CreateTime
-				args[i*column+8] = dirItem.ModifyTime
-				args[i*column+9] = dirItem.ChangeTime
-				args[i*column+10] = dirItem.AccessTime
+			for i, dirItem := range insertItems[i*maxRow : (i+1)*maxRow] {
+				fillArgs(args, i*column, dirItem)
 			}
 			// TODO: override if duplicated
 			_, err = stmt.ExecContext(ctx, args...)
@@ -302,23 +314,13 @@ func InsertDirWithTx(ctx context.Context, tx *sql.Tx, db DbImpl, dirItems []dao.
 	}
 	if remainRow > 0 {
 		var query string
-		query, err = getInsertDirItemQuery(remainRow)
+		query, err = getInsertItemQuery(remainRow)
 		if err != nil {
 			return
 		}
 		args := make([]interface{}, remainRow*column)
-		for i, dirItem := range insertDirItems[repeat*maxRow:] {
-			args[i*column] = dir.Hash()
-			args[i*column+1] = dirItem.Hash
-			args[i*column+2] = dirItem.Name
-			args[i*column+3] = dirItem.Mode
-			args[i*column+4] = dirItem.Size
-			args[i*column+5] = dirItem.Count
-			args[i*column+6] = dirItem.TotalCount
-			args[i*column+7] = dirItem.CreateTime
-			args[i*column+8] = dirItem.ModifyTime
-			args[i*column+9] = dirItem.ChangeTime
-			args[i*column+10] = dirItem.AccessTime
+		for i, dirItem := range insertItems[repeat*maxRow:] {
+			fillArgs(args, i*column, dirItem)
 		}
 		// TODO: override if duplicated
 		_, err = tx.ExecContext(ctx, query, args...)

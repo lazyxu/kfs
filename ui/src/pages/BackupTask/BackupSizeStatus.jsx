@@ -16,6 +16,7 @@ export default function ({json}) {
     }
     return (
         <Alert variant="outlined" sx={{width: "max-content"}} severity={json.finished ? "success" : "info"}>
+            <Typography>待计算的文件和目录数量：{json.data.stackSize}</Typography>
             <Typography>文件数量：{json.data.fileCount}</Typography>
             <Typography>目录数量：{json.data.dirCount}</Typography>
             <Typography>总大小：{humanize.filesize(json.data.fileSize)}</Typography>
