@@ -96,6 +96,12 @@ var upgrader = websocket.Upgrader{
 	},
 } // use default options
 
+type WsProcessor struct {
+	conn            *websocket.Conn
+	cancelFunctions sync.Map
+	lock            sync.Mutex
+}
+
 func wsHandler(w http.ResponseWriter, r *http.Request, serverAddr string) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -103,7 +109,10 @@ func wsHandler(w http.ResponseWriter, r *http.Request, serverAddr string) {
 		return
 	}
 	defer c.Close()
-	process(r.Context(), c)
+	p := WsProcessor{
+		conn: c,
+	}
+	p.process(r.Context())
 }
 
 type WsReq struct {
@@ -119,10 +128,27 @@ type WsResp struct {
 	ErrMsg   string      `json:"errMsg"`
 }
 
-func process(ctx context.Context, conn *websocket.Conn) {
-	println(conn.RemoteAddr().String(), "Process")
-	var calculateBackupSizeCancelFunctions sync.Map
-	var lock sync.Mutex
+func (p *WsProcessor) ok(req WsReq, finished bool, data interface{}) error {
+	var resp WsResp
+	resp.Id = req.Id
+	resp.Finished = finished
+	resp.Data = data
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	return p.conn.WriteJSON(resp)
+}
+
+func (p *WsProcessor) err(req WsReq, err error) error {
+	var resp WsResp
+	resp.Id = req.Id
+	resp.ErrMsg = err.Error()
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	return p.conn.WriteJSON(resp)
+}
+
+func (p *WsProcessor) process(ctx context.Context) {
+	println(p.conn.RemoteAddr().String(), "Process")
 	//defer func() {
 	//	if err := recover(); err != nil {
 	//		println("recover", err)
@@ -135,11 +161,11 @@ func process(ctx context.Context, conn *websocket.Conn) {
 	}
 
 	for {
-		println(conn.RemoteAddr().String(), "ReadJSON")
+		println(p.conn.RemoteAddr().String(), "ReadJSON")
 		var req WsReq
-		err := conn.ReadJSON(&req)
+		err := p.conn.ReadJSON(&req)
 		if err == io.EOF || websocket.IsUnexpectedCloseError(err) {
-			conn.Close()
+			p.conn.Close()
 			return
 		}
 		if err != nil {
@@ -148,35 +174,20 @@ func process(ctx context.Context, conn *websocket.Conn) {
 		fmt.Printf("%+v\n", req)
 		switch req.Type {
 		case "calculateBackupSize.cancel":
-			cancelFunc, ok := calculateBackupSizeCancelFunctions.Load(req.Id)
+			cancelFunc, ok := p.cancelFunctions.Load(req.Id)
 			if !ok {
 				continue
 			}
 			cancelFunc.(context.CancelFunc)()
 		case "calculateBackupSize":
 			newCtx, cancelFunc := context.WithCancel(ctx)
-			calculateBackupSizeCancelFunctions.Store(req.Id, cancelFunc)
+			p.cancelFunctions.Store(req.Id, cancelFunc)
 			go func() {
-				err := calculateBackupSize(newCtx, db, req, req.Data.(map[string]interface{})["backupDir"].(string), func(finished bool, data interface{}) error {
-					var resp WsResp
-					resp.Id = req.Id
-					resp.Finished = finished
-					resp.Data = data
-					lock.Lock()
-					defer lock.Unlock()
-					return conn.WriteJSON(resp)
-				}, func(err error) error {
-					var resp WsResp
-					resp.Id = req.Id
-					resp.ErrMsg = err.Error()
-					lock.Lock()
-					defer lock.Unlock()
-					return conn.WriteJSON(resp)
-				})
+				err := p.calculateBackupSize(newCtx, db, req, req.Data.(map[string]interface{})["backupDir"].(string))
 				if err != nil {
 					fmt.Printf("%+v %+v\n", req, err)
 				}
-				calculateBackupSizeCancelFunctions.Delete(req.Id)
+				p.cancelFunctions.Delete(req.Id)
 			}()
 		}
 	}
@@ -319,41 +330,43 @@ func getInsertItemQuery(row int) (string, error) {
 	return qs.String(), err
 }
 
-func calculateBackupSize(ctx context.Context, db *DB, req WsReq, backupDir string, onResp func(finished bool, data interface{}) error, onErr func(error) error) error {
+func (p *WsProcessor) calculateBackupSize(ctx context.Context, db *DB, req WsReq, backupDir string) error {
 	if !filepath.IsAbs(backupDir) {
-		return onErr(errors.New("请输入绝对路径"))
+		return p.err(req, errors.New("请输入绝对路径"))
 	}
 	info, err := os.Lstat(backupDir)
 	if err != nil {
-		return onErr(err)
+		return p.err(req, err)
 	}
 	if !info.IsDir() {
-		return onErr(errors.New("请输入一个目录"))
+		return p.err(req, errors.New("请输入一个目录"))
 	}
 	handlers := SizeWalkerHandlers{
-		req:       req,
-		tick:      time.Tick(time.Millisecond * 500),
-		onResp:    onResp,
+		req:  req,
+		tick: time.Tick(time.Millisecond * 500),
+		onResp: func(finished bool, data interface{}) error {
+			return p.ok(req, finished, data)
+		},
 		db:        db,
 		startTime: time.Now().UnixNano(),
 		root:      backupDir,
 		lock:      &sync.Mutex{},
 	}
-	err = onResp(false, handlers.FileSizeResp)
+	err = p.ok(req, false, handlers.FileSizeResp)
 	if err != nil {
 		return err
 	}
 	_, err = core.Walk[CountAndSize](ctx, backupDir, 15, &handlers)
 	if err != nil {
-		return onErr(err)
+		return p.err(req, err)
 	}
-	err = onResp(false, handlers.FileSizeResp)
+	err = p.ok(req, false, handlers.FileSizeResp)
 	if err != nil {
 		return err
 	}
 	err = handlers.insertFiles(ctx)
 	if err != nil {
-		return onErr(err)
+		return p.err(req, err)
 	}
-	return onResp(true, handlers.FileSizeResp)
+	return p.ok(req, true, handlers.FileSizeResp)
 }
