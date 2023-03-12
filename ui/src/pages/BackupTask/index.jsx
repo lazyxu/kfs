@@ -1,4 +1,16 @@
-import {Box, Button, FormControl, InputLabel, MenuItem, Select, Stack, TextField, Typography} from "@mui/material";
+import {
+    Box,
+    Button,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    Stack,
+    Tab,
+    Tabs,
+    TextField,
+    Typography
+} from "@mui/material";
 import {useEffect, useState} from "react";
 import {getBranchApi} from "../../api/branch";
 import useWebSocket, {ReadyState} from "react-use-websocket";
@@ -35,8 +47,29 @@ export default function () {
     const [calculateBackupSizeResult, setCalculateBackupSizeResult] = useState('');
     const [backupResult, setBackupResult] = useState('');
     return (
-        <Box sx={{width: "100%", height: "100%", padding: "1em"}}>
-            <Stack spacing={2}>
+        <Stack spacing={2} sx={{
+            position: "absolute", width: "100%", height: "100%"
+        }}>
+            <Box sx={{borderBottom: 1, borderColor: 'divider', width: "100%"}}>
+                <Tabs value={0} variant="scrollable" scrollButtons="auto">
+                    <Tab label="主页"/>
+                    <Tab label="快速检测"/>
+                    <Tab label="其它"/>
+                    <Tab label="其它"/>
+                    <Tab label="其它"/>
+                    <Tab label="其它"/>
+                    <Tab label="其它"/>
+                    <Tab label="其它"/>
+                    <Tab label="其它"/>
+                    <Tab label="其它"/>
+                    <Tab label="其它"/>
+                    <Tab label="其它"/>
+                    <Tab label="其它3"/>
+                    <Tab label="其它2"/>
+                    <Tab label="其它1"/>
+                </Tabs>
+            </Box>
+            <Box sx={{padding: "1em"}}>
                 <Typography>The WebSocket is currently {connectionStatus}</Typography>
                 <TextField variant="standard" label="本地文件夹路径" type="search" sx={{width: "50%"}}
                            value={backupDir}
@@ -83,7 +116,7 @@ export default function () {
                     开始备份
                 </Button>
                 <Typography>{backupResult}</Typography>
-            </Stack>
-        </Box>
+            </Box>
+        </Stack>
     );
 }
