@@ -117,12 +117,12 @@ func wsHandler(w http.ResponseWriter, r *http.Request, serverAddr string) {
 
 type WsReq struct {
 	Type string      `json:"type"`
-	Id   int         `json:"id"`
+	Id   string      `json:"id"`
 	Data interface{} `json:"data"`
 }
 
 type WsResp struct {
-	Id       int         `json:"id"`
+	Id       string      `json:"id"`
 	Finished bool        `json:"finished"`
 	Data     interface{} `json:"data"`
 	ErrMsg   string      `json:"errMsg"`
@@ -161,7 +161,7 @@ func (p *WsProcessor) process(ctx context.Context) {
 	}
 
 	for {
-		println(p.conn.RemoteAddr().String(), "ReadJSON")
+		print(p.conn.RemoteAddr().String(), " ReadJSON ")
 		var req WsReq
 		err := p.conn.ReadJSON(&req)
 		if err == io.EOF || websocket.IsUnexpectedCloseError(err) {

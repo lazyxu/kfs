@@ -1,10 +1,36 @@
-import {Button, FormControl, InputLabel, MenuItem, Select, TextField} from "@mui/material";
+import {Button, FormControl, InputLabel, MenuItem, Select, Stack, TextField, Typography} from "@mui/material";
+import {useEffect, useState} from "react";
+import {getBranchApi} from "../../api/branch";
+import useWebSocket, {ReadyState} from "react-use-websocket";
+import useSysConfig from "../../hox/sysConfig";
 import BackupSizeStatus from "./BackupSizeStatus";
 
-export default function ({json}) {
+function isInvalidBackupDir(backupDir) {
+    return backupDir === "";
+}
+
+function isInvalidBranchName(branchName) {
+    return branchName === "";
+}
+
+let lastId = 0;
+
+export default function () {
+    const {sysConfig, setSysConfig, resetSysConfig} = useSysConfig();
+    const {sendJsonMessage, lastJsonMessage, readyState} = useWebSocket("ws://127.0.0.1:" + sysConfig.port + "/ws");
+    const [id, setId] = useState(lastId);
+    const [branches, setBranches] = useState([]);
+    useEffect(() => {
+        getBranchApi().listBranch().then(setBranches);
+    }, []);
+    const [branchName, setBranchName] = useState('');
+    const [backupDir, setBackupDir] = useState('');
+    const [calculateBackupSizeResult, setCalculateBackupSizeResult] = useState('');
+    const [backupResult, setBackupResult] = useState('');
+    const [page, setPage] = useState(0);
     return (
-        <>
-            <TextField variant="standard" label="本地文件夹路径" type="search" sx={{width: "50%"}}
+        <Stack spacing={2}>
+            <TextField variant="standard" label="本地文件夹路径" type="search" sx={{width: "100%"}}
                        value={backupDir}
                        onChange={e => setBackupDir(e.target.value)}/>
             <Button variant="outlined" sx={{width: "10em"}}
@@ -40,6 +66,15 @@ export default function ({json}) {
                     )}
                 </Select>
             </FormControl>
-        </>
+            <Button variant="outlined" sx={{width: "10em"}}
+                    disabled={isInvalidBackupDir(backupDir) || isInvalidBranchName(branchName)}
+                    onClick={e => {
+                        console.log("backup", backupDir, branchName)
+                    }}
+            >
+                开始备份
+            </Button>
+            <Typography>{backupResult}</Typography>
+        </Stack>
     );
 }

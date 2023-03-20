@@ -5,7 +5,7 @@ const initialState = {
   branches: [],
   // branchName: "",
   filePath: [],
-  dirItems: [],
+  dirItems: null,
   content: null,
 };
 

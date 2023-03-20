@@ -16,6 +16,7 @@ import {getBranchApi} from "../../api/branch";
 import useWebSocket, {ReadyState} from "react-use-websocket";
 import useSysConfig from "../../hox/sysConfig";
 import BackupSizeStatus from "./BackupSizeStatus";
+import FastCheck from "./FastCheck";
 
 function isInvalidBackupDir(backupDir) {
     return backupDir === "";
@@ -46,17 +47,19 @@ export default function () {
     const [backupDir, setBackupDir] = useState('');
     const [calculateBackupSizeResult, setCalculateBackupSizeResult] = useState('');
     const [backupResult, setBackupResult] = useState('');
+    const [page, setPage] = useState(0);
     return (
         <Stack spacing={2} sx={{
             position: "absolute", width: "100%", height: "100%"
         }}>
+            <Typography>The WebSocket is currently {connectionStatus}</Typography>
             <Box sx={{borderBottom: 1, borderColor: 'divider', width: "100%"}}>
-                <Tabs value={0} variant="scrollable" scrollButtons="auto">
+                <Tabs value={page} variant="scrollable" scrollButtons="auto" onChange={(e, v) => setPage(v)}>
                     <Tab label="主页"/>
+                    <Tab label="历史"/>
                     <Tab label="快速检测"/>
-                    <Tab label="其它"/>
-                    <Tab label="其它"/>
-                    <Tab label="其它"/>
+                    <Tab label="带记录的检测"/>
+                    <Tab label="备份"/>
                     <Tab label="其它"/>
                     <Tab label="其它"/>
                     <Tab label="其它"/>
@@ -70,52 +73,55 @@ export default function () {
                 </Tabs>
             </Box>
             <Box sx={{padding: "1em"}}>
-                <Typography>The WebSocket is currently {connectionStatus}</Typography>
-                <TextField variant="standard" label="本地文件夹路径" type="search" sx={{width: "50%"}}
-                           value={backupDir}
-                           onChange={e => setBackupDir(e.target.value)}/>
-                <Button variant="outlined" sx={{width: "10em"}}
-                        disabled={isInvalidBackupDir(backupDir)}
-                        onClick={e => {
-                            sendJsonMessage({type: "calculateBackupSize.cancel", id, data: {backupDir: backupDir}});
-                            const newId = id + 1;
-                            setId(newId);
-                            console.log("calculateBackupSize", newId, backupDir);
-                            sendJsonMessage({type: "calculateBackupSize", id: newId, data: {backupDir: backupDir}});
-                        }}
-                >
-                    检测总大小
-                </Button>
-                <Button variant="outlined" sx={{width: "10em"}}
-                        disabled={isInvalidBackupDir(backupDir)}
-                        onClick={e => {
-                            sendJsonMessage({type: "calculateBackupSize.cancel", id, data: {backupDir: backupDir}});
-                        }}
-                >
-                    取消
-                </Button>
-                <BackupSizeStatus json={lastJsonMessage}/>
-                <FormControl sx={{width: "10em"}}>
-                    <InputLabel id="demo-simple-select-label">备份分支</InputLabel>
-                    <Select
-                        labelId="demo-simple-select-label"
-                        value={branchName}
-                        onChange={e => setBranchName(e.target.value)}
+                {page === 2 && <FastCheck/>}
+                <Box sx={{borderBottom: 1, borderColor: 'divider', width: "100%"}}/>
+                <Stack spacing={2}>
+                    <TextField variant="standard" label="本地文件夹路径" type="search" sx={{width: "100%"}}
+                               value={backupDir}
+                               onChange={e => setBackupDir(e.target.value)}/>
+                    <Button variant="outlined" sx={{width: "10em"}}
+                            disabled={isInvalidBackupDir(backupDir)}
+                            onClick={e => {
+                                sendJsonMessage({type: "calculateBackupSize.cancel", id, data: {backupDir: backupDir}});
+                                const newId = id + 1;
+                                setId(newId);
+                                console.log("calculateBackupSize", newId, backupDir);
+                                sendJsonMessage({type: "calculateBackupSize", id: newId, data: {backupDir: backupDir}});
+                            }}
                     >
-                        {branches.map(branch =>
-                            <MenuItem key={branch.name} value={branch.name}>{branch.name}</MenuItem>
-                        )}
-                    </Select>
-                </FormControl>
-                <Button variant="outlined" sx={{width: "10em"}}
-                        disabled={isInvalidBackupDir(backupDir) || isInvalidBranchName(branchName)}
-                        onClick={e => {
-                            console.log("backup", backupDir, branchName)
-                        }}
-                >
-                    开始备份
-                </Button>
-                <Typography>{backupResult}</Typography>
+                        检测总大小
+                    </Button>
+                    <Button variant="outlined" sx={{width: "10em"}}
+                            disabled={isInvalidBackupDir(backupDir)}
+                            onClick={e => {
+                                sendJsonMessage({type: "calculateBackupSize.cancel", id, data: {backupDir: backupDir}});
+                            }}
+                    >
+                        取消
+                    </Button>
+                    <BackupSizeStatus json={lastJsonMessage}/>
+                    <FormControl sx={{width: "10em"}}>
+                        <InputLabel id="demo-simple-select-label">备份分支</InputLabel>
+                        <Select
+                            labelId="demo-simple-select-label"
+                            value={branchName}
+                            onChange={e => setBranchName(e.target.value)}
+                        >
+                            {branches.map(branch =>
+                                <MenuItem key={branch.name} value={branch.name}>{branch.name}</MenuItem>
+                            )}
+                        </Select>
+                    </FormControl>
+                    <Button variant="outlined" sx={{width: "10em"}}
+                            disabled={isInvalidBackupDir(backupDir) || isInvalidBranchName(branchName)}
+                            onClick={e => {
+                                console.log("backup", backupDir, branchName)
+                            }}
+                    >
+                        开始备份
+                    </Button>
+                    <Typography>{backupResult}</Typography>
+                </Stack>
             </Box>
         </Stack>
     );
