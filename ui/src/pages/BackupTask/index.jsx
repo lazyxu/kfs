@@ -16,7 +16,8 @@ import {getBranchApi} from "../../api/branch";
 import useWebSocket, {ReadyState} from "react-use-websocket";
 import useSysConfig from "../../hox/sysConfig";
 import BackupSizeStatus from "./BackupSizeStatus";
-import FastCheck from "./FastCheck";
+import FastScan from "./FastScan";
+import Scan from "./Scan";
 
 function isInvalidBackupDir(backupDir) {
     return backupDir === "";
@@ -56,24 +57,17 @@ export default function () {
             <Box sx={{borderBottom: 1, borderColor: 'divider', width: "100%"}}>
                 <Tabs value={page} variant="scrollable" scrollButtons="auto" onChange={(e, v) => setPage(v)}>
                     <Tab label="主页"/>
-                    <Tab label="历史"/>
-                    <Tab label="快速检测"/>
-                    <Tab label="带记录的检测"/>
+                    <Tab label="快速扫描"/>
+                    <Tab label="扫描"/>
+                    <Tab label="扫描历史"/>
+                    <Tab label="快速备份"/>
                     <Tab label="备份"/>
-                    <Tab label="其它"/>
-                    <Tab label="其它"/>
-                    <Tab label="其它"/>
-                    <Tab label="其它"/>
-                    <Tab label="其它"/>
-                    <Tab label="其它"/>
-                    <Tab label="其它"/>
-                    <Tab label="其它3"/>
-                    <Tab label="其它2"/>
-                    <Tab label="其它1"/>
+                    <Tab label="备份历史"/>
                 </Tabs>
             </Box>
             <Box sx={{padding: "1em"}}>
-                {page === 2 && <FastCheck/>}
+                {page === 1 && <FastScan/>}
+                {page === 2 && <Scan/>}
                 <Box sx={{borderBottom: 1, borderColor: 'divider', width: "100%"}}/>
                 <Stack spacing={2}>
                     <TextField variant="standard" label="本地文件夹路径" type="search" sx={{width: "100%"}}

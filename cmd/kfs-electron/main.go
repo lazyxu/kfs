@@ -3,24 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/lazyxu/kfs/db/dbBase"
+	"github.com/gorilla/websocket"
+	"github.com/spf13/cobra"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
 	"sync"
-	"sync/atomic"
-	"time"
-
-	"github.com/gorilla/websocket"
-	"github.com/lazyxu/kfs/core"
-
-	"github.com/spf13/cobra"
 )
 
 func main() {
@@ -47,8 +38,13 @@ func rootCmd() *cobra.Command {
 func runRoot(cmd *cobra.Command, args []string) {
 	serverAddr := args[0]
 
+	db, err := NewDb("electron.db")
+	if err != nil {
+		panic(err)
+	}
+
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		wsHandler(w, r, serverAddr)
+		wsHandler(w, r, serverAddr, db)
 	})
 
 	portStr := cmd.Flag(PortStr).Value.String()
@@ -102,7 +98,7 @@ type WsProcessor struct {
 	lock            sync.Mutex
 }
 
-func wsHandler(w http.ResponseWriter, r *http.Request, serverAddr string) {
+func wsHandler(w http.ResponseWriter, r *http.Request, serverAddr string, db *DB) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
@@ -112,7 +108,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request, serverAddr string) {
 	p := WsProcessor{
 		conn: c,
 	}
-	p.process(r.Context())
+	p.process(r.Context(), db)
 }
 
 type WsReq struct {
@@ -147,7 +143,7 @@ func (p *WsProcessor) err(req WsReq, err error) error {
 	return p.conn.WriteJSON(resp)
 }
 
-func (p *WsProcessor) process(ctx context.Context) {
+func (p *WsProcessor) process(ctx context.Context, db *DB) {
 	println(p.conn.RemoteAddr().String(), "Process")
 	//defer func() {
 	//	if err := recover(); err != nil {
@@ -155,10 +151,6 @@ func (p *WsProcessor) process(ctx context.Context) {
 	//		conn.Close()
 	//	}
 	//}()
-	db, err := NewDb("electron.db")
-	if err != nil {
-		panic(err)
-	}
 
 	for {
 		print(p.conn.RemoteAddr().String(), " ReadJSON ")
@@ -173,17 +165,30 @@ func (p *WsProcessor) process(ctx context.Context) {
 		}
 		fmt.Printf("%+v\n", req)
 		switch req.Type {
-		case "calculateBackupSize.cancel":
+		case "scan.cancel":
+			fallthrough
+		case "fastScan.cancel":
 			cancelFunc, ok := p.cancelFunctions.Load(req.Id)
 			if !ok {
 				continue
 			}
 			cancelFunc.(context.CancelFunc)()
-		case "calculateBackupSize":
+			p.cancelFunctions.Delete(req.Id)
+		case "scan":
 			newCtx, cancelFunc := context.WithCancel(ctx)
 			p.cancelFunctions.Store(req.Id, cancelFunc)
 			go func() {
-				err := p.calculateBackupSize(newCtx, db, req, req.Data.(map[string]interface{})["backupDir"].(string))
+				err := p.scan(newCtx, db, req, req.Data.(map[string]interface{})["backupDir"].(string))
+				if err != nil {
+					fmt.Printf("%+v %+v\n", req, err)
+				}
+				p.cancelFunctions.Delete(req.Id)
+			}()
+		case "fastScan":
+			newCtx, cancelFunc := context.WithCancel(ctx)
+			p.cancelFunctions.Store(req.Id, cancelFunc)
+			go func() {
+				err := p.fastScan(newCtx, req, req.Data.(map[string]interface{})["backupDir"].(string))
 				if err != nil {
 					fmt.Printf("%+v %+v\n", req, err)
 				}
@@ -191,182 +196,4 @@ func (p *WsProcessor) process(ctx context.Context) {
 			}()
 		}
 	}
-}
-
-type CountAndSize struct {
-	Count int64
-	Size  int64
-}
-
-type FileSizeResp struct {
-	FileSize  int64 `json:"fileSize"`
-	FileCount int64 `json:"fileCount"`
-	DirCount  int64 `json:"dirCount"`
-	StackSize int   `json:"stackSize"`
-}
-
-type SizeWalkerHandlers struct {
-	FileSizeResp
-	core.DefaultWalkHandlers[CountAndSize]
-	req         WsReq
-	onResp      func(finished bool, data interface{}) error
-	tick        <-chan time.Time
-	db          *DB
-	startTime   int64
-	root        string
-	lock        sync.Locker
-	dbFileInfos []DbFileInfo
-}
-
-func (h *SizeWalkerHandlers) StackSizeHandler(size int) {
-	h.StackSize = size
-}
-
-type DbFileInfo struct {
-	time  int64
-	path  string
-	typ   int // 0: file 1: dir 2: root
-	count int64
-	size  int64
-}
-
-func (h *SizeWalkerHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []CountAndSize) CountAndSize {
-	var count int64 = 1
-	var size int64
-	if info.IsDir() {
-		atomic.AddInt64(&h.DirCount, 1)
-		for _, child := range children {
-			count += child.Count
-			size += child.Size
-		}
-	} else {
-		count = 1
-		size = info.Size()
-		atomic.AddInt64(&h.FileCount, 1)
-		atomic.AddInt64(&h.FileSize, info.Size())
-	}
-
-	h.addFile(info, filePath, count, size)
-
-	//err := h.db.InsertFile(ctx, h.startTime, filePath, info.IsDir(), count, size)
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	select {
-	case <-h.tick:
-		fmt.Printf("tick: %+v\n", h.FileSizeResp)
-		err := h.onResp(false, h.FileSizeResp)
-		if err != nil {
-			fmt.Printf("%+v %+v\n", h.req, err)
-		}
-	case <-ctx.Done():
-	default:
-	}
-	return CountAndSize{
-		Count: count,
-		Size:  size,
-	}
-}
-
-func (h *SizeWalkerHandlers) addFile(info os.FileInfo, filePath string, count int64, size int64) {
-	{
-		typ := 0
-		if info.IsDir() {
-			if filePath == h.root {
-				typ = 2
-			} else {
-				typ = 1
-			}
-		}
-		h.lock.Lock()
-		defer h.lock.Unlock()
-		h.dbFileInfos = append(h.dbFileInfos, DbFileInfo{
-			time:  h.startTime,
-			path:  filePath,
-			typ:   typ,
-			count: count,
-			size:  size,
-		})
-	}
-}
-
-func (h *SizeWalkerHandlers) insertFiles(ctx context.Context) error {
-	conn := h.db.getConn()
-	defer h.db.putConn(conn)
-	return dbBase.InsertBatch[DbFileInfo](ctx, conn, 32766, h.dbFileInfos, 7, getInsertItemQuery, func(args []interface{}, start int, item DbFileInfo) {
-		args[start] = item.time
-		args[start+1] = item.path
-		args[start+2] = filepath.Dir(item.path)
-		args[start+3] = filepath.Base(item.path)
-		args[start+4] = item.typ
-		args[start+5] = item.count
-		args[start+6] = item.size
-	})
-}
-
-func getInsertItemQuery(row int) (string, error) {
-	var qs strings.Builder
-	_, err := qs.WriteString(`
-	INSERT INTO _file (
-	    time,
-		path,
-	    dirname,
-		name,
-	    typ,
-		count,
-		size
-	) VALUES `)
-	if err != nil {
-		return "", err
-	}
-	for i := 0; i < row; i++ {
-		if i != 0 {
-			qs.WriteString(", ")
-		}
-		qs.WriteString("(?, ?, ?, ?, ?, ?, ?)")
-	}
-	qs.WriteString(";")
-	return qs.String(), err
-}
-
-func (p *WsProcessor) calculateBackupSize(ctx context.Context, db *DB, req WsReq, backupDir string) error {
-	if !filepath.IsAbs(backupDir) {
-		return p.err(req, errors.New("请输入绝对路径"))
-	}
-	info, err := os.Lstat(backupDir)
-	if err != nil {
-		return p.err(req, err)
-	}
-	if !info.IsDir() {
-		return p.err(req, errors.New("请输入一个目录"))
-	}
-	handlers := SizeWalkerHandlers{
-		req:  req,
-		tick: time.Tick(time.Millisecond * 500),
-		onResp: func(finished bool, data interface{}) error {
-			return p.ok(req, finished, data)
-		},
-		db:        db,
-		startTime: time.Now().UnixNano(),
-		root:      backupDir,
-		lock:      &sync.Mutex{},
-	}
-	err = p.ok(req, false, handlers.FileSizeResp)
-	if err != nil {
-		return err
-	}
-	_, err = core.Walk[CountAndSize](ctx, backupDir, 15, &handlers)
-	if err != nil {
-		return p.err(req, err)
-	}
-	err = p.ok(req, false, handlers.FileSizeResp)
-	if err != nil {
-		return err
-	}
-	err = handlers.insertFiles(ctx)
-	if err != nil {
-		return p.err(req, err)
-	}
-	return p.ok(req, true, handlers.FileSizeResp)
 }

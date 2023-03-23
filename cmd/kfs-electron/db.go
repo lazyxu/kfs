@@ -49,6 +49,7 @@ func (db *DB) Remove() error {
 	defer db.putConn(conn)
 	_, err := conn.Exec(`
 	DROP TABLE IF EXISTS _file;
+	DROP TABLE IF EXISTS _scan_history;
 	`)
 	return err
 }
@@ -58,14 +59,22 @@ func (db *DB) Create() error {
 	defer db.putConn(conn)
 	_, err := conn.Exec(`
 	CREATE TABLE IF NOT EXISTS _file (
-	    time       INTEGER      NOT NULL,
-		path       VARCHAR(256) NOT NULL,
-	    dirname    VARCHAR(256) NOT NULL,
-		name       VARCHAR(256) NOT NULL,
-	    typ        INTEGER      NOT NULL,
-		count      INTEGER      NOT NULL,
-		size       INTEGER      NOT NULL,
-	    PRIMARY KEY(time, path)
+	    id      INTEGER NOT NULL,
+		path    TEXT    NOT NULL,
+	    dirname TEXT    NOT NULL,
+		name    TEXT    NOT NULL,
+	    typ     INTEGER NOT NULL,
+		count   INTEGER NOT NULL,
+		size    INTEGER NOT NULL,
+	    PRIMARY KEY(id, path)
+	);
+	CREATE TABLE IF NOT EXISTS _scan_history (
+	    id        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		time      INTEGER NOT NULL,
+		dirname   TEXT    NOT NULL,
+	    fileSize  INTEGER NOT NULL,
+	    fileCount INTEGER NOT NULL,
+	    dirCount  INTEGER NOT NULL
 	);
 	`)
 	return err

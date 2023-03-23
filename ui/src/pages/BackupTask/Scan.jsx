@@ -24,11 +24,11 @@ export default function () {
                     disabled={isInvalidBackupDir(backupDir)}
                     onClick={e => {
                         if (id) {
-                            sendJsonMessage({type: "calculateBackupSize.cancel", id, data: {backupDir: backupDir}});
+                            sendJsonMessage({type: "scan.cancel", id});
                         }
                         id = uuid();
-                        console.log("calculateBackupSize", id, backupDir);
-                        sendJsonMessage({type: "calculateBackupSize", id, data: {backupDir: backupDir}});
+                        console.log("scan", id, backupDir);
+                        sendJsonMessage({type: "scan", id, data: {backupDir: backupDir}});
                     }}
             >
                 检测总大小
@@ -37,7 +37,7 @@ export default function () {
                     disabled={isInvalidBackupDir(backupDir)}
                     onClick={e => {
                         id = uuid();
-                        sendJsonMessage({type: "calculateBackupSize.cancel", id, data: {backupDir: backupDir}});
+                        sendJsonMessage({type: "scan.cancel", id});
                     }}
             >
                 取消
