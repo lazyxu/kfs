@@ -121,7 +121,7 @@ type WsResp struct {
 	Id       string      `json:"id"`
 	Finished bool        `json:"finished"`
 	Data     interface{} `json:"data"`
-	ErrMsg   string      `json:"errMsg"`
+	ErrMsg   string      `json:"errMsg,omitempty"`
 }
 
 func (p *WsProcessor) ok(req WsReq, finished bool, data interface{}) error {
@@ -137,6 +137,7 @@ func (p *WsProcessor) ok(req WsReq, finished bool, data interface{}) error {
 func (p *WsProcessor) err(req WsReq, err error) error {
 	var resp WsResp
 	resp.Id = req.Id
+	resp.Finished = true
 	resp.ErrMsg = err.Error()
 	p.lock.Lock()
 	defer p.lock.Unlock()
@@ -145,6 +146,16 @@ func (p *WsProcessor) err(req WsReq, err error) error {
 
 func (p *WsProcessor) process(ctx context.Context, db *DB) {
 	println(p.conn.RemoteAddr().String(), "Process")
+	defer func() {
+		p.cancelFunctions.Range(func(key, value any) bool {
+			cancelFunc, ok := p.cancelFunctions.Load(key)
+			if !ok {
+				return true
+			}
+			cancelFunc.(context.CancelFunc)()
+			return true
+		})
+	}()
 	//defer func() {
 	//	if err := recover(); err != nil {
 	//		println("recover", err)
@@ -158,6 +169,7 @@ func (p *WsProcessor) process(ctx context.Context, db *DB) {
 		err := p.conn.ReadJSON(&req)
 		if err == io.EOF || websocket.IsUnexpectedCloseError(err) {
 			p.conn.Close()
+			println()
 			return
 		}
 		if err != nil {
