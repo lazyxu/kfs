@@ -13,7 +13,7 @@ let id;
 
 export default function () {
     const sysConfig = getSysConfig().sysConfig;
-    const {sendJsonMessage, lastJsonMessage, readyState} = useWebSocket("ws://127.0.0.1:" + sysConfig.port + "/ws");
+    const {sendJsonMessage, lastJsonMessage, readyState} = useWebSocket("ws://127.0.0.1:" + sysConfig.port + "/ws", {share: true});
     const [backupDir, setBackupDir] = useState('');
     const finished = lastJsonMessage?.finished;
     if (finished) {
@@ -44,7 +44,7 @@ export default function () {
                             sendJsonMessage({type: "scan", id, data: {backupDir: backupDir}});
                         }}
                 >
-                    检测总大小
+                    扫描
                 </Button>
             }
             <BackupSizeStatus json={lastJsonMessage}/>
