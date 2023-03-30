@@ -41,11 +41,9 @@ function App() {
                 backgroundColor: theme => theme.background.primary,
                 color: theme => theme.context.primary
             }}>
-                {menu === '我的云盘' && <Files/>}
-                {menu === '备份任务' && <BackupTask/>}
-                {menu === '传输列表' && <span>{menu}</span>}
-                {menu === '设置' && <SystemConfig/>}
-                {menu === '资源监控' && <span>{menu}</span>}
+                <Files show={menu === '我的云盘'}/>
+                <BackupTask show={menu === '备份任务'}/>
+                <SystemConfig show={menu === '设置'}/>
             </Box>
         </Stack>
     );

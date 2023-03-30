@@ -25,22 +25,38 @@ function isInvalidBranchName(branchName) {
     return branchName === "";
 }
 
-let id;
-
-export default function () {
+export default function ({show}) {
     const sysConfig = getSysConfig().sysConfig;
-    const {sendJsonMessage, lastJsonMessage} = useWebSocket("ws://127.0.0.1:" + sysConfig.port + "/ws", {share: true});
+    const [id, setId] = useState();
+    const {sendJsonMessage, lastJsonMessage} = useWebSocket("ws://127.0.0.1:" + sysConfig.port + "/ws", {
+        share: true,
+        filter: message => {
+            if (!(message?.data)) {
+                return false;
+            }
+            let curId = JSON.parse(message.data)?.id;
+            if (curId !== id) {
+                return false;
+            }
+            return true;
+        }
+    });
     const [branches, setBranches] = useState([]);
     useEffect(() => {
         getBranchApi().listBranch().then(setBranches);
     }, []);
     const [branchName, setBranchName] = useState('');
     const [backupDir, setBackupDir] = useState('');
-    const finished = lastJsonMessage?.finished;
-    if (finished) {
-        id = undefined;
+    const [finished, setFinished] = useState(true);
+    useEffect(()=> {
+        if (!lastJsonMessage) {
+            return;
+        }
+        setFinished(lastJsonMessage.finished);
+    }, [lastJsonMessage]);
+    if (!show) {
+        return
     }
-    console.log(id, lastJsonMessage)
     return (
         <Stack spacing={2}>
             <FormControl sx={{width: "10em"}}>
@@ -58,7 +74,7 @@ export default function () {
             <TextField variant="standard" label="本地文件夹路径" type="search" sx={{width: "50%"}}
                        value={backupDir}
                        onChange={e => setBackupDir(e.target.value)}/>
-            {id ?
+            {!finished ?
                 <Button variant="outlined" sx={{width: "10em"}}
                         onClick={e => {
                             sendJsonMessage({type: "fastBackup.cancel", id});
@@ -73,9 +89,10 @@ export default function () {
                             if (id) {
                                 sendJsonMessage({type: "fastBackup.cancel", id});
                             }
-                            id = uuid();
-                            console.log("fastBackup", id, backupDir);
-                            sendJsonMessage({type: "fastBackup", id, data: {backupDir: backupDir}});
+                            let newId = uuid();
+                            setId(newId);
+                            console.log("fastBackup", newId, backupDir);
+                            sendJsonMessage({type: "fastBackup", id: newId, data: {backupDir: backupDir}});
                         }}
                 >
                     快速备份

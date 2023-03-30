@@ -1,8 +1,11 @@
 import useSysConfig from 'hox/sysConfig';
 import styles from 'pages/Setting/index.module.scss';
 
-export default () => {
+export default ({show}) => {
     const {sysConfig, setSysConfig, resetSysConfig} = useSysConfig();
+    if (!show) {
+        return;
+    }
     return (
         <div className={styles.page}>
             <header>设置</header>
