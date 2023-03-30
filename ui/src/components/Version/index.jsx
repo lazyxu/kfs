@@ -1,14 +1,13 @@
-import {Box, Typography} from "@mui/material";
+import {Box, Button, Typography} from "@mui/material";
 import useSysConfig from "../../hox/sysConfig";
-import useWebSocket, {ReadyState} from "react-use-websocket";
+import useWebSocket, {ReadyState, resetGlobalState} from "react-use-websocket";
+import {useState} from "react";
 
 export default function () {
     const {sysConfig, setSysConfig, resetSysConfig} = useSysConfig();
-    const {
-        sendJsonMessage,
-        lastJsonMessage,
-        readyState
-    } = useWebSocket("ws://127.0.0.1:" + sysConfig.port + "/ws", {share: true});
+    const { readyState } = useWebSocket("ws://127.0.0.1:" + sysConfig.port + "/ws", {
+        share: true,
+    });
     const connectionStatus = {
         [ReadyState.CONNECTING]: 'Connecting',
         [ReadyState.OPEN]: 'Open',

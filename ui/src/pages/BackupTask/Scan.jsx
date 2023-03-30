@@ -33,11 +33,8 @@ export default function ({show}) {
         }
         setFinished(lastJsonMessage.finished);
     }, [lastJsonMessage]);
-    if (!show) {
-        return
-    }
     return (
-        <Stack spacing={2}>
+        <Stack spacing={2} style={{display: show?undefined:"none"}}>
             <TextField variant="standard" label="本地文件夹路径" type="search" sx={{width: "50%"}}
                        value={backupDir}
                        onChange={e => setBackupDir(e.target.value)}/>

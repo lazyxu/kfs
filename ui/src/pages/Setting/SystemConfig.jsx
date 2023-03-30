@@ -3,11 +3,8 @@ import styles from 'pages/Setting/index.module.scss';
 
 export default ({show}) => {
     const {sysConfig, setSysConfig, resetSysConfig} = useSysConfig();
-    if (!show) {
-        return;
-    }
     return (
-        <div className={styles.page}>
+        <div className={styles.page} style={{display: show?undefined:"none"}}>
             <header>设置</header>
             {!sysConfig ? <span>加载中...</span>
                 : (

@@ -11,11 +11,8 @@ export default function ({show}) {
     useEffect(() => {
         listBranch(setResourceManager);
     }, []);
-    if (!show) {
-        return;
-    }
     return (
-        <Stack style={{width: "100%", height: "100%"}}>
+        <Stack style={{width: "100%", height: "100%", display: show?undefined:"none"}}>
             {resourceManager.branches && <Branches/>}
             {resourceManager.file && <File file={resourceManager.file}/>}
             {resourceManager.dirItems && <DirItems dirItems={resourceManager.dirItems}/>}

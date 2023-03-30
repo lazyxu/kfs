@@ -54,11 +54,8 @@ export default function ({show}) {
         }
         setFinished(lastJsonMessage.finished);
     }, [lastJsonMessage]);
-    if (!show) {
-        return
-    }
     return (
-        <Stack spacing={2}>
+        <Stack spacing={2} style={{display: show?undefined:"none"}}>
             <FormControl sx={{width: "10em"}}>
                 <InputLabel id="demo-simple-select-label">备份分支</InputLabel>
                 <Select
