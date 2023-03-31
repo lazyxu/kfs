@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/spf13/cobra"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"sync"
+
+	"github.com/gorilla/websocket"
+	"github.com/spf13/cobra"
 )
 
 func main() {
@@ -190,7 +191,7 @@ func (p *WsProcessor) process(ctx context.Context, db *DB) {
 			newCtx, cancelFunc := context.WithCancel(ctx)
 			p.cancelFunctions.Store(req.Id, cancelFunc)
 			go func() {
-				err := p.scan(newCtx, db, req, req.Data.(map[string]interface{})["backupDir"].(string))
+				err := p.scan(newCtx, db, req, req.Data.(map[string]interface{})["srcPath"].(string))
 				if err != nil {
 					fmt.Printf("%+v %+v\n", req, err)
 				}
@@ -199,8 +200,24 @@ func (p *WsProcessor) process(ctx context.Context, db *DB) {
 		case "fastScan":
 			newCtx, cancelFunc := context.WithCancel(ctx)
 			p.cancelFunctions.Store(req.Id, cancelFunc)
+			srcPath := req.Data.(map[string]interface{})["srcPath"].(string)
 			go func() {
-				err := p.fastScan(newCtx, req, req.Data.(map[string]interface{})["backupDir"].(string))
+				err := p.fastScan(newCtx, req, srcPath)
+				if err != nil {
+					fmt.Printf("%+v %+v\n", req, err)
+				}
+				p.cancelFunctions.Delete(req.Id)
+			}()
+		case "fastBackup":
+			newCtx, cancelFunc := context.WithCancel(ctx)
+			p.cancelFunctions.Store(req.Id, cancelFunc)
+			data := req.Data.(map[string]interface{})
+			srcPath := data["srcPath"].(string)
+			serverAddr := data["serverAddr"].(string)
+			branchName := data["branchName"].(string)
+			dstPath := data["dstPath"].(string)
+			go func() {
+				err := p.fastBackup(newCtx, req, srcPath, serverAddr, branchName, dstPath)
 				if err != nil {
 					fmt.Printf("%+v %+v\n", req, err)
 				}

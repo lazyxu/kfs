@@ -9,10 +9,14 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/lazyxu/kfs/rpc/client"
+
+	"github.com/dustin/go-humanize"
+
 	"github.com/lazyxu/kfs/core"
 )
 
-type FastScanWalker struct {
+type FastBackupWalker struct {
 	FileSizeResp
 	core.DefaultWalkHandlers[CountAndSize]
 	req    WsReq
@@ -20,11 +24,11 @@ type FastScanWalker struct {
 	tick   <-chan time.Time
 }
 
-func (w *FastScanWalker) StackSizeHandler(size int) {
+func (w *FastBackupWalker) StackSizeHandler(size int) {
 	w.StackSize = size
 }
 
-func (w *FastScanWalker) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []CountAndSize) CountAndSize {
+func (w *FastBackupWalker) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []CountAndSize) CountAndSize {
 	var count int64 = 1
 	var size int64
 	if info.IsDir() {
@@ -56,7 +60,7 @@ func (w *FastScanWalker) FileHandler(ctx context.Context, index int, filePath st
 	}
 }
 
-func (p *WsProcessor) fastScan(ctx context.Context, req WsReq, srcPath string) error {
+func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string, serverAddr string, branchName string, dstPath string) error {
 	if !filepath.IsAbs(srcPath) {
 		return p.err(req, errors.New("请输入绝对路径"))
 	}
@@ -67,24 +71,23 @@ func (p *WsProcessor) fastScan(ctx context.Context, req WsReq, srcPath string) e
 	if !info.IsDir() {
 		return p.err(req, errors.New("请输入一个目录"))
 	}
-	w := FastScanWalker{
-		req:  req,
-		tick: time.Tick(time.Millisecond * 500),
-		onResp: func(finished bool, data interface{}) error {
-			return p.ok(req, finished, data)
-		},
+	concurrent := 1
+	encoder := ""
+
+	var uploadProcess core.UploadProcess = &core.EmptyUploadProcess{}
+
+	fs := &client.RpcFs{
+		SocketServerAddr: serverAddr,
 	}
-	err = p.ok(req, false, w.FileSizeResp)
-	if err != nil {
-		return err
-	}
-	_, err = core.Walk[CountAndSize](ctx, srcPath, 15, &w)
+	commit, branch, err := fs.Upload(ctx, branchName, dstPath, srcPath, core.UploadConfig{
+		Encoder:       encoder,
+		UploadProcess: uploadProcess,
+		Concurrent:    concurrent,
+		Verbose:       false,
+	})
 	if err != nil {
 		return p.err(req, err)
 	}
-	err = p.ok(req, false, w.FileSizeResp)
-	if err != nil {
-		return err
-	}
-	return p.ok(req, true, w.FileSizeResp)
+	fmt.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", commit.Hash[:4], branch.CommitId, humanize.Bytes(branch.Size), branch.Count)
+	return p.ok(req, true, branch)
 }

@@ -5,8 +5,8 @@ import {getSysConfig} from "../../hox/sysConfig";
 import {v4 as uuid} from 'uuid';
 import humanize from "humanize";
 
-function isInvalidBackupDir(backupDir) {
-    return backupDir === "";
+function isInvalidSrcPath(srcPath) {
+    return srcPath === "";
 }
 
 export default function ({show}) {
@@ -25,7 +25,7 @@ export default function ({show}) {
             return true;
         }
     });
-    const [backupDir, setBackupDir] = useState('');
+    const [srcPath, setSrcPath] = useState('');
     const [finished, setFinished] = useState(true);
     useEffect(() => {
         if (!lastJsonMessage) {
@@ -36,8 +36,14 @@ export default function ({show}) {
     return (
         <Stack spacing={2} style={{display: show?undefined:"none"}}>
             <TextField variant="standard" label="本地文件夹路径" type="search" sx={{width: "50%"}}
-                       value={backupDir}
-                       onChange={e => setBackupDir(e.target.value)}/>
+                       value={srcPath}
+                       onChange={e => setSrcPath(e.target.value)}/>
+            <TextField
+                label="文件忽略规则"
+                multiline minRows={4} maxRows={4}
+                variant="standard"
+                size="small"
+            />
             {!finished ?
                 <Button variant="outlined" sx={{width: "10em"}}
                         onClick={e => {
@@ -48,15 +54,15 @@ export default function ({show}) {
                 </Button>
                 :
                 <Button variant="outlined" sx={{width: "10em"}}
-                        disabled={isInvalidBackupDir(backupDir)}
+                        disabled={isInvalidSrcPath(srcPath)}
                         onClick={e => {
                             if (id) {
                                 sendJsonMessage({type: "scan.cancel", id});
                             }
                             let newId = uuid();
                             setId(newId);
-                            console.log("scan", newId, backupDir);
-                            sendJsonMessage({type: "scan", id: newId, data: {backupDir: backupDir}});
+                            console.log("scan", newId, srcPath);
+                            sendJsonMessage({type: "scan", id: newId, data: {srcPath: srcPath}});
                         }}
                 >
                     扫描

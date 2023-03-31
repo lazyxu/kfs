@@ -53,7 +53,7 @@ func runUpload(cmd *cobra.Command, args []string) {
 
 	}
 
-	branch, commit, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, core.UploadConfig{
+	commit, branch, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, core.UploadConfig{
 		Encoder:       encoder,
 		UploadProcess: uploadProcess,
 		Concurrent:    concurrent,
@@ -62,5 +62,5 @@ func runUpload(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
-	cmd.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", branch.Hash[:4], commit.CommitId, humanize.Bytes(commit.Size), commit.Count)
+	cmd.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", commit.Hash[:4], branch.CommitId, humanize.Bytes(branch.Size), branch.Count)
 }

@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/lazyxu/kfs/core"
-	"github.com/lazyxu/kfs/db/dbBase"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/db/dbBase"
 )
 
 type CountAndSize struct {
@@ -164,11 +165,11 @@ func getInsertItemQuery(row int) (string, error) {
 	return qs.String(), err
 }
 
-func (p *WsProcessor) scan(ctx context.Context, db *DB, req WsReq, backupDir string) error {
-	if !filepath.IsAbs(backupDir) {
+func (p *WsProcessor) scan(ctx context.Context, db *DB, req WsReq, srcPath string) error {
+	if !filepath.IsAbs(srcPath) {
 		return p.err(req, errors.New("请输入绝对路径"))
 	}
-	info, err := os.Lstat(backupDir)
+	info, err := os.Lstat(srcPath)
 	if err != nil {
 		return p.err(req, err)
 	}
@@ -189,7 +190,7 @@ func (p *WsProcessor) scan(ctx context.Context, db *DB, req WsReq, backupDir str
 	if err != nil {
 		return err
 	}
-	_, err = core.Walk[CountAndSize](ctx, backupDir, 15, &w)
+	_, err = core.Walk[CountAndSize](ctx, srcPath, 15, &w)
 	if err != nil {
 		return p.err(req, err)
 	}
@@ -197,7 +198,7 @@ func (p *WsProcessor) scan(ctx context.Context, db *DB, req WsReq, backupDir str
 	if err != nil {
 		return err
 	}
-	id, err := w.insertScanHistory(ctx, startTime, backupDir, w.FileSize, w.FileCount, w.DirCount)
+	id, err := w.insertScanHistory(ctx, startTime, srcPath, w.FileSize, w.FileCount, w.DirCount)
 	if err != nil {
 		return p.err(req, err)
 	}
