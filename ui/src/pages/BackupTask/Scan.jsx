@@ -1,9 +1,10 @@
-import {Alert, Box, Button, Stack, TextField, Typography} from "@mui/material";
+import {Alert, Box, Button, Checkbox, FormControlLabel, FormGroup, Stack, TextField, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import useWebSocket from "react-use-websocket";
 import {getSysConfig} from "../../hox/sysConfig";
 import {v4 as uuid} from 'uuid';
 import humanize from "humanize";
+import moment from "moment/moment";
 
 function isInvalidSrcPath(srcPath) {
     return srcPath === "";
@@ -27,14 +28,23 @@ export default function ({show}) {
     });
     const [srcPath, setSrcPath] = useState('');
     const [finished, setFinished] = useState(true);
+    const [timeCost, setTimeCost] = useState(null);
     useEffect(() => {
         if (!lastJsonMessage) {
             return;
         }
+        setTimeCost(prev => {
+            if (lastJsonMessage !== prev) {
+                return moment().diff(startTime, 'seconds', true);
+            }
+            return null;
+        });
         setFinished(lastJsonMessage.finished);
     }, [lastJsonMessage]);
+    const [startTime, setStartTime] = useState();
+    const [record, setRecord] = useState(false);
     return (
-        <Stack spacing={2} style={{display: show?undefined:"none"}}>
+        <Stack spacing={2} style={{display: show ? undefined : "none"}}>
             <TextField variant="standard" label="本地文件夹路径" type="search" sx={{width: "50%"}}
                        value={srcPath}
                        onChange={e => setSrcPath(e.target.value)}/>
@@ -44,10 +54,15 @@ export default function ({show}) {
                 variant="standard"
                 size="small"
             />
+            <FormGroup>
+                <FormControlLabel control={<Checkbox value={record} onChange={e => {
+                    setRecord(e.target.checked)
+                }}/>} label="记录文件大小"/>
+            </FormGroup>
             {!finished ?
                 <Button variant="outlined" sx={{width: "10em"}}
                         onClick={e => {
-                            sendJsonMessage({type: "scan.cancel", id});
+                            sendJsonMessage({type: "cancel", id});
                         }}
                 >
                     取消
@@ -56,13 +71,12 @@ export default function ({show}) {
                 <Button variant="outlined" sx={{width: "10em"}}
                         disabled={isInvalidSrcPath(srcPath)}
                         onClick={e => {
-                            if (id) {
-                                sendJsonMessage({type: "scan.cancel", id});
-                            }
                             let newId = uuid();
                             setId(newId);
-                            console.log("scan", newId, srcPath);
-                            sendJsonMessage({type: "scan", id: newId, data: {srcPath: srcPath}});
+                            let data = {record, srcPath};
+                            console.log("scan", newId, data);
+                            setStartTime(moment());
+                            sendJsonMessage({type: "scan", id: newId, data});
                         }}
                 >
                     扫描
@@ -75,7 +89,7 @@ export default function ({show}) {
                     :
                     <Alert variant="outlined" sx={{width: "max-content"}}
                            severity={lastJsonMessage.finished ? "success" : "info"}>
-                        <Typography>id：{id}</Typography>
+                        <Typography>耗时：{timeCost} 秒</Typography>
                         <Typography>待计算的文件和目录数量：{lastJsonMessage.data.stackSize}</Typography>
                         <Typography>文件数量：{lastJsonMessage.data.fileCount}</Typography>
                         <Typography>目录数量：{lastJsonMessage.data.dirCount}</Typography>

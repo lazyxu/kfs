@@ -181,6 +181,8 @@ func (p *WsProcessor) process(ctx context.Context, db *DB) {
 		case "scan.cancel":
 			fallthrough
 		case "fastScan.cancel":
+			fallthrough
+		case "cancel":
 			cancelFunc, ok := p.cancelFunctions.Load(req.Id)
 			if !ok {
 				continue
@@ -190,19 +192,16 @@ func (p *WsProcessor) process(ctx context.Context, db *DB) {
 		case "scan":
 			newCtx, cancelFunc := context.WithCancel(ctx)
 			p.cancelFunctions.Store(req.Id, cancelFunc)
+			data := req.Data.(map[string]interface{})
+			srcPath := data["srcPath"].(string)
+			record := data["record"].(bool)
 			go func() {
-				err := p.scan(newCtx, db, req, req.Data.(map[string]interface{})["srcPath"].(string))
-				if err != nil {
-					fmt.Printf("%+v %+v\n", req, err)
+				var err error
+				if !record {
+					err = p.fastScan(newCtx, req, srcPath)
+				} else {
+					err = p.scan(newCtx, db, req, srcPath)
 				}
-				p.cancelFunctions.Delete(req.Id)
-			}()
-		case "fastScan":
-			newCtx, cancelFunc := context.WithCancel(ctx)
-			p.cancelFunctions.Store(req.Id, cancelFunc)
-			srcPath := req.Data.(map[string]interface{})["srcPath"].(string)
-			go func() {
-				err := p.fastScan(newCtx, req, srcPath)
 				if err != nil {
 					fmt.Printf("%+v %+v\n", req, err)
 				}
