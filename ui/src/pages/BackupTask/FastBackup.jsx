@@ -89,7 +89,7 @@ export default function ({show}) {
             {!finished ?
                 <Button variant="outlined" sx={{width: "10em"}}
                         onClick={e => {
-                            sendJsonMessage({type: "fastBackup.cancel", id});
+                            sendJsonMessage({type: "cancel", id});
                         }}
                 >
                     取消
@@ -98,9 +98,6 @@ export default function ({show}) {
                 <Button variant="outlined" sx={{width: "10em"}}
                         disabled={isInvalidSrcPath(srcPath) || isInvalidBranchName(branchName)}
                         onClick={e => {
-                            if (id) {
-                                sendJsonMessage({type: "fastBackup.cancel", id});
-                            }
                             let newId = uuid();
                             setId(newId);
                             console.log("fastBackup", newId, srcPath);
