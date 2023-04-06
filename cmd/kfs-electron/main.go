@@ -195,12 +195,13 @@ func (p *WsProcessor) process(ctx context.Context, db *DB) {
 			data := req.Data.(map[string]interface{})
 			srcPath := data["srcPath"].(string)
 			record := data["record"].(bool)
+			concurrent := int(data["concurrent"].(float64))
 			go func() {
 				var err error
 				if !record {
-					err = p.fastScan(newCtx, req, srcPath)
+					err = p.fastScan(newCtx, req, srcPath, concurrent)
 				} else {
-					err = p.scan(newCtx, db, req, srcPath)
+					err = p.scan(newCtx, db, req, srcPath, concurrent)
 				}
 				if err != nil {
 					fmt.Printf("%+v %+v\n", req, err)
