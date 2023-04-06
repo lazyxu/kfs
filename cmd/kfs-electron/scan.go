@@ -165,7 +165,7 @@ func getInsertItemQuery(row int) (string, error) {
 	return qs.String(), err
 }
 
-func (p *WsProcessor) scan(ctx context.Context, db *DB, req WsReq, srcPath string) error {
+func (p *WsProcessor) scan(ctx context.Context, db *DB, req WsReq, srcPath string, concurrent int) error {
 	if !filepath.IsAbs(srcPath) {
 		return p.err(req, errors.New("请输入绝对路径"))
 	}
@@ -190,7 +190,7 @@ func (p *WsProcessor) scan(ctx context.Context, db *DB, req WsReq, srcPath strin
 	if err != nil {
 		return err
 	}
-	_, err = core.Walk[CountAndSize](ctx, srcPath, 15, &w)
+	_, err = core.Walk[CountAndSize](ctx, srcPath, concurrent, &w)
 	if err != nil {
 		return p.err(req, err)
 	}

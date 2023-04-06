@@ -56,7 +56,7 @@ func (w *FastScanWalker) FileHandler(ctx context.Context, index int, filePath st
 	}
 }
 
-func (p *WsProcessor) fastScan(ctx context.Context, req WsReq, srcPath string) error {
+func (p *WsProcessor) fastScan(ctx context.Context, req WsReq, srcPath string, concurrent int) error {
 	if !filepath.IsAbs(srcPath) {
 		return p.err(req, errors.New("请输入绝对路径"))
 	}
@@ -78,7 +78,7 @@ func (p *WsProcessor) fastScan(ctx context.Context, req WsReq, srcPath string) e
 	if err != nil {
 		return err
 	}
-	_, err = core.Walk[CountAndSize](ctx, srcPath, 15, &w)
+	_, err = core.Walk[CountAndSize](ctx, srcPath, concurrent, &w)
 	if err != nil {
 		return p.err(req, err)
 	}
