@@ -21,6 +21,8 @@ func webServer(webPortString string) {
 		ExposeHeaders: []string{"*"},
 	}))
 
+	e.StaticFS("/", echo.MustSubFS(build, "build"))
+
 	// Routes
 	e.GET("/api/v1/branches", apiBranches)
 	e.POST("/api/v1/branches", apiNewBranch)

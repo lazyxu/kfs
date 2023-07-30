@@ -22,6 +22,7 @@ function App() {
             <Box sx={{backgroundColor: theme => theme.background.secondary, color: theme => theme.context.secondary}}>
                 <Menu items={[
                     {icon: 'wangpan', name: '我的云盘'},
+                    {icon: 'DCIM', name: '我的相册'},
                     {icon: 'devices', name: '设备列表'},
                     {icon: 'yuntongbu', name: '备份任务'},
                     {icon: 'swapVertical', name: '传输列表'},
