@@ -16,6 +16,7 @@ import {getSysConfig} from "../../hox/sysConfig";
 import {v4 as uuid} from 'uuid';
 import humanize from "humanize";
 import {getBranchApi} from "../../api/branch";
+import AsyncSelect from "components/AsyncSelect";
 
 function isInvalidSrcPath(srcPath) {
     return srcPath === "";
@@ -60,25 +61,17 @@ export default function ({show}) {
             <TextField variant="standard" label="本地文件夹路径" type="search" sx={{minWidth: "50%"}}
                        value={srcPath}
                        onChange={e => setSrcPath(e.target.value)}/>
-            <TextField
-                label="文件忽略规则"
-                multiline minRows={4} maxRows={4}
-                variant="standard"
-                size="small"
-            />
             <Stack spacing={2} direction="row">
                 <FormControl sx={{minWidth: "10em"}} size="small">
-                    <InputLabel id="demo-simple-select-label">备份分支</InputLabel>
-                    <Select
-                        labelId="demo-simple-select-label"
+                    <AsyncSelect
+                        label="备份分支"
+                        fetchOptions={async ()=> {
+                            let branches = await getBranchApi().listBranch();
+                            return branches.map(branch =>branch.name);
+                        }}
                         value={branchName}
-                        onChange={e => setBranchName(e.target.value)}
-                        autoWidth={true}
-                    >
-                        {branches.map(branch =>
-                            <MenuItem key={branch.name} value={branch.name}>{branch.name}</MenuItem>
-                        )}
-                    </Select>
+                        onChange={name => setBranchName(name)}
+                    />
                 </FormControl>
                 <TextField variant="standard" label="远程文件夹路径" type="search" sx={{minWidth: "50%"}}
                            value={dstPath}
