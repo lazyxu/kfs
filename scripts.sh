@@ -24,6 +24,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 
 rm -f pb/*.g
 
+# https://github.com/protocolbuffers/protobuf/releases
 protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. pb/fs.proto
 
 export PATH="$PATH:/c/Users/dell/lib"

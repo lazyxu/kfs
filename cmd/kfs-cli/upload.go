@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/lazyxu/kfs/rpc/client"
 	"strconv"
 
 	"github.com/dustin/go-humanize"
@@ -51,10 +52,18 @@ func runUpload(cmd *cobra.Command, args []string) {
 
 	}
 
+	var uploadProcess core.UploadProcess
+	if verbose {
+		uploadProcess = &client.TerminalUploadProcess{}
+	} else {
+		uploadProcess = &core.EmptyUploadProcess{}
+	}
+
 	commit, branch, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, core.UploadConfig{
-		Encoder:    encoder,
-		Concurrent: concurrent,
-		Verbose:    verbose,
+		UploadProcess: uploadProcess,
+		Encoder:       encoder,
+		Concurrent:    concurrent,
+		Verbose:       verbose,
 	})
 	if err != nil {
 		return

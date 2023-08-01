@@ -2,40 +2,43 @@ package client
 
 import (
 	"fmt"
+	"github.com/lazyxu/kfs/core"
+	"net"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/dustin/go-humanize"
 
 	"github.com/muesli/termenv"
 )
 
-type Process struct {
-	index     int
-	label     string
-	filePath  string
-	size      uint64
-	stackSize int
-	err       error
+type TerminalUploadProcess struct {
+	ch         chan *core.Process
+	wg         sync.WaitGroup
+	concurrent int
+	conns      []net.Conn
 }
 
-func (h *uploadHandlers) ErrHandler(filePath string, err error) {
-	if h.verbose {
-		h.ch <- &Process{
-			filePath:  filePath,
-			err:       err,
-			stackSize: -1,
-		}
-	} else {
-		println(filePath+":", err.Error())
+func (h *TerminalUploadProcess) Show(p *core.Process) {
+	h.ch <- p
+}
+
+func (h *TerminalUploadProcess) Verbose() bool {
+	return true
+}
+
+func (h *TerminalUploadProcess) ErrHandler(filePath string, err error) {
+	h.ch <- &core.Process{
+		FilePath:  filePath,
+		Err:       err,
+		StackSize: -1,
 	}
 }
 
-func (h *uploadHandlers) StackSizeHandler(size int) {
-	if h.verbose {
-		h.ch <- &Process{
-			stackSize: size,
-		}
+func (h *TerminalUploadProcess) StackSizeHandler(size int) {
+	h.ch <- &core.Process{
+		StackSize: size,
 	}
 }
 
@@ -45,7 +48,24 @@ type LineProcess struct {
 	count int
 }
 
-func (h *uploadHandlers) handleProcess(srcPath string) {
+func (h *TerminalUploadProcess) New(srcPath string, concurrent int, conns []net.Conn) core.UploadProcess {
+	h.ch = make(chan *core.Process)
+	h.wg.Add(1)
+	h.conns = conns
+	h.concurrent = concurrent
+	go func() {
+		h.handleProcess(srcPath)
+		h.wg.Done()
+	}()
+	return h
+}
+
+func (h *TerminalUploadProcess) Close() {
+	close(h.ch)
+	h.wg.Wait()
+}
+
+func (h *TerminalUploadProcess) handleProcess(srcPath string) {
 	lines := make([]*LineProcess, h.concurrent)
 	errCnt := 0
 
@@ -58,40 +78,40 @@ func (h *uploadHandlers) handleProcess(srcPath string) {
 		if p == nil {
 			break
 		}
-		rel, _ := filepath.Rel(srcPath, p.filePath)
-		if p.err != nil {
-			println(rel+":", p.err.Error())
+		rel, _ := filepath.Rel(srcPath, p.FilePath)
+		if p.Err != nil {
+			println(rel+":", p.Err.Error())
 			errCnt++
 			continue
 		}
-		if p.stackSize != -1 {
+		if p.StackSize != -1 {
 			size := h.concurrent
 			offset := size + 2 + errCnt
 			termenv.CursorPrevLine(offset)
 			termenv.ClearLine()
-			fmt.Printf("waiting to process: %d", p.stackSize)
+			fmt.Printf("waiting to process: %d", p.StackSize)
 			termenv.CursorNextLine(offset)
 			continue
 		}
-		port := h.conns[p.index].LocalAddr().String()
+		port := h.conns[p.Index].LocalAddr().String()
 		port = port[strings.LastIndexByte(port, ':')+1:]
 
-		if lines[p.index] == nil {
-			lines[p.index] = &LineProcess{
+		if lines[p.Index] == nil {
+			lines[p.Index] = &LineProcess{
 				port: port,
 			}
 		}
-		line := lines[p.index]
+		line := lines[p.Index]
 
 		size := h.concurrent
-		if p.label == "code=0" || p.label == "exist" {
-			line.size += p.size
+		if p.Label == "code=0" || p.Label == "exist" {
+			line.size += p.Size
 			line.count++
 		}
-		offset := size + 1 - p.index + errCnt
+		offset := size + 1 - p.Index + errCnt
 		termenv.CursorPrevLine(offset)
 		termenv.ClearLine()
-		fmt.Printf("%5s %6s %d: %-8s %6s %s", port, humanize.Bytes(line.size), line.count, p.label, humanize.Bytes(p.size), rel)
+		fmt.Printf("%5s %6s %d: %-8s %6s %s", port, humanize.Bytes(line.size), line.count, p.Label, humanize.Bytes(p.Size), rel)
 		termenv.CursorNextLine(offset)
 	}
 }

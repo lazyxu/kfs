@@ -4,12 +4,6 @@ import (
 	"github.com/lazyxu/kfs/dao"
 )
 
-type UploadConfig struct {
-	Encoder    string
-	Concurrent int
-	Verbose    bool
-}
-
 type KFS struct {
 	Db         dao.Database
 	S          dao.Storage

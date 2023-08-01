@@ -13,11 +13,11 @@ import (
 
 type uploadHandlers struct {
 	core.DefaultWalkHandlers[FileResp]
+	uploadProcess    core.UploadProcess
 	concurrent       int
 	encoder          string
 	verbose          bool
 	socketServerAddr string
-	ch               chan *Process
 	conns            []net.Conn
 }
 
@@ -37,6 +37,14 @@ func (h *uploadHandlers) StartWorker(ctx context.Context, index int) {
 
 func (h *uploadHandlers) EndWorker(ctx context.Context, index int) {
 	h.conns[index].Close()
+}
+
+func (h *uploadHandlers) ErrHandler(filePath string, err error) {
+	h.uploadProcess.ErrHandler(filePath, err)
+}
+
+func (h *uploadHandlers) StackSizeHandler(size int) {
+	h.uploadProcess.StackSizeHandler(size)
 }
 
 func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []FileResp) (fileResp FileResp) {

@@ -2,14 +2,12 @@ package client
 
 import (
 	"context"
+	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 	"net"
 	"os"
 	"path/filepath"
-	"sync"
-
-	"github.com/lazyxu/kfs/core"
 
 	"github.com/lazyxu/kfs/pb"
 )
@@ -21,27 +19,16 @@ func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, 
 		return
 	}
 	handlers := &uploadHandlers{
+		uploadProcess:    config.UploadProcess,
 		encoder:          config.Encoder,
 		verbose:          config.Verbose,
 		concurrent:       config.Concurrent,
 		socketServerAddr: fs.SocketServerAddr,
-		ch:               make(chan *Process),
 		conns:            make([]net.Conn, config.Concurrent),
 	}
-	var wg sync.WaitGroup
-	if config.Verbose {
-		handlers.ch = make(chan *Process)
-		wg.Add(1)
-		go func() {
-			handlers.handleProcess(srcPath)
-			wg.Done()
-		}()
-	}
+	handlers.uploadProcess = handlers.uploadProcess.New(srcPath, config.Concurrent, handlers.conns)
 	walkResp, err := core.Walk[FileResp](ctx, srcPath, config.Concurrent, handlers)
-	if config.Verbose {
-		close(handlers.ch)
-		wg.Wait()
-	}
+	handlers.uploadProcess.Close()
 	if err != nil {
 		return
 	}

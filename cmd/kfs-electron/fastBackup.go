@@ -71,16 +71,26 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 	if !info.IsDir() {
 		return p.err(req, errors.New("请输入一个目录"))
 	}
-	concurrent := 1
+	concurrent := 2
 	encoder := ""
 
 	fs := &client.RpcFs{
 		SocketServerAddr: serverAddr,
 	}
+
+	verbose := true
+	var uploadProcess core.UploadProcess
+	if verbose {
+		uploadProcess = &client.TerminalUploadProcess{}
+	} else {
+		uploadProcess = &core.EmptyUploadProcess{}
+	}
+
 	commit, branch, err := fs.Upload(ctx, branchName, dstPath, srcPath, core.UploadConfig{
-		Encoder:    encoder,
-		Concurrent: concurrent,
-		Verbose:    true,
+		UploadProcess: uploadProcess,
+		Encoder:       encoder,
+		Concurrent:    concurrent,
+		Verbose:       true,
 	})
 	if err != nil {
 		return p.err(req, err)

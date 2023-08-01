@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
 	"io"
 	"net"
@@ -40,10 +41,10 @@ func (h *uploadHandlers) copyFile(conn net.Conn, filePath string, size int64) er
 	return nil
 }
 
-func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *Process) (dao.File, error) {
+func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *core.Process) (dao.File, error) {
 	if h.verbose {
-		p.label = "stat?"
-		h.ch <- p
+		p.Label = "stat?"
+		h.uploadProcess.Show(p)
 	}
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -55,9 +56,9 @@ func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *Process) (dao.Fil
 		return dao.File{}, err
 	}
 	if h.verbose {
-		p.label = "hash?"
-		p.size = uint64(info.Size())
-		h.ch <- p
+		p.Label = "hash?"
+		p.Size = uint64(info.Size())
+		h.uploadProcess.Show(p)
 	}
 	hash := sha256.New()
 	_, err = io.Copy(hash, f)
@@ -68,15 +69,15 @@ func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *Process) (dao.Fil
 }
 
 func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath string) (file dao.File, err error) {
-	var p *Process
+	var p *core.Process
 	if h.verbose {
-		p = &Process{
-			index:     index,
-			filePath:  filePath,
-			stackSize: -1,
+		p = &core.Process{
+			Index:     index,
+			FilePath:  filePath,
+			StackSize: -1,
 		}
-		p.label = "start"
-		h.ch <- p
+		p.Label = "start"
+		h.uploadProcess.Show(p)
 	}
 	file, err = h.getSizeAndCalHash(filePath, p)
 	if err != nil {
@@ -107,8 +108,8 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	}
 
 	if h.verbose {
-		p.label = "size"
-		h.ch <- p
+		p.Label = "size"
+		h.uploadProcess.Show(p)
 	}
 	err = binary.Write(conn, binary.LittleEndian, file.Size())
 	if err != nil {
@@ -116,8 +117,8 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	}
 
 	if h.verbose {
-		p.label = "exist?"
-		h.ch <- p
+		p.Label = "exist?"
+		h.uploadProcess.Show(p)
 	}
 	var notExist bool
 	err = binary.Read(conn, binary.LittleEndian, &notExist)
@@ -127,15 +128,15 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 
 	if !notExist {
 		if h.verbose {
-			p.label = fmt.Sprintf("exist")
-			h.ch <- p
+			p.Label = fmt.Sprintf("exist")
+			h.uploadProcess.Show(p)
 		}
 		return
 	}
 
 	if h.verbose {
-		p.label = fmt.Sprintf("e=%s", h.encoder)
-		h.ch <- p
+		p.Label = fmt.Sprintf("e=%s", h.encoder)
+		h.uploadProcess.Show(p)
 	}
 	err = rpcutil.WriteString(conn, h.encoder)
 	if err != nil {
@@ -143,8 +144,8 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	}
 
 	if h.verbose {
-		p.label = "copyFile"
-		h.ch <- p
+		p.Label = "copyFile"
+		h.uploadProcess.Show(p)
 	}
 	err = h.copyFile(conn, filePath, int64(file.Size()))
 	if err != nil {
@@ -152,19 +153,19 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	}
 
 	if h.verbose {
-		p.label = "code?"
-		h.ch <- p
+		p.Label = "code?"
+		h.uploadProcess.Show(p)
 	}
 	code, errMsg, err := rpcutil.ReadStatus(conn)
 	if err != nil {
 		return
 	}
 	if h.verbose {
-		p.label = fmt.Sprintf("code=%d", code)
-		h.ch <- p
+		p.Label = fmt.Sprintf("code=%d", code)
+		h.uploadProcess.Show(p)
 		if code != rpcutil.EOK {
-			p.err = errors.New(errMsg)
-			h.ch <- p
+			p.Err = errors.New(errMsg)
+			h.uploadProcess.Show(p)
 		}
 	}
 
