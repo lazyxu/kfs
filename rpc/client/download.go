@@ -9,11 +9,9 @@ import (
 	"strconv"
 
 	"github.com/lazyxu/kfs/rpc/rpcutil"
-
-	"github.com/lazyxu/kfs/core"
 )
 
-func (fs *RpcFs) Download(ctx context.Context, branchName string, dstPath string, srcPath string, config core.UploadConfig) (filePath string, err error) {
+func (fs *RpcFs) Download(ctx context.Context, branchName string, dstPath string, srcPath string) (filePath string, err error) {
 	conn, err := net.Dial("tcp", fs.SocketServerAddr)
 	if err != nil {
 		return

@@ -5,10 +5,9 @@ import (
 )
 
 type UploadConfig struct {
-	Encoder       string
-	UploadProcess UploadProcess
-	Concurrent    int
-	Verbose       bool
+	Encoder    string
+	Concurrent int
+	Verbose    bool
 }
 
 type KFS struct {

@@ -21,7 +21,6 @@ func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, 
 		return
 	}
 	handlers := &uploadHandlers{
-		uploadProcess:    config.UploadProcess,
 		encoder:          config.Encoder,
 		verbose:          config.Verbose,
 		concurrent:       config.Concurrent,
@@ -38,7 +37,7 @@ func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, 
 			wg.Done()
 		}()
 	}
-	walkResp, err := core.Walk[fileResp](ctx, srcPath, config.Concurrent, handlers)
+	walkResp, err := core.Walk[FileResp](ctx, srcPath, config.Concurrent, handlers)
 	if config.Verbose {
 		close(handlers.ch)
 		wg.Wait()

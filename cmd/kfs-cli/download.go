@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/lazyxu/kfs/core"
-
 	"github.com/spf13/cobra"
 )
 
@@ -56,7 +54,7 @@ func runDownload(cmd *cobra.Command, args []string) {
 		err = fmt.Errorf("unknown dstPath")
 	}
 
-	var uploadProcess core.UploadProcess = &core.EmptyUploadProcess{}
+	//var uploadProcess core.UploadProcess = &core.EmptyUploadProcess{}
 	//if verbose {
 	//	uploadProcess = &UploadProcessBar{}
 	//} else {
@@ -67,12 +65,7 @@ func runDownload(cmd *cobra.Command, args []string) {
 
 	}
 
-	filePath, err := fs.Download(cmd.Context(), branchName, dstPath, srcPath, core.UploadConfig{
-		Encoder:       encoder,
-		UploadProcess: uploadProcess,
-		Concurrent:    concurrent,
-		Verbose:       verbose,
-	})
+	filePath, err := fs.Download(cmd.Context(), branchName, dstPath, srcPath)
 	if err != nil {
 		return
 	}

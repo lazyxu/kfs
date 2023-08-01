@@ -74,16 +74,13 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 	concurrent := 1
 	encoder := ""
 
-	var uploadProcess core.UploadProcess = &core.EmptyUploadProcess{}
-
 	fs := &client.RpcFs{
 		SocketServerAddr: serverAddr,
 	}
 	commit, branch, err := fs.Upload(ctx, branchName, dstPath, srcPath, core.UploadConfig{
-		Encoder:       encoder,
-		UploadProcess: uploadProcess,
-		Concurrent:    concurrent,
-		Verbose:       false,
+		Encoder:    encoder,
+		Concurrent: concurrent,
+		Verbose:    true,
 	})
 	if err != nil {
 		return p.err(req, err)

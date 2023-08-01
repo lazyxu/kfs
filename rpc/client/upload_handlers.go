@@ -2,20 +2,17 @@ package client
 
 import (
 	"context"
+	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 	"net"
 	"os"
-	"path/filepath"
-
-	"github.com/lazyxu/kfs/core"
 
 	"github.com/lazyxu/kfs/pb"
 )
 
 type uploadHandlers struct {
-	core.DefaultWalkHandlers[fileResp]
-	uploadProcess    core.UploadProcess
+	core.DefaultWalkHandlers[FileResp]
 	concurrent       int
 	encoder          string
 	verbose          bool
@@ -24,12 +21,12 @@ type uploadHandlers struct {
 	conns            []net.Conn
 }
 
-type fileResp struct {
+type FileResp struct {
 	fileOrDir dao.IFileOrDir
 	info      os.FileInfo
 }
 
-func (h *uploadHandlers) BeforeFileHandler(ctx context.Context, index int) {
+func (h *uploadHandlers) StartWorker(ctx context.Context, index int) {
 	conn, err := net.Dial("tcp", h.socketServerAddr)
 	if err != nil {
 		println(err.Error())
@@ -38,11 +35,11 @@ func (h *uploadHandlers) BeforeFileHandler(ctx context.Context, index int) {
 	h.conns[index] = conn
 }
 
-func (h *uploadHandlers) AfterFileHandler(ctx context.Context, index int) {
+func (h *uploadHandlers) EndWorker(ctx context.Context, index int) {
 	h.conns[index].Close()
 }
 
-func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []fileResp) (fileResp fileResp) {
+func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []FileResp) (fileResp FileResp) {
 	var err error
 	defer func() {
 		if err != nil {
@@ -51,8 +48,6 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 	}()
 	fileResp.info = info
 	if info.Mode().IsRegular() {
-		h.uploadProcess = h.uploadProcess.New(int(info.Size()), filepath.Base(filePath))
-		defer h.uploadProcess.Close()
 		file, err := h.uploadFile(ctx, index, filePath)
 		if err != nil {
 			return

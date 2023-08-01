@@ -47,17 +47,14 @@ func runUpload(cmd *cobra.Command, args []string) {
 	}
 	srcPath := args[0]
 
-	var uploadProcess core.UploadProcess = &core.EmptyUploadProcess{}
-
 	if cpuProfile {
 
 	}
 
 	commit, branch, err := fs.Upload(cmd.Context(), branchName, dstPath, srcPath, core.UploadConfig{
-		Encoder:       encoder,
-		UploadProcess: uploadProcess,
-		Concurrent:    concurrent,
-		Verbose:       verbose,
+		Encoder:    encoder,
+		Concurrent: concurrent,
+		Verbose:    verbose,
 	})
 	if err != nil {
 		return
