@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
-	"sync/atomic"
 	"time"
 
 	"github.com/lazyxu/kfs/rpc/client"
@@ -16,48 +16,65 @@ import (
 	"github.com/lazyxu/kfs/core"
 )
 
-type FastBackupWalker struct {
-	FileSizeResp
+type WebUploadProcess struct {
 	core.DefaultWalkHandlers[CountAndSize]
+	ctx    context.Context
 	req    WsReq
 	onResp func(finished bool, data interface{}) error
 	tick   <-chan time.Time
+	conns  []net.Conn
 }
 
-func (w *FastBackupWalker) StackSizeHandler(size int) {
-	w.StackSize = size
-}
-
-func (w *FastBackupWalker) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []CountAndSize) CountAndSize {
-	var count int64 = 1
-	var size int64
-	if info.IsDir() {
-		atomic.AddInt64(&w.DirCount, 1)
-		for _, child := range children {
-			count += child.Count
-			size += child.Size
-		}
-	} else {
-		count = 1
-		size = info.Size()
-		atomic.AddInt64(&w.FileCount, 1)
-		atomic.AddInt64(&w.FileSize, info.Size())
-	}
-
+func (w *WebUploadProcess) Show(p *core.Process) {
 	select {
 	case <-w.tick:
-		fmt.Printf("tick: %+v\n", w.FileSizeResp)
-		err := w.onResp(false, w.FileSizeResp)
+		fmt.Printf("tick: %+v\n", p)
+		err := w.onResp(false, p)
 		if err != nil {
 			fmt.Printf("%+v %+v\n", w.req, err)
 		}
-	case <-ctx.Done():
+	case <-w.ctx.Done():
 	default:
 	}
-	return CountAndSize{
-		Count: count,
-		Size:  size,
+}
+
+func (w *WebUploadProcess) StackSizeHandler(size int) {
+	w.Show(&core.Process{
+		StackSize: size,
+	})
+}
+
+func (w *WebUploadProcess) New(srcPath string, concurrent int, conns []net.Conn) core.UploadProcess {
+	w.Show(&core.Process{
+		SrcPath:    srcPath,
+		Concurrent: concurrent,
+	})
+	nw := *w
+	nw.conns = conns
+	return &nw
+}
+
+func (w *WebUploadProcess) Close(resp core.FileResp, err error) {
+	e := w.onResp(true, resp)
+	if e != nil {
+		fmt.Printf("%+v %+v\n", w.req, e)
 	}
+}
+
+func (w *WebUploadProcess) ErrHandler(filePath string, err error) {
+	println(filePath+":", err.Error())
+	e := w.onResp(false, &core.Process{
+		FilePath:  filePath,
+		Err:       err,
+		StackSize: -1,
+	})
+	if e != nil {
+		fmt.Printf("%+v %+v\n", w.req, e)
+	}
+}
+
+func (w *WebUploadProcess) Verbose() bool {
+	return true
 }
 
 func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string, serverAddr string, branchName string, dstPath string) error {
@@ -81,7 +98,14 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 	verbose := true
 	var uploadProcess core.UploadProcess
 	if verbose {
-		uploadProcess = &client.TerminalUploadProcess{}
+		uploadProcess = &WebUploadProcess{
+			ctx:  ctx,
+			req:  req,
+			tick: time.Tick(time.Millisecond * 500),
+			onResp: func(finished bool, data interface{}) error {
+				return p.ok(req, finished, data)
+			},
+		}
 	} else {
 		uploadProcess = &core.EmptyUploadProcess{}
 	}
@@ -90,7 +114,7 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 		UploadProcess: uploadProcess,
 		Encoder:       encoder,
 		Concurrent:    concurrent,
-		Verbose:       true,
+		Verbose:       verbose,
 	})
 	if err != nil {
 		return p.err(req, err)

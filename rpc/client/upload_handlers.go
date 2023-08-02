@@ -12,18 +12,13 @@ import (
 )
 
 type uploadHandlers struct {
-	core.DefaultWalkHandlers[FileResp]
+	core.DefaultWalkHandlers[core.FileResp]
 	uploadProcess    core.UploadProcess
 	concurrent       int
 	encoder          string
 	verbose          bool
 	socketServerAddr string
 	conns            []net.Conn
-}
-
-type FileResp struct {
-	fileOrDir dao.IFileOrDir
-	info      os.FileInfo
 }
 
 func (h *uploadHandlers) StartWorker(ctx context.Context, index int) {
@@ -47,35 +42,35 @@ func (h *uploadHandlers) StackSizeHandler(size int) {
 	h.uploadProcess.StackSizeHandler(size)
 }
 
-func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []FileResp) (fileResp FileResp) {
+func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []core.FileResp) (fileResp core.FileResp) {
 	var err error
 	defer func() {
 		if err != nil {
 			h.ErrHandler(filePath, err)
 		}
 	}()
-	fileResp.info = info
+	fileResp.Info = info
 	if info.Mode().IsRegular() {
 		file, err := h.uploadFile(ctx, index, filePath)
 		if err != nil {
 			return
 		}
-		fileResp.fileOrDir = file
+		fileResp.FileOrDir = file
 		return
 	} else if info.IsDir() {
 		dirItems := make([]*pb.DirItem, len(children))
 		for i, child := range children {
-			if child.fileOrDir == nil {
+			if child.FileOrDir == nil {
 				continue
 			}
-			modifyTime := uint64(child.info.ModTime().UnixNano())
+			modifyTime := uint64(child.Info.ModTime().UnixNano())
 			dirItems[i] = &pb.DirItem{
-				Hash:       child.fileOrDir.Hash(),
-				Name:       child.info.Name(),
-				Mode:       uint64(child.info.Mode()),
-				Size:       child.fileOrDir.Size(),
-				Count:      child.fileOrDir.Count(),
-				TotalCount: child.fileOrDir.TotalCount(),
+				Hash:       child.FileOrDir.Hash(),
+				Name:       child.Info.Name(),
+				Mode:       uint64(child.Info.Mode()),
+				Size:       child.FileOrDir.Size(),
+				Count:      child.FileOrDir.Count(),
+				TotalCount: child.FileOrDir.TotalCount(),
 				CreateTime: modifyTime,
 				ModifyTime: modifyTime,
 				ChangeTime: modifyTime,
@@ -90,7 +85,7 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 		if err != nil {
 			return
 		}
-		fileResp.fileOrDir = dao.NewDir(resp.Dir.Hash, resp.Dir.Size, resp.Dir.Count, resp.Dir.TotalCount)
+		fileResp.FileOrDir = dao.NewDir(resp.Dir.Hash, resp.Dir.Size, resp.Dir.Count, resp.Dir.TotalCount)
 		return
 	}
 	return

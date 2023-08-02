@@ -60,7 +60,7 @@ func (h *TerminalUploadProcess) New(srcPath string, concurrent int, conns []net.
 	return h
 }
 
-func (h *TerminalUploadProcess) Close() {
+func (h *TerminalUploadProcess) Close(resp core.FileResp, err error) {
 	close(h.ch)
 	h.wg.Wait()
 }
