@@ -26,15 +26,9 @@ type WebUploadProcess struct {
 }
 
 func (w *WebUploadProcess) Show(p *core.Process) {
-	select {
-	case <-w.tick:
-		fmt.Printf("tick: %+v\n", p)
-		err := w.onResp(false, p)
-		if err != nil {
-			fmt.Printf("%+v %+v\n", w.req, err)
-		}
-	case <-w.ctx.Done():
-	default:
+	err := w.onResp(false, p)
+	if err != nil {
+		fmt.Printf("%+v %+v\n", w.req, err)
 	}
 }
 
@@ -45,20 +39,23 @@ func (w *WebUploadProcess) StackSizeHandler(size int) {
 }
 
 func (w *WebUploadProcess) New(srcPath string, concurrent int, conns []net.Conn) core.UploadProcess {
-	w.Show(&core.Process{
+	err := w.onResp(false, &core.Process{
 		SrcPath:    srcPath,
 		Concurrent: concurrent,
 	})
+	if err != nil {
+		fmt.Printf("%+v %+v\n", w.req, err)
+	}
 	nw := *w
 	nw.conns = conns
 	return &nw
 }
 
 func (w *WebUploadProcess) Close(resp core.FileResp, err error) {
-	e := w.onResp(true, resp)
-	if e != nil {
-		fmt.Printf("%+v %+v\n", w.req, e)
-	}
+	//e := w.onResp(true, resp)
+	//if e != nil {
+	//	fmt.Printf("%+v %+v\n", w.req, e)
+	//}
 }
 
 func (w *WebUploadProcess) ErrHandler(filePath string, err error) {
@@ -77,7 +74,7 @@ func (w *WebUploadProcess) Verbose() bool {
 	return true
 }
 
-func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string, serverAddr string, branchName string, dstPath string) error {
+func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string, serverAddr string, branchName string, dstPath string, concurrent int, encoder string, verbose bool) error {
 	if !filepath.IsAbs(srcPath) {
 		return p.err(req, errors.New("请输入绝对路径"))
 	}
@@ -88,14 +85,11 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 	if !info.IsDir() {
 		return p.err(req, errors.New("请输入一个目录"))
 	}
-	concurrent := 2
-	encoder := ""
 
 	fs := &client.RpcFs{
 		SocketServerAddr: serverAddr,
 	}
 
-	verbose := true
 	var uploadProcess core.UploadProcess
 	if verbose {
 		uploadProcess = &WebUploadProcess{

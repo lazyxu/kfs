@@ -14,14 +14,14 @@ type UploadConfig struct {
 }
 
 type Process struct {
-	SrcPath    string
-	Concurrent int
-	Index      int
-	Label      string
-	FilePath   string
-	Size       uint64
-	StackSize  int
-	Err        error
+	SrcPath    string `json:"srcPath"`
+	Concurrent int    `json:"concurrent"`
+	Index      int    `json:"index"`
+	Label      string `json:"label"`
+	FilePath   string `json:"filePath"`
+	Size       uint64 `json:"size"`
+	StackSize  int    `json:"stackSize"`
+	Err        error  `json:"err"`
 }
 
 type FileResp struct {
