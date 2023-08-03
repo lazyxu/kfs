@@ -8,14 +8,16 @@ import {
     Select,
     Stack,
     TextField,
+    FormControlLabel,
+    Switch,
     Typography
 } from "@mui/material";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import useWebSocket from "react-use-websocket";
-import {getSysConfig} from "../../hox/sysConfig";
-import {v4 as uuid} from 'uuid';
+import { getSysConfig } from "../../hox/sysConfig";
+import { v4 as uuid } from 'uuid';
 import humanize from "humanize";
-import {getBranchApi} from "../../api/branch";
+import { getBranchApi } from "../../api/branch";
 import AsyncSelect from "components/AsyncSelect";
 
 function isInvalidSrcPath(srcPath) {
@@ -26,10 +28,10 @@ function isInvalidBranchName(branchName) {
     return branchName === "";
 }
 
-export default function ({show}) {
+export default function ({ show }) {
     const sysConfig = getSysConfig().sysConfig;
     const [id, setId] = useState();
-    const {sendJsonMessage, lastJsonMessage} = useWebSocket("ws://127.0.0.1:" + sysConfig.port + "/ws", {
+    const { sendJsonMessage, lastJsonMessage } = useWebSocket("ws://127.0.0.1:" + sysConfig.port + "/ws", {
         share: true,
         filter: message => {
             if (!(message?.data)) {
@@ -47,6 +49,9 @@ export default function ({show}) {
         getBranchApi().listBranch().then(setBranches);
     }, []);
     const [branchName, setBranchName] = useState('');
+    const [concurrent, setConcurrent] = useState(2);
+    const [encoder, setEncoder] = useState("none");
+    const [verbose, setVerbose] = useState(true);
     const [srcPath, setSrcPath] = useState('');
     const [dstPath, setDstPath] = useState('');
     const [finished, setFinished] = useState(true);
@@ -57,68 +62,99 @@ export default function ({show}) {
         setFinished(lastJsonMessage.finished);
     }, [lastJsonMessage]);
     return (
-        <Stack spacing={2} style={{display: show ? undefined : "none"}}>
-            <TextField variant="standard" label="本地文件夹路径" type="search" sx={{minWidth: "50%"}}
-                       value={srcPath}
-                       onChange={e => setSrcPath(e.target.value)}/>
+        <Stack spacing={2} style={{ display: show ? undefined : "none" }}>
+            <TextField variant="standard" label="本地文件夹路径" type="search" sx={{ minWidth: "50%" }}
+                value={srcPath}
+                onChange={e => setSrcPath(e.target.value)} />
             <Stack spacing={2} direction="row">
-                <FormControl sx={{minWidth: "10em"}} size="small">
+                <FormControl sx={{ minWidth: "10em" }}>
                     <AsyncSelect
                         label="备份分支"
-                        fetchOptions={async ()=> {
+                        fetchOptions={async () => {
                             let branches = await getBranchApi().listBranch();
-                            return branches.map(branch =>branch.name);
+                            return branches.map(branch => branch.name);
                         }}
                         value={branchName}
                         onChange={name => setBranchName(name)}
                     />
                 </FormControl>
-                <TextField variant="standard" label="远程文件夹路径" type="search" sx={{minWidth: "50%"}}
-                           value={dstPath}
-                           onChange={e => setDstPath(e.target.value)}
-                           size="small"
+                <TextField variant="standard" label="远程文件夹路径" type="search" sx={{ minWidth: "50%" }}
+                    value={dstPath}
+                    onChange={e => setDstPath(e.target.value)}
                 />
             </Stack>
+            <FormControl sx={{ minWidth: "10em" }}>
+                <InputLabel id="backup-encoder-label">上传时压缩</InputLabel>
+                <Select
+                    labelId="backup-encoder-label"
+                    value={encoder}
+                    onChange={e => setEncoder(e.target.value)}
+                    sx={{ width: "10em" }}
+                >
+                    {["none", "lz4"].map(value =>
+                        <MenuItem key={value} value={value}>{value}</MenuItem>
+                    )}
+                </Select>
+            </FormControl>
+            <FormControl sx={{ minWidth: "10em" }}>
+                <InputLabel id="backup-concurrent-label">同时上传文件数</InputLabel>
+                <Select
+                    labelId="backup-concurrent-label"
+                    value={concurrent}
+                    onChange={e => setConcurrent(e.target.value)}
+                    sx={{ width: "10em" }}
+                >
+                    {[1, 2, 3, 4, 5].map(value =>
+                        <MenuItem key={value} value={value}>{value}</MenuItem>
+                    )}
+                </Select>
+            </FormControl>
+            <FormControlLabel label="显示上传进度" control={
+                <Switch
+                    checked={verbose}
+                    onChange={e => setVerbose(e.target.checked)}
+                />
+            } />
             {!finished ?
-                <Button variant="outlined" sx={{width: "10em"}}
-                        onClick={e => {
-                            sendJsonMessage({type: "cancel", id});
-                        }}
+                <Button variant="outlined" sx={{ width: "10em" }}
+                    onClick={e => {
+                        sendJsonMessage({ type: "cancel", id });
+                    }}
                 >
                     取消
                 </Button>
                 :
-                <Button variant="outlined" sx={{width: "10em"}}
-                        disabled={isInvalidSrcPath(srcPath) || isInvalidBranchName(branchName)}
-                        onClick={e => {
-                            let newId = uuid();
-                            setId(newId);
-                            console.log("fastBackup", newId, srcPath);
-                            sendJsonMessage({
-                                type: "fastBackup", id: newId, data: {
-                                    srcPath,
-                                    serverAddr: sysConfig.webServer,
-                                    branchName,
-                                    dstPath
-                                }
-                            });
-                        }}
+                <Button variant="outlined" sx={{ width: "10em" }}
+                    disabled={isInvalidSrcPath(srcPath) || isInvalidBranchName(branchName)}
+                    onClick={e => {
+                        let newId = uuid();
+                        setId(newId);
+                        console.log("fastBackup", newId, srcPath);
+                        sendJsonMessage({
+                            type: "fastBackup", id: newId, data: {
+                                srcPath, verbose, concurrent, encoder,
+                                serverAddr: sysConfig.webServer,
+                                branchName,
+                                dstPath
+                            }
+                        });
+                    }}
                 >
                     快速备份
                 </Button>}
             {lastJsonMessage ? (lastJsonMessage.errMsg ?
-                    <Alert variant="outlined" sx={{width: "max-content"}} severity="error">
-                        {lastJsonMessage.errMsg}
-                    </Alert>
-                    :
-                    <Alert variant="outlined" sx={{width: "max-content"}}
-                           severity={lastJsonMessage.finished ? "success" : "info"}>
-                        <Typography>id：{lastJsonMessage.id}</Typography>
-                        <Typography>commitId：{lastJsonMessage.data.commitId}</Typography>
-                        <Typography>文件数量：{lastJsonMessage.data.count}</Typography>
-                        <Typography>总大小：{humanize.filesize(lastJsonMessage.data.size)}</Typography>
-                    </Alert>
-            ) : <Box/>}
+                <Alert variant="outlined" sx={{ width: "max-content" }} severity="error">
+                    {lastJsonMessage.errMsg}
+                </Alert>
+                :
+                <Alert variant="outlined" sx={{ width: "max-content" }}
+                    severity={lastJsonMessage.finished ? "success" : "info"}>
+                    <Typography>id：{lastJsonMessage.id}</Typography>
+                    <Typography>commitId：{lastJsonMessage.data.commitId}</Typography>
+                    <Typography>文件数量：{lastJsonMessage.data.count}</Typography>
+                    <Typography>总大小：{humanize.filesize(lastJsonMessage.data.size)}</Typography>
+                </Alert>
+            ) : <Box />}
         </Stack>
     );
 }

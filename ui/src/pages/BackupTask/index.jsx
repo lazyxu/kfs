@@ -21,7 +21,7 @@ export default function ({show}) {
             </Box>
             <Box sx={{padding: "1em"}}>
                 <Scan show={page === 1}/>
-                <FastBackup show={page === 3}/>
+                <FastBackup show={page === 0}/>
             </Box>
         </Stack>
     );
