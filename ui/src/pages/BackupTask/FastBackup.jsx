@@ -55,8 +55,6 @@ export default function ({ show }) {
     const [srcPath, setSrcPath] = useState('');
     const [dstPath, setDstPath] = useState('');
     const [errs, setErrs] = useState([]);
-    const [stackSize, setStackSize] = useState(0);
-    const [uploadProcesses, setUploadProcesses] = useState([]);
     const [finished, setFinished] = useState(true);
     useEffect(() => {
         if (!lastJsonMessage) {
@@ -69,31 +67,6 @@ export default function ({ show }) {
         console.log(lastJsonMessage)
         if (lastJsonMessage.data.err) {
             setErrs(prev => prev.push({ err: lastJsonMessage.data.err, filePath: lastJsonMessage.data.filePath }));
-        } else if (lastJsonMessage.data.concurrent) {
-            let processes = [];
-            for (let i = 0; i < lastJsonMessage.data.concurrent; i++) {
-                processes.push({
-                    size: 0,
-                    count: 0,
-                    label: "prepare",
-                })
-            }
-            console.log("0", processes);
-            setUploadProcesses(processes);
-        } else if (lastJsonMessage.data.stackSize != -1) {
-            setStackSize(lastJsonMessage.data.stackSize);
-        } else if (lastJsonMessage.data.label != "") {
-            setUploadProcesses(processes => {
-                console.log("1", processes);
-                if (lastJsonMessage.data.label == "start") {
-                    processes[lastJsonMessage.data.index].count++;
-                }
-                if (lastJsonMessage.data.label == "hash?") {
-                    processes[lastJsonMessage.data.index].size += lastJsonMessage.data.size;
-                }
-                processes[lastJsonMessage.data.index].label = lastJsonMessage.data.label;
-                return processes;
-            })
         }
     }, [lastJsonMessage]);
     return (
@@ -165,8 +138,6 @@ export default function ({ show }) {
                         let newId = uuid();
                         setId(newId);
                         setErrs([]);
-                        setStackSize(0);
-                        setUploadProcesses([]);
                         console.log("fastBackup", newId, srcPath);
                         sendJsonMessage({
                             type: "fastBackup", id: newId, data: {
@@ -184,22 +155,16 @@ export default function ({ show }) {
                 <Alert variant="outlined" sx={{ width: "max-content" }} severity="error">
                     {lastJsonMessage.errMsg}
                 </Alert>}
-            {lastJsonMessage?.finished &&
-                <Alert variant="outlined" sx={{ width: "max-content" }}
-                    severity={lastJsonMessage.finished ? "success" : "info"}>
+            {lastJsonMessage?.finished && lastJsonMessage?.data?.branch &&
+                <Alert variant="outlined" sx={{ width: "max-content" }} severity={"success"}>
                     <Typography>id：{lastJsonMessage.id}</Typography>
-                    <Typography>commitId：{lastJsonMessage.data.commitId}</Typography>
-                    <Typography>文件数量：{lastJsonMessage.data.count}</Typography>
-                    <Typography>总大小：{humanize.filesize(lastJsonMessage.data.size)}</Typography>
+                    <Typography>commitId：{lastJsonMessage.data.branch.commitId}</Typography>
+                    <Typography>文件数量：{lastJsonMessage.data.branch.count}</Typography>
+                    <Typography>总大小：{humanize.filesize(lastJsonMessage.data.branch.size)}</Typography>
                 </Alert>}
-            <Alert variant="outlined" sx={{ width: "max-content" }} severity={"info"}>
-                <Typography>{stackSize} 个文件待处理</Typography>
-            </Alert>
-            {uploadProcesses.map((process, i) =>
-                <Alert variant="outlined" sx={{ width: "max-content" }} severity={"info"} key={i}>
-                    <Typography>已处理 {process.count} 个文件, 共 {humanize.filesize(process.size)}，{process.label}</Typography>
-                </Alert>
-            )}
+            {lastJsonMessage?.data?.filePath && <Alert variant="outlined" sx={{ width: "max-content" }} severity={"info"}>
+                <Typography>{lastJsonMessage.data.exist ? "已存在" : "上传成功"} {lastJsonMessage.data.filePath}</Typography>
+            </Alert>}
             {errs.map(err =>
                 <Alert variant="outlined" sx={{ width: "max-content" }} severity="error" key={err.filePath}>
                     {err.filePath}: {err.err}

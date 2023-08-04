@@ -36,6 +36,7 @@ type UploadProcess interface {
 	ErrHandler(filePath string, err error)
 	Show(p *Process)
 	Verbose() bool
+	EndFile(filePath string, err error, exist bool)
 }
 
 type EmptyUploadProcess struct {
@@ -60,4 +61,7 @@ func (h *EmptyUploadProcess) ErrHandler(filePath string, err error) {
 
 func (h *EmptyUploadProcess) Verbose() bool {
 	return false
+}
+
+func (h *EmptyUploadProcess) EndFile(filePath string, err error, exist bool) {
 }

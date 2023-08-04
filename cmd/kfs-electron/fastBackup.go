@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/lazyxu/kfs/dao"
 	"net"
 	"os"
 	"path/filepath"
@@ -17,19 +18,20 @@ import (
 )
 
 type WebUploadProcess struct {
-	core.DefaultWalkHandlers[CountAndSize]
 	ctx    context.Context
 	req    WsReq
 	onResp func(finished bool, data interface{}) error
 	tick   <-chan time.Time
-	conns  []net.Conn
+}
+
+type WebBackupResp struct {
+	FilePath string     `json:"filePath"`
+	Err      error      `json:"err"`
+	Exist    bool       `json:"exist"`
+	Branch   dao.Branch `json:"branch"`
 }
 
 func (w *WebUploadProcess) Show(p *core.Process) {
-	err := w.onResp(false, p)
-	if err != nil {
-		fmt.Printf("%+v %+v\n", w.req, err)
-	}
 }
 
 func (w *WebUploadProcess) StackSizeHandler(size int) {
@@ -39,31 +41,40 @@ func (w *WebUploadProcess) StackSizeHandler(size int) {
 }
 
 func (w *WebUploadProcess) New(srcPath string, concurrent int, conns []net.Conn) core.UploadProcess {
-	err := w.onResp(false, &core.Process{
-		SrcPath:    srcPath,
-		Concurrent: concurrent,
-	})
-	if err != nil {
-		fmt.Printf("%+v %+v\n", w.req, err)
-	}
-	nw := *w
-	nw.conns = conns
-	return &nw
+	return w
 }
 
 func (w *WebUploadProcess) Close(resp core.FileResp, err error) {
-	//e := w.onResp(true, resp)
-	//if e != nil {
-	//	fmt.Printf("%+v %+v\n", w.req, e)
-	//}
+}
+
+func (w *WebUploadProcess) EndFile(filePath string, err error, exist bool) {
+	if err != nil {
+		println(filePath+":", err.Error())
+		e := w.onResp(false, WebBackupResp{
+			FilePath: filePath, Err: err, Exist: exist,
+		})
+		if e != nil {
+			fmt.Printf("%+v %+v\n", w.req, e)
+		}
+		return
+	}
+	select {
+	case <-w.tick:
+		e := w.onResp(false, WebBackupResp{
+			FilePath: filePath, Err: err, Exist: exist,
+		})
+		if e != nil {
+			fmt.Printf("%+v %+v\n", w.req, e)
+		}
+	case <-w.ctx.Done():
+	default:
+	}
 }
 
 func (w *WebUploadProcess) ErrHandler(filePath string, err error) {
 	println(filePath+":", err.Error())
-	e := w.onResp(false, &core.Process{
-		FilePath:  filePath,
-		Err:       err,
-		StackSize: -1,
+	e := w.onResp(false, WebBackupResp{
+		FilePath: filePath, Err: err,
 	})
 	if e != nil {
 		fmt.Printf("%+v %+v\n", w.req, e)
@@ -108,11 +119,11 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 		UploadProcess: uploadProcess,
 		Encoder:       encoder,
 		Concurrent:    concurrent,
-		Verbose:       verbose,
+		Verbose:       false,
 	})
 	if err != nil {
 		return p.err(req, err)
 	}
 	fmt.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", commit.Hash[:4], branch.CommitId, humanize.Bytes(branch.Size), branch.Count)
-	return p.ok(req, true, branch)
+	return p.ok(req, true, WebBackupResp{Branch: branch})
 }

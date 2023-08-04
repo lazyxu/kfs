@@ -64,6 +64,8 @@ func (h *TerminalUploadProcess) Close(resp core.FileResp, err error) {
 	close(h.ch)
 	h.wg.Wait()
 }
+func (h *TerminalUploadProcess) EndFile(filePath string, err error, exist bool) {
+}
 
 func (h *TerminalUploadProcess) handleProcess(srcPath string) {
 	lines := make([]*LineProcess, h.concurrent)

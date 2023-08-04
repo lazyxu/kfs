@@ -69,6 +69,10 @@ func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *core.Process) (da
 }
 
 func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath string) (file dao.File, err error) {
+	var notExist bool
+	defer func() {
+		h.uploadProcess.EndFile(filePath, err, !notExist)
+	}()
 	var p *core.Process
 	if h.verbose {
 		p = &core.Process{
@@ -120,7 +124,6 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 		p.Label = "exist?"
 		h.uploadProcess.Show(p)
 	}
-	var notExist bool
 	err = binary.Read(conn, binary.LittleEndian, &notExist)
 	if err != nil {
 		return
