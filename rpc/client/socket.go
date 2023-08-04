@@ -41,19 +41,19 @@ func (h *uploadHandlers) copyFile(conn net.Conn, filePath string, size int64) er
 	return nil
 }
 
-func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *core.Process) (dao.File, error) {
+func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *core.Process) (os.FileInfo, dao.File, error) {
 	if h.verbose {
 		p.Label = "stat?"
 		h.uploadProcess.Show(p)
 	}
 	f, err := os.Open(filePath)
 	if err != nil {
-		return dao.File{}, err
+		return nil, dao.File{}, err
 	}
 	defer f.Close()
 	info, err := f.Stat()
 	if err != nil {
-		return dao.File{}, err
+		return nil, dao.File{}, err
 	}
 	if h.verbose {
 		p.Label = "hash?"
@@ -63,16 +63,12 @@ func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *core.Process) (da
 	hash := sha256.New()
 	_, err = io.Copy(hash, f)
 	if err != nil {
-		return dao.File{}, err
+		return info, dao.File{}, err
 	}
-	return dao.NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(info.Size())), nil
+	return info, dao.NewFile(hex.EncodeToString(hash.Sum(nil)), uint64(info.Size())), nil
 }
 
-func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath string) (file dao.File, err error) {
-	var notExist bool
-	defer func() {
-		h.uploadProcess.EndFile(filePath, err, !notExist)
-	}()
+func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath string) (file dao.File, info os.FileInfo, err error, notExist bool) {
 	var p *core.Process
 	if h.verbose {
 		p = &core.Process{
@@ -83,7 +79,7 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 		p.Label = "start"
 		h.uploadProcess.Show(p)
 	}
-	file, err = h.getSizeAndCalHash(filePath, p)
+	info, file, err = h.getSizeAndCalHash(filePath, p)
 	if err != nil {
 		return
 	}

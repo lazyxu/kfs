@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/lazyxu/kfs/core"
 	"net"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -28,7 +29,7 @@ func (h *TerminalUploadProcess) Verbose() bool {
 	return true
 }
 
-func (h *TerminalUploadProcess) ErrHandler(filePath string, err error) {
+func (h *TerminalUploadProcess) OnFileError(filePath string, info os.FileInfo, err error) {
 	h.ch <- &core.Process{
 		FilePath:  filePath,
 		Err:       err,
@@ -64,7 +65,11 @@ func (h *TerminalUploadProcess) Close(resp core.FileResp, err error) {
 	close(h.ch)
 	h.wg.Wait()
 }
-func (h *TerminalUploadProcess) EndFile(filePath string, err error, exist bool) {
+
+func (h *TerminalUploadProcess) EnqueueFile(info os.FileInfo) {
+}
+
+func (h *TerminalUploadProcess) EndFile(filePath string, info os.FileInfo, exist bool) {
 }
 
 func (h *TerminalUploadProcess) handleProcess(srcPath string) {

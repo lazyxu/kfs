@@ -22,11 +22,11 @@ type WorkHandlers[T any] interface {
 	FilePathFilter(filePath string) bool
 	FileInfoFilter(filePath string, info os.FileInfo) bool
 	FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []T) T
-	AfterFileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []T)
-	ErrHandler(filePath string, err error)
+	OnFileError(filePath string, info os.FileInfo, err error)
 	StackSizeHandler(size int)
 	StartWorker(ctx context.Context, index int)
 	EndWorker(ctx context.Context, index int)
+	EnqueueFile(info os.FileInfo)
 }
 
 type DefaultWalkHandlers[T any] struct{}
@@ -43,10 +43,7 @@ func (DefaultWalkHandlers[T]) FileHandler(ctx context.Context, index int, filePa
 	return
 }
 
-func (DefaultWalkHandlers[T]) AfterFileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []T) {
-}
-
-func (DefaultWalkHandlers[T]) ErrHandler(filePath string, err error) {
+func (DefaultWalkHandlers[T]) OnFileError(filePath string, info os.FileInfo, err error) {
 	println(filePath, err.Error())
 }
 
@@ -59,19 +56,22 @@ func (DefaultWalkHandlers[T]) StartWorker(ctx context.Context, index int) {
 func (DefaultWalkHandlers[T]) EndWorker(ctx context.Context, index int) {
 }
 
-func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers WorkHandlers[T]) (t T, err error) {
+func (DefaultWalkHandlers[T]) EnqueueFile(info os.FileInfo) {
+}
+
+func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers WorkHandlers[T]) (t T, err1 error) {
 	if concurrent <= 0 {
 		return t, fmt.Errorf("concurrent should be > 0, actual %d", concurrent)
 	}
-	filePath, err = filepath.Abs(filePath)
-	if err != nil {
+	filePath, err1 = filepath.Abs(filePath)
+	if err1 != nil {
 		return
 	}
 	stack := arraystack.New()
 	stack.Push(&File[T]{
 		Path: filePath,
 	})
-	ch := make(chan *File[T], concurrent)
+	ch := make(chan *File[T], 1000000)
 	var wg sync.WaitGroup
 	defer func() {
 		close(ch)
@@ -82,6 +82,12 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 		go func(index int) {
 			handlers.StartWorker(ctx, index)
 			for {
+				select {
+				case <-ctx.Done():
+					err1 = context.DeadlineExceeded
+					break
+				default:
+				}
 				f, ok := <-ch
 				if !ok {
 					break
@@ -89,16 +95,27 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 				cnt := cap(f.children)
 				children := make([]T, cnt)
 				for i := 0; i < cnt; i++ {
-					children[i] = <-f.children
+					select {
+					case children[i] = <-f.children:
+					case <-ctx.Done():
+						err1 = context.DeadlineExceeded
+						goto EndWorker
+					}
 				}
 				parent := handlers.FileHandler(ctx, index, f.Path, f.Info, children)
-				handlers.AfterFileHandler(ctx, index, f.Path, f.Info, children)
 				if f.parent != nil {
-					f.parent <- parent
+					select {
+					case f.parent <- parent:
+					case <-ctx.Done():
+						err1 = context.DeadlineExceeded
+						goto EndWorker
+					}
+
 				} else {
 					t = parent
 				}
 			}
+		EndWorker:
 			handlers.EndWorker(ctx, index)
 			wg.Done()
 		}(i)
@@ -133,10 +150,9 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 				continue
 			}
 
-			var infos []os.DirEntry
-			infos, err = os.ReadDir(f.Path)
+			infos, err := os.ReadDir(f.Path)
 			if err != nil {
-				handlers.ErrHandler(f.Path, err)
+				handlers.OnFileError(f.Path, f.Info, err)
 				continue
 			}
 			cur.children = make(chan T, len(infos))
@@ -153,6 +169,7 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 			}
 			handlers.StackSizeHandler(stack.Size())
 			f := vv.(*File[T])
+			handlers.EnqueueFile(f.Info)
 			ch <- f
 		}
 	}
@@ -164,7 +181,7 @@ func preHandler[T any](filePath string, handlers WorkHandlers[T]) (info os.FileI
 	var err error
 	defer func() {
 		if err != nil {
-			handlers.ErrHandler(filePath, err)
+			handlers.OnFileError(filePath, info, err)
 			continues = true
 		}
 	}()

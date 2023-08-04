@@ -18,17 +18,29 @@ import (
 )
 
 type WebUploadProcess struct {
-	ctx    context.Context
-	req    WsReq
-	onResp func(finished bool, data interface{}) error
-	tick   <-chan time.Time
+	Size           uint64
+	FileCount      uint64
+	DirCount       uint64
+	TotalSize      uint64
+	TotalFileCount uint64
+	TotalDirCount  uint64
+	ctx            context.Context
+	req            WsReq
+	onResp         func(finished bool, data interface{}) error
+	tick           <-chan time.Time
 }
 
 type WebBackupResp struct {
-	FilePath string     `json:"filePath"`
-	Err      error      `json:"err"`
-	Exist    bool       `json:"exist"`
-	Branch   dao.Branch `json:"branch"`
+	FilePath       string     `json:"filePath"`
+	Size           uint64     `json:"size"`
+	FileCount      uint64     `json:"fileCount"`
+	DirCount       uint64     `json:"dirCount"`
+	TotalSize      uint64     `json:"totalSize"`
+	TotalFileCount uint64     `json:"totalFileCount"`
+	TotalDirCount  uint64     `json:"totalDirCount"`
+	Err            error      `json:"err"`
+	Exist          bool       `json:"exist"`
+	Branch         dao.Branch `json:"branch"`
 }
 
 func (w *WebUploadProcess) Show(p *core.Process) {
@@ -47,37 +59,50 @@ func (w *WebUploadProcess) New(srcPath string, concurrent int, conns []net.Conn)
 func (w *WebUploadProcess) Close(resp core.FileResp, err error) {
 }
 
-func (w *WebUploadProcess) EndFile(filePath string, err error, exist bool) {
-	if err != nil {
-		println(filePath+":", err.Error())
-		e := w.onResp(false, WebBackupResp{
-			FilePath: filePath, Err: err, Exist: exist,
-		})
-		if e != nil {
-			fmt.Printf("%+v %+v\n", w.req, e)
-		}
+func (w *WebUploadProcess) OnFileError(filePath string, info os.FileInfo, err error) {
+	println(filePath+":", err.Error())
+	e := w.onResp(false, WebBackupResp{
+		FilePath: filePath, Err: err,
+		Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
+		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
+	})
+	if e != nil {
+		fmt.Printf("%+v %+v\n", w.req, e)
+	}
+}
+
+func (w *WebUploadProcess) EndFile(filePath string, info os.FileInfo, exist bool) {
+	if info.IsDir() {
+		w.DirCount++
+	} else {
+		w.FileCount++
+		w.Size += uint64(info.Size())
+	}
+	select {
+	case <-w.ctx.Done():
 		return
+	default:
 	}
 	select {
 	case <-w.tick:
 		e := w.onResp(false, WebBackupResp{
-			FilePath: filePath, Err: err, Exist: exist,
+			FilePath: filePath, Exist: exist,
+			Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
+			TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
 		})
 		if e != nil {
 			fmt.Printf("%+v %+v\n", w.req, e)
 		}
-	case <-w.ctx.Done():
 	default:
 	}
 }
 
-func (w *WebUploadProcess) ErrHandler(filePath string, err error) {
-	println(filePath+":", err.Error())
-	e := w.onResp(false, WebBackupResp{
-		FilePath: filePath, Err: err,
-	})
-	if e != nil {
-		fmt.Printf("%+v %+v\n", w.req, e)
+func (w *WebUploadProcess) EnqueueFile(info os.FileInfo) {
+	if info.IsDir() {
+		w.TotalDirCount++
+	} else {
+		w.TotalFileCount++
+		w.TotalSize += uint64(info.Size())
 	}
 }
 

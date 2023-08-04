@@ -34,8 +34,8 @@ func (h *uploadHandlers) EndWorker(ctx context.Context, index int) {
 	h.conns[index].Close()
 }
 
-func (h *uploadHandlers) ErrHandler(filePath string, err error) {
-	h.uploadProcess.ErrHandler(filePath, err)
+func (h *uploadHandlers) OnFileError(filePath string, info os.FileInfo, err error) {
+	h.uploadProcess.OnFileError(filePath, info, err)
 }
 
 func (h *uploadHandlers) StackSizeHandler(size int) {
@@ -46,15 +46,16 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 	var err error
 	defer func() {
 		if err != nil {
-			h.ErrHandler(filePath, err)
+			h.uploadProcess.OnFileError(filePath, info, err)
 		}
 	}()
 	fileResp.Info = info
 	if info.Mode().IsRegular() {
-		file, err := h.uploadFile(ctx, index, filePath)
+		file, info, err, notExist := h.uploadFile(ctx, index, filePath)
 		if err != nil {
 			return
 		}
+		h.uploadProcess.EndFile(filePath, info, !notExist)
 		fileResp.FileOrDir = file
 		return
 	} else if info.IsDir() {
@@ -85,8 +86,13 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 		if err != nil {
 			return
 		}
+		h.uploadProcess.EndFile(filePath, info, resp.Exist)
 		fileResp.FileOrDir = dao.NewDir(resp.Dir.Hash, resp.Dir.Size, resp.Dir.Count, resp.Dir.TotalCount)
 		return
 	}
 	return
+}
+
+func (h *uploadHandlers) EnqueueFile(info os.FileInfo) {
+	h.uploadProcess.EnqueueFile(info)
 }

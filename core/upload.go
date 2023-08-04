@@ -33,10 +33,11 @@ type UploadProcess interface {
 	New(srcPath string, concurrent int, conns []net.Conn) UploadProcess
 	Close(resp FileResp, err error)
 	StackSizeHandler(size int)
-	ErrHandler(filePath string, err error)
 	Show(p *Process)
 	Verbose() bool
-	EndFile(filePath string, err error, exist bool)
+	OnFileError(filePath string, info os.FileInfo, err error)
+	EndFile(filePath string, info os.FileInfo, exist bool)
+	EnqueueFile(info os.FileInfo)
 }
 
 type EmptyUploadProcess struct {
@@ -55,13 +56,16 @@ func (h *EmptyUploadProcess) New(srcPath string, concurrent int, conns []net.Con
 func (h *EmptyUploadProcess) Close(resp FileResp, err error) {
 }
 
-func (h *EmptyUploadProcess) ErrHandler(filePath string, err error) {
-	println(filePath+":", err.Error())
-}
-
 func (h *EmptyUploadProcess) Verbose() bool {
 	return false
 }
 
-func (h *EmptyUploadProcess) EndFile(filePath string, err error, exist bool) {
+func (h *EmptyUploadProcess) OnFileError(filePath string, info os.FileInfo, err error) {
+	println(filePath+":", err.Error())
+}
+
+func (h *EmptyUploadProcess) EndFile(filePath string, info os.FileInfo, exist bool) {
+}
+
+func (h *EmptyUploadProcess) EnqueueFile(info os.FileInfo) {
 }

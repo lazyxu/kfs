@@ -163,7 +163,10 @@ export default function ({ show }) {
                     <Typography>总大小：{humanize.filesize(lastJsonMessage.data.branch.size)}</Typography>
                 </Alert>}
             {lastJsonMessage?.data?.filePath && <Alert variant="outlined" sx={{ width: "max-content" }} severity={"info"}>
-                <Typography>{lastJsonMessage.data.exist ? "已存在" : "上传成功"} {lastJsonMessage.data.filePath}</Typography>
+                <Typography>备份中：{humanize.filesize(lastJsonMessage.data.size)}/{humanize.filesize(lastJsonMessage.data.totalSize)}</Typography>
+                <Typography>文件：{lastJsonMessage.data.fileCount}/{lastJsonMessage.data.totalFileCount}</Typography>
+                <Typography>目录：{lastJsonMessage.data.dirCount}/{lastJsonMessage.data.totalDirCount}</Typography>
+                <Typography>{lastJsonMessage.data.exist ? "已经存在" : "上传成功"}：{lastJsonMessage.data.filePath}</Typography>
             </Alert>}
             {errs.map(err =>
                 <Alert variant="outlined" sx={{ width: "max-content" }} severity="error" key={err.filePath}>
