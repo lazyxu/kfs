@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/lazyxu/kfs/rpc/client"
@@ -28,10 +29,10 @@ type WebUploadProcess struct {
 	ctx            context.Context
 	req            WsReq
 	onResp         func(finished bool, data interface{}) error
-	ticks          []<-chan time.Time
 }
 
 type Process struct {
+	updated  atomic.Bool
 	FilePath string `json:"filePath"`
 	Size     uint64 `json:"size"`
 	Status   int    `json:"status"`
@@ -75,7 +76,7 @@ func (w *WebUploadProcess) Close(resp core.FileResp, err error) {
 
 func (w *WebUploadProcess) StartFile(index int, filePath string, info os.FileInfo) {
 	w.Processes[index] = Process{FilePath: filePath, Size: uint64(info.Size()), Status: StatusUploading}
-	w.respWithTick(index)
+	w.Processes[index].updated.Store(true)
 }
 
 func (w *WebUploadProcess) OnFileError(index int, filePath string, info os.FileInfo, err error) {
@@ -108,27 +109,7 @@ func (w *WebUploadProcess) EndFile(index int, filePath string, info os.FileInfo,
 	if exist {
 		w.Processes[index].Status = StatusExist
 	}
-	w.respWithTick(index)
-}
-
-func (w *WebUploadProcess) respWithTick(i int) {
-	select {
-	case <-w.ctx.Done():
-		return
-	default:
-	}
-	select {
-	case <-w.ticks[i]:
-		e := w.onResp(false, WebBackupResp{
-			Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
-			TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
-			Processes: w.Processes[:],
-		})
-		if e != nil {
-			fmt.Printf("%+v %+v\n", w.req, e)
-		}
-	default:
-	}
+	w.Processes[index].updated.Store(true)
 }
 
 func (w *WebUploadProcess) EnqueueFile(info os.FileInfo) {
@@ -183,15 +164,33 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 }
 
 func NewWebUploadProcess(ctx context.Context, req WsReq, concurrent int, onResp func(finished bool, data interface{}) error) core.UploadProcess {
-	p := &WebUploadProcess{
+	w := &WebUploadProcess{
 		ctx:       ctx,
 		req:       req,
-		ticks:     make([]<-chan time.Time, concurrent),
 		onResp:    onResp,
 		Processes: make([]Process, concurrent),
 	}
-	for i := 0; i < len(p.ticks); i++ {
-		p.ticks[i] = time.Tick(time.Millisecond * 500)
+	for i := 0; i < concurrent; i++ {
+		go func(i int) {
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				default:
+					if w.Processes[i].updated.CompareAndSwap(true, false) {
+						e := w.onResp(false, WebBackupResp{
+							Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
+							TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
+							Processes: w.Processes[:],
+						})
+						if e != nil {
+							fmt.Printf("%+v %+v\n", w.req, e)
+						}
+					}
+				}
+				time.Sleep(time.Millisecond * 500)
+			}
+		}(i)
 	}
-	return p
+	return w
 }
