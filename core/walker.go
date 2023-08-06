@@ -27,6 +27,7 @@ type WorkHandlers[T any] interface {
 	StartWorker(ctx context.Context, index int)
 	EndWorker(ctx context.Context, index int)
 	EnqueueFile(info os.FileInfo)
+	StartFile(ctx context.Context, index int, filePath string, info os.FileInfo)
 }
 
 type DefaultWalkHandlers[T any] struct{}
@@ -37,6 +38,9 @@ func (DefaultWalkHandlers[T]) FilePathFilter(filePath string) bool {
 
 func (DefaultWalkHandlers[T]) FileInfoFilter(filePath string, info os.FileInfo) bool {
 	return false
+}
+
+func (DefaultWalkHandlers[T]) StartFile(ctx context.Context, index int, filePath string, info os.FileInfo) {
 }
 
 func (DefaultWalkHandlers[T]) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []T) (t T) {
@@ -92,6 +96,7 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 				if !ok {
 					break
 				}
+				handlers.StartFile(ctx, index, f.Path, f.Info)
 				cnt := cap(f.children)
 				children := make([]T, cnt)
 				for i := 0; i < cnt; i++ {

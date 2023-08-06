@@ -29,7 +29,10 @@ func (h *TerminalUploadProcess) Verbose() bool {
 	return true
 }
 
-func (h *TerminalUploadProcess) OnFileError(filePath string, info os.FileInfo, err error) {
+func (h *TerminalUploadProcess) StartFile(index int, filePath string, info os.FileInfo) {
+}
+
+func (h *TerminalUploadProcess) OnFileError(index int, filePath string, info os.FileInfo, err error) {
 	h.ch <- &core.Process{
 		FilePath:  filePath,
 		Err:       err,
@@ -69,7 +72,7 @@ func (h *TerminalUploadProcess) Close(resp core.FileResp, err error) {
 func (h *TerminalUploadProcess) EnqueueFile(info os.FileInfo) {
 }
 
-func (h *TerminalUploadProcess) EndFile(filePath string, info os.FileInfo, exist bool) {
+func (h *TerminalUploadProcess) EndFile(index int, filePath string, info os.FileInfo, exist bool) {
 }
 
 func (h *TerminalUploadProcess) handleProcess(srcPath string) {

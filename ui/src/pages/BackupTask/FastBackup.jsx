@@ -162,11 +162,15 @@ export default function ({ show }) {
                     <Typography>文件数量：{lastJsonMessage.data.branch.count}</Typography>
                     <Typography>总大小：{humanize.filesize(lastJsonMessage.data.branch.size)}</Typography>
                 </Alert>}
-            {lastJsonMessage?.data?.filePath && <Alert variant="outlined" sx={{ width: "max-content" }} severity={"info"}>
+            {lastJsonMessage?.data?.totalSize && <Alert variant="outlined" sx={{ width: "max-content" }} severity={"info"}>
                 <Typography>备份中：{humanize.filesize(lastJsonMessage.data.size)}/{humanize.filesize(lastJsonMessage.data.totalSize)}</Typography>
                 <Typography>文件：{lastJsonMessage.data.fileCount}/{lastJsonMessage.data.totalFileCount}</Typography>
                 <Typography>目录：{lastJsonMessage.data.dirCount}/{lastJsonMessage.data.totalDirCount}</Typography>
-                <Typography>{lastJsonMessage.data.exist ? "已经存在" : "上传成功"}：{lastJsonMessage.data.filePath}</Typography>
+                <Typography>上传列表：</Typography>
+                {lastJsonMessage.data.processes.map((process, i) => 
+                    process.filePath ? <Typography key={i}>{i+1}： {StatusList[process.status]} {humanize.filesize(process.size)} {process.filePath}</Typography>
+                    : <Typography key={i}>{i+1}：空闲</Typography>
+                )}
             </Alert>}
             {errs.map(err =>
                 <Alert variant="outlined" sx={{ width: "max-content" }} severity="error" key={err.filePath}>
@@ -176,3 +180,5 @@ export default function ({ show }) {
         </Stack>
     );
 }
+
+const StatusList = ["正在上传", "已经存在", "上传成功"];

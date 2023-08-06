@@ -35,18 +35,22 @@ func (h *uploadHandlers) EndWorker(ctx context.Context, index int) {
 }
 
 func (h *uploadHandlers) OnFileError(filePath string, info os.FileInfo, err error) {
-	h.uploadProcess.OnFileError(filePath, info, err)
+	h.uploadProcess.OnFileError(-1, filePath, info, err)
 }
 
 func (h *uploadHandlers) StackSizeHandler(size int) {
 	h.uploadProcess.StackSizeHandler(size)
 }
 
+func (h *uploadHandlers) StartFile(ctx context.Context, index int, filePath string, info os.FileInfo) {
+	h.uploadProcess.StartFile(index, filePath, info)
+}
+
 func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []core.FileResp) (fileResp core.FileResp) {
 	var err error
 	defer func() {
 		if err != nil {
-			h.uploadProcess.OnFileError(filePath, info, err)
+			h.uploadProcess.OnFileError(index, filePath, info, err)
 		}
 	}()
 	fileResp.Info = info
@@ -55,7 +59,7 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 		if err != nil {
 			return
 		}
-		h.uploadProcess.EndFile(filePath, info, !notExist)
+		h.uploadProcess.EndFile(index, filePath, info, !notExist)
 		fileResp.FileOrDir = file
 		return
 	} else if info.IsDir() {
@@ -86,7 +90,7 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 		if err != nil {
 			return
 		}
-		h.uploadProcess.EndFile(filePath, info, resp.Exist)
+		h.uploadProcess.EndFile(index, filePath, info, resp.Exist)
 		fileResp.FileOrDir = dao.NewDir(resp.Dir.Hash, resp.Dir.Size, resp.Dir.Count, resp.Dir.TotalCount)
 		return
 	}

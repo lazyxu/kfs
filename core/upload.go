@@ -35,8 +35,9 @@ type UploadProcess interface {
 	StackSizeHandler(size int)
 	Show(p *Process)
 	Verbose() bool
-	OnFileError(filePath string, info os.FileInfo, err error)
-	EndFile(filePath string, info os.FileInfo, exist bool)
+	StartFile(index int, filePath string, info os.FileInfo)
+	OnFileError(index int, filePath string, info os.FileInfo, err error)
+	EndFile(index int, filePath string, info os.FileInfo, exist bool)
 	EnqueueFile(info os.FileInfo)
 }
 
@@ -60,11 +61,14 @@ func (h *EmptyUploadProcess) Verbose() bool {
 	return false
 }
 
-func (h *EmptyUploadProcess) OnFileError(filePath string, info os.FileInfo, err error) {
+func (h *EmptyUploadProcess) StartFile(index int, filePath string, info os.FileInfo) {
+}
+
+func (h *EmptyUploadProcess) OnFileError(index int, filePath string, info os.FileInfo, err error) {
 	println(filePath+":", err.Error())
 }
 
-func (h *EmptyUploadProcess) EndFile(filePath string, info os.FileInfo, exist bool) {
+func (h *EmptyUploadProcess) EndFile(index int, filePath string, info os.FileInfo, exist bool) {
 }
 
 func (h *EmptyUploadProcess) EnqueueFile(info os.FileInfo) {
