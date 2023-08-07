@@ -25,6 +25,7 @@ func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, 
 		concurrent:       config.Concurrent,
 		socketServerAddr: fs.SocketServerAddr,
 		conns:            make([]net.Conn, config.Concurrent),
+		files:            make([]*os.File, config.Concurrent),
 	}
 	handlers.uploadProcess = handlers.uploadProcess.New(srcPath, config.Concurrent, handlers.conns)
 	walkResp, err := core.Walk[core.FileResp](ctx, srcPath, config.Concurrent, handlers)

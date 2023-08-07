@@ -18,22 +18,16 @@ import (
 	"github.com/pierrec/lz4"
 )
 
-func (h *uploadHandlers) copyFile(conn net.Conn, filePath string, size int64) error {
-	f, err := os.Open(filePath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
+func (h *uploadHandlers) copyFile(conn net.Conn, f *os.File, size int64) error {
 	if h.encoder == "lz4" {
 		w := lz4.NewWriter(conn)
-		_, err = io.CopyN(w, f, size)
+		_, err := io.CopyN(w, f, size)
 		if err != nil {
 			return err
 		}
 		defer w.Flush()
 	} else {
-		_, err = io.CopyN(conn, f, size)
+		_, err := io.CopyN(conn, f, size)
 		if err != nil {
 			return err
 		}
@@ -41,16 +35,11 @@ func (h *uploadHandlers) copyFile(conn net.Conn, filePath string, size int64) er
 	return nil
 }
 
-func (h *uploadHandlers) getSizeAndCalHash(filePath string, p *core.Process) (os.FileInfo, dao.File, error) {
+func (h *uploadHandlers) getSizeAndCalHash(f *os.File, p *core.Process) (os.FileInfo, dao.File, error) {
 	if h.verbose {
 		p.Label = "stat?"
 		h.uploadProcess.Show(p)
 	}
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, dao.File{}, err
-	}
-	defer f.Close()
 	info, err := f.Stat()
 	if err != nil {
 		return nil, dao.File{}, err
@@ -79,15 +68,23 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 		p.Label = "start"
 		h.uploadProcess.Show(p)
 	}
-	info, file, err = h.getSizeAndCalHash(filePath, p)
+	f, err := os.Open(filePath)
+	if err != nil {
+		return dao.File{}, nil, err, true
+	}
+	h.files[index] = f
+	defer func() {
+		h.files[index] = nil
+		f.Close()
+	}()
+	info, file, err = h.getSizeAndCalHash(f, p)
 	if err != nil {
 		return
 	}
 
 	defer func() {
 		if err != nil {
-			h.conns[index].Close()
-			h.StartWorker(ctx, index)
+			h.reconnect(ctx, index)
 			return
 		}
 	}()
@@ -146,7 +143,7 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 		p.Label = "copyFile"
 		h.uploadProcess.Show(p)
 	}
-	err = h.copyFile(conn, filePath, int64(file.Size()))
+	err = h.copyFile(conn, f, int64(file.Size()))
 	if err != nil {
 		return
 	}

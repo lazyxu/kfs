@@ -115,6 +115,8 @@ func handleUpload(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	}
 	println(conn.RemoteAddr().String(), "size", size)
 
+	// 1. What if the hash is the same but the size is different?
+	// 2. What if the hash and size are the same, but the file content is different?
 	exist, err := kfsCore.S.Write(hash, func(f io.Writer, hasher io.Writer) (e error) {
 		_, e = conn.Write([]byte{1}) // not exist
 		if e != nil {

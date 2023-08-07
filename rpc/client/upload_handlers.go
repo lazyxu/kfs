@@ -19,10 +19,29 @@ type uploadHandlers struct {
 	verbose          bool
 	socketServerAddr string
 	conns            []net.Conn
+	files            []*os.File
 }
 
 func (h *uploadHandlers) StartWorker(ctx context.Context, index int) {
-	conn, err := net.Dial("tcp", h.socketServerAddr)
+	var d net.Dialer
+	conn, err := d.DialContext(ctx, "tcp", h.socketServerAddr)
+	if err != nil {
+		println(err.Error())
+		os.Exit(1)
+	}
+	h.conns[index] = conn
+	go func() {
+		<-ctx.Done()
+		if h.files[index] != nil {
+			h.files[index].Close()
+		}
+	}()
+}
+
+func (h *uploadHandlers) reconnect(ctx context.Context, index int) {
+	h.conns[index].Close()
+	var d net.Dialer
+	conn, err := d.DialContext(ctx, "tcp", h.socketServerAddr)
 	if err != nil {
 		println(err.Error())
 		os.Exit(1)
