@@ -27,6 +27,7 @@ type WebUploadProcess struct {
 	TotalDirCount  uint64
 	Processes      []Process
 	ctx            context.Context
+	Done           chan struct{}
 	req            WsReq
 	onResp         func(finished bool, data interface{}) error
 }
@@ -48,7 +49,7 @@ type WebBackupResp struct {
 	Processes      []Process `json:"processes"`
 
 	FilePath string     `json:"filePath"`
-	Err      error      `json:"err"`
+	ErrMsg   string     `json:"errMsg"`
 	Branch   dao.Branch `json:"branch"`
 }
 
@@ -85,7 +86,7 @@ func (w *WebUploadProcess) OnFileError(index int, filePath string, info os.FileI
 	}
 	println(filePath+":", err.Error())
 	e := w.onResp(false, WebBackupResp{
-		FilePath: filePath, Err: err,
+		FilePath: filePath, ErrMsg: err.Error(),
 		Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
 		Processes: w.Processes[:],
@@ -141,17 +142,12 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 		SocketServerAddr: serverAddr,
 	}
 
-	var uploadProcess core.UploadProcess
-	if verbose {
-		uploadProcess = NewWebUploadProcess(ctx, req, concurrent, func(finished bool, data interface{}) error {
-			return p.ok(req, finished, data)
-		})
-	} else {
-		uploadProcess = &core.EmptyUploadProcess{}
-	}
+	w := NewWebUploadProcess(ctx, req, concurrent, func(finished bool, data interface{}) error {
+		return p.ok(req, finished, data)
+	})
 
 	commit, branch, err := fs.Upload(ctx, branchName, dstPath, srcPath, core.UploadConfig{
-		UploadProcess: uploadProcess,
+		UploadProcess: w,
 		Encoder:       encoder,
 		Concurrent:    concurrent,
 		Verbose:       false,
@@ -159,38 +155,53 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 	if err != nil {
 		return p.err(req, err)
 	}
+	w.Done <- struct{}{}
+	for i := 0; i < concurrent; i++ {
+		w.RespIfUpdated(i)
+	}
 	fmt.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", commit.Hash[:4], branch.CommitId, humanize.Bytes(branch.Size), branch.Count)
-	return p.ok(req, true, WebBackupResp{Branch: branch})
+	return p.ok(req, true, WebBackupResp{
+		Branch: branch,
+		Size:   w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
+		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
+		Processes: w.Processes[:],
+	})
 }
 
-func NewWebUploadProcess(ctx context.Context, req WsReq, concurrent int, onResp func(finished bool, data interface{}) error) core.UploadProcess {
+func NewWebUploadProcess(ctx context.Context, req WsReq, concurrent int, onResp func(finished bool, data interface{}) error) *WebUploadProcess {
 	w := &WebUploadProcess{
 		ctx:       ctx,
 		req:       req,
 		onResp:    onResp,
 		Processes: make([]Process, concurrent),
+		Done:      make(chan struct{}),
 	}
 	for i := 0; i < concurrent; i++ {
 		go func(i int) {
 			for {
 				select {
-				case <-ctx.Done():
+				case <-w.Done:
 					return
+				case <-ctx.Done():
 				default:
-					if w.Processes[i].updated.CompareAndSwap(true, false) {
-						e := w.onResp(false, WebBackupResp{
-							Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
-							TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
-							Processes: w.Processes[:],
-						})
-						if e != nil {
-							fmt.Printf("%+v %+v\n", w.req, e)
-						}
-					}
+					w.RespIfUpdated(i)
 				}
 				time.Sleep(time.Millisecond * 500)
 			}
 		}(i)
 	}
 	return w
+}
+
+func (w *WebUploadProcess) RespIfUpdated(i int) {
+	if w.Processes[i].updated.CompareAndSwap(true, false) {
+		e := w.onResp(false, WebBackupResp{
+			Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
+			TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
+			Processes: w.Processes[:],
+		})
+		if e != nil {
+			fmt.Printf("%+v %+v\n", w.req, e)
+		}
+	}
 }

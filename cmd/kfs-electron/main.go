@@ -185,6 +185,7 @@ func (p *WsProcessor) process(ctx context.Context, db *DB) {
 		case "cancel":
 			cancelFunc, ok := p.cancelFunctions.Load(req.Id)
 			if !ok {
+				p.ok(req, true, nil)
 				continue
 			}
 			cancelFunc.(context.CancelFunc)()

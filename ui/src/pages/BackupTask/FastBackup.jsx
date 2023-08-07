@@ -65,8 +65,11 @@ export default function ({ show }) {
             return;
         }
         console.log(lastJsonMessage)
-        if (lastJsonMessage.data.err) {
-            setErrs(prev => prev.push({ err: lastJsonMessage.data.err, filePath: lastJsonMessage.data.filePath }));
+        if (lastJsonMessage.data.errMsg) {
+            setErrs(prev => {
+                prev.push({ errMsg: lastJsonMessage.data.errMsg, filePath: lastJsonMessage.data.filePath });
+                return prev;
+            });
         }
     }, [lastJsonMessage]);
     return (
@@ -155,15 +158,9 @@ export default function ({ show }) {
                 <Alert variant="outlined" sx={{ width: "max-content" }} severity="error">
                     {lastJsonMessage.errMsg}
                 </Alert>}
-            {lastJsonMessage?.finished && lastJsonMessage?.data?.branch &&
-                <Alert variant="outlined" sx={{ width: "max-content" }} severity={"success"}>
-                    <Typography>id：{lastJsonMessage.id}</Typography>
-                    <Typography>commitId：{lastJsonMessage.data.branch.commitId}</Typography>
-                    <Typography>文件数量：{lastJsonMessage.data.branch.count}</Typography>
-                    <Typography>总大小：{humanize.filesize(lastJsonMessage.data.branch.size)}</Typography>
-                </Alert>}
-            {lastJsonMessage?.data?.totalSize && <Alert variant="outlined" sx={{ width: "max-content" }} severity={"info"}>
-                <Typography>备份中：{humanize.filesize(lastJsonMessage.data.size)}/{humanize.filesize(lastJsonMessage.data.totalSize)}</Typography>
+            {lastJsonMessage?.data?.totalSize &&
+            <Alert variant="outlined" sx={{ width: "max-content" }} severity={lastJsonMessage.finished?"success":"info"}>
+                <Typography>进度：{humanize.filesize(lastJsonMessage.data.size)}/{humanize.filesize(lastJsonMessage.data.totalSize)}</Typography>
                 <Typography>文件：{lastJsonMessage.data.fileCount}/{lastJsonMessage.data.totalFileCount}</Typography>
                 <Typography>目录：{lastJsonMessage.data.dirCount}/{lastJsonMessage.data.totalDirCount}</Typography>
                 <Typography>上传列表：</Typography>
@@ -174,7 +171,7 @@ export default function ({ show }) {
             </Alert>}
             {errs.map(err =>
                 <Alert variant="outlined" sx={{ width: "max-content" }} severity="error" key={err.filePath}>
-                    {err.filePath}: {err.err}
+                    {err.filePath}: {err.errMsg}
                 </Alert>
             )}
         </Stack>
