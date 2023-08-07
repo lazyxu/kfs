@@ -69,10 +69,13 @@ func (h *TerminalUploadProcess) Close(resp core.FileResp, err error) {
 	h.wg.Wait()
 }
 
-func (h *TerminalUploadProcess) EnqueueFile(info os.FileInfo) {
+func (h *TerminalUploadProcess) PushFile(info os.FileInfo) {
 }
 
 func (h *TerminalUploadProcess) EndFile(index int, filePath string, info os.FileInfo, exist bool) {
+}
+
+func (h *TerminalUploadProcess) HasPushedAllToStack() {
 }
 
 func (h *TerminalUploadProcess) handleProcess(srcPath string) {

@@ -116,6 +116,10 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 	return
 }
 
-func (h *uploadHandlers) EnqueueFile(info os.FileInfo) {
-	h.uploadProcess.EnqueueFile(info)
+func (h *uploadHandlers) PushFile(info os.FileInfo) {
+	h.uploadProcess.PushFile(info)
+}
+
+func (h *uploadHandlers) HasPushedAllToStack() {
+	h.uploadProcess.HasPushedAllToStack()
 }

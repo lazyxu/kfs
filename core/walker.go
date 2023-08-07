@@ -26,8 +26,9 @@ type WorkHandlers[T any] interface {
 	StackSizeHandler(size int)
 	StartWorker(ctx context.Context, index int)
 	EndWorker(ctx context.Context, index int)
-	EnqueueFile(info os.FileInfo)
+	PushFile(info os.FileInfo)
 	StartFile(ctx context.Context, index int, filePath string, info os.FileInfo)
+	HasPushedAllToStack()
 }
 
 type DefaultWalkHandlers[T any] struct{}
@@ -60,7 +61,9 @@ func (DefaultWalkHandlers[T]) StartWorker(ctx context.Context, index int) {
 func (DefaultWalkHandlers[T]) EndWorker(ctx context.Context, index int) {
 }
 
-func (DefaultWalkHandlers[T]) EnqueueFile(info os.FileInfo) {
+func (DefaultWalkHandlers[T]) PushFile(info os.FileInfo) {
+}
+func (DefaultWalkHandlers[T]) HasPushedAllToStack() {
 }
 
 func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers WorkHandlers[T]) (t T, err1 error) {
@@ -174,11 +177,12 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 			}
 			handlers.StackSizeHandler(stack.Size())
 			f := vv.(*File[T])
-			handlers.EnqueueFile(f.Info)
+			handlers.PushFile(f.Info)
 			ch <- f
 		}
 	}
 	handlers.StackSizeHandler(0)
+	handlers.HasPushedAllToStack()
 	return
 }
 

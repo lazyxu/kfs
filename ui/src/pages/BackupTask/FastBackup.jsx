@@ -19,6 +19,7 @@ import { v4 as uuid } from 'uuid';
 import humanize from "humanize";
 import { getBranchApi } from "../../api/branch";
 import AsyncSelect from "components/AsyncSelect";
+import LinearProgressWithLabel from "./LinearProgressWithLabel";
 
 function isInvalidSrcPath(srcPath) {
     return srcPath === "";
@@ -159,19 +160,21 @@ export default function ({ show }) {
                     {lastJsonMessage.errMsg}
                 </Alert>}
             {lastJsonMessage?.data?.totalSize &&
-            <Alert variant="outlined" sx={{ width: "max-content" }} severity={lastJsonMessage.finished?"success":"info"}>
-                <Typography>进度：{humanize.filesize(lastJsonMessage.data.size)}/{humanize.filesize(lastJsonMessage.data.totalSize)}</Typography>
-                <Typography>文件：{lastJsonMessage.data.fileCount}/{lastJsonMessage.data.totalFileCount}</Typography>
-                <Typography>目录：{lastJsonMessage.data.dirCount}/{lastJsonMessage.data.totalDirCount}</Typography>
-                <Typography>上传列表：</Typography>
-                {lastJsonMessage.data.processes.map((process, i) => 
-                    process.filePath ? <Typography key={i}>{i+1}： {StatusList[process.status]} {humanize.filesize(process.size)} {process.filePath}</Typography>
-                    : <Typography key={i}>{i+1}：空闲</Typography>
-                )}
-            </Alert>}
+                <Alert variant="outlined" sx={{ width: "max-content" }} severity={lastJsonMessage.finished ? "success" : "info"}>
+                    {lastJsonMessage.data.pushedAllToStack && <LinearProgressWithLabel variant="determinate" value={lastJsonMessage.data.size / lastJsonMessage.data.totalSize * 100} />}
+                    <Typography>进度：{humanize.filesize(lastJsonMessage.data.size)}/{humanize.filesize(lastJsonMessage.data.totalSize)}</Typography>
+                    <Typography>文件：{lastJsonMessage.data.fileCount}/{lastJsonMessage.data.totalFileCount}</Typography>
+                    <Typography>目录：{lastJsonMessage.data.dirCount}/{lastJsonMessage.data.totalDirCount}</Typography>
+                    <Typography>上传列表：</Typography>
+                    {lastJsonMessage.data.processes.map((process, i) =>
+                        process.filePath ? <Typography key={i}>{i + 1}： {StatusList[process.status]} {humanize.filesize(process.size)} {process.filePath}</Typography>
+                            : <Typography key={i}>{i + 1}：空闲</Typography>
+                    )}
+                </Alert>}
             {errs.map(err =>
                 <Alert variant="outlined" sx={{ width: "max-content" }} severity="error" key={err.filePath}>
-                    {err.filePath}: {err.errMsg}
+                    <Typography>{err.filePath}</Typography>
+                    <Typography>{err.errMsg}</Typography>
                 </Alert>
             )}
         </Stack>

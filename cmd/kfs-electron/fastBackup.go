@@ -19,17 +19,18 @@ import (
 )
 
 type WebUploadProcess struct {
-	Size           uint64
-	FileCount      uint64
-	DirCount       uint64
-	TotalSize      uint64
-	TotalFileCount uint64
-	TotalDirCount  uint64
-	Processes      []Process
-	ctx            context.Context
-	Done           chan struct{}
-	req            WsReq
-	onResp         func(finished bool, data interface{}) error
+	Size             uint64
+	FileCount        uint64
+	DirCount         uint64
+	TotalSize        uint64
+	TotalFileCount   uint64
+	TotalDirCount    uint64
+	Processes        []Process
+	PushedAllToStack bool
+	ctx              context.Context
+	Done             chan struct{}
+	req              WsReq
+	onResp           func(finished bool, data interface{}) error
 }
 
 type Process struct {
@@ -40,13 +41,14 @@ type Process struct {
 }
 
 type WebBackupResp struct {
-	Size           uint64    `json:"size"`
-	FileCount      uint64    `json:"fileCount"`
-	DirCount       uint64    `json:"dirCount"`
-	TotalSize      uint64    `json:"totalSize"`
-	TotalFileCount uint64    `json:"totalFileCount"`
-	TotalDirCount  uint64    `json:"totalDirCount"`
-	Processes      []Process `json:"processes"`
+	Size             uint64    `json:"size"`
+	FileCount        uint64    `json:"fileCount"`
+	DirCount         uint64    `json:"dirCount"`
+	TotalSize        uint64    `json:"totalSize"`
+	TotalFileCount   uint64    `json:"totalFileCount"`
+	TotalDirCount    uint64    `json:"totalDirCount"`
+	Processes        []Process `json:"processes"`
+	PushedAllToStack bool      `json:"pushedAllToStack"`
 
 	FilePath string     `json:"filePath"`
 	ErrMsg   string     `json:"errMsg"`
@@ -89,7 +91,7 @@ func (w *WebUploadProcess) OnFileError(index int, filePath string, info os.FileI
 		FilePath: filePath, ErrMsg: err.Error(),
 		Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
-		Processes: w.Processes[:],
+		Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack,
 	})
 	if e != nil {
 		fmt.Printf("%+v %+v\n", w.req, e)
@@ -113,13 +115,17 @@ func (w *WebUploadProcess) EndFile(index int, filePath string, info os.FileInfo,
 	w.Processes[index].updated.Store(true)
 }
 
-func (w *WebUploadProcess) EnqueueFile(info os.FileInfo) {
+func (w *WebUploadProcess) PushFile(info os.FileInfo) {
 	if info.IsDir() {
 		w.TotalDirCount++
 	} else {
 		w.TotalFileCount++
 		w.TotalSize += uint64(info.Size())
 	}
+}
+
+func (w *WebUploadProcess) HasPushedAllToStack() {
+	w.PushedAllToStack = true
 }
 
 func (w *WebUploadProcess) Verbose() bool {
@@ -164,7 +170,7 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 		Branch: branch,
 		Size:   w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
-		Processes: w.Processes[:],
+		Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack,
 	})
 }
 
@@ -198,7 +204,7 @@ func (w *WebUploadProcess) RespIfUpdated(i int) {
 		e := w.onResp(false, WebBackupResp{
 			Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 			TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
-			Processes: w.Processes[:],
+			Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack,
 		})
 		if e != nil {
 			fmt.Printf("%+v %+v\n", w.req, e)

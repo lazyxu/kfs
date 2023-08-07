@@ -38,7 +38,8 @@ type UploadProcess interface {
 	StartFile(index int, filePath string, info os.FileInfo)
 	OnFileError(index int, filePath string, info os.FileInfo, err error)
 	EndFile(index int, filePath string, info os.FileInfo, exist bool)
-	EnqueueFile(info os.FileInfo)
+	PushFile(info os.FileInfo)
+	HasPushedAllToStack()
 }
 
 type EmptyUploadProcess struct {
@@ -71,5 +72,8 @@ func (h *EmptyUploadProcess) OnFileError(index int, filePath string, info os.Fil
 func (h *EmptyUploadProcess) EndFile(index int, filePath string, info os.FileInfo, exist bool) {
 }
 
-func (h *EmptyUploadProcess) EnqueueFile(info os.FileInfo) {
+func (h *EmptyUploadProcess) PushFile(info os.FileInfo) {
+}
+
+func (h *EmptyUploadProcess) HasPushedAllToStack() {
 }
