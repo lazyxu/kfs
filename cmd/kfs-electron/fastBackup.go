@@ -27,10 +27,12 @@ type WebUploadProcess struct {
 	TotalDirCount    uint64
 	Processes        []Process
 	PushedAllToStack bool
-	ctx              context.Context
-	Done             chan struct{}
-	req              WsReq
-	onResp           func(finished bool, data interface{}) error
+
+	StartTime time.Time
+	ctx       context.Context
+	Done      chan struct{}
+	req       WsReq
+	onResp    func(finished bool, data interface{}) error
 }
 
 type Process struct {
@@ -49,6 +51,7 @@ type WebBackupResp struct {
 	TotalDirCount    uint64    `json:"totalDirCount"`
 	Processes        []Process `json:"processes"`
 	PushedAllToStack bool      `json:"pushedAllToStack"`
+	Cost             int64     `json:"cost"`
 
 	FilePath string     `json:"filePath"`
 	ErrMsg   string     `json:"errMsg"`
@@ -122,6 +125,7 @@ func (w *WebUploadProcess) PushFile(info os.FileInfo) {
 		w.TotalFileCount++
 		w.TotalSize += uint64(info.Size())
 	}
+	w.Processes[0].updated.Store(true)
 }
 
 func (w *WebUploadProcess) HasPushedAllToStack() {
@@ -170,7 +174,7 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 		Branch: branch,
 		Size:   w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
-		Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack,
+		Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack, Cost: time.Now().Sub(w.StartTime).Milliseconds(),
 	})
 }
 
@@ -181,16 +185,21 @@ func NewWebUploadProcess(ctx context.Context, req WsReq, concurrent int, onResp 
 		onResp:    onResp,
 		Processes: make([]Process, concurrent),
 		Done:      make(chan struct{}),
+		StartTime: time.Now(),
 	}
 	for i := 0; i < concurrent; i++ {
 		go func(i int) {
 			for {
 				select {
 				case <-w.Done:
+					w.Done <- struct{}{}
+					w.Resp(i)
 					return
 				case <-ctx.Done():
+					w.Resp(i)
+					return
 				default:
-					w.RespIfUpdated(i)
+					w.Resp(i)
 				}
 				time.Sleep(time.Millisecond * 500)
 			}
@@ -204,10 +213,22 @@ func (w *WebUploadProcess) RespIfUpdated(i int) {
 		e := w.onResp(false, WebBackupResp{
 			Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 			TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
-			Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack,
+			Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack, Cost: time.Now().Sub(w.StartTime).Milliseconds(),
 		})
 		if e != nil {
 			fmt.Printf("%+v %+v\n", w.req, e)
 		}
+	}
+}
+
+func (w *WebUploadProcess) Resp(i int) {
+	w.Processes[i].updated.Store(false)
+	e := w.onResp(false, WebBackupResp{
+		Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
+		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
+		Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack, Cost: time.Now().Sub(w.StartTime).Milliseconds(),
+	})
+	if e != nil {
+		fmt.Printf("%+v %+v\n", w.req, e)
 	}
 }

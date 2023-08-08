@@ -20,6 +20,8 @@ import humanize from "humanize";
 import { getBranchApi } from "../../api/branch";
 import AsyncSelect from "components/AsyncSelect";
 import LinearProgressWithLabel from "./LinearProgressWithLabel";
+import humanizeDuration from "humanize-duration";
+import './index.scss';
 
 function isInvalidSrcPath(srcPath) {
     return srcPath === "";
@@ -156,13 +158,17 @@ export default function ({ show }) {
                     快速备份
                 </Button>}
             {lastJsonMessage?.errMsg &&
-                <Alert variant="outlined" sx={{ width: "max-content" }} severity="error">
+                <Alert variant="outlined" classes={{ message: "width100" }} severity="error">
                     {lastJsonMessage.errMsg}
                 </Alert>}
-            {lastJsonMessage?.data?.totalSize &&
-                <Alert variant="outlined" sx={{ width: "max-content" }} severity={lastJsonMessage.finished ? "success" : "info"}>
-                    {lastJsonMessage.data.pushedAllToStack && <LinearProgressWithLabel variant="determinate" value={lastJsonMessage.data.size / lastJsonMessage.data.totalSize * 100} />}
+            {lastJsonMessage?.data?.totalSize ?
+                <Alert variant="outlined" classes={{ message: "width100" }} severity={lastJsonMessage.finished ? "success" : "info"}>
+                    {lastJsonMessage.data.pushedAllToStack &&
+                        <LinearProgressWithLabel variant="determinate" value={lastJsonMessage.data.size / lastJsonMessage.data.totalSize * 100} />
+                    }
                     <Typography>进度：{humanize.filesize(lastJsonMessage.data.size)}/{humanize.filesize(lastJsonMessage.data.totalSize)}</Typography>
+                    <Typography>耗时：{humanizeDuration(Math.floor(lastJsonMessage.data.cost / 1000) * 1000)}</Typography>
+                    <Typography>预计剩余时间：{humanizeDuration(Math.floor(lastJsonMessage.data.totalSize === lastJsonMessage.data.size ? 0 : lastJsonMessage.data.cost / lastJsonMessage.data.size * (lastJsonMessage.data.totalSize - lastJsonMessage.data.size) / 1000) * 1000)}</Typography>
                     <Typography>文件：{lastJsonMessage.data.fileCount}/{lastJsonMessage.data.totalFileCount}</Typography>
                     <Typography>目录：{lastJsonMessage.data.dirCount}/{lastJsonMessage.data.totalDirCount}</Typography>
                     <Typography>上传列表：</Typography>
@@ -170,9 +176,9 @@ export default function ({ show }) {
                         process.filePath ? <Typography key={i}>{i + 1}： {StatusList[process.status]} {humanize.filesize(process.size)} {process.filePath}</Typography>
                             : <Typography key={i}>{i + 1}：空闲</Typography>
                     )}
-                </Alert>}
+                </Alert>:<Box></Box>}
             {errs.map(err =>
-                <Alert variant="outlined" sx={{ width: "max-content" }} severity="error" key={err.filePath}>
+                <Alert variant="outlined" classes={{ message: "width100" }} severity="error" key={err.filePath}>
                     <Typography>{err.filePath}</Typography>
                     <Typography>{err.errMsg}</Typography>
                 </Alert>

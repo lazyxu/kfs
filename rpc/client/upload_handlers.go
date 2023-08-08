@@ -74,7 +74,9 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 	}()
 	fileResp.Info = info
 	if info.Mode().IsRegular() {
-		file, info, err, notExist := h.uploadFile(ctx, index, filePath)
+		var file dao.File
+		var notExist bool
+		file, info, err, notExist = h.uploadFile(ctx, index, filePath)
 		if err != nil {
 			return
 		}
