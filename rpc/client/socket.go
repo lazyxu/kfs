@@ -19,15 +19,19 @@ import (
 )
 
 func (h *uploadHandlers) copyFile(conn net.Conn, f *os.File, size int64) error {
+	_, err := f.Seek(0, io.SeekStart)
+	if err != nil {
+		return err
+	}
 	if h.encoder == "lz4" {
 		w := lz4.NewWriter(conn)
-		_, err := io.CopyN(w, f, size)
+		_, err = io.CopyN(w, f, size)
 		if err != nil {
 			return err
 		}
 		defer w.Flush()
 	} else {
-		_, err := io.CopyN(conn, f, size)
+		_, err = io.CopyN(conn, f, size)
 		if err != nil {
 			return err
 		}
