@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"embed"
 	"errors"
 	"fmt"
@@ -129,10 +128,6 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		defer kfsCore.Close()
-		_, err = kfsCore.Checkout(context.Background(), "master")
-		if err != nil {
-			return
-		}
 
 		go func() {
 			// socket

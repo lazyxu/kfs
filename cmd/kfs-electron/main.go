@@ -219,9 +219,8 @@ func (p *WsProcessor) process(ctx context.Context, db *DB) {
 			dstPath := data["dstPath"].(string)
 			concurrent := int(data["concurrent"].(float64))
 			encoder := data["encoder"].(string)
-			verbose := data["verbose"].(bool)
 			go func() {
-				err := p.fastBackup(newCtx, req, srcPath, serverAddr, branchName, dstPath, concurrent, encoder, verbose)
+				err := p.fastBackup(newCtx, req, srcPath, serverAddr, branchName, dstPath, concurrent, encoder)
 				if err != nil {
 					fmt.Printf("%+v %+v\n", req, err)
 				}

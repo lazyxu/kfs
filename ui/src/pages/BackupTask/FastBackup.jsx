@@ -54,7 +54,6 @@ export default function ({ show }) {
     const [branchName, setBranchName] = useState('');
     const [concurrent, setConcurrent] = useState(2);
     const [encoder, setEncoder] = useState("none");
-    const [verbose, setVerbose] = useState(true);
     const [srcPath, setSrcPath] = useState('');
     const [dstPath, setDstPath] = useState('');
     const [errs, setErrs] = useState([]);
@@ -123,12 +122,6 @@ export default function ({ show }) {
                     )}
                 </Select>
             </FormControl>
-            <FormControlLabel label="显示上传进度" control={
-                <Switch
-                    checked={verbose}
-                    onChange={e => setVerbose(e.target.checked)}
-                />
-            } />
             {!finished ?
                 <Button variant="outlined" sx={{ width: "10em" }}
                     onClick={e => {
@@ -147,7 +140,7 @@ export default function ({ show }) {
                         console.log("fastBackup", newId, srcPath);
                         sendJsonMessage({
                             type: "fastBackup", id: newId, data: {
-                                srcPath, verbose, concurrent, encoder,
+                                srcPath, concurrent, encoder,
                                 serverAddr: sysConfig.webServer,
                                 branchName,
                                 dstPath
