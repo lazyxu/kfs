@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
@@ -30,6 +31,7 @@ func (h *uploadHandlers) StartWorker(ctx context.Context, index int) {
 		os.Exit(1)
 	}
 	h.conns[index] = conn
+	fmt.Printf("StartWorker: %+v\n", conn)
 	go func() {
 		<-ctx.Done()
 		if h.files[index] != nil {
@@ -105,7 +107,7 @@ func (h *uploadHandlers) FileHandler(ctx context.Context, index int, filePath st
 		}
 
 		var resp pb.UploadResp
-		err = ReqResp(h.socketServerAddr, rpcutil.CommandUploadDirItem, &pb.UploadReq{
+		_, err = ReqResp(h.socketServerAddr, rpcutil.CommandUploadDirItem, &pb.UploadReq{
 			Dir: &pb.UploadReqDir{DirItem: dirItems},
 		}, &resp)
 		if err != nil {

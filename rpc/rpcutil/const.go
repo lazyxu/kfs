@@ -14,6 +14,9 @@ const (
 	CommandUploadDirItem
 	CommandTouch
 
+	CommandUploadV2File
+	CommandUploadV2Dir
+
 	CommandDownload
 
 	CommandCat
@@ -27,5 +30,6 @@ type Status = int8
 
 const (
 	EOK Status = iota
-	EInvalid
+	ENotExist
+	EInvalid = -1
 )

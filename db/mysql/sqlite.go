@@ -45,7 +45,7 @@ func open(dataSourceName string) (*DB, error) {
 
 func (db *DB) Remove() error {
 	_, err := db.db.Exec(`
-	DROP TABLE IF EXISTS _file, _dir, _dirItem, _commit, _branch;
+	DROP TABLE IF EXISTS _file, _dir, _dirItem, _commit, _branch, _driver, _files;
 	`)
 	return err
 }
@@ -54,7 +54,7 @@ func (db *DB) Create() error {
 	_, err := db.db.Exec(`
 	CREATE TABLE IF NOT EXISTS _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
-		size BIGINT  NOT NULL
+		size BIGINT   NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS _dir (
@@ -76,12 +76,12 @@ func (db *DB) Create() error {
 		itemModifyTime BIGINT    NOT NULL,
 		itemChangeTime BIGINT    NOT NULL,
 		itemAccessTime BIGINT    NOT NULL,
-		PRIMARY KEY(Hash, itemName)
+		PRIMARY KEY (Hash, itemName)
 	);
 
 	CREATE TABLE IF NOT EXISTS _commit (
 		id          BIGINT    NOT NULL PRIMARY KEY AUTO_INCREMENT,
-		createTime  BIGINT NOT NULL,
+		createTime  BIGINT    NOT NULL,
 		Hash        CHAR(64)  NOT NULL,
 		lastId      BIGINT    NOT NULL
 	);
@@ -93,6 +93,35 @@ func (db *DB) Create() error {
 		size        BIGINT       NOT NULL,
 		count       BIGINT       NOT NULL,
 		FOREIGN KEY (commitId)   REFERENCES _commit(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS _branch (
+		name        VARCHAR(256) NOT NULL PRIMARY KEY,
+		description VARCHAR(256) NOT NULL DEFAULT "",
+		commitId    BIGINT       NOT NULL,
+		size        BIGINT       NOT NULL,
+		count       BIGINT       NOT NULL,
+		FOREIGN KEY (commitId)   REFERENCES _commit(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver (
+		name        VARCHAR(256) NOT NULL PRIMARY KEY,
+		description VARCHAR(256) NOT NULL DEFAULT ""
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver_file (
+		driver_name VARCHAR(256)   NOT NULL,
+		filepath    VARCHAR(65536) NOT NULL,
+	    version     BIGINT         NOT NULL,
+		hash        CHAR(64)       NOT NULL,
+		mode        BIGINT         NOT NULL,
+		size        BIGINT         NOT NULL,
+		createTime  BIGINT         NOT NULL,
+		modifyTime  BIGINT         NOT NULL,
+		changeTime  BIGINT         NOT NULL,
+		accessTime  BIGINT         NOT NULL,
+		PRIMARY KEY (driver_name, filepath, version),
+		FOREIGN KEY (driver_name)    REFERENCES _driver(name)
 	);
 	`)
 	return err

@@ -34,7 +34,7 @@ func (fs *RpcFs) Cat(ctx context.Context, branchName string, filePath string, fn
 	if err != nil {
 		return
 	}
-	if code != rpcutil.EOK {
+	if code == rpcutil.EInvalid {
 		err = errors.New(errMsg)
 		return
 	}
@@ -51,7 +51,7 @@ func (fs *RpcFs) Cat(ctx context.Context, branchName string, filePath string, fn
 	if err != nil {
 		return
 	}
-	if code != rpcutil.EOK {
+	if code == rpcutil.EInvalid {
 		err = errors.New(errMsg)
 		return
 	}

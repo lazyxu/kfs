@@ -88,6 +88,7 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 
 	defer func() {
 		if err != nil {
+			fmt.Printf("reconnect %d: %s\n", index, err.Error())
 			h.reconnect(ctx, index)
 			return
 		}
@@ -163,7 +164,7 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	if h.verbose {
 		p.Label = fmt.Sprintf("code=%d", code)
 		h.uploadProcess.Show(p)
-		if code != rpcutil.EOK {
+		if code == rpcutil.EInvalid {
 			p.Err = errors.New(errMsg)
 			h.uploadProcess.Show(p)
 		}

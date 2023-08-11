@@ -41,7 +41,7 @@ func (fs *RpcFs) Upload(ctx context.Context, branchName string, dstPath string, 
 	modifyTime := uint64(info.ModTime().UnixNano())
 
 	var resp pb.UploadResp
-	err = ReqResp(fs.SocketServerAddr, rpcutil.CommandUploadDirItem, &pb.UploadReq{
+	_, err = ReqResp(fs.SocketServerAddr, rpcutil.CommandUploadDirItem, &pb.UploadReq{
 		Root: &pb.UploadReqRoot{
 			BranchName: branchName,
 			Path:       dstPath,

@@ -12,3 +12,7 @@ func FormatPath(p string) []string {
 	}
 	return retPath
 }
+
+func FormatPathV2(p string) string {
+	return p
+}

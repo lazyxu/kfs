@@ -34,20 +34,23 @@ func ReqString(socketServerAddr string, commandType rpcutil.CommandType, req str
 	if err != nil {
 		return
 	}
-	if status != rpcutil.EOK {
+	if status == rpcutil.EInvalid {
 		err = errors.New(errMsg)
 		return
 	}
 	return nil
 }
 
-func ReqResp(socketServerAddr string, commandType rpcutil.CommandType, req proto.Message, resp proto.Message) (err error) {
+func ReqResp(socketServerAddr string, commandType rpcutil.CommandType, req proto.Message, resp proto.Message) (status rpcutil.Status, err error) {
 	conn, err := net.Dial("tcp", socketServerAddr)
 	if err != nil {
 		return
 	}
 	defer conn.Close()
+	return ReqRespWithConn(conn, commandType, req, resp)
+}
 
+func ReqRespWithConn(conn net.Conn, commandType rpcutil.CommandType, req proto.Message, resp proto.Message) (status rpcutil.Status, err error) {
 	// write
 	err = rpcutil.WriteCommandType(conn, commandType)
 	if err != nil {
@@ -63,9 +66,12 @@ func ReqResp(socketServerAddr string, commandType rpcutil.CommandType, req proto
 	if err != nil {
 		return
 	}
-	if status != rpcutil.EOK {
+	if status == rpcutil.EInvalid {
 		err = errors.New(errMsg)
 		return
+	}
+	if resp == nil {
+		return status, nil
 	}
 
 	err = rpcutil.ReadProto(conn, resp)
@@ -78,11 +84,11 @@ func ReqResp(socketServerAddr string, commandType rpcutil.CommandType, req proto
 	if err != nil {
 		return
 	}
-	if status != rpcutil.EOK {
+	if status == rpcutil.EInvalid {
 		err = errors.New(errMsg)
 		return
 	}
-	return nil
+	return status, nil
 }
 
 func ReqStringResp(socketServerAddr string, commandType rpcutil.CommandType, req string, resp proto.Message) (err error) {
@@ -107,7 +113,7 @@ func ReqStringResp(socketServerAddr string, commandType rpcutil.CommandType, req
 	if err != nil {
 		return
 	}
-	if status != rpcutil.EOK {
+	if status == rpcutil.EInvalid {
 		err = errors.New(errMsg)
 		return
 	}
@@ -122,7 +128,7 @@ func ReqStringResp(socketServerAddr string, commandType rpcutil.CommandType, req
 	if err != nil {
 		return
 	}
-	if status != rpcutil.EOK {
+	if status == rpcutil.EInvalid {
 		err = errors.New(errMsg)
 		return
 	}
@@ -152,7 +158,7 @@ func ReqRespN(socketServerAddr string, commandType rpcutil.CommandType, req prot
 	if err != nil {
 		return
 	}
-	if status != rpcutil.EOK {
+	if status == rpcutil.EInvalid {
 		err = errors.New(errMsg)
 		return
 	}
@@ -183,7 +189,7 @@ func ReqRespN(socketServerAddr string, commandType rpcutil.CommandType, req prot
 	if err != nil {
 		return
 	}
-	if status != rpcutil.EOK {
+	if status == rpcutil.EInvalid {
 		err = errors.New(errMsg)
 		return
 	}

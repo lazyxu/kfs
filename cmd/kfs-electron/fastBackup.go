@@ -13,8 +13,6 @@ import (
 
 	"github.com/lazyxu/kfs/rpc/client"
 
-	"github.com/dustin/go-humanize"
-
 	"github.com/lazyxu/kfs/core"
 )
 
@@ -156,7 +154,7 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 		return p.ok(req, finished, data)
 	})
 
-	commit, branch, err := fs.Upload(ctx, branchName, dstPath, srcPath, core.UploadConfig{
+	err = fs.UploadV2(ctx, branchName, dstPath, srcPath, core.UploadConfig{
 		UploadProcess: w,
 		Encoder:       encoder,
 		Concurrent:    concurrent,
@@ -169,10 +167,9 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 	for i := 0; i < concurrent; i++ {
 		w.RespIfUpdated(i)
 	}
-	fmt.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", commit.Hash[:4], branch.CommitId, humanize.Bytes(branch.Size), branch.Count)
+	fmt.Printf("w=%+v\n", w)
 	return p.ok(req, true, WebBackupResp{
-		Branch: branch,
-		Size:   w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
+		Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
 		Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack, Cost: time.Now().Sub(w.StartTime).Milliseconds(),
 	})

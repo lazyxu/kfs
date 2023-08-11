@@ -37,6 +37,7 @@ type Database interface {
 	DirCount(ctx context.Context) (int, error)
 	DirItemCount(ctx context.Context) (int, error)
 	BranchCount(ctx context.Context) (int, error)
+	UpsertDriverFile(ctx context.Context, f DriverFile) error
 }
 
 func DatabaseNewFunc(dataSourceName string, newDB func(dataSourceName string) (Database, error)) func() (Database, error) {

@@ -154,7 +154,7 @@ export default function ({ show }) {
                 <Alert variant="outlined" classes={{ message: "width100" }} severity="error">
                     {lastJsonMessage.errMsg}
                 </Alert>}
-            {lastJsonMessage?.data?.totalSize ?
+            {lastJsonMessage?.data?.cost ?
                 <Alert variant="outlined" classes={{ message: "width100" }} severity={lastJsonMessage.finished ? "success" : "info"}>
                     {lastJsonMessage.data.pushedAllToStack &&
                         <LinearProgressWithLabel variant="determinate" value={lastJsonMessage.data.size / lastJsonMessage.data.totalSize * 100} />

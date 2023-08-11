@@ -103,6 +103,35 @@ func (db *DB) Create() error {
 		count       INTEGER       NOT NULL,
 		FOREIGN KEY (commitId)   REFERENCES _commit(id)
 	);
+
+	CREATE TABLE IF NOT EXISTS _branch (
+		name        VARCHAR(256) NOT NULL PRIMARY KEY,
+		description VARCHAR(256) NOT NULL DEFAULT "",
+		commitId    INTEGER       NOT NULL,
+		size        INTEGER       NOT NULL,
+		count       INTEGER       NOT NULL,
+		FOREIGN KEY (commitId)   REFERENCES _commit(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver (
+		name        VARCHAR(256) NOT NULL PRIMARY KEY,
+		description VARCHAR(256) NOT NULL DEFAULT ""
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver_file (
+		driver_name VARCHAR(256)   NOT NULL,
+		filepath    VARCHAR(65536) NOT NULL,
+	    version     INTEGER         NOT NULL,
+		hash        CHAR(64)       NOT NULL,
+		mode        INTEGER         NOT NULL,
+		size        INTEGER         NOT NULL,
+		createTime  INTEGER         NOT NULL,
+		modifyTime  INTEGER         NOT NULL,
+		changeTime  INTEGER         NOT NULL,
+		accessTime  INTEGER         NOT NULL,
+		PRIMARY KEY (driver_name, filepath, version),
+		FOREIGN KEY (driver_name)
+	);
 	`)
 	return err
 }

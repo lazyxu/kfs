@@ -150,3 +150,61 @@ func GetFileHashMode(ctx context.Context, conn *sql.DB, branchName string, split
 	mode = os.FileMode(m)
 	return
 }
+
+func UpsertDriverFile(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) error {
+	_, err := txOrDb.ExecContext(ctx, `
+	INSERT INTO _driver_file (
+		driver_name,
+		filepath,
+	    version,
+		hash,
+		mode,
+		size,
+		createTime,
+		modifyTime,
+		changeTime,
+		accessTime
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO UPDATE SET
+		hash=?,
+		mode=?,
+		size=?,
+		createTime=?,
+		modifyTime=?,
+		changeTime=?,
+		accessTime=?;
+	`, f.DriverName, f.FilePath, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
+		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) error {
+	_, err := txOrDb.ExecContext(ctx, `
+	INSERT INTO _driver_file (
+		driver_name,
+		filepath,
+	    version,
+		hash,
+		mode,
+		size,
+		createTime,
+		modifyTime,
+		changeTime,
+		accessTime
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE 
+		hash=?,
+		mode=?,
+		size=?,
+		createTime=?,
+		modifyTime=?,
+		changeTime=?,
+		accessTime=?;
+	`, f.DriverName, f.FilePath, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
+		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime)
+	if err != nil {
+		return err
+	}
+	return err
+}

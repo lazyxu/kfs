@@ -27,3 +27,7 @@ func (db *DB) UpsertDirItems(ctx context.Context, branchName string, splitPath [
 func (db *DB) GetFileHashMode(ctx context.Context, branchName string, splitPath []string) (hash string, mode os.FileMode, err error) {
 	return dbBase.GetFileHashMode(ctx, db.db, branchName, splitPath)
 }
+
+func (db *DB) UpsertDriverFile(ctx context.Context, f dao.DriverFile) error {
+	return dbBase.UpsertDriverFile(ctx, db.db, f)
+}
