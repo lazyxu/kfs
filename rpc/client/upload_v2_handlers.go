@@ -10,6 +10,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 
 	"github.com/lazyxu/kfs/pb"
 )
@@ -24,6 +25,8 @@ type uploadHandlersV2 struct {
 	conns            []net.Conn
 	files            []*os.File
 	driverName       string
+	srcPath          string
+	dstPath          string
 }
 
 func (h *uploadHandlersV2) StartWorker(ctx context.Context, index int) {
@@ -61,19 +64,35 @@ func (h *uploadHandlersV2) OnFileError(filePath string, index int, info os.FileI
 	h.uploadProcess.OnFileError(index, filePath, info, err)
 }
 
-func (h *uploadHandlersV2) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo) error {
+func (h *uploadHandlersV2) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo) (err error) {
 	h.uploadProcess.StartFile(index, filePath, info)
+
+	var relPath string
+	relPath, err = h.formatPath(filePath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			h.reconnect(ctx, index)
+			return
+		}
+	}()
+	conn := h.conns[index]
+
 	if info.Mode().IsRegular() {
-		exist, err := h.uploadFile(ctx, index, filePath, info)
+		var exist bool
+		exist, err = h.uploadFile(ctx, conn, index, filePath, info, relPath)
 		if err != nil {
 			return err
 		}
 		h.uploadProcess.EndFile(index, filePath, info, exist)
 	} else if info.IsDir() {
 		modifyTime := uint64(info.ModTime().UnixNano())
-		_, err := ReqResp(h.socketServerAddr, rpcutil.CommandUploadV2Dir, &pb.UploadReqV2{
+		_, err = ReqRespWithConn(conn, rpcutil.CommandUploadV2Dir, &pb.UploadReqV2{
 			DriverName: h.driverName,
-			FilePath:   filePath,
+			DstPath:    h.dstPath,
+			RelPath:    relPath,
 			Hash:       "",
 			Mode:       uint64(info.Mode()),
 			Size:       0,
@@ -123,16 +142,24 @@ func (h *uploadHandlersV2) copyFile(conn net.Conn, f *os.File, size int64) error
 	return nil
 }
 
-func (h *uploadHandlersV2) getSizeAndCalHash(f *os.File, info os.FileInfo) (string, uint64, error) {
+func (h *uploadHandlersV2) getHash(f *os.File) (string, error) {
 	hash := sha256.New()
 	_, err := io.Copy(hash, f)
 	if err != nil {
-		return "", 0, err
+		return "", err
 	}
-	return hex.EncodeToString(hash.Sum(nil)), uint64(info.Size()), nil
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func (h *uploadHandlersV2) uploadFile(ctx context.Context, index int, filePath string, info os.FileInfo) (exist bool, err error) {
+func (h *uploadHandlersV2) formatPath(filePath string) (string, error) {
+	rel, err := filepath.Rel(h.srcPath, filePath)
+	if err != nil {
+		return "", err
+	}
+	return filepath.ToSlash(rel), nil
+}
+
+func (h *uploadHandlersV2) uploadFile(ctx context.Context, conn net.Conn, index int, filePath string, info os.FileInfo, relPath string) (exist bool, err error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return
@@ -142,24 +169,19 @@ func (h *uploadHandlersV2) uploadFile(ctx context.Context, index int, filePath s
 		h.files[index] = nil
 		f.Close()
 	}()
-	hash, size, err := h.getSizeAndCalHash(f, info)
+	size := uint64(info.Size())
+	hash, err := h.getHash(f)
 	if err != nil {
 		return
 	}
 
-	defer func() {
-		if err != nil {
-			h.reconnect(ctx, index)
-			return
-		}
-	}()
-	conn := h.conns[index]
 	println(conn.RemoteAddr().String(), "hash", len(hash), hash)
 
 	modifyTime := uint64(info.ModTime().UnixNano())
 	status, err := ReqRespWithConn(conn, rpcutil.CommandUploadV2File, &pb.UploadReqV2{
 		DriverName: h.driverName,
-		FilePath:   filePath,
+		DstPath:    h.dstPath,
+		RelPath:    relPath,
 		Hash:       hash,
 		Mode:       uint64(info.Mode()),
 		Size:       size,

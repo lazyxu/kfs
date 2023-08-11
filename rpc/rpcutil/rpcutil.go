@@ -63,10 +63,6 @@ func WriteOK(w io.Writer) error {
 	return UnexpectedIfError(binary.Write(w, binary.LittleEndian, EOK))
 }
 
-func WriteStatus(w io.Writer, code Status) error {
-	return UnexpectedIfError(binary.Write(w, binary.LittleEndian, code))
-}
-
 func ReadStatus(r io.Reader) (status Status, errMsg string, err error) {
 	err = UnexpectedIfError(binary.Read(r, binary.LittleEndian, &status))
 	if err != nil {

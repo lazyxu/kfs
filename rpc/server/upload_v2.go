@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/pierrec/lz4"
 	"io"
+	"path/filepath"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
@@ -19,9 +20,11 @@ func handleUploadV2Dir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	if err != nil {
 		return err
 	}
+	filePath := filepath.Clean(filepath.Join(req.DstPath, req.RelPath))
+	// TODO: if dir not exist
 	err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
 		DriverName: req.DriverName,
-		FilePath:   core.FormatPathV2(req.FilePath),
+		FilePath:   filePath,
 		Version:    0,
 		Hash:       req.Hash,
 		Mode:       req.Mode,
@@ -32,9 +35,10 @@ func handleUploadV2Dir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		AccessTime: req.AccessTime,
 	})
 	if err != nil {
+		fmt.Println("Upload error", err.Error())
 		return err
 	}
-	fmt.Println("Upload finish", req.FilePath)
+	fmt.Println("Upload finish", req.DstPath, req.RelPath)
 
 	return nil
 }
@@ -75,9 +79,10 @@ func handleUploadV2File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		println(conn.RemoteAddr().String(), "Write", err.Error())
 		return err
 	}
+	filePath := filepath.Clean(filepath.Join(req.DstPath, req.RelPath))
 	err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
 		DriverName: req.DriverName,
-		FilePath:   core.FormatPathV2(req.FilePath),
+		FilePath:   filePath,
 		Version:    0,
 		Hash:       req.Hash,
 		Mode:       req.Mode,

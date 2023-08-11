@@ -22,6 +22,8 @@ func (fs *RpcFs) UploadV2(ctx context.Context, driverName string, dstPath string
 		conns:            make([]net.Conn, config.Concurrent),
 		files:            make([]*os.File, config.Concurrent),
 		driverName:       driverName,
+		srcPath:          srcPath,
+		dstPath:          dstPath,
 	}
 	handlers.uploadProcess = handlers.uploadProcess.New(srcPath, config.Concurrent, handlers.conns)
 	err = core.WalkByLevel(ctx, srcPath, config.Concurrent, handlers)
