@@ -7,6 +7,13 @@ import useContextMenu from "../../hox/contextMenu";
 import SvgIcon from "../Icon/SvgIcon";
 import {Box, Stack} from "@mui/material";
 
+function isDCIM(name) {
+    if (name.endsWith(".jpg")) {
+        return true;
+    }
+    return false;
+}
+
 export default function ({dirItem, filesElm}) {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
@@ -40,8 +47,10 @@ export default function ({dirItem, filesElm}) {
             })}>
                 {modeIsDir(mode) ?
                     <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit"/> :
+                    isDCIM(name) ? <img src={"http://127.0.0.1:1123/thumbnail?hash="+dirItem.hash} loading="lazy"/> :
                     <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit"/>
                 }
+                
             </Box>
             <Box kfs-attr="file" style={{width: "100%", overflowWrap: "break-word", textAlign: "center"}}>{name}</Box>
         </Stack>

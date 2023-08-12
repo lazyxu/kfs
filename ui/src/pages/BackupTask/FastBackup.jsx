@@ -55,7 +55,7 @@ export default function ({ show }) {
     const [concurrent, setConcurrent] = useState(2);
     const [encoder, setEncoder] = useState("none");
     const [srcPath, setSrcPath] = useState('');
-    const [dstPath, setDstPath] = useState('');
+    const [dstPath, setDstPath] = useState('/');
     const [errs, setErrs] = useState([]);
     const [finished, setFinished] = useState(true);
     useEffect(() => {

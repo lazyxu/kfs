@@ -1,7 +1,12 @@
 package main
 
 import (
+	"github.com/disintegration/imaging"
+	"github.com/lazyxu/kfs/dao"
+	"image"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -30,6 +35,8 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/list", apiList)
 	e.GET("/api/v1/openFile", apiOpenFile)
 	e.GET("/api/v1/downloadFile", apiDownloadFile)
+
+	e.GET("/thumbnail", apiThumbnail)
 
 	println("KFS web server listening at:", webPortString)
 	// Start server
@@ -123,4 +130,52 @@ func apiDownloadFile(c echo.Context) error {
 	}
 	defer rc.Close()
 	return c.Stream(http.StatusOK, "", rc)
+}
+func init() {
+	err := os.Mkdir("thumbnail", 0o700)
+	if os.IsExist(err) {
+		return
+	} else if err != nil {
+		panic(err)
+	}
+}
+
+func apiThumbnail(c echo.Context) error {
+	hash := c.QueryParam("hash")
+	thumbnailFilePath := filepath.Join("thumbnail", hash+".jpg")
+	f, err := os.Open(thumbnailFilePath)
+	if os.IsNotExist(err) {
+		var rc dao.SizedReadCloser
+		rc, err = kfsCore.S.ReadWithSize(hash)
+		if err != nil {
+			println(err.Error())
+			c.Logger().Error(err)
+			return err
+		}
+		defer rc.Close()
+		var img image.Image
+		img, err = imaging.Decode(rc)
+		x := img.Bounds().Size().X
+		y := img.Bounds().Size().Y
+		var xx int
+		var yy int
+		if x > y {
+			xx = 64
+			yy = int(64.0 * float64(y) / float64(x))
+		} else {
+			xx = int(64.0 * float64(x) / float64(y))
+			yy = 64
+		}
+		newImg := imaging.Resize(img, xx, yy, imaging.Lanczos)
+		err = imaging.Save(newImg, thumbnailFilePath)
+		if err != nil {
+			return err
+		}
+		f, err = os.Open(thumbnailFilePath)
+	}
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return c.Stream(http.StatusOK, "", f)
 }
