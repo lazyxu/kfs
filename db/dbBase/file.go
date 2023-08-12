@@ -23,36 +23,43 @@ func WriteFileWithTxOrDb(ctx context.Context, txOrDb TxOrDb, db DbImpl, file dao
 	return err
 }
 
-func GetFile(ctx context.Context, conn *sql.DB, branchName string, splitPath []string) (dirItem dao.DirItem, err error) {
-	tx, err := conn.Begin()
-	if err != nil {
-		return
-	}
-	defer func() {
-		err = CommitAndRollback(tx, err)
-	}()
+func GetFile(ctx context.Context, conn *sql.DB, driverName string, splitPath []string) (file dao.DriverFile, err error) {
 	if len(splitPath) == 0 {
 		err = errors.New("/: Is a directory")
 		return
 	}
-	hash, err := getBranchCommitHash(ctx, tx, branchName)
+	file.DriverName = driverName
+	file.DirPath = splitPath[:len(splitPath)-1]
+	file.Name = splitPath[len(splitPath)-1]
+	file.Version = 0
+
+	rows, err := conn.QueryContext(ctx, `
+		SELECT hash,
+		mode,
+		size,
+		createTime,
+		modifyTime,
+		changeTime,
+		accessTime
+		FROM _driver_file WHERE driver_name=? and dirpath=? and name=? and version=0
+	`, file.DriverName, arrayToJson(file.DirPath), file.Name)
 	if err != nil {
 		return
 	}
-	for i := range splitPath[:len(splitPath)-1] {
-		hash, err = getDirItemHash(ctx, tx, hash, splitPath, i)
-		if err != nil {
-			return
-		}
-	}
-	dirItem, err = getDirItem(ctx, tx, hash, splitPath, len(splitPath)-1)
-	if err != nil {
+	defer rows.Close()
+	if !rows.Next() {
+		err = errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
 		return
 	}
-	if os.FileMode(dirItem.Mode).IsDir() {
-		err = errors.New("/" + strings.Join(splitPath, "/") + ": Is a directory")
-		return
-	}
+	err = rows.Scan(
+		&file.Hash,
+		&file.Mode,
+		&file.Size,
+		&file.CreateTime,
+		&file.ModifyTime,
+		&file.ChangeTime,
+		&file.AccessTime)
+	return
 	return
 }
 

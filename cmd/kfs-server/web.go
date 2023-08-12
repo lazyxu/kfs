@@ -24,9 +24,6 @@ func webServer(webPortString string) {
 	e.StaticFS("/", echo.MustSubFS(build, "build"))
 
 	// Routes
-	e.GET("/api/v1/branches", apiBranches)
-	e.POST("/api/v1/branches", apiNewBranch)
-	e.DELETE("/api/v1/branches", apiDeleteBranch)
 	e.GET("/api/v1/drivers", apiDrivers)
 	e.POST("/api/v1/drivers", apiNewDriver)
 	e.DELETE("/api/v1/drivers", apiDeleteDriver)
@@ -50,40 +47,14 @@ func ok(c echo.Context, data interface{}) error {
 }
 
 // Handler
-func apiBranches(c echo.Context) error {
-	branches, err := kfsCore.BranchList(c.Request().Context())
-	if err != nil {
-		c.Logger().Error(err)
-		return err
-	}
-	return ok(c, branches)
-}
-
-func apiNewBranch(c echo.Context) error {
-	exist, err := kfsCore.Checkout(c.Request().Context(), c.QueryParam("name"))
-	if err != nil {
-		c.Logger().Error(err)
-		return err
-	}
-	return ok(c, exist)
-}
-
-func apiDeleteBranch(c echo.Context) error {
-	err := kfsCore.DeleteBranch(c.Request().Context(), c.QueryParam("name"))
-	if err != nil {
-		c.Logger().Error(err)
-		return err
-	}
-	return c.String(http.StatusOK, "")
-}
 
 func apiDrivers(c echo.Context) error {
-	branches, err := kfsCore.DriverList(c.Request().Context())
+	drivers, err := kfsCore.DriverList(c.Request().Context())
 	if err != nil {
 		c.Logger().Error(err)
 		return err
 	}
-	return ok(c, branches)
+	return ok(c, drivers)
 }
 
 func apiNewDriver(c echo.Context) error {
@@ -107,6 +78,9 @@ func apiDeleteDriver(c echo.Context) error {
 func apiList(c echo.Context) error {
 	driverName := c.QueryParam("driverName")
 	filePath := c.QueryParams()["filePath[]"]
+	if filePath == nil {
+		filePath = []string{}
+	}
 	files, err := kfsCore.ListV2(c.Request().Context(), driverName, filePath)
 	if err != nil {
 		println(err.Error())
@@ -117,14 +91,14 @@ func apiList(c echo.Context) error {
 }
 
 func apiOpenFile(c echo.Context) error {
-	branchName := c.QueryParam("branchName")
-	filePath := c.QueryParam("filePath")
+	driverName := c.QueryParam("driverName")
+	filePath := c.QueryParams()["filePath[]"]
 	maxContentSizeStr := c.QueryParam("maxContentSize")
 	maxContentSize, err := strconv.ParseInt(maxContentSizeStr, 10, 0)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "maxContentSize should be a number")
 	}
-	rc, tooLarge, err := kfsCore.OpenFile(c.Request().Context(), branchName, filePath, maxContentSize)
+	rc, tooLarge, err := kfsCore.OpenFile(c.Request().Context(), driverName, filePath, maxContentSize)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -139,9 +113,9 @@ func apiOpenFile(c echo.Context) error {
 }
 
 func apiDownloadFile(c echo.Context) error {
-	branchName := c.QueryParam("branchName")
-	filePath := c.QueryParam("filePath")
-	rc, _, err := kfsCore.OpenFile(c.Request().Context(), branchName, filePath, -1)
+	driverName := c.QueryParam("driverName")
+	filePath := c.QueryParams()["filePath[]"]
+	rc, _, err := kfsCore.OpenFile(c.Request().Context(), driverName, filePath, -1)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)

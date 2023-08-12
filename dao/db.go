@@ -19,7 +19,6 @@ type Database interface {
 	WriteCommit(ctx context.Context, commit *Commit) error
 
 	WriteDir(ctx context.Context, dirItems []DirItem) (dir Dir, err error)
-	GetFile(ctx context.Context, branchName string, splitPath []string) (dirItem DirItem, err error)
 	RemoveDirItem(ctx context.Context, branchName string, splitPath []string) (commit Commit, branch Branch, err error)
 
 	WriteFile(ctx context.Context, file File) error
@@ -44,6 +43,7 @@ type Database interface {
 
 	UpsertDriverFile(ctx context.Context, f DriverFile) error
 	ListV2(ctx context.Context, driverName string, filePath []string) (files []DriverFile, err error)
+	GetFile(ctx context.Context, driverName string, splitPath []string) (file DriverFile, err error)
 }
 
 func DatabaseNewFunc(dataSourceName string, newDB func(dataSourceName string) (Database, error)) func() (Database, error) {

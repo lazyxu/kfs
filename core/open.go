@@ -47,15 +47,15 @@ func (fs *KFS) Open2(ctx context.Context, branchName string, filePath string, ma
 	return
 }
 
-func (fs *KFS) OpenFile(ctx context.Context, branchName string, filePath string, maxContentSize int64) (rc dao.SizedReadCloser, tooLarge bool, err error) {
-	dirItem, err := fs.Db.GetFile(ctx, branchName, FormatPath(filePath))
+func (fs *KFS) OpenFile(ctx context.Context, driverName string, filePath []string, maxContentSize int64) (rc dao.SizedReadCloser, tooLarge bool, err error) {
+	f, err := fs.Db.GetFile(ctx, driverName, filePath)
 	if err != nil {
 		return
 	}
-	if dirItem.Size > uint64(maxContentSize) {
+	if f.Size > uint64(maxContentSize) {
 		tooLarge = true
 		return
 	}
-	rc, err = fs.S.ReadWithSize(dirItem.Hash)
+	rc, err = fs.S.ReadWithSize(f.Hash)
 	return
 }

@@ -14,10 +14,10 @@ func (db *DB) WriteFile(ctx context.Context, file dao.File) error {
 	return dbBase.WriteFileWithTxOrDb(ctx, conn, db, file)
 }
 
-func (db *DB) GetFile(ctx context.Context, branchName string, splitPath []string) (dirItem dao.DirItem, err error) {
+func (db *DB) GetFile(ctx context.Context, driverName string, splitPath []string) (file dao.DriverFile, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.GetFile(ctx, conn, branchName, splitPath)
+	return dbBase.GetFile(ctx, conn, driverName, splitPath)
 }
 
 func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []string, item dao.DirItem) (commit dao.Commit, branch dao.Branch, err error) {

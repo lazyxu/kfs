@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState, useEffect } from 'react';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -10,12 +10,12 @@ function sleep(delay = 0) {
 }
 
 export default function AsyncSelect({label, fetchOptions, onChange}) {
-  const [open, setOpen] = React.useState(false);
-  const [fetch, setFetch] = React.useState(false);
-  const [options, setOptions] = React.useState([]);
+  const [open, setOpen] = useState(false);
+  const [fetch, setFetch] = useState(false);
+  const [options, setOptions] = useState([]);
   const loading = open && !fetch;
 
-  React.useEffect(() => {
+  useEffect(() => {
     let active = true;
 
     if (!loading) {
@@ -34,7 +34,7 @@ export default function AsyncSelect({label, fetchOptions, onChange}) {
     };
   }, [loading]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) {
       setFetch(false);
       setOptions([]);
@@ -61,10 +61,10 @@ export default function AsyncSelect({label, fetchOptions, onChange}) {
           InputProps={{
             ...params.InputProps,
             endAdornment: (
-              <React.Fragment>
+              <>
                 {loading ? <CircularProgress color="inherit" size={20} /> : null}
                 {params.InputProps.endAdornment}
-              </React.Fragment>
+              </>
             ),
           }}
         />

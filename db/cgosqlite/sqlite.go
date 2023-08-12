@@ -66,53 +66,6 @@ func (db *DB) Create() error {
 		size INTEGER  NOT NULL
 	);
 
-	CREATE TABLE IF NOT EXISTS _dir (
-		hash       CHAR(64) NOT NULL PRIMARY KEY,
-		size       INTEGER  NOT NULL,
-		count      INTEGER  NOT NULL,
-		totalCount INTEGER  NOT NULL
-	);
-
-	CREATE TABLE IF NOT EXISTS _dirItem (
-		hash           CHAR(64)     NOT NULL,
-		itemHash       CHAR(64)     NOT NULL,
-		itemName       VARCHAR(256) NOT NULL,
-		itemMode       INTEGER       NOT NULL,
-		itemSize       INTEGER       NOT NULL,
-		itemCount      INTEGER       NOT NULL,
-		itemTotalCount INTEGER       NOT NULL,
-		itemCreateTime INTEGER    NOT NULL,
-		itemModifyTime INTEGER    NOT NULL,
-		itemChangeTime INTEGER    NOT NULL,
-		itemAccessTime INTEGER    NOT NULL,
-		PRIMARY KEY(Hash, itemName)
-	);
-
-	CREATE TABLE IF NOT EXISTS _commit (
-		id          INTEGER    NOT NULL PRIMARY KEY AUTOINCREMENT,
-		createTime  INTEGER NOT NULL,
-		Hash        CHAR(64)  NOT NULL,
-		lastId      INTEGER    NOT NULL
-	);
-
-	CREATE TABLE IF NOT EXISTS _branch (
-		name        VARCHAR(256) NOT NULL PRIMARY KEY,
-		description VARCHAR(256) NOT NULL DEFAULT "",
-		commitId    INTEGER       NOT NULL,
-		size        INTEGER       NOT NULL,
-		count       INTEGER       NOT NULL,
-		FOREIGN KEY (commitId)   REFERENCES _commit(id)
-	);
-
-	CREATE TABLE IF NOT EXISTS _branch (
-		name        VARCHAR(256) NOT NULL PRIMARY KEY,
-		description VARCHAR(256) NOT NULL DEFAULT "",
-		commitId    INTEGER       NOT NULL,
-		size        INTEGER       NOT NULL,
-		count       INTEGER       NOT NULL,
-		FOREIGN KEY (commitId)   REFERENCES _commit(id)
-	);
-
 	CREATE TABLE IF NOT EXISTS _driver (
 		name        VARCHAR(256) NOT NULL PRIMARY KEY,
 		description VARCHAR(256) NOT NULL DEFAULT ""

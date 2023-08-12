@@ -56,7 +56,7 @@ func ListV2(ctx context.Context, conn *sql.DB, driverName string, filePath []str
 			modifyTime,
 			changeTime,
 			accessTime
-		FROM _driver_file WHERE driver_name=? and dirpath=?
+		FROM _driver_file WHERE driver_name=? and dirpath=? and version=0
 	`, driverName, arrayToJson(filePath))
 	if err != nil {
 		return
@@ -65,6 +65,8 @@ func ListV2(ctx context.Context, conn *sql.DB, driverName string, filePath []str
 	files = make([]dao.DriverFile, 0)
 	for rows.Next() {
 		var file dao.DriverFile
+		file.DriverName = driverName
+		file.DirPath = filePath
 		err = rows.Scan(
 			&file.Name,
 			&file.Hash,

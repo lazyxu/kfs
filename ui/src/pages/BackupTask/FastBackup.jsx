@@ -55,7 +55,7 @@ export default function ({ show }) {
     const [concurrent, setConcurrent] = useState(2);
     const [encoder, setEncoder] = useState("none");
     const [srcPath, setSrcPath] = useState('');
-    const [dstPath, setDstPath] = useState('/');
+    const [dstPath, setDstPath] = useState('');
     const [errs, setErrs] = useState([]);
     const [finished, setFinished] = useState(true);
     useEffect(() => {
@@ -170,7 +170,7 @@ export default function ({ show }) {
                         process.filePath ? <Typography key={i}>{i + 1}： {StatusList[process.status]} {humanize.filesize(process.size)} {process.filePath}</Typography>
                             : <Typography key={i}>{i + 1}：空闲</Typography>
                     )}
-                </Alert>:<Box></Box>}
+                </Alert>:<Box/>}
             {errs.map(err =>
                 <Alert variant="outlined" classes={{ message: "width100" }} severity="error" key={err.filePath}>
                     <Typography>{err.filePath}</Typography>

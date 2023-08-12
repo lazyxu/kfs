@@ -6,7 +6,7 @@ export async function list(driverName, filePath) {
     console.log('web.list', driverName, filePath);
     return await httpGet("/api/v1/list", {
         driverName,
-        filePath: filePath,
+        filePath,
     });
 }
 
@@ -15,7 +15,7 @@ export async function openFile(driverName, filePath) {
     let resp = await axios.get(`http://127.0.0.1:1123/api/v1/openFile`, {
         params: {
             driverName,
-            filePath: filePath.join("/"),
+            filePath,
             maxContentSize: getSysConfig().sysConfig.maxContentSize,
         },
         transformResponse: x=>x,
@@ -29,7 +29,7 @@ export async function download(driverName, filePath) {
     let resp = await axios.get(`http://127.0.0.1:1123/api/v1/downloadFile`, {
         params: {
             driverName,
-            filePath: filePath.join("/"),
+            filePath,
         },
         responseType: "arraybuffer",
     });
