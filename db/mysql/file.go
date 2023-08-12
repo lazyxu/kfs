@@ -31,3 +31,7 @@ func (db *DB) GetFileHashMode(ctx context.Context, branchName string, splitPath 
 func (db *DB) UpsertDriverFile(ctx context.Context, f dao.DriverFile) error {
 	return dbBase.UpsertDriverFile(ctx, db.db, f)
 }
+
+func (db *DB) ListV2(ctx context.Context, driverName string, filePath []string) (files []dao.DriverFile, err error) {
+	return dbBase.ListV2(ctx, db.db, driverName, filePath)
+}

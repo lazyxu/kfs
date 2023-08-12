@@ -27,6 +27,9 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/branches", apiBranches)
 	e.POST("/api/v1/branches", apiNewBranch)
 	e.DELETE("/api/v1/branches", apiDeleteBranch)
+	e.GET("/api/v1/drivers", apiDrivers)
+	e.POST("/api/v1/drivers", apiNewDriver)
+	e.DELETE("/api/v1/drivers", apiDeleteDriver)
 	e.GET("/api/v1/list", apiList)
 	e.GET("/api/v1/openFile", apiOpenFile)
 	e.GET("/api/v1/downloadFile", apiDownloadFile)
@@ -74,16 +77,43 @@ func apiDeleteBranch(c echo.Context) error {
 	return c.String(http.StatusOK, "")
 }
 
+func apiDrivers(c echo.Context) error {
+	branches, err := kfsCore.DriverList(c.Request().Context())
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, branches)
+}
+
+func apiNewDriver(c echo.Context) error {
+	exist, err := kfsCore.NewDriver(c.Request().Context(), c.QueryParam("name"), c.QueryParam("description"))
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, exist)
+}
+
+func apiDeleteDriver(c echo.Context) error {
+	err := kfsCore.DeleteDriver(c.Request().Context(), c.QueryParam("name"))
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return c.String(http.StatusOK, "")
+}
+
 func apiList(c echo.Context) error {
-	branchName := c.QueryParam("branchName")
-	filePath := c.QueryParam("filePath")
-	dirItems, err := kfsCore.List(c.Request().Context(), branchName, filePath)
+	driverName := c.QueryParam("driverName")
+	filePath := c.QueryParams()["filePath[]"]
+	files, err := kfsCore.ListV2(c.Request().Context(), driverName, filePath)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
 		return err
 	}
-	return ok(c, dirItems)
+	return ok(c, files)
 }
 
 func apiOpenFile(c echo.Context) error {

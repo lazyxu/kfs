@@ -3,6 +3,7 @@ package dbBase
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"github.com/lazyxu/kfs/dao"
 	"os"
@@ -151,11 +152,23 @@ func GetFileHashMode(ctx context.Context, conn *sql.DB, branchName string, split
 	return
 }
 
+func arrayToJson(arr []string) []byte {
+	if arr == nil {
+		arr = []string{}
+	}
+	data, err := json.Marshal(arr)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
 func UpsertDriverFile(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _driver_file (
 		driver_name,
-		filepath,
+		dirpath,
+		name,
 	    version,
 		hash,
 		mode,
@@ -164,7 +177,7 @@ func UpsertDriverFile(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) erro
 		modifyTime,
 		changeTime,
 		accessTime
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO UPDATE SET
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO UPDATE SET
 		hash=?,
 		mode=?,
 		size=?,
@@ -172,7 +185,7 @@ func UpsertDriverFile(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) erro
 		modifyTime=?,
 		changeTime=?,
 		accessTime=?;
-	`, f.DriverName, f.FilePath, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
+	`, f.DriverName, arrayToJson(f.DirPath), f.Name, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
 		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime)
 	if err != nil {
 		return err
@@ -184,7 +197,8 @@ func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile)
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _driver_file (
 		driver_name,
-		filepath,
+		dirpath,
+		name,
 	    version,
 		hash,
 		mode,
@@ -193,7 +207,7 @@ func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile)
 		modifyTime,
 		changeTime,
 		accessTime
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE 
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE 
 		hash=?,
 		mode=?,
 		size=?,
@@ -201,7 +215,7 @@ func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile)
 		modifyTime=?,
 		changeTime=?,
 		accessTime=?;
-	`, f.DriverName, f.FilePath, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
+	`, f.DriverName, f.DirPath, f.Name, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
 		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime)
 	if err != nil {
 		return err

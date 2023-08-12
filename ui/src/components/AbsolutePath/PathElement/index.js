@@ -2,7 +2,7 @@ import useResourceManager from 'hox/resourceManager';
 import {list, openFile} from "api/fs";
 import {Link, Stack} from "@mui/material";
 import SvgIcon from "../../Icon/SvgIcon";
-import {listBranch} from "api/branch";
+import {listDriver} from "api/driver";
 
 export default ({type, name, icon, filePath}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -10,12 +10,12 @@ export default ({type, name, icon, filePath}) => {
         <Link color="inherit" underline="hover" onClick={(() => {
             if (filePath) {
                 if (type === "file") {
-                    openFile(setResourceManager, resourceManager.branchName, filePath, resourceManager.file);
+                    openFile(setResourceManager, resourceManager.driverName, filePath, resourceManager.file);
                 } else {
-                    list(setResourceManager, resourceManager.branchName, filePath);
+                    list(setResourceManager, resourceManager.driverName, filePath);
                 }
             } else {
-                listBranch(setResourceManager);
+                listDriver(setResourceManager);
             }
         })}>
             <Stack direction="row"

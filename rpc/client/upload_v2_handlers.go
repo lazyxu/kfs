@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/lazyxu/kfs/pb"
 )
@@ -67,8 +68,9 @@ func (h *uploadHandlersV2) OnFileError(filePath string, index int, info os.FileI
 func (h *uploadHandlersV2) FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo) (err error) {
 	h.uploadProcess.StartFile(index, filePath, info)
 
-	var relPath string
-	relPath, err = h.formatPath(filePath)
+	var dirPath []string
+	var name string
+	dirPath, name, err = h.formatPath(filePath)
 	if err != nil {
 		return err
 	}
@@ -82,17 +84,22 @@ func (h *uploadHandlersV2) FileHandler(ctx context.Context, index int, filePath 
 
 	if info.Mode().IsRegular() {
 		var exist bool
-		exist, err = h.uploadFile(ctx, conn, index, filePath, info, relPath)
+		exist, err = h.uploadFile(ctx, conn, index, filePath, info, dirPath, name)
 		if err != nil {
 			return err
 		}
 		h.uploadProcess.EndFile(index, filePath, info, exist)
 	} else if info.IsDir() {
+		println(conn.RemoteAddr().String(), "uploadDir", filePath)
+		if len(dirPath) == 0 && len(name) == 0 {
+			h.uploadProcess.EndFile(index, filePath, info, false)
+			return nil
+		}
 		modifyTime := uint64(info.ModTime().UnixNano())
 		_, err = ReqRespWithConn(conn, rpcutil.CommandUploadV2Dir, &pb.UploadReqV2{
 			DriverName: h.driverName,
-			DstPath:    h.dstPath,
-			RelPath:    relPath,
+			DirPath:    dirPath,
+			Name:       name,
 			Hash:       "",
 			Mode:       uint64(info.Mode()),
 			Size:       0,
@@ -151,15 +158,25 @@ func (h *uploadHandlersV2) getHash(f *os.File) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func (h *uploadHandlersV2) formatPath(filePath string) (string, error) {
+func (h *uploadHandlersV2) formatPath(filePath string) ([]string, string, error) {
 	rel, err := filepath.Rel(h.srcPath, filePath)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
-	return filepath.ToSlash(rel), nil
+	pathList := strings.Split(filepath.Join(h.dstPath, rel), string(os.PathSeparator))
+	newPathList := []string{}
+	for _, path := range pathList {
+		if path != "" {
+			newPathList = append(newPathList, path)
+		}
+	}
+	if len(newPathList) == 0 {
+		return newPathList, "", nil
+	}
+	return newPathList[0 : len(newPathList)-1], newPathList[len(newPathList)-1], nil
 }
 
-func (h *uploadHandlersV2) uploadFile(ctx context.Context, conn net.Conn, index int, filePath string, info os.FileInfo, relPath string) (exist bool, err error) {
+func (h *uploadHandlersV2) uploadFile(ctx context.Context, conn net.Conn, index int, filePath string, info os.FileInfo, dirPath []string, name string) (exist bool, err error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return
@@ -175,13 +192,13 @@ func (h *uploadHandlersV2) uploadFile(ctx context.Context, conn net.Conn, index 
 		return
 	}
 
-	println(conn.RemoteAddr().String(), "hash", len(hash), hash)
+	println(conn.RemoteAddr().String(), "uploadFile", filePath, hash)
 
 	modifyTime := uint64(info.ModTime().UnixNano())
 	status, err := ReqRespWithConn(conn, rpcutil.CommandUploadV2File, &pb.UploadReqV2{
 		DriverName: h.driverName,
-		DstPath:    h.dstPath,
-		RelPath:    relPath,
+		DirPath:    dirPath,
+		Name:       name,
 		Hash:       hash,
 		Mode:       uint64(info.Mode()),
 		Size:       size,

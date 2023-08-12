@@ -9,7 +9,7 @@ export default () => {
     const [dialog, setDialog] = useDialog();
     let [name, setName] = useState("");
     const [resourceManager, setResourceManager] = useResourceManager();
-    let {filePath, branchName} = resourceManager;
+    let {filePath, driverName} = resourceManager;
     const inputRef = useRef(null);
     // useEffect(() => {
     //     console.log("inputRef.current", inputRef.current)
@@ -57,7 +57,7 @@ export default () => {
                 }}>取消</Button>
                 <Button onClick={() => {
                     setDialog(null);
-                    newDir(setResourceManager, branchName, filePath, name);
+                    newDir(setResourceManager, driverName, filePath, name);
                 }}>确定</Button>
             </DialogActions>
         </Dialog>

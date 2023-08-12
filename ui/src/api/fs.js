@@ -6,38 +6,38 @@ function getFsApi() {
     return getSysConfig().sysConfig.api === "web" ? webApi : mockApi;
 }
 
-export async function list(setResourceManager, branchName, filePath) {
-    console.log('api.list', branchName, filePath);
-    let dirItems = await getFsApi().list(branchName, filePath);
+export async function list(setResourceManager, driverName, filePath) {
+    console.log('api.list', driverName, filePath);
+    let dirItems = await getFsApi().list(driverName, filePath);
     setResourceManager(prev => {
-        return {...prev, branchName, filePath, dirItems, file: null, branches: null};
+        return {...prev, driverName, filePath, dirItems, file: null, drivers: null};
     });
 }
 
-export async function openFile(setResourceManager, branchName, filePath, dirItem) {
-    console.log('api.openFile', branchName, filePath);
-    let {content, tooLarge} = await getFsApi().openFile(branchName, filePath);
+export async function openFile(setResourceManager, driverName, filePath, dirItem) {
+    console.log('api.openFile', driverName, filePath);
+    let {content, tooLarge} = await getFsApi().openFile(driverName, filePath);
     dirItem.content = content;
     dirItem.tooLarge = tooLarge;
     setResourceManager(prev => {
         return {
-            ...prev, branchName, filePath,
-            dirItems: null, branches: null,
+            ...prev, driverName, filePath,
+            dirItems: null, drivers: null,
             file: dirItem,
         };
     });
 }
 
-export async function newFile(setResourceManager, branchName, dirPath, fileName) {
-    console.log('api.newFile', branchName, dirPath, fileName);
-    await getFsApi().newFile(branchName, dirPath, fileName);
-    await list(setResourceManager, branchName, dirPath)
+export async function newFile(setResourceManager, driverName, dirPath, fileName) {
+    console.log('api.newFile', driverName, dirPath, fileName);
+    await getFsApi().newFile(driverName, dirPath, fileName);
+    await list(setResourceManager, driverName, dirPath)
 }
 
-export async function newDir(setResourceManager, branchName, dirPath, fileName) {
-    console.log('api.newDir', branchName, dirPath, fileName);
-    await getFsApi().newDir(branchName, dirPath, fileName);
-    await list(setResourceManager, branchName, dirPath)
+export async function newDir(setResourceManager, driverName, dirPath, fileName) {
+    console.log('api.newDir', driverName, dirPath, fileName);
+    await getFsApi().newDir(driverName, dirPath, fileName);
+    await list(setResourceManager, driverName, dirPath)
 }
 
 function downloadURI(uri, name) {
@@ -54,8 +54,8 @@ function downloader(data, name) {
     window.URL.revokeObjectURL(url);
 }
 
-export async function download(branchName, filePath) {
-    console.log('api.download', branchName, filePath);
-    let data = await getFsApi().download(branchName, filePath);
+export async function download(driverName, filePath) {
+    console.log('api.download', driverName, filePath);
+    let data = await getFsApi().download(driverName, filePath);
     downloader(data, filePath[filePath.length - 1]);
 }

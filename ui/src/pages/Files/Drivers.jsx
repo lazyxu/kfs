@@ -1,44 +1,44 @@
 import {useRef} from 'react';
 import AbsolutePath from "components/AbsolutePath";
 import useResourceManager from 'hox/resourceManager';
-import Branch from "./Branch";
+import Driver from "./Driver";
 import {Grid} from "@mui/material";
-import BranchContextMenu from "../../components/ContextMenu/BranchContextMenu";
-import BranchesContextMenu from "../../components/ContextMenu/BranchesContextMenu";
+import DriverContextMenu from "../../components/ContextMenu/DriverContextMenu";
+import DriversContextMenu from "../../components/ContextMenu/DriversContextMenu";
 import useContextMenu from "../../hox/contextMenu";
 import Dialog from "../../components/Dialog";
 
 export default function () {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
-    const branchesElm = useRef(null);
+    const driversElm = useRef(null);
 
     return (
         <>
             <AbsolutePath/>
             <Grid container margin={1} spacing={1}
                   style={{flex: "auto", overflowY: "scroll"}}
-                  ref={branchesElm} onContextMenu={(e) => {
+                  ref={driversElm} onContextMenu={(e) => {
                 e.preventDefault();
                 // console.log(e.target, e.currentTarget, e.target === e.currentTarget);
                 // if (e.target === e.currentTarget) {
                 const {clientX, clientY} = e;
                 let {x, y, width, height} = e.currentTarget.getBoundingClientRect();
                 setContextMenu({
-                    type: 'branches',
+                    type: 'drivers',
                     clientX, clientY,
                     x, y, width, height,
                 })
                 // }
             }}>
-                {resourceManager.branches.map((branch, i) => (
-                    <Grid item key={branch.name}>
-                        <Branch branchesElm={branchesElm} branch={branch}>{branch.name}</Branch>
+                {resourceManager.drivers.map((driver, i) => (
+                    <Grid item key={driver.name}>
+                        <Driver driversElm={driversElm} driver={driver}>{driver.name}</Driver>
                     </Grid>
                 ))}
             </Grid>
-            <BranchContextMenu/>
-            <BranchesContextMenu/>
+            <DriverContextMenu/>
+            <DriversContextMenu/>
             <Dialog/>
         </>
     );

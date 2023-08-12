@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { createGlobalStore } from 'hox';
 
 const initialState = {
-  branches: [],
-  // branchName: "",
+  drivers: [],
+  // driverName: "",
   filePath: [],
   dirItems: null,
   content: null,

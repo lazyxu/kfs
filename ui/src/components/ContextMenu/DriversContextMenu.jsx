@@ -22,9 +22,9 @@ export default () => {
         maxWidth={200}
         maxHeight={2 * 50}
         options={{
-            新建同步文件夹: () => {
+            新建云盘: () => {
                 setDialog({
-                    title: "新建同步文件夹",
+                    title: "新建云盘",
                 })
             },
             刷新: async () => {

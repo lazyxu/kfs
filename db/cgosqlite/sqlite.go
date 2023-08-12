@@ -120,19 +120,20 @@ func (db *DB) Create() error {
 
 	CREATE TABLE IF NOT EXISTS _driver_file (
 		driver_name VARCHAR(256)   NOT NULL,
-		filepath    VARCHAR(65536) NOT NULL,
-	    version     INTEGER         NOT NULL,
+		dirpath     VARCHAR(32767) NOT NULL,
+		name        VARCHAR(255)   NOT NULL,
+	    version     INTEGER        NOT NULL,
 		hash        CHAR(64)       NOT NULL,
-		mode        INTEGER         NOT NULL,
-		size        INTEGER         NOT NULL,
-		createTime  INTEGER         NOT NULL,
-		modifyTime  INTEGER         NOT NULL,
-		changeTime  INTEGER         NOT NULL,
-		accessTime  INTEGER         NOT NULL,
-		PRIMARY KEY (driver_name, filepath, version),
-		FOREIGN KEY (driver_name)
+		mode        INTEGER        NOT NULL,
+		size        INTEGER        NOT NULL,
+		createTime  INTEGER        NOT NULL,
+		modifyTime  INTEGER        NOT NULL,
+		changeTime  INTEGER        NOT NULL,
+		accessTime  INTEGER        NOT NULL,
+		PRIMARY KEY (driver_name, dirpath, name, version),
+		FOREIGN KEY (driver_name)  REFERENCES _driver(name)
 	);
-	`)
+	`) // https://blog.csdn.net/jimmyleeee/article/details/124682486
 	return err
 }
 

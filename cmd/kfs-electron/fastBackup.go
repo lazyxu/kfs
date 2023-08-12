@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/lazyxu/kfs/dao"
 	"net"
 	"os"
 	"path/filepath"
@@ -51,9 +50,8 @@ type WebBackupResp struct {
 	PushedAllToStack bool      `json:"pushedAllToStack"`
 	Cost             int64     `json:"cost"`
 
-	FilePath string     `json:"filePath"`
-	ErrMsg   string     `json:"errMsg"`
-	Branch   dao.Branch `json:"branch"`
+	FilePath string `json:"filePath"`
+	ErrMsg   string `json:"errMsg"`
 }
 
 const (
@@ -134,7 +132,7 @@ func (w *WebUploadProcess) Verbose() bool {
 	return true
 }
 
-func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string, serverAddr string, branchName string, dstPath string, concurrent int, encoder string) error {
+func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string, serverAddr string, driverName string, dstPath string, concurrent int, encoder string) error {
 	if !filepath.IsAbs(srcPath) {
 		return p.err(req, errors.New("请输入绝对路径"))
 	}
@@ -154,7 +152,7 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 		return p.ok(req, finished, data)
 	})
 
-	err = fs.UploadV2(ctx, branchName, dstPath, srcPath, core.UploadConfig{
+	err = fs.UploadV2(ctx, driverName, dstPath, srcPath, core.UploadConfig{
 		UploadProcess: w,
 		Encoder:       encoder,
 		Concurrent:    concurrent,

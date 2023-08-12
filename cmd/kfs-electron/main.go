@@ -215,12 +215,12 @@ func (p *WsProcessor) process(ctx context.Context, db *DB) {
 			data := req.Data.(map[string]interface{})
 			srcPath := data["srcPath"].(string)
 			serverAddr := data["serverAddr"].(string)
-			branchName := data["branchName"].(string)
+			driverName := data["driverName"].(string)
 			dstPath := data["dstPath"].(string)
 			concurrent := int(data["concurrent"].(float64))
 			encoder := data["encoder"].(string)
 			go func() {
-				err := p.fastBackup(newCtx, req, srcPath, serverAddr, branchName, dstPath, concurrent, encoder)
+				err := p.fastBackup(newCtx, req, srcPath, serverAddr, driverName, dstPath, concurrent, encoder)
 				if err != nil {
 					fmt.Printf("%+v %+v\n", req, err)
 				}

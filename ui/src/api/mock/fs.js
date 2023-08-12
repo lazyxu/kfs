@@ -1,12 +1,12 @@
 import {modeIsDir} from "../utils/api";
 import moment from "moment";
-import {branches} from './data';
+import {drivers} from './data';
 
-function getBranch(name) {
-    for (let i = 0; i < branches.length; i++) {
-        const branch = branches[i];
-        if (branch.name === name) {
-            return branch;
+function getDriver(name) {
+    for (let i = 0; i < drivers.length; i++) {
+        const driver = drivers[i];
+        if (driver.name === name) {
+            return driver;
         }
     }
     return null;
@@ -31,14 +31,14 @@ function listR(dir, filePath) {
     return null;
 }
 
-export async function listCb(branchName, filePath, onTotal, onDirItem) {
-    console.log('mock.listCb', branchName, filePath)
-    const branch = getBranch(branchName);
-    if (!branch) {
+export async function listCb(driverName, filePath, onTotal, onDirItem) {
+    console.log('mock.listCb', driverName, filePath)
+    const driver = getDriver(driverName);
+    if (!driver) {
         onTotal?.(0);
         return;
     }
-    let item = listR(branch, filePath.slice());
+    let item = listR(driver, filePath.slice());
     if (item.dirItems) {
         let total = item.dirItems.length;
         onTotal?.(total);
@@ -51,13 +51,13 @@ export async function listCb(branchName, filePath, onTotal, onDirItem) {
     onTotal?.(0);
 }
 
-export async function list(branchName, filePath, onTotal, onDirItem) {
-    console.log('mock.list', branchName, filePath)
-    const branch = getBranch(branchName);
-    if (!branch) {
+export async function list(driverName, filePath, onTotal, onDirItem) {
+    console.log('mock.list', driverName, filePath)
+    const driver = getDriver(driverName);
+    if (!driver) {
         return [];
     }
-    let item = listR(branch, filePath.slice());
+    let item = listR(driver, filePath.slice());
     return item.dirItems;
 }
 
@@ -103,38 +103,38 @@ function addNewFile(item, name, mode) {
     item.dirItems.push(newFileItem(tempName, mode));
 }
 
-export async function newFile(branchName, dirPath, fileName) {
-    console.log('mock.newFile', branchName, dirPath, fileName)
-    const branch = getBranch(branchName);
-    if (!branch) {
+export async function newFile(driverName, dirPath, fileName) {
+    console.log('mock.newFile', driverName, dirPath, fileName)
+    const driver = getDriver(driverName);
+    if (!driver) {
         return;
     }
-    let item = listR(branch, dirPath.slice());
+    let item = listR(driver, dirPath.slice());
     if (item.dirItems) {
         item.dirItems.push(newFileItem(fileName, 438));
     }
 }
 
-export async function newDir(branchName, dirPath, fileName) {
-    console.log('mock.newDir', branchName, dirPath, fileName)
-    const branch = getBranch(branchName);
-    if (!branch) {
+export async function newDir(driverName, dirPath, fileName) {
+    console.log('mock.newDir', driverName, dirPath, fileName)
+    const driver = getDriver(driverName);
+    if (!driver) {
         return;
     }
-    let item = listR(branch, dirPath.slice());
+    let item = listR(driver, dirPath.slice());
     // TODO: empty or duplicate
     if (item.dirItems) {
         item.dirItems.push(newFileItem(fileName, 2147484159));
     }
 }
 
-export async function download(branchName, filePath) {
-    console.log('mock.download', branchName, filePath)
-    const branch = getBranch(branchName);
-    if (!branch) {
+export async function download(driverName, filePath) {
+    console.log('mock.download', driverName, filePath)
+    const driver = getDriver(driverName);
+    if (!driver) {
         return;
     }
-    let item = listR(branch, filePath.slice());
+    let item = listR(driver, filePath.slice());
     if (item.Content) {
         return item.Content;
     }

@@ -22,7 +22,7 @@ function Attr({k, children}) {
 export default () => {
     const [dialog, setDialog] = useDialog();
     const [resourceManager, setResourceManager] = useResourceManager();
-    let {filePath, branchName} = resourceManager;
+    let {filePath, driverName} = resourceManager;
     filePath = filePath.slice()
     filePath.push(dialog.dirItem.name);
     const isDir = modeIsDir(dialog.dirItem.mode)
@@ -56,7 +56,7 @@ export default () => {
             }}>
                 <Grid container spacing={1.5}>
                     <Attr k="名称">{dialog.dirItem.name}</Attr>
-                    <Attr k="分支">{branchName}</Attr>
+                    <Attr k="云盘">{driverName}</Attr>
                     <Attr k="路径">{"/" + filePath.join("/")}</Attr>
                     <Attr k="哈希值">{dialog.dirItem.hash}</Attr>
                     <Attr k="类型">{isDir ? "文件夹" : "文件"}</Attr>

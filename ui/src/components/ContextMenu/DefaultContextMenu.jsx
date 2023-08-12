@@ -7,7 +7,7 @@ import useDialog2 from "hox/dialog";
 export default () => {
     const [contextMenu, setContextMenu] = useContextMenu();
     const [resourceManager, setResourceManager] = useResourceManager();
-    let {filePath, branchName} = resourceManager;
+    let {filePath, driverName} = resourceManager;
     const [dialog, setDialog] = useDialog2();
     if (contextMenu === null || contextMenu.type !== "default") {
         return <div/>

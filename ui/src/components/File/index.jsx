@@ -10,7 +10,7 @@ import {Box, Stack} from "@mui/material";
 export default function ({dirItem, filesElm}) {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
-    let {filePath, branchName} = resourceManager;
+    let {filePath, driverName} = resourceManager;
     const {name, mode} = dirItem;
     filePath = filePath.concat(name);
     return (
@@ -33,9 +33,9 @@ export default function ({dirItem, filesElm}) {
                }}>
             <Box onMouseDown={useClick(null, () => {
                 if (modeIsDir(mode)) {
-                    list(setResourceManager, branchName, filePath);
+                    list(setResourceManager, driverName, filePath);
                 } else {
-                    openFile(setResourceManager, branchName, filePath, dirItem);
+                    openFile(setResourceManager, driverName, filePath, dirItem);
                 }
             })}>
                 {modeIsDir(mode) ?

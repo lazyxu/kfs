@@ -45,7 +45,7 @@ export default ({file}) => {
                     </Tooltip>
                     <Tooltip title="下载">
                     <span><IconButton onClick={() => {
-                        download(resourceManager.branchName, resourceManager.filePath)
+                        download(resourceManager.driverName, resourceManager.filePath)
                     }}>
                     <FileDownloadIcon fontSize="small"/>
                     </IconButton></span>

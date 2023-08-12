@@ -76,14 +76,14 @@ const CommandReset = 1;
 const CommandList = 2;
 const CommandOpen = 3;
 
-export function list(sysConfig, branchName, path, onTotal, onDirItem) {
-  console.log('list', branchName, path, path.join('/'))
+export function list(sysConfig, driverName, path, onTotal, onDirItem) {
+  console.log('list', driverName, path, path.join('/'))
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(`ws://${sysConfig.webServer}/ws`);
     ws.addEventListener('open', async () => {
       try {
         ws.send(new Uint8Array([CommandList]));
-        let reqData = await encode("PathReq", { branchName, path: path.join('/') });
+        let reqData = await encode("PathReq", { driverName, path: path.join('/') });
         // console.log('reqData', reqData);
         ws.send(new Int32Array([reqData.length, 0]));
         ws.send(reqData);
@@ -117,14 +117,14 @@ export function list(sysConfig, branchName, path, onTotal, onDirItem) {
   });
 }
 
-export function open(sysConfig, branchName, path, onFile, onTotal, onDirItem) {
-  console.log('open', branchName, path, path.join('/'))
+export function open(sysConfig, driverName, path, onFile, onTotal, onDirItem) {
+  console.log('open', driverName, path, path.join('/'))
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(`ws://${sysConfig.webServer}/ws`);
     ws.addEventListener('open', async () => {
       try {
         ws.send(new Uint8Array([CommandOpen]));
-        let reqData = await encode("PathReq", { branchName, path: path.join('/') });
+        let reqData = await encode("PathReq", { driverName, path: path.join('/') });
         // console.log('reqData', reqData);
         ws.send(new Int32Array([reqData.length, 0]));
         ws.send(reqData);

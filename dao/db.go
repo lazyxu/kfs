@@ -37,7 +37,13 @@ type Database interface {
 	DirCount(ctx context.Context) (int, error)
 	DirItemCount(ctx context.Context) (int, error)
 	BranchCount(ctx context.Context) (int, error)
+
+	NewDriver(ctx context.Context, driverName string, description string) (exist bool, err error)
+	DeleteDriver(ctx context.Context, driverName string) error
+	DriverList(ctx context.Context) (drivers []IDriver, err error)
+
 	UpsertDriverFile(ctx context.Context, f DriverFile) error
+	ListV2(ctx context.Context, driverName string, filePath []string) (files []DriverFile, err error)
 }
 
 func DatabaseNewFunc(dataSourceName string, newDB func(dataSourceName string) (Database, error)) func() (Database, error) {

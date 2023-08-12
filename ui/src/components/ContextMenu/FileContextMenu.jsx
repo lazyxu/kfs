@@ -13,7 +13,7 @@ export default () => {
     if (contextMenu === null || contextMenu.type !== "file") {
         return <div/>
     }
-    let {filePath, branchName} = resourceManager;
+    let {filePath, driverName} = resourceManager;
     let {dirItem} = contextMenu;
     let {name, mode} = dirItem;
     filePath = filePath.concat(name);
@@ -27,14 +27,14 @@ export default () => {
         options={{
             打开: async () => {
                 if (modeIsDir(mode)) {
-                    await list(setResourceManager, branchName, filePath);
+                    await list(setResourceManager, driverName, filePath);
                 } else {
-                    await openFile(setResourceManager, branchName, filePath, dirItem);
+                    await openFile(setResourceManager, driverName, filePath, dirItem);
                 }
             },
             下载: {
                 enabled: !modeIsDir(mode), fn: async () => {
-                    await download(branchName, filePath);
+                    await download(driverName, filePath);
                 }
             },
             分享: null,

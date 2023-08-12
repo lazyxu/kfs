@@ -2,19 +2,19 @@ import {httpGet} from "./common";
 import axios from "axios";
 import {getSysConfig} from "hox/sysConfig";
 
-export async function list(branchName, filePath) {
-    console.log('web.list', branchName, filePath);
+export async function list(driverName, filePath) {
+    console.log('web.list', driverName, filePath);
     return await httpGet("/api/v1/list", {
-        branchName,
-        filePath: filePath.join("/"),
+        driverName,
+        filePath: filePath,
     });
 }
 
-export async function openFile(branchName, filePath) {
-    console.log('web.openFile', branchName, filePath);
+export async function openFile(driverName, filePath) {
+    console.log('web.openFile', driverName, filePath);
     let resp = await axios.get(`http://127.0.0.1:1123/api/v1/openFile`, {
         params: {
-            branchName,
+            driverName,
             filePath: filePath.join("/"),
             maxContentSize: getSysConfig().sysConfig.maxContentSize,
         },
@@ -24,11 +24,11 @@ export async function openFile(branchName, filePath) {
     return {tooLarge, content: resp.data}
 }
 
-export async function download(branchName, filePath) {
-    console.log('web.download', branchName, filePath);
+export async function download(driverName, filePath) {
+    console.log('web.download', driverName, filePath);
     let resp = await axios.get(`http://127.0.0.1:1123/api/v1/downloadFile`, {
         params: {
-            branchName,
+            driverName,
             filePath: filePath.join("/"),
         },
         responseType: "arraybuffer",

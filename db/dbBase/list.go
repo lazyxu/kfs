@@ -45,3 +45,39 @@ func ListByHash(ctx context.Context, conn *sql.DB, hash string) (dirItems []dao.
 	}
 	return
 }
+
+func ListV2(ctx context.Context, conn *sql.DB, driverName string, filePath []string) (files []dao.DriverFile, err error) {
+	rows, err := conn.QueryContext(ctx, `
+		SELECT name,
+			hash,
+			mode,
+			size,
+			createTime,
+			modifyTime,
+			changeTime,
+			accessTime
+		FROM _driver_file WHERE driver_name=? and dirpath=?
+	`, driverName, arrayToJson(filePath))
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	files = make([]dao.DriverFile, 0)
+	for rows.Next() {
+		var file dao.DriverFile
+		err = rows.Scan(
+			&file.Name,
+			&file.Hash,
+			&file.Mode,
+			&file.Size,
+			&file.CreateTime,
+			&file.ModifyTime,
+			&file.ChangeTime,
+			&file.AccessTime)
+		if err != nil {
+			return
+		}
+		files = append(files, file)
+	}
+	return
+}

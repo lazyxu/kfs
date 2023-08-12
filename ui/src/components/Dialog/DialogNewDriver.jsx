@@ -3,13 +3,13 @@ import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} fr
 import useDialog from "hox/dialog";
 import {newDir} from "api/fs";
 import useResourceManager from "hox/resourceManager";
-import {newBranch} from "../../api/branch";
+import {newDriver} from "../../api/driver";
 
 export default function () {
     const [dialog, setDialog] = useDialog();
     let [name, setName] = useState("");
     const [resourceManager, setResourceManager] = useResourceManager();
-    let {filePath, branchName} = resourceManager;
+    let {filePath, driverName} = resourceManager;
     const inputRef = useRef(null);
     // useEffect(() => {
     //     console.log("inputRef.current", inputRef.current)
@@ -40,7 +40,7 @@ export default function () {
                     // ref={inputRef}
                     margin="dense"
                     id="name"
-                    placeholder="请输入文件夹的名字"
+                    placeholder="请输入云盘的名字"
                     fullWidth
                     variant="outlined"
                     onChange={e => {
@@ -57,7 +57,7 @@ export default function () {
                 }}>取消</Button>
                 <Button onClick={() => {
                     setDialog(null);
-                    newBranch(setResourceManager, name);
+                    newDriver(setResourceManager, name);
                 }}>确定</Button>
             </DialogActions>
         </Dialog>

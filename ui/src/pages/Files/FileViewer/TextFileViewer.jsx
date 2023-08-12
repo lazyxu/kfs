@@ -13,7 +13,7 @@ export default ({file}) => {
             <>
                 文件大于{humanize.filesize(getSysConfig().sysConfig.maxContentSize)}，不支持在线查看，你可以选择
                 <Link underline="hover" onClick={() => {
-                    download(resourceManager.branchName, resourceManager.filePath)
+                    download(resourceManager.driverName, resourceManager.filePath)
                 }}>下载该文件</Link>。
             </> :
             <Editor

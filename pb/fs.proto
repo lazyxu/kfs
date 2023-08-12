@@ -50,8 +50,8 @@ message UploadReq {
 
 message UploadReqV2 {
   string DriverName = 1;
-  string DstPath = 2;
-  string RelPath = 3;
+  repeated string DirPath = 2;
+  string Name = 3;
   string Hash = 4;
   uint64 Mode = 5;
   uint64 Size = 6;

@@ -8,7 +8,7 @@ export default () => {
     const [dialog, setDialog] = useDialog();
     let [name, setName] = useState("");
     const [resourceManager, setResourceManager] = useResourceManager();
-    let {filePath, branchName} = resourceManager;
+    let {filePath, driverName} = resourceManager;
     return (
         <Dialog open={true} onClose={() => {
             setDialog(null)
@@ -41,7 +41,7 @@ export default () => {
                     setDialog(null);
                 }}>取消</Button>
                 <Button onClick={async () => {
-                    await newFile(setResourceManager, branchName, filePath, name);
+                    await newFile(setResourceManager, driverName, filePath, name);
                     setDialog(null);
                 }}>确定</Button>
             </DialogActions>

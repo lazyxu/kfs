@@ -17,7 +17,7 @@ import useWebSocket from "react-use-websocket";
 import { getSysConfig } from "../../hox/sysConfig";
 import { v4 as uuid } from 'uuid';
 import humanize from "humanize";
-import { getBranchApi } from "../../api/branch";
+import { getDriverApi } from "../../api/driver";
 import AsyncSelect from "components/AsyncSelect";
 import LinearProgressWithLabel from "./LinearProgressWithLabel";
 import humanizeDuration from "humanize-duration";
@@ -27,8 +27,8 @@ function isInvalidSrcPath(srcPath) {
     return srcPath === "";
 }
 
-function isInvalidBranchName(branchName) {
-    return branchName === "";
+function isInvalidDriverName(driverName) {
+    return driverName === "";
 }
 
 export default function ({ show }) {
@@ -47,15 +47,15 @@ export default function ({ show }) {
             return true;
         }
     });
-    const [branches, setBranches] = useState([]);
+    const [drivers, setDrivers] = useState([]);
     useEffect(() => {
-        getBranchApi().listBranch().then(setBranches);
+        getDriverApi().listDriver().then(setDrivers);
     }, []);
-    const [branchName, setBranchName] = useState('');
+    const [driverName, setDriverName] = useState('');
     const [concurrent, setConcurrent] = useState(2);
     const [encoder, setEncoder] = useState("none");
     const [srcPath, setSrcPath] = useState('');
-    const [dstPath, setDstPath] = useState('');
+    const [dstPath, setDstPath] = useState('/');
     const [errs, setErrs] = useState([]);
     const [finished, setFinished] = useState(true);
     useEffect(() => {
@@ -82,18 +82,19 @@ export default function ({ show }) {
             <Stack spacing={2} direction="row">
                 <FormControl sx={{ minWidth: "10em" }}>
                     <AsyncSelect
-                        label="备份分支"
+                        label="云盘"
                         fetchOptions={async () => {
-                            let branches = await getBranchApi().listBranch();
-                            return branches.map(branch => branch.name);
+                            let drivers = await getDriverApi().listDriver();
+                            return drivers.map(driver => driver.name);
                         }}
-                        value={branchName}
-                        onChange={name => setBranchName(name)}
+                        value={driverName}
+                        onChange={name => setDriverName(name)}
                     />
                 </FormControl>
                 <TextField variant="standard" label="远程文件夹路径" type="search" sx={{ minWidth: "50%" }}
                     value={dstPath}
                     onChange={e => setDstPath(e.target.value)}
+                    disabled
                 />
             </Stack>
             <FormControl sx={{ minWidth: "10em" }}>
@@ -132,7 +133,7 @@ export default function ({ show }) {
                 </Button>
                 :
                 <Button variant="outlined" sx={{ width: "10em" }}
-                    disabled={isInvalidSrcPath(srcPath) || isInvalidBranchName(branchName)}
+                    disabled={isInvalidSrcPath(srcPath) || isInvalidDriverName(driverName)}
                     onClick={e => {
                         let newId = uuid();
                         setId(newId);
@@ -142,7 +143,7 @@ export default function ({ show }) {
                             type: "fastBackup", id: newId, data: {
                                 srcPath, concurrent, encoder,
                                 serverAddr: sysConfig.webServer,
-                                branchName,
+                                driverName,
                                 dstPath
                             }
                         });
