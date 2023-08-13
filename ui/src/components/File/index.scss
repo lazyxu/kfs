@@ -2,11 +2,22 @@
   width: 5em;
   border: 1px solid transparent;
 
-  .file-icon {
+  .file-icon-box {
     margin: 0.3em;
     height: 4em;
     width: 4em;
     border-radius: 0.3em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .file-icon {
+      height: 4em;
+      width: 4em;
+    }
+    img {
+      max-height: 4em;
+      max-width: 4em;
+    }
   }
   .file-icon-file {
     color: var(--mui-palette-file);
