@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-
 	"github.com/lazyxu/kfs/dao"
 )
 
@@ -32,6 +31,6 @@ func (fs *KFS) List(ctx context.Context, branchName string, filePath string) ([]
 	return fs.Db.List(ctx, branchName, FormatPath(filePath))
 }
 
-func (fs *KFS) ListV2(ctx context.Context, branchName string, filePath []string) ([]dao.DriverFile, error) {
-	return fs.Db.ListV2(ctx, branchName, filePath)
+func (fs *KFS) ListDriverFile(ctx context.Context, branchName string, filePath []string) ([]dao.DriverFile, error) {
+	return fs.Db.ListDriverFile(ctx, branchName, filePath)
 }

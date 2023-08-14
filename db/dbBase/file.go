@@ -23,7 +23,7 @@ func WriteFileWithTxOrDb(ctx context.Context, txOrDb TxOrDb, db DbImpl, file dao
 	return err
 }
 
-func GetFile(ctx context.Context, conn *sql.DB, driverName string, splitPath []string) (file dao.DriverFile, err error) {
+func GetDriverFile(ctx context.Context, conn *sql.DB, driverName string, splitPath []string) (file dao.DriverFile, err error) {
 	if len(splitPath) == 0 {
 		err = errors.New("/: Is a directory")
 		return
@@ -41,7 +41,7 @@ func GetFile(ctx context.Context, conn *sql.DB, driverName string, splitPath []s
 		modifyTime,
 		changeTime,
 		accessTime
-		FROM _driver_file WHERE driver_name=? and dirpath=? and name=? and version=0
+		FROM _driver_file WHERE driverName=? and dirPath=? and name=? and version=0
 	`, file.DriverName, arrayToJson(file.DirPath), file.Name)
 	if err != nil {
 		return
@@ -173,8 +173,8 @@ func arrayToJson(arr []string) []byte {
 func UpsertDriverFile(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _driver_file (
-		driver_name,
-		dirpath,
+		driverName,
+		dirPath,
 		name,
 	    version,
 		hash,
@@ -203,8 +203,8 @@ func UpsertDriverFile(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) erro
 func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _driver_file (
-		driver_name,
-		dirpath,
+		driverName,
+		dirPath,
 		name,
 	    version,
 		hash,

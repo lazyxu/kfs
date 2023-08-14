@@ -1,0 +1,31 @@
+package cgosqlite
+
+import (
+	"context"
+	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/db/dbBase"
+)
+
+func (db *DB) InsertNullExif(ctx context.Context, hash string) (exist bool, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.InsertNullExif(ctx, conn, db, hash)
+}
+
+func (db *DB) InsertExif(ctx context.Context, hash string, e dao.ExifData) (exist bool, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.InsertExif(ctx, conn, db, hash, e)
+}
+
+func (db *DB) ListExpectExif(ctx context.Context) (hashList []string, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListExpectExif(ctx, conn)
+}
+
+func (db *DB) ListExpectExifCb(ctx context.Context, cb func(hash string)) (err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListExpectExifCb(ctx, conn, cb)
+}

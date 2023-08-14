@@ -66,14 +66,26 @@ func (db *DB) Create() error {
 		size INTEGER  NOT NULL
 	);
 
+	CREATE TABLE IF NOT EXISTS _exif (
+		hash             CHAR(64)     NOT NULL PRIMARY KEY,
+	    version          CHAR(4)      DEFAULT NULL,
+	    dateTime         INTEGER      DEFAULT NULL,
+	    hostComputer     VARCHAR(255) DEFAULT NULL,
+	    GPSLatitudeRef   CHAR(1)      DEFAULT NULL,
+	    GPSLatitude      DOUBLE       DEFAULT NULL,
+	    GPSLongitudeRef  CHAR(1)      DEFAULT NULL,
+	    GPSLongitude     DOUBLE       DEFAULT NULL,
+	    FOREIGN KEY (hash)  REFERENCES _file(hash)
+	);
+
 	CREATE TABLE IF NOT EXISTS _driver (
 		name        VARCHAR(256) NOT NULL PRIMARY KEY,
 		description VARCHAR(256) NOT NULL DEFAULT ""
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver_file (
-		driver_name VARCHAR(256)   NOT NULL,
-		dirpath     VARCHAR(32767) NOT NULL,
+		driverName VARCHAR(256)   NOT NULL,
+		dirPath     VARCHAR(32767) NOT NULL,
 		name        VARCHAR(255)   NOT NULL,
 	    version     INTEGER        NOT NULL,
 		hash        CHAR(64)       NOT NULL,
@@ -83,8 +95,8 @@ func (db *DB) Create() error {
 		modifyTime  INTEGER        NOT NULL,
 		changeTime  INTEGER        NOT NULL,
 		accessTime  INTEGER        NOT NULL,
-		PRIMARY KEY (driver_name, dirpath, name, version),
-		FOREIGN KEY (driver_name)  REFERENCES _driver(name)
+		PRIMARY KEY (driverName, dirPath, name, version),
+		FOREIGN KEY (driverName)  REFERENCES _driver(name)
 	);
 	`) // https://blog.csdn.net/jimmyleeee/article/details/124682486
 	return err

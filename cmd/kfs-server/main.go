@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+	AnalysisExifProcess()
 	err := rootCmd.Execute()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

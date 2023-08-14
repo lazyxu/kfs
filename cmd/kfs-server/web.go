@@ -37,6 +37,7 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/downloadFile", apiDownloadFile)
 
 	e.GET("/thumbnail", apiThumbnail)
+	e.GET("/api/v1/analysisExif", apiAnalysisExif)
 
 	println("KFS web server listening at:", webPortString)
 	// Start server
@@ -56,7 +57,7 @@ func ok(c echo.Context, data interface{}) error {
 // Handler
 
 func apiDrivers(c echo.Context) error {
-	drivers, err := kfsCore.DriverList(c.Request().Context())
+	drivers, err := kfsCore.ListDriver(c.Request().Context())
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -65,7 +66,7 @@ func apiDrivers(c echo.Context) error {
 }
 
 func apiNewDriver(c echo.Context) error {
-	exist, err := kfsCore.NewDriver(c.Request().Context(), c.QueryParam("name"), c.QueryParam("description"))
+	exist, err := kfsCore.InsertDriver(c.Request().Context(), c.QueryParam("name"), c.QueryParam("description"))
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -88,7 +89,7 @@ func apiList(c echo.Context) error {
 	if filePath == nil {
 		filePath = []string{}
 	}
-	files, err := kfsCore.ListV2(c.Request().Context(), driverName, filePath)
+	files, err := kfsCore.ListDriverFile(c.Request().Context(), driverName, filePath)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -131,6 +132,7 @@ func apiDownloadFile(c echo.Context) error {
 	defer rc.Close()
 	return c.Stream(http.StatusOK, "", rc)
 }
+
 func init() {
 	err := os.Mkdir("thumbnail", 0o700)
 	if os.IsExist(err) {
@@ -142,6 +144,7 @@ func init() {
 
 func apiThumbnail(c echo.Context) error {
 	hash := c.QueryParam("hash")
+	// TODO: save it to storage.
 	thumbnailFilePath := filepath.Join("thumbnail", hash+".jpg")
 	f, err := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err) {
@@ -155,6 +158,11 @@ func apiThumbnail(c echo.Context) error {
 		defer rc.Close()
 		var img image.Image
 		img, err = imaging.Decode(rc)
+		if err != nil {
+			println(err.Error())
+			c.Logger().Error(err)
+			return err
+		}
 		x := img.Bounds().Size().X
 		y := img.Bounds().Size().Y
 		var xx int

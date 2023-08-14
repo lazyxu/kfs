@@ -46,7 +46,7 @@ func ListByHash(ctx context.Context, conn *sql.DB, hash string) (dirItems []dao.
 	return
 }
 
-func ListV2(ctx context.Context, conn *sql.DB, driverName string, filePath []string) (files []dao.DriverFile, err error) {
+func ListDriverFile(ctx context.Context, conn *sql.DB, driverName string, filePath []string) (files []dao.DriverFile, err error) {
 	rows, err := conn.QueryContext(ctx, `
 		SELECT name,
 			hash,
@@ -56,7 +56,7 @@ func ListV2(ctx context.Context, conn *sql.DB, driverName string, filePath []str
 			modifyTime,
 			changeTime,
 			accessTime
-		FROM _driver_file WHERE driver_name=? and dirpath=? and version=0
+		FROM _driver_file WHERE driverName=? and dirPath=? and version=0
 	`, driverName, arrayToJson(filePath))
 	if err != nil {
 		return

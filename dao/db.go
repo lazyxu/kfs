@@ -37,13 +37,18 @@ type Database interface {
 	DirItemCount(ctx context.Context) (int, error)
 	BranchCount(ctx context.Context) (int, error)
 
-	NewDriver(ctx context.Context, driverName string, description string) (exist bool, err error)
+	InsertDriver(ctx context.Context, driverName string, description string) (exist bool, err error)
 	DeleteDriver(ctx context.Context, driverName string) error
-	DriverList(ctx context.Context) (drivers []IDriver, err error)
+	ListDriver(ctx context.Context) (drivers []IDriver, err error)
 
 	UpsertDriverFile(ctx context.Context, f DriverFile) error
-	ListV2(ctx context.Context, driverName string, filePath []string) (files []DriverFile, err error)
-	GetFile(ctx context.Context, driverName string, splitPath []string) (file DriverFile, err error)
+	ListDriverFile(ctx context.Context, driverName string, filePath []string) (files []DriverFile, err error)
+	GetDriverFile(ctx context.Context, driverName string, splitPath []string) (file DriverFile, err error)
+
+	InsertNullExif(ctx context.Context, hash string) (exist bool, err error)
+	InsertExif(ctx context.Context, hash string, e ExifData) (exist bool, err error)
+	ListExpectExif(ctx context.Context) (hashList []string, err error)
+	ListExpectExifCb(ctx context.Context, cb func(hash string)) (err error)
 }
 
 func DatabaseNewFunc(dataSourceName string, newDB func(dataSourceName string) (Database, error)) func() (Database, error) {

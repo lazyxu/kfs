@@ -6,25 +6,17 @@ import (
 	"github.com/lazyxu/kfs/dao"
 )
 
-func NewDriver(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string) (exist bool, err error) {
-	err = InsertDriverWithTxOrDb(ctx, conn, driverName, description)
+func InsertDriver(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string) (exist bool, err error) {
+	_, err = conn.ExecContext(ctx, `
+	INSERT INTO _driver (
+		name,
+		description
+	) VALUES (?, ?)`, driverName, description)
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
 	}
 	return
-}
-
-func InsertDriverWithTxOrDb(ctx context.Context, txOrDb TxOrDb, driverName string, description string) error {
-	_, err := txOrDb.ExecContext(ctx, `
-	INSERT INTO _driver (
-		name,
-		description
-	) VALUES (?, ?)`, driverName, description)
-	if err != nil {
-		return err
-	}
-	return err
 }
 
 func DeleteDriver(ctx context.Context, conn *sql.DB, driverName string) error {
@@ -36,7 +28,7 @@ func DeleteDriver(ctx context.Context, conn *sql.DB, driverName string) error {
 	return err
 }
 
-func DriverList(ctx context.Context, txOrDb TxOrDb) (branches []dao.IDriver, err error) {
+func ListDriver(ctx context.Context, txOrDb TxOrDb) (branches []dao.IDriver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
 	SELECT * FROM _driver;
 	`)
