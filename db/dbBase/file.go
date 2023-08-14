@@ -229,3 +229,17 @@ func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile)
 	}
 	return err
 }
+
+func InsertFile(ctx context.Context, conn *sql.DB, db DbImpl, hash string, size uint64) error {
+	// TODO: on duplicated key check size.
+	_, err := conn.ExecContext(ctx, `
+	INSERT INTO _file VALUES (?, ?);
+	`, hash, size)
+	if err != nil {
+		if db.IsUniqueConstraintError(err) {
+			return nil
+		}
+		return err
+	}
+	return err
+}

@@ -7,6 +7,7 @@ export function getPerm(mode) {
 }
 
 export function isDCIM(name) {
+    name = name.toLowerCase()
     if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png")) {
         return true;
     }

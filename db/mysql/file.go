@@ -35,3 +35,7 @@ func (db *DB) UpsertDriverFile(ctx context.Context, f dao.DriverFile) error {
 func (db *DB) ListDriverFile(ctx context.Context, driverName string, filePath []string) (files []dao.DriverFile, err error) {
 	return dbBase.ListDriverFile(ctx, db.db, driverName, filePath)
 }
+
+func (db *DB) InsertFile(ctx context.Context, hash string, size uint64) error {
+	return dbBase.InsertFile(ctx, db.db, db, hash, size)
+}

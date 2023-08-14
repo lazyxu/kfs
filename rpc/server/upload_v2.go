@@ -79,6 +79,11 @@ func handleUploadV2File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		println(conn.RemoteAddr().String(), "Write", err.Error())
 		return err
 	}
+	err = kfsCore.Db.InsertFile(context.TODO(), req.Hash, req.Size)
+	if err != nil {
+		println(conn.RemoteAddr().String(), "InsertFile", err.Error())
+		return err
+	}
 	err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
 		DriverName: req.DriverName,
 		DirPath:    req.DirPath,

@@ -49,6 +49,8 @@ func AnalysisExifProcess() {
 }
 
 func AnalysisExif(ctx context.Context, fs *core.KFS) error {
+	println("AnalysisExif")
+	// TODO: now remain is 0
 	hashList, err := fs.Db.ListExpectExif(ctx)
 	if err != nil {
 		return err
@@ -70,19 +72,23 @@ func AnalysisExif(ctx context.Context, fs *core.KFS) error {
 		defer rc.Close()
 		d, err := GetExifData(rc)
 		if err != nil {
+			fmt.Printf("%d %s NullExif\n", len(hashList)-i, hash)
 			_, err = fs.Db.InsertNullExif(ctx, hash)
 			// TODO: what if exist
 			if err != nil {
-				println("InsertNullExif", err)
+				println("InsertNullExif", err.Error())
 				return err
 			}
 			continue
 		}
-		fmt.Printf("%+v\n", d)
+		fmt.Printf("%d %s %+v\n", len(hashList)-i, hash, d)
+		if d.DateTime == 0 {
+			println("d.DateTime == 0")
+		}
 		_, err = fs.Db.InsertExif(ctx, hash, d)
 		// TODO: what if exist
 		if err != nil {
-			println("InsertExif", err)
+			println("InsertExif", err.Error())
 			return err
 		}
 		remain.Store(uint64(len(hashList) - i - 1))
@@ -103,12 +109,14 @@ func GetExifData(r io.Reader) (d dao.ExifData, err error) {
 		return
 	}
 	for _, et := range ets {
+		//fmt.Printf("%s %v\n", et.TagName, et.Value)
 		if et.TagName == "ExifVersion" {
 			d.Version = et.Value.(exifundefined.Tag9000ExifVersion).ExifVersion
-		} else if et.TagName == "DateTime" {
-			t, err := time.Parse(time.DateTime, et.Value.(string))
+		} else if et.TagName == "DateTime" || et.TagName == "DateTimeOriginal" {
+			t, err := time.Parse("2006:01:02 15:04:05", et.Value.(string))
 			if err != nil {
-				continue
+				println("time.Parse", et.Value.(string), err.Error())
+				return d, err
 			}
 			d.DateTime = uint64(t.UnixNano())
 		} else if et.TagName == "HostComputer" {

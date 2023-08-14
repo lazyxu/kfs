@@ -49,3 +49,9 @@ func (db *DB) ListDriverFile(ctx context.Context, driverName string, filePath []
 	defer db.putConn(conn)
 	return dbBase.ListDriverFile(ctx, conn, driverName, filePath)
 }
+
+func (db *DB) InsertFile(ctx context.Context, hash string, size uint64) error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.InsertFile(ctx, conn, db, hash, size)
+}

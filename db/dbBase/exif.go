@@ -10,7 +10,7 @@ func InsertNullExif(ctx context.Context, conn *sql.DB, db DbImpl, hash string) (
 	_, err = conn.ExecContext(ctx, `
 	INSERT INTO _exif (
 		hash  
-	) VALUES (?, ?)`, hash)
+	) VALUES (?)`, hash)
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
@@ -22,14 +22,14 @@ func InsertExif(ctx context.Context, conn *sql.DB, db DbImpl, hash string, e dao
 	_, err = conn.ExecContext(ctx, `
 	INSERT INTO _exif (
 		hash,
-		version,        
-		dateTime,       
-		hostComputer,   
-		GPSLatitudeRef, 
-		GPSLatitude,    
+		version,
+		dateTime,
+		hostComputer,
+		GPSLatitudeRef,
+		GPSLatitude,
 		GPSLongitudeRef,
-		GPSLongitude,   
-	) VALUES (?, ?)`, hash, e.Version, e.DateTime, e.HostComputer, e.GPSLatitudeRef, e.GPSLatitude, e.GPSLongitudeRef, e.GPSLongitude)
+		GPSLongitude
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, hash, e.Version, e.DateTime, e.HostComputer, e.GPSLatitudeRef, e.GPSLatitude, e.GPSLongitudeRef, e.GPSLongitude)
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil

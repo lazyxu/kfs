@@ -41,6 +41,8 @@ type Database interface {
 	DeleteDriver(ctx context.Context, driverName string) error
 	ListDriver(ctx context.Context) (drivers []IDriver, err error)
 
+	InsertFile(ctx context.Context, hash string, size uint64) error
+
 	UpsertDriverFile(ctx context.Context, f DriverFile) error
 	ListDriverFile(ctx context.Context, driverName string, filePath []string) (files []DriverFile, err error)
 	GetDriverFile(ctx context.Context, driverName string, splitPath []string) (file DriverFile, err error)
