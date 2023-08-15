@@ -12,7 +12,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path"
 	"strconv"
 
 	"github.com/gorilla/websocket"
@@ -128,6 +127,7 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		defer kfsCore.Close()
+		//GetExifData("375667db5da6ed4017815f864ffe0563182523167ce40448c175298fe6af56d1")
 
 		go func() {
 			// socket
@@ -147,19 +147,6 @@ var rootCmd = &cobra.Command{
 		})
 		webServer(webPortString)
 	},
-}
-
-type Dir struct {
-	fs     http.FileSystem
-	prefix string
-}
-
-func AddPrefix(fs http.FileSystem, prefix string) http.FileSystem {
-	return Dir{fs, prefix}
-}
-
-func (d Dir) Open(name string) (http.File, error) {
-	return d.fs.Open(path.Clean(d.prefix + name))
 }
 
 var upgrader = websocket.Upgrader{

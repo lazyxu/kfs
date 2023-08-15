@@ -8,7 +8,7 @@ export default function ({ dirItem }) {
             {modeIsDir(dirItem.mode) ?
                 <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit" /> :
                 isDCIM(dirItem.name) ?
-                    <img src={"http://127.0.0.1:1123/thumbnail?hash=" + dirItem.hash} loading="lazy" />
+                    <img src={"http://127.0.0.1:1123/thumbnail?size=64&hash=" + dirItem.hash} loading="lazy" />
                     :
                     <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit" />
             }

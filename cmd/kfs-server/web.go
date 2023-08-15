@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"github.com/disintegration/imaging"
 	"github.com/lazyxu/kfs/dao"
 	"image"
@@ -145,10 +146,19 @@ func init() {
 
 func apiThumbnail(c echo.Context) error {
 	hash := c.QueryParam("hash")
+	sizeStr := c.QueryParam("size")
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil {
+		return err
+	}
+	if size != 64 && size != 128 && size != 256 {
+		return errors.New("invalid size, expected 64, 128 or 256")
+	}
 	// TODO: save it to storage.
-	thumbnailFilePath := filepath.Join("thumbnail", hash+".jpg")
+	thumbnailFilePath := filepath.Join("thumbnail", hash+"@"+strconv.Itoa(size)+".jpg")
 	f, err := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err) {
+		//println("generate thumbnail for", hash+"@"+strconv.Itoa(size))
 		var rc dao.SizedReadCloser
 		rc, err = kfsCore.S.ReadWithSize(hash)
 		if err != nil {
@@ -169,11 +179,11 @@ func apiThumbnail(c echo.Context) error {
 		var xx int
 		var yy int
 		if x > y {
-			xx = 64
-			yy = int(64.0 * float64(y) / float64(x))
+			xx = size
+			yy = int(float64(size) * float64(y) / float64(x))
 		} else {
-			xx = int(64.0 * float64(x) / float64(y))
-			yy = 64
+			xx = int(float64(size) * float64(x) / float64(y))
+			yy = size
 		}
 		newImg := imaging.Resize(img, xx, yy, imaging.Lanczos)
 		err = imaging.Save(newImg, thumbnailFilePath)
@@ -185,6 +195,7 @@ func apiThumbnail(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 	defer f.Close()
 	return c.Stream(http.StatusOK, "", f)
 }

@@ -7,9 +7,7 @@ import (
 	exifcommon "github.com/dsoprea/go-exif/v3/common"
 	exifundefined "github.com/dsoprea/go-exif/v3/undefined"
 	"github.com/labstack/echo/v4"
-	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
-	"io"
 	"net/http"
 	"strconv"
 	"sync/atomic"
@@ -46,7 +44,7 @@ func AnalysisExifProcess() {
 			case start := <-exifChan:
 				if start {
 					if remain.Load() == 0 {
-						go AnalysisExif(ctx, kfsCore)
+						go AnalysisExif(ctx)
 					}
 				} else {
 					cancel()
@@ -56,10 +54,10 @@ func AnalysisExifProcess() {
 	}()
 }
 
-func AnalysisExif(ctx context.Context, fs *core.KFS) error {
+func AnalysisExif(ctx context.Context) error {
 	println("AnalysisExif")
 	// TODO: now remain is 0
-	hashList, err := fs.Db.ListExpectExif(ctx)
+	hashList, err := kfsCore.Db.ListExpectExif(ctx)
 	if err != nil {
 		return err
 	}
@@ -73,15 +71,10 @@ func AnalysisExif(ctx context.Context, fs *core.KFS) error {
 			return context.DeadlineExceeded
 		default:
 		}
-		rc, err := fs.S.ReadWithSize(hash)
-		if err != nil {
-			return err
-		}
-		defer rc.Close()
-		e, err := GetExifData(rc)
+		e, err := GetExifData(hash)
 		if err != nil {
 			fmt.Printf("%d %s NullExif\n", len(hashList)-i, hash)
-			_, err = fs.Db.InsertNullExif(ctx, hash)
+			_, err = kfsCore.Db.InsertNullExif(ctx, hash)
 			// TODO: what if exist
 			if err != nil {
 				println("InsertNullExif", err.Error())
@@ -92,8 +85,9 @@ func AnalysisExif(ctx context.Context, fs *core.KFS) error {
 		fmt.Printf("%d %s %+v\n", len(hashList)-i, hash, e)
 		if e.DateTime == 0 {
 			println("d.DateTime == 0")
+			continue
 		}
-		_, err = fs.Db.InsertExif(ctx, hash, e)
+		_, err = kfsCore.Db.InsertExif(ctx, hash, e)
 		// TODO: what if exist
 		if err != nil {
 			println("InsertExif", err.Error())
@@ -107,8 +101,13 @@ func AnalysisExif(ctx context.Context, fs *core.KFS) error {
 	return nil
 }
 
-func GetExifData(r io.Reader) (e dao.Exif, err error) {
-	dt, err := exif.SearchAndExtractExifWithReader(r)
+func GetExifData(hash string) (e dao.Exif, err error) {
+	rc, err := kfsCore.S.ReadWithSize(hash)
+	if err != nil {
+		return
+	}
+	defer rc.Close()
+	dt, err := exif.SearchAndExtractExifWithReader(rc)
 	if err != nil {
 		return
 	}
@@ -121,6 +120,7 @@ func GetExifData(r io.Reader) (e dao.Exif, err error) {
 		if et.TagName == "ExifVersion" {
 			e.Version = et.Value.(exifundefined.Tag9000ExifVersion).ExifVersion
 		} else if et.TagName == "DateTime" || et.TagName == "DateTimeOriginal" {
+			// TODO: time zone
 			t, err := time.Parse("2006:01:02 15:04:05", et.Value.(string))
 			if err != nil {
 				println("time.Parse", et.Value.(string), err.Error())
