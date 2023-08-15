@@ -11,6 +11,8 @@ is_command_exist () {
   which $1 >/dev/null 2>&1
 }
 
+# https://go.dev/dl/
+# https://goproxy.cn/
 if ! is_command_exist protoc-gen-go; then
   GOOS= GOARCH= go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
 fi
@@ -50,6 +52,8 @@ cliTest () {
   export kfs_test_database_type=$2
   cd $root/cmd/kfs-cli && go test -v ./...
 }
+
+# https://nodejs.org/en/download/current
 
 case $1 in
   start)

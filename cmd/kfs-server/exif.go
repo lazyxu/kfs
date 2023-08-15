@@ -30,6 +30,14 @@ func apiAnalysisExif(c echo.Context) error {
 	return c.String(http.StatusOK, "")
 }
 
+func apiListExif(c echo.Context) error {
+	exifMap, err := kfsCore.Db.ListExif(c.Request().Context())
+	if err != nil {
+		return err
+	}
+	return ok(c, exifMap)
+}
+
 func AnalysisExifProcess() {
 	ctx, cancel := context.WithCancel(context.TODO())
 	go func() {
@@ -70,7 +78,7 @@ func AnalysisExif(ctx context.Context, fs *core.KFS) error {
 			return err
 		}
 		defer rc.Close()
-		d, err := GetExifData(rc)
+		e, err := GetExifData(rc)
 		if err != nil {
 			fmt.Printf("%d %s NullExif\n", len(hashList)-i, hash)
 			_, err = fs.Db.InsertNullExif(ctx, hash)
@@ -81,11 +89,11 @@ func AnalysisExif(ctx context.Context, fs *core.KFS) error {
 			}
 			continue
 		}
-		fmt.Printf("%d %s %+v\n", len(hashList)-i, hash, d)
-		if d.DateTime == 0 {
+		fmt.Printf("%d %s %+v\n", len(hashList)-i, hash, e)
+		if e.DateTime == 0 {
 			println("d.DateTime == 0")
 		}
-		_, err = fs.Db.InsertExif(ctx, hash, d)
+		_, err = fs.Db.InsertExif(ctx, hash, e)
 		// TODO: what if exist
 		if err != nil {
 			println("InsertExif", err.Error())
@@ -99,7 +107,7 @@ func AnalysisExif(ctx context.Context, fs *core.KFS) error {
 	return nil
 }
 
-func GetExifData(r io.Reader) (d dao.ExifData, err error) {
+func GetExifData(r io.Reader) (e dao.Exif, err error) {
 	dt, err := exif.SearchAndExtractExifWithReader(r)
 	if err != nil {
 		return
@@ -111,31 +119,31 @@ func GetExifData(r io.Reader) (d dao.ExifData, err error) {
 	for _, et := range ets {
 		//fmt.Printf("%s %v\n", et.TagName, et.Value)
 		if et.TagName == "ExifVersion" {
-			d.Version = et.Value.(exifundefined.Tag9000ExifVersion).ExifVersion
+			e.Version = et.Value.(exifundefined.Tag9000ExifVersion).ExifVersion
 		} else if et.TagName == "DateTime" || et.TagName == "DateTimeOriginal" {
 			t, err := time.Parse("2006:01:02 15:04:05", et.Value.(string))
 			if err != nil {
 				println("time.Parse", et.Value.(string), err.Error())
-				return d, err
+				return e, err
 			}
-			d.DateTime = uint64(t.UnixNano())
+			e.DateTime = uint64(t.UnixNano())
 		} else if et.TagName == "HostComputer" {
-			d.HostComputer = et.Value.(string)
+			e.HostComputer = et.Value.(string)
 		} else if et.TagName == "OffsetTime" {
-			d.OffsetTime = et.Value.(string)
+			e.OffsetTime = et.Value.(string)
 		} else if et.TagName == "HostComputer" {
-			d.HostComputer = et.Value.(string)
+			e.HostComputer = et.Value.(string)
 		} else if et.TagName == "GPSLatitudeRef" {
-			d.GPSLatitudeRef = et.Value.(string)
+			e.GPSLatitudeRef = et.Value.(string)
 		} else if et.TagName == "GPSLatitude" {
-			d.GPSLatitude = GPS2Float(et.Value.([]exifcommon.Rational))
+			e.GPSLatitude = GPS2Float(et.Value.([]exifcommon.Rational))
 		} else if et.TagName == "GPSLongitudeRef" {
-			d.GPSLongitudeRef = et.Value.(string)
+			e.GPSLongitudeRef = et.Value.(string)
 		} else if et.TagName == "GPSLongitude" {
-			d.GPSLongitude = GPS2Float(et.Value.([]exifcommon.Rational))
+			e.GPSLongitude = GPS2Float(et.Value.([]exifcommon.Rational))
 		}
 	}
-	return d, nil
+	return e, nil
 }
 
 func GPS2Float(rational []exifcommon.Rational) float64 {

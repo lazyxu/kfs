@@ -38,6 +38,7 @@ func webServer(webPortString string) {
 
 	e.GET("/thumbnail", apiThumbnail)
 	e.GET("/api/v1/analysisExif", apiAnalysisExif)
+	e.GET("/api/v1/exif", apiListExif)
 
 	println("KFS web server listening at:", webPortString)
 	// Start server

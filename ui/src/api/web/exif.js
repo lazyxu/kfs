@@ -8,3 +8,8 @@ export async function analysisExif(start) {
         start,
     });
 }
+
+export async function listExif() {
+    console.log('web.exif');
+    return await httpGet("/api/v1/exif");
+}

@@ -48,9 +48,10 @@ type Database interface {
 	GetDriverFile(ctx context.Context, driverName string, splitPath []string) (file DriverFile, err error)
 
 	InsertNullExif(ctx context.Context, hash string) (exist bool, err error)
-	InsertExif(ctx context.Context, hash string, e ExifData) (exist bool, err error)
+	InsertExif(ctx context.Context, hash string, e Exif) (exist bool, err error)
 	ListExpectExif(ctx context.Context) (hashList []string, err error)
 	ListExpectExifCb(ctx context.Context, cb func(hash string)) (err error)
+	ListExif(ctx context.Context) (exifMap map[string]Exif, err error)
 }
 
 func DatabaseNewFunc(dataSourceName string, newDB func(dataSourceName string) (Database, error)) func() (Database, error) {

@@ -18,7 +18,7 @@ func InsertNullExif(ctx context.Context, conn *sql.DB, db DbImpl, hash string) (
 	return
 }
 
-func InsertExif(ctx context.Context, conn *sql.DB, db DbImpl, hash string, e dao.ExifData) (exist bool, err error) {
+func InsertExif(ctx context.Context, conn *sql.DB, db DbImpl, hash string, e dao.Exif) (exist bool, err error) {
 	_, err = conn.ExecContext(ctx, `
 	INSERT INTO _exif (
 		hash,
@@ -36,7 +36,6 @@ func InsertExif(ctx context.Context, conn *sql.DB, db DbImpl, hash string, e dao
 	}
 	return
 }
-
 func ListExpectExif(ctx context.Context, conn *sql.DB) (hashList []string, err error) {
 	rows, err := conn.QueryContext(ctx, `
 	SELECT hash FROM _file EXCEPT SELECT hash FROM _exif;
@@ -72,6 +71,37 @@ func ListExpectExifCb(ctx context.Context, conn *sql.DB, cb func(hash string)) (
 			return
 		}
 		cb(hash)
+	}
+	return
+}
+
+func ListExif(ctx context.Context, conn *sql.DB) (exifMap map[string]dao.Exif, err error) {
+	rows, err := conn.QueryContext(ctx, `
+	SELECT 
+		hash,
+		version,
+		dateTime,
+		hostComputer,
+		GPSLatitudeRef,
+		GPSLatitude,
+		GPSLongitudeRef,
+		GPSLongitude
+	FROM _exif WHERE version IS NOT NULL;
+	`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	exifMap = make(map[string]dao.Exif)
+	for rows.Next() {
+		var hash string
+		var exif dao.Exif
+		err = rows.Scan(&hash, &exif.Version, &exif.DateTime, &exif.HostComputer,
+			&exif.GPSLatitudeRef, &exif.GPSLatitude, &exif.GPSLongitudeRef, &exif.GPSLongitude)
+		if err != nil {
+			return
+		}
+		exifMap[hash] = exif
 	}
 	return
 }

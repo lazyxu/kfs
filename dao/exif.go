@@ -1,10 +1,10 @@
 package dao
 
-type ExifData struct {
-	Version         string
-	DateTime        uint64
-	HostComputer    string
-	OffsetTime      string
+type Exif struct {
+	Version         string `json:"version"`
+	DateTime        uint64 `json:"dateTime"`
+	HostComputer    string `json:"hostComputer"`
+	OffsetTime      string `json:"offsetTime"`
 	GPSLatitudeRef  string
 	GPSLatitude     float64
 	GPSLongitudeRef string

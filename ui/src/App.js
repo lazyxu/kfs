@@ -7,7 +7,7 @@ import React, {useEffect} from "react";
 import useMenu from "./hox/menu";
 import useSysConfig from "./hox/sysConfig";
 import BackupTask from "./pages/BackupTask";
-import DCIM from 'pages/DCIM';
+import Dcim from 'pages/Dcim';
 
 function App() {
     const {sysConfig} = useSysConfig();
@@ -44,7 +44,7 @@ function App() {
                 color: theme => theme.context.primary
             }}>
                 <Files show={menu === '我的云盘'}/>
-                <DCIM show={menu === '我的相册'}/>
+                <Dcim show={menu === '我的相册'}/>
                 <BackupTask show={menu === '备份任务'}/>
                 <SystemConfig show={menu === '设置'}/>
             </Box>

@@ -12,7 +12,7 @@ func (db *DB) InsertNullExif(ctx context.Context, hash string) (exist bool, err 
 	return dbBase.InsertNullExif(ctx, conn, db, hash)
 }
 
-func (db *DB) InsertExif(ctx context.Context, hash string, e dao.ExifData) (exist bool, err error) {
+func (db *DB) InsertExif(ctx context.Context, hash string, e dao.Exif) (exist bool, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.InsertExif(ctx, conn, db, hash, e)
@@ -28,4 +28,10 @@ func (db *DB) ListExpectExifCb(ctx context.Context, cb func(hash string)) (err e
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.ListExpectExifCb(ctx, conn, cb)
+}
+
+func (db *DB) ListExif(ctx context.Context) (exifMap map[string]dao.Exif, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListExif(ctx, conn)
 }
