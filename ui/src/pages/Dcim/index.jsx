@@ -1,5 +1,5 @@
 import useResourceManager from 'hox/resourceManager';
-import { Box, Button, Checkbox, FormControl, FormControlLabel, FormGroup, Grid, ImageList, ImageListItem, ImageListItemBar, InputLabel, MenuItem, Select, Stack } from "@mui/material";
+import { Box, Button, Checkbox, FormControl, FormControlLabel, FormGroup, Grid, Hidden, ImageList, ImageListItem, ImageListItemBar, InputLabel, MenuItem, Select, Stack } from "@mui/material";
 // import FormControlLabel from '@mui/material/FormControlLabel';
 import { useEffect, useState } from "react";
 import { analysisExif, listExif } from 'api/web/exif';
@@ -73,13 +73,13 @@ export default function ({ show }) {
                     } label={(hostComputer ? hostComputer : "未知设备") + " (" + hostComputerMap[hostComputer] + ")"} />
                 )}
             </FormGroup>
-            <Grid container spacing={2} overflow="scroll">
+            <Grid container spacing={1} style={{overflowY: "scroll", alignItems: "center"}}>
                 {Object.keys(exifMap).sort((a, b) => exifMap[a].dateTime - exifMap[b].dateTime)
                     .filter(hash => chosenHostComputer.includes(exifMap[hash].hostComputer)).map(hash => {
                         let time = moment(exifMap[hash].dateTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
-                        return <Grid xs={2.4} key={hash}>
+                        return <Grid item style={{width: "256px", height: "256px", overflow: "hidden"}} key={hash}>
                             <Box sx={{width: "100%"}}>
-                                <img style={{width: "100%"}}src={"http://127.0.0.1:1123/thumbnail?size=256&hash=" + hash} loading="lazy" title={time + "\n" + hash} />
+                                <img style={{width: "100%"}}src={"http://127.0.0.1:1123/thumbnail?size=256&cutSquare=true&hash=" + hash} loading="lazy" title={time + "\n" + hash} />
                             </Box>
                         </Grid>
                     })}

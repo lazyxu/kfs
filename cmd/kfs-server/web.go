@@ -154,11 +154,25 @@ func apiThumbnail(c echo.Context) error {
 	if size != 64 && size != 128 && size != 256 {
 		return errors.New("invalid size, expected 64, 128 or 256")
 	}
+	cutSquareStr := c.QueryParam("cutSquare")
+	cutSquare := false
+	if cutSquareStr != "" {
+		cutSquare, err = strconv.ParseBool(cutSquareStr)
+		if err != nil {
+			return err
+		}
+	}
 	// TODO: save it to storage.
-	thumbnailFilePath := filepath.Join("thumbnail", hash+"@"+strconv.Itoa(size)+".jpg")
+	var filename string
+	if cutSquare {
+		filename = hash + "@" + sizeStr + "x" + sizeStr
+	} else {
+		filename = hash + "@" + sizeStr
+	}
+	thumbnailFilePath := filepath.Join("thumbnail", filename+".jpg")
 	f, err := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err) {
-		//println("generate thumbnail for", hash+"@"+strconv.Itoa(size))
+		println("generate thumbnail for", filename)
 		var rc dao.SizedReadCloser
 		rc, err = kfsCore.S.ReadWithSize(hash)
 		if err != nil {
@@ -176,16 +190,21 @@ func apiThumbnail(c echo.Context) error {
 		}
 		x := img.Bounds().Size().X
 		y := img.Bounds().Size().Y
-		var xx int
-		var yy int
-		if x > y {
-			xx = size
-			yy = int(float64(size) * float64(y) / float64(x))
+		var newImg *image.NRGBA
+		if cutSquare {
+			newImg = imaging.Thumbnail(img, size, size, imaging.Lanczos)
 		} else {
-			xx = int(float64(size) * float64(x) / float64(y))
-			yy = size
+			var xx int
+			var yy int
+			if x > y {
+				xx = size
+				yy = int(float64(size) * float64(y) / float64(x))
+			} else {
+				xx = int(float64(size) * float64(x) / float64(y))
+				yy = size
+			}
+			newImg = imaging.Thumbnail(img, xx, yy, imaging.Lanczos)
 		}
-		newImg := imaging.Resize(img, xx, yy, imaging.Lanczos)
 		err = imaging.Save(newImg, thumbnailFilePath)
 		if err != nil {
 			return err
