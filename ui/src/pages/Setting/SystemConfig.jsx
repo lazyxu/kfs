@@ -72,7 +72,7 @@ export default ({show}) => {
                                 <span>客户端端口</span>
                             </div>
                             <div className={styles.configs_item_values}>
-                                <input type="text" value={sysConfig.port}/>
+                                <input type="text" defaultValue={sysConfig.port}/>
                             </div>
                         </li>
                     </ul>
