@@ -39,3 +39,7 @@ func (db *DB) ListDriverFile(ctx context.Context, driverName string, filePath []
 func (db *DB) InsertFile(ctx context.Context, hash string, size uint64) error {
 	return dbBase.InsertFile(ctx, db.db, db, hash, size)
 }
+
+func (db *DB) SumFileSize(ctx context.Context) (size uint64, err error) {
+	return dbBase.SumFileSize(ctx, db.db)
+}

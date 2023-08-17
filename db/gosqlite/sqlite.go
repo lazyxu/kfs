@@ -2,6 +2,7 @@ package gosqlite
 
 import (
 	"database/sql"
+	"os"
 
 	"github.com/lazyxu/kfs/dao"
 	_ "modernc.org/sqlite"
@@ -30,10 +31,19 @@ func open(dataSourceName string) (*DB, error) {
 		return nil, err
 	}
 	db := &DB{
-		ch: make(chan *sql.DB, 1),
+		ch:             make(chan *sql.DB, 1),
+		dataSourceName: dataSourceName,
 	}
 	db.ch <- conn
 	return db, err
+}
+
+func (db *DB) Size() (int64, error) {
+	stat, err := os.Stat(db.dataSourceName)
+	if err != nil {
+		return 0, err
+	}
+	return stat.Size(), err
 }
 
 func (db *DB) getConn() *sql.DB {

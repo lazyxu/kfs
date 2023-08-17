@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"database/sql"
+	"errors"
 	"sync"
 
 	"github.com/lazyxu/kfs/dao"
@@ -41,6 +42,10 @@ func open(dataSourceName string) (*DB, error) {
 		db: db,
 	}
 	return d, err
+}
+
+func (db *DB) Size() (int64, error) {
+	return 0, errors.New("not supported")
 }
 
 func (db *DB) Remove() error {

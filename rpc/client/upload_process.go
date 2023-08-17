@@ -124,7 +124,7 @@ func (h *TerminalUploadProcess) handleProcess(srcPath string) {
 		offset := size + 1 - p.Index + errCnt
 		termenv.CursorPrevLine(offset)
 		termenv.ClearLine()
-		fmt.Printf("%5s %6s %d: %-8s %6s %s", port, humanize.Bytes(line.size), line.count, p.Label, humanize.Bytes(p.Size), rel)
+		fmt.Printf("%5s %6s %d: %-8s %6s %s", port, humanize.IBytes(line.size), line.count, p.Label, humanize.IBytes(p.Size), rel)
 		termenv.CursorNextLine(offset)
 	}
 }

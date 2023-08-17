@@ -30,5 +30,5 @@ func runTouch(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
-	cmd.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", branch.Hash[:4], commit.CommitId, humanize.Bytes(commit.Size), commit.Count)
+	cmd.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", branch.Hash[:4], commit.CommitId, humanize.IBytes(commit.Size), commit.Count)
 }

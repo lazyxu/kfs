@@ -6,6 +6,7 @@ import (
 )
 
 type Database interface {
+	Size() (int64, error)
 	Remove() error
 	Create() error
 	Close() error
@@ -42,6 +43,7 @@ type Database interface {
 	ListDriver(ctx context.Context) (drivers []IDriver, err error)
 
 	InsertFile(ctx context.Context, hash string, size uint64) error
+	SumFileSize(ctx context.Context) (size uint64, err error)
 
 	UpsertDriverFile(ctx context.Context, f DriverFile) error
 	ListDriverFile(ctx context.Context, driverName string, filePath []string) (files []DriverFile, err error)

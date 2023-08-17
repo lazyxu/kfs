@@ -243,3 +243,21 @@ func InsertFile(ctx context.Context, conn *sql.DB, db DbImpl, hash string, size 
 	}
 	return err
 }
+
+func SumFileSize(ctx context.Context, conn *sql.DB) (size uint64, err error) {
+	// TODO: on duplicated key check size.
+	rows, err := conn.QueryContext(ctx, `
+	SELECT SUM(size) FROM _file;
+	`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err = rows.Scan(&size)
+		if err != nil {
+			return
+		}
+	}
+	return
+}

@@ -33,7 +33,7 @@ func printBody(w io.Writer, dirItem dao.IDirItem, isHumanize bool) {
 		fmt.Fprintf(w, "%s\t%s\t     %s\t%s\t%s\t%s\t%s\n",
 			os.FileMode(dirItem.GetMode()).String(),
 			formatCount(dirItem.GetMode(), dirItem.GetCount()), formatCount(dirItem.GetMode(), dirItem.GetTotalCount()),
-			dirItem.GetHash()[:4], humanize.Bytes(dirItem.GetSize()), modifyTime, dirItem.GetName())
+			dirItem.GetHash()[:4], humanize.IBytes(dirItem.GetSize()), modifyTime, dirItem.GetName())
 	} else {
 		fmt.Fprintf(w, "%s\t%s\t     %s\t%s\t%d\t%s\t%s\n",
 			os.FileMode(dirItem.GetMode()).String(),

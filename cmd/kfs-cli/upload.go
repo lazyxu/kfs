@@ -68,5 +68,5 @@ func runUpload(cmd *cobra.Command, args []string) {
 	if err != nil {
 		return
 	}
-	cmd.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", commit.Hash[:4], branch.CommitId, humanize.Bytes(branch.Size), branch.Count)
+	cmd.Printf("hash=%s, commitId=%d, size=%s, count=%d\n", commit.Hash[:4], branch.CommitId, humanize.IBytes(branch.Size), branch.Count)
 }
