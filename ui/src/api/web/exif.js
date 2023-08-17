@@ -1,12 +1,15 @@
-import {httpGet} from "./common";
-import axios from "axios";
-import {getSysConfig} from "hox/sysConfig";
+import {httpGet, httpPost} from "./common";
 
 export async function analysisExif(start) {
     console.log('web.analysisExif', start);
-    return await httpGet("/api/v1/analysisExif", {
+    return await httpPost("/api/v1/analysisExif", {
         start,
     });
+}
+
+export async function exifStatus() {
+    console.log('web.exifStatus');
+    return await httpGet("/api/v1/analysisExif");
 }
 
 export async function listExif() {

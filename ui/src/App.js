@@ -25,9 +25,12 @@ function App() {
                     {icon: 'wangpan', name: '我的云盘'},
                     {icon: 'DCIM', name: '我的相册'},
                     {icon: 'devices', name: '设备列表'},
+                    {icon: '', name: '文件类型'},
+                    {icon: '', name: '文件大小'},
                     {icon: 'yuntongbu', name: '备份任务'},
-                    {icon: 'swapVertical', name: '传输列表'},
                     {icon: 'peizhi', name: '设置'},
+
+                    {icon: 'swapVertical', name: '传输列表'},
                     {icon: 'system', name: '资源监控'},
                     {icon: '', name: '我的书签'},
                     {icon: '', name: '分享历史'},

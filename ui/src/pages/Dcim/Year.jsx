@@ -7,7 +7,7 @@ export default function ({ exifMap, chosenHostComputer }) {
         .filter(hash => chosenHostComputer.includes(exifMap[hash].hostComputer));
     let dateMap = {};
     filterHashList.forEach(hash => {
-        let date = moment(exifMap[hash].dateTime / 1000 / 1000).format("YYYY年");
+        let date = exifMap[hash].dateTime ? moment(exifMap[hash].dateTime / 1000 / 1000).format("YYYY年") : "未知时间";
         let elm = { hash, ...exifMap[hash] };
         if (dateMap.hasOwnProperty(date)) {
             dateMap[date].push(elm);

@@ -1,48 +1,34 @@
 import { Box, Button, Checkbox, FormControl, FormControlLabel, FormGroup, Grid, Hidden, ImageList, ImageListItem, ImageListItemBar, InputLabel, MenuItem, Select, Stack } from "@mui/material";
 // import FormControlLabel from '@mui/material/FormControlLabel';
 import { useEffect, useState } from "react";
-import { analysisExif, listExif } from 'api/web/exif';
+import { analysisExif, exifStatus, listExif } from 'api/web/exif';
 import All from './All';
 import Date from "./Date";
 import Month from "./Month";
 import Year from "./Year";
+import Exif from "./Exif";
 
 export default function ({ show }) {
     const [exifMap, setExifMap] = useState({});
     const [viewBy, setViewBy] = useState("所有照片");
     const [chosenHostComputer, setChosenHostComputer] = useState([]);
     const [hostComputerMap, setHostComputerMap] = useState([]);
-    useEffect(() => {
-        listExif().then(exifMap => {
-            setExifMap(exifMap);
-            let hostComputerMap = {};
-            Object.values(exifMap).forEach(exif => {
-                if (hostComputerMap.hasOwnProperty(exif.hostComputer)) {
-                    hostComputerMap[exif.hostComputer]++;
-                } else {
-                    hostComputerMap[exif.hostComputer] = 1;
-                }
-            })
-            setHostComputerMap(hostComputerMap);
-            setChosenHostComputer(Object.keys(hostComputerMap));
-        });
-    }, []);
     return (
         <Stack style={{ width: "100%", height: "100%", display: show ? undefined : "none" }}>
-            <Button variant="outlined" sx={{ width: "10em" }}
-                onClick={e => {
-                    analysisExif(true);
-                }}
-            >
-                开始解析exif
-            </Button>
-            <Button variant="outlined" sx={{ width: "10em" }}
-                onClick={e => {
-                    analysisExif(false);
-                }}
-            >
-                结束解析exif
-            </Button>
+            <Exif onNewExif={() => {
+                listExif().then(exifMap => {
+                    setExifMap(exifMap);
+                    let hostComputerMap = {};
+                    Object.values(exifMap).forEach(exif => {
+                        if (hostComputerMap.hasOwnProperty(exif.hostComputer)) {
+                            hostComputerMap[exif.hostComputer]++;
+                        } else {
+                            hostComputerMap[exif.hostComputer] = 1;
+                        }
+                    })
+                    setHostComputerMap(hostComputerMap);
+                });
+            }} />
             <FormControl sx={{ minWidth: "10em" }}>
                 <InputLabel id="view-by">视图</InputLabel>
                 <Select

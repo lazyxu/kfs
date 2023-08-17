@@ -16,7 +16,10 @@ import (
 
 var exifChan = make(chan bool)
 
-var remain atomic.Uint64
+var exifAnalyzing atomic.Bool
+var exifFinished atomic.Bool
+var exifCnt atomic.Uint64
+var exifTotal atomic.Uint64
 
 func apiAnalysisExif(c echo.Context) error {
 	startStr := c.QueryParam("start")
@@ -28,6 +31,22 @@ func apiAnalysisExif(c echo.Context) error {
 	return c.String(http.StatusOK, "")
 }
 
+type ExifStatus struct {
+	Analyzing bool   `json:"analyzing"`
+	Finished  bool   `json:"finished"`
+	Cnt       uint64 `json:"cnt"`
+	Total     uint64 `json:"total"`
+}
+
+func apiExifStatus(c echo.Context) error {
+	return ok(c, ExifStatus{
+		Analyzing: exifAnalyzing.Load(),
+		Finished:  exifFinished.Load(),
+		Cnt:       exifCnt.Load(),
+		Total:     exifTotal.Load(),
+	})
+}
+
 func apiListExif(c echo.Context) error {
 	exifMap, err := kfsCore.Db.ListExif(c.Request().Context())
 	if err != nil {
@@ -37,41 +56,49 @@ func apiListExif(c echo.Context) error {
 }
 
 func AnalysisExifProcess() {
-	ctx, cancel := context.WithCancel(context.TODO())
+	var ctx context.Context
+	var cancel context.CancelFunc
 	go func() {
 		for {
 			select {
 			case start := <-exifChan:
 				if start {
-					if remain.Load() == 0 {
+					if exifAnalyzing.CompareAndSwap(false, true) {
+						ctx, cancel = context.WithCancel(context.TODO())
 						go AnalysisExif(ctx)
 					}
 				} else {
-					cancel()
+					if cancel != nil {
+						cancel()
+					}
 				}
 			}
 		}
 	}()
 }
 
-func AnalysisExif(ctx context.Context) error {
+func AnalysisExif(ctx context.Context) (err error) {
 	println("AnalysisExif")
-	// TODO: now remain is 0
+	exifFinished.Store(false)
+	exifCnt.Store(0)
+	exifTotal.Store(0)
+	defer func() {
+		exifAnalyzing.Store(false)
+		exifFinished.Store(true)
+	}()
 	hashList, err := kfsCore.Db.ListExpectExif(ctx)
 	if err != nil {
 		return err
 	}
-	remain.Store(uint64(len(hashList)))
-	defer func() {
-		remain.Store(0)
-	}()
+	exifTotal.Store(uint64(len(hashList)))
 	for i, hash := range hashList {
 		select {
 		case <-ctx.Done():
 			return context.DeadlineExceeded
 		default:
 		}
-		e, err := GetExifData(hash)
+		var e dao.Exif
+		e, err = GetExifData(hash)
 		if err != nil {
 			fmt.Printf("%d %s NullExif\n", len(hashList)-i, hash)
 			_, err = kfsCore.Db.InsertNullExif(ctx, hash)
@@ -80,12 +107,12 @@ func AnalysisExif(ctx context.Context) error {
 				println("InsertNullExif", err.Error())
 				return err
 			}
+			exifCnt.Add(1)
 			continue
 		}
 		fmt.Printf("%d %s %+v\n", len(hashList)-i, hash, e)
 		if e.DateTime == 0 {
 			println("d.DateTime == 0")
-			continue
 		}
 		_, err = kfsCore.Db.InsertExif(ctx, hash, e)
 		// TODO: what if exist
@@ -93,7 +120,7 @@ func AnalysisExif(ctx context.Context) error {
 			println("InsertExif", err.Error())
 			return err
 		}
-		remain.Store(uint64(len(hashList) - i - 1))
+		exifCnt.Add(1)
 	}
 	if err != nil {
 		return err

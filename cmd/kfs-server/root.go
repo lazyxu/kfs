@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"embed"
 	"errors"
 	"fmt"
@@ -133,7 +132,7 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			println("diskUsage:", err.Error())
 		}
-		AnalysisFileType(context.TODO())
+		//AnalysisFileType(context.TODO())
 
 		go func() {
 			// socket
