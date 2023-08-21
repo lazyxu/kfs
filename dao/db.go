@@ -54,6 +54,12 @@ type Database interface {
 	ListExpectExif(ctx context.Context) (hashList []string, err error)
 	ListExpectExifCb(ctx context.Context, cb func(hash string)) (err error)
 	ListExif(ctx context.Context) (exifMap map[string]Exif, err error)
+
+	ListFile(ctx context.Context) (hashList []string, err error)
+
+	InsertFileType(ctx context.Context, hash string, t FileType) (exist bool, err error)
+	ListExpectFileType(ctx context.Context) (hashList []string, err error)
+	ListFileType(ctx context.Context) (fileTypeMap map[string]FileType, err error)
 }
 
 func DatabaseNewFunc(dataSourceName string, newDB func(dataSourceName string) (Database, error)) func() (Database, error) {

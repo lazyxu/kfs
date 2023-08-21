@@ -60,3 +60,9 @@ func (db *DB) SumFileSize(ctx context.Context) (size uint64, err error) {
 	defer db.putConn(conn)
 	return dbBase.SumFileSize(ctx, conn)
 }
+
+func (db *DB) ListFile(ctx context.Context) (hashList []string, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListFile(ctx, conn)
+}

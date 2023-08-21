@@ -43,3 +43,7 @@ func (db *DB) InsertFile(ctx context.Context, hash string, size uint64) error {
 func (db *DB) SumFileSize(ctx context.Context) (size uint64, err error) {
 	return dbBase.SumFileSize(ctx, db.db)
 }
+
+func (db *DB) ListFile(ctx context.Context) (hashList []string, err error) {
+	return dbBase.ListFile(ctx, db.db)
+}

@@ -261,3 +261,23 @@ func SumFileSize(ctx context.Context, conn *sql.DB) (size uint64, err error) {
 	}
 	return
 }
+
+func ListFile(ctx context.Context, conn *sql.DB) (hashList []string, err error) {
+	rows, err := conn.QueryContext(ctx, `
+	SELECT hash FROM _file;
+	`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	hashList = []string{}
+	for rows.Next() {
+		var hash string
+		err = rows.Scan(&hash)
+		if err != nil {
+			return
+		}
+		hashList = append(hashList, hash)
+	}
+	return
+}

@@ -102,6 +102,14 @@ func (db *DB) Create() error {
 		FOREIGN KEY (hash)  REFERENCES _file(hash)
 	);
 
+	CREATE TABLE IF NOT EXISTS _file_type (
+		hash               CHAR(64)     NOT NULL PRIMARY KEY,
+		Type               VARCHAR(255) NOT NULL,
+		SubType            VARCHAR(255) NOT NULL,
+		Extension          VARCHAR(255) NOT NULL,
+		FOREIGN KEY (hash) REFERENCES _file(hash)
+	);
+
 	CREATE TABLE IF NOT EXISTS _driver (
 		name        VARCHAR(256) NOT NULL PRIMARY KEY,
 		description VARCHAR(256) NOT NULL DEFAULT ""
