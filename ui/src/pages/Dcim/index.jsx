@@ -18,9 +18,9 @@ export default function ({ show }) {
         <Stack style={{ width: "100%", height: "100%", display: show ? undefined : "none" }}>
             <Exif onNewExif={() => {
                 listExif().then(exifMap => {
-                    setExifMap(exifMap);
                     let shotEquipmentMap = {};
-                    Object.values(exifMap).forEach(exif => {
+                    Object.keys(exifMap).forEach(hash => {
+                        let exif = exifMap[hash];
                         let shotEquipment = parseShotEquipment(exif);
                         let shotTime = parseShotTime(exif);
                         if (shotEquipmentMap.hasOwnProperty(shotEquipment)) {
@@ -28,9 +28,10 @@ export default function ({ show }) {
                         } else {
                             shotEquipmentMap[shotEquipment] = 1;
                         }
-                        exif.shotEquipment = shotEquipment;
-                        exif.shotTime = shotTime;
+                        exifMap[hash].shotEquipment = shotEquipment;
+                        exifMap[hash].shotTime = shotTime;
                     })
+                    setExifMap(exifMap);
                     setShotEquipmentMap(shotEquipmentMap);
                 });
             }} />
