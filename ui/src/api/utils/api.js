@@ -16,6 +16,23 @@ export function isDCIM(name) {
     return false;
 }
 
-export function parseDateTime(exif) {
-    return moment.parseZone(exif.DateTime + " " + exif.OffsetTime, "YYYY:MM:DD HH:mm:ss ZZ");
+export function parseShotTime(exif) {
+    if (exif.DateTime) {
+        return moment.parseZone(exif.DateTime + " " + exif.OffsetTime, "YYYY:MM:DD HH:mm:ss ZZ");
+    } else if (exif.DateTimeOriginal) {
+        return moment.parseZone(exif.DateTimeOriginal + " " + exif.OffsetTimeOriginal, "YYYY:MM:DD HH:mm:ss ZZ");
+    }
+    return moment.parseZone(exif.DateTimeDigitized + " " + exif.OffsetTimeDigitized, "YYYY:MM:DD HH:mm:ss ZZ");
+}
+
+export function parseShotEquipment(exif) {
+    if (exif.Model) {
+        if (exif.Model.includes(exif.Make)) {
+            return exif.Model;
+        } else {
+            return exif.Make + " " + exif.Model;
+        }
+    } else {
+        return exif.HostComputer;
+    }
 }

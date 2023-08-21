@@ -1,13 +1,13 @@
 import Image from "./Image";
 import { Box, Grid } from "@mui/material";
-import { parseDateTime } from "api/utils/api";
+import { parseShotTime } from "api/utils/api";
 
-export default function ({ exifMap, chosenModel }) {
-    let filterHashList = Object.keys(exifMap).sort((a, b) => exifMap[a].DateTime - exifMap[b].DateTime)
-        .filter(hash => chosenModel.includes(exifMap[hash].Model));
+export default function ({ exifMap, chosenShotEquipment }) {
+    let filterHashList = Object.keys(exifMap).sort((a, b) => exifMap[a].shotTime - exifMap[b].shotTime)
+        .filter(hash => chosenShotEquipment.includes(exifMap[hash].shotEquipment));
     let dateMap = {};
     filterHashList.forEach(hash => {
-        let date = parseDateTime(exifMap[hash]);
+        let date = parseShotTime(exifMap[hash]);
         date = date ? date.format("YYYY年MM月") : "未知时间";
         let elm = { hash, ...exifMap[hash] };
         if (dateMap.hasOwnProperty(date)) {

@@ -187,8 +187,6 @@ func NewWebUploadProcess(ctx context.Context, req WsReq, concurrent int, onResp 
 			for {
 				select {
 				case <-w.Done:
-					w.Done <- struct{}{}
-					w.Resp(i)
 					return
 				case <-ctx.Done():
 					w.Resp(i)

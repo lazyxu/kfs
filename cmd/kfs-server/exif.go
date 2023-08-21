@@ -10,6 +10,7 @@ import (
 	"github.com/lazyxu/kfs/dao"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync/atomic"
 )
 
@@ -148,11 +149,8 @@ func GetExifData(hash string) (e dao.Exif, err error) {
 		case "Orientation":
 			val := et.Value.([]uint16)
 			if len(val) == 0 {
-				e.Orientation = 0
+				e.Orientation = 0xFFFF
 			} else if len(val) == 1 {
-				if val[0] < 1 || val[0] > 8 {
-					panic(val[0])
-				}
 				e.Orientation = val[0]
 			} else {
 				panic(val)
@@ -178,7 +176,7 @@ func GetExifData(hash string) (e dao.Exif, err error) {
 		case "HostComputer":
 			e.HostComputer = et.Value.(string)
 		case "Make":
-			e.Make = et.Value.(string)
+			e.Make = strings.TrimSuffix(et.Value.(string), "\x00")
 		case "Model":
 			e.Model = et.Value.(string)
 		case "ExifImageWidth":

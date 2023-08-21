@@ -1,7 +1,7 @@
-import { parseDateTime } from 'api/utils/api';
+import { parseShotTime } from 'api/utils/api';
 
 export default function ({ hash, exif }) {
-    let time = parseDateTime(exif).format("YYYY年MM月DD日 HH:mm:ss");
+    let time = parseShotTime(exif).format("YYYY年MM月DD日 HH:mm:ss");
     return (
         <img style={{ width: "100%" }} src={"http://127.0.0.1:1123/thumbnail?size=256&cutSquare=true&hash=" + hash} loading="lazy"
             title={time + " " + exif.OffsetTime + "\n"
