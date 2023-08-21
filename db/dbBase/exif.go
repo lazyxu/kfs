@@ -22,20 +22,41 @@ func InsertExif(ctx context.Context, conn *sql.DB, db DbImpl, hash string, e dao
 	_, err = conn.ExecContext(ctx, `
 	INSERT INTO _exif (
 		hash,
-		version,
-		dateTime,
-		hostComputer,
+		ExifVersion,
+		ImageDescription,
+		Orientation,
+		DateTime,
+		DateTimeOriginal,
+		DateTimeDigitized,
+		OffsetTime,
+		OffsetTimeOriginal,
+		OffsetTimeDigitized,
+		SubsecTime,
+		SubsecTimeOriginal,
+		SubsecTimeDigitized,
+		HostComputer,
+		Make,
+		Model,
+		ExifImageWidth,
+		ExifImageLength,
 		GPSLatitudeRef,
 		GPSLatitude,
 		GPSLongitudeRef,
 		GPSLongitude
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, hash, e.Version, e.DateTime, e.HostComputer, e.GPSLatitudeRef, e.GPSLatitude, e.GPSLongitudeRef, e.GPSLongitude)
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, hash, e.ExifVersion, e.ImageDescription, e.Orientation,
+		e.DateTime, e.DateTimeOriginal, e.DateTimeDigitized,
+		e.OffsetTime, e.OffsetTimeOriginal, e.OffsetTimeDigitized,
+		e.SubsecTime, e.SubsecTimeOriginal, e.SubsecTimeDigitized,
+		e.HostComputer, e.Make, e.Model,
+		e.ExifImageWidth, e.ExifImageLength,
+		e.GPSLatitudeRef, e.GPSLatitude, e.GPSLongitudeRef, e.GPSLongitude)
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
 	}
 	return
 }
+
 func ListExpectExif(ctx context.Context, conn *sql.DB) (hashList []string, err error) {
 	rows, err := conn.QueryContext(ctx, `
 	SELECT hash FROM _file EXCEPT SELECT hash FROM _exif;
@@ -79,14 +100,28 @@ func ListExif(ctx context.Context, conn *sql.DB) (exifMap map[string]dao.Exif, e
 	rows, err := conn.QueryContext(ctx, `
 	SELECT 
 		hash,
-		version,
-		dateTime,
-		hostComputer,
+		ExifVersion,
+		ImageDescription,
+		Orientation,
+		DateTime,
+		DateTimeOriginal,
+		DateTimeDigitized,
+		OffsetTime,
+		OffsetTimeOriginal,
+		OffsetTimeDigitized,
+		SubsecTime,
+		SubsecTimeOriginal,
+		SubsecTimeDigitized,
+		HostComputer,
+		Make,
+		Model,
+		ExifImageWidth,
+		ExifImageLength,
 		GPSLatitudeRef,
 		GPSLatitude,
 		GPSLongitudeRef,
 		GPSLongitude
-	FROM _exif WHERE version IS NOT NULL;
+	FROM _exif WHERE exifVersion IS NOT NULL;
 	`)
 	if err != nil {
 		return
@@ -95,13 +130,18 @@ func ListExif(ctx context.Context, conn *sql.DB) (exifMap map[string]dao.Exif, e
 	exifMap = make(map[string]dao.Exif)
 	for rows.Next() {
 		var hash string
-		var exif dao.Exif
-		err = rows.Scan(&hash, &exif.Version, &exif.DateTime, &exif.HostComputer,
-			&exif.GPSLatitudeRef, &exif.GPSLatitude, &exif.GPSLongitudeRef, &exif.GPSLongitude)
+		var e dao.Exif
+		err = rows.Scan(&hash, &e.ExifVersion, &e.ImageDescription, &e.Orientation,
+			&e.DateTime, &e.DateTimeOriginal, &e.DateTimeDigitized,
+			&e.OffsetTime, &e.OffsetTimeOriginal, &e.OffsetTimeDigitized,
+			&e.SubsecTime, &e.SubsecTimeOriginal, &e.SubsecTimeDigitized,
+			&e.HostComputer, &e.Make, &e.Model,
+			&e.ExifImageWidth, &e.ExifImageLength,
+			&e.GPSLatitudeRef, &e.GPSLatitude, &e.GPSLongitudeRef, &e.GPSLongitude)
 		if err != nil {
 			return
 		}
-		exifMap[hash] = exif
+		exifMap[hash] = e
 	}
 	return
 }

@@ -1,7 +1,8 @@
-import { Box, Button, Checkbox, FormControl, FormControlLabel, FormGroup, Grid, Hidden, ImageList, ImageListItem, ImageListItemBar, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import { Box, Button, Container, Paper, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { analysisExif, exifStatus } from 'api/web/exif';
 import LinearProgressWithLabel from "pages/BackupTask/LinearProgressWithLabel";
+import { Label, ShortText } from "@mui/icons-material";
 
 export default function ({ onNewExif }) {
     const [status, setStatus] = useState({ analyzing: false });
@@ -54,7 +55,7 @@ export default function ({ onNewExif }) {
                     >
                         开始解析exif
                     </Button>
-                    {status.finished && <Typography variant="body2" color="text.secondary">已完成 {status.cnt}</Typography>}
+                    {status.finished && <Typography component="label" color="text.secondary">已完成 {status.cnt}</Typography>}
                 </>}
         </Box>
     );

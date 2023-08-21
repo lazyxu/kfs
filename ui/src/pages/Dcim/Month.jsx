@@ -1,13 +1,14 @@
 import Image from "./Image";
-import { Box, Button, Checkbox, FormControl, FormControlLabel, FormGroup, Grid, Hidden, ImageList, ImageListItem, ImageListItemBar, InputLabel, MenuItem, Select, Stack } from "@mui/material";
-import moment from 'moment';
+import { Box, Grid } from "@mui/material";
+import { parseDateTime } from "api/utils/api";
 
-export default function ({ exifMap, chosenHostComputer }) {
-    let filterHashList = Object.keys(exifMap).sort((a, b) => exifMap[a].dateTime - exifMap[b].dateTime)
-        .filter(hash => chosenHostComputer.includes(exifMap[hash].hostComputer));
+export default function ({ exifMap, chosenModel }) {
+    let filterHashList = Object.keys(exifMap).sort((a, b) => exifMap[a].DateTime - exifMap[b].DateTime)
+        .filter(hash => chosenModel.includes(exifMap[hash].Model));
     let dateMap = {};
     filterHashList.forEach(hash => {
-        let date = exifMap[hash].dateTime ? moment(exifMap[hash].dateTime / 1000 / 1000).format("YYYY年MM月") : "未知时间";
+        let date = parseDateTime(exifMap[hash]);
+        date = date ? date.format("YYYY年MM月") : "未知时间";
         let elm = { hash, ...exifMap[hash] };
         if (dateMap.hasOwnProperty(date)) {
             dateMap[date].push(elm);

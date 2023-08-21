@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"strconv"
 	"sync/atomic"
-	"time"
 )
 
 var exifChan = make(chan bool)
@@ -111,9 +110,6 @@ func AnalysisExif(ctx context.Context) (err error) {
 			continue
 		}
 		fmt.Printf("%d %s %+v\n", len(hashList)-i, hash, e)
-		if e.DateTime == 0 {
-			println("d.DateTime == 0")
-		}
 		_, err = kfsCore.Db.InsertExif(ctx, hash, e)
 		// TODO: what if exist
 		if err != nil {
@@ -144,29 +140,58 @@ func GetExifData(hash string) (e dao.Exif, err error) {
 	}
 	for _, et := range ets {
 		//fmt.Printf("%s %v\n", et.TagName, et.Value)
-		if et.TagName == "ExifVersion" {
-			e.Version = et.Value.(exifundefined.Tag9000ExifVersion).ExifVersion
-		} else if et.TagName == "DateTime" || et.TagName == "DateTimeOriginal" {
-			// TODO: time zone
-			t, err := time.Parse("2006:01:02 15:04:05", et.Value.(string))
-			if err != nil {
-				println("time.Parse", et.Value.(string), err.Error())
-				return e, err
+		switch et.TagName {
+		case "ExifVersion":
+			e.ExifVersion = et.Value.(exifundefined.Tag9000ExifVersion).ExifVersion
+		case "ImageDescription":
+			e.ImageDescription = et.Value.(string)
+		case "Orientation":
+			val := et.Value.([]uint16)
+			if len(val) == 0 {
+				e.Orientation = 0
+			} else if len(val) == 1 {
+				if val[0] < 1 || val[0] > 8 {
+					panic(val[0])
+				}
+				e.Orientation = val[0]
+			} else {
+				panic(val)
 			}
-			e.DateTime = uint64(t.UnixNano())
-		} else if et.TagName == "HostComputer" {
-			e.HostComputer = et.Value.(string)
-		} else if et.TagName == "OffsetTime" {
+		case "DateTime":
+			e.DateTime = et.Value.(string)
+		case "DateTimeOriginal":
+			e.DateTimeOriginal = et.Value.(string)
+		case "DateTimeDigitized":
+			e.DateTimeDigitized = et.Value.(string)
+		case "OffsetTime":
 			e.OffsetTime = et.Value.(string)
-		} else if et.TagName == "HostComputer" {
+		case "OffsetTimeOriginal":
+			e.OffsetTimeOriginal = et.Value.(string)
+		case "OffsetTimeDigitized":
+			e.OffsetTimeDigitized = et.Value.(string)
+		case "SubsecTime":
+			e.SubsecTime = et.Value.(string)
+		case "SubsecTimeOriginal":
+			e.SubsecTimeOriginal = et.Value.(string)
+		case "SubsecTimeDigitized":
+			e.SubsecTimeDigitized = et.Value.(string)
+		case "HostComputer":
 			e.HostComputer = et.Value.(string)
-		} else if et.TagName == "GPSLatitudeRef" {
+		case "Make":
+			e.Make = et.Value.(string)
+		case "Model":
+			e.Model = et.Value.(string)
+		case "ExifImageWidth":
+			e.ExifImageWidth = et.Value.(uint64)
+		case "ExifImageLength":
+			e.ExifImageLength = et.Value.(uint64)
+		case "GPSLatitudeRef":
 			e.GPSLatitudeRef = et.Value.(string)
-		} else if et.TagName == "GPSLatitude" {
+		case "GPSLatitude":
 			e.GPSLatitude = GPS2Float(et.Value.([]exifcommon.Rational))
-		} else if et.TagName == "GPSLongitudeRef" {
+		case "GPSLongitudeRef":
 			e.GPSLongitudeRef = et.Value.(string)
-		} else if et.TagName == "GPSLongitude" {
+		case "GPSLongitude":
 			e.GPSLongitude = GPS2Float(et.Value.([]exifcommon.Rational))
 		}
 	}

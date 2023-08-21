@@ -77,15 +77,29 @@ func (db *DB) Create() error {
 	);
 
 	CREATE TABLE IF NOT EXISTS _exif (
-		hash             CHAR(64)     NOT NULL PRIMARY KEY,
-	    version          CHAR(4)      DEFAULT NULL,
-	    dateTime         INTEGER      DEFAULT NULL,
-	    hostComputer     VARCHAR(255) DEFAULT NULL,
-	    GPSLatitudeRef   CHAR(1)      DEFAULT NULL,
-	    GPSLatitude      DOUBLE       DEFAULT NULL,
-	    GPSLongitudeRef  CHAR(1)      DEFAULT NULL,
-	    GPSLongitude     DOUBLE       DEFAULT NULL,
-	    FOREIGN KEY (hash)  REFERENCES _file(hash)
+		hash                CHAR(64)     NOT NULL PRIMARY KEY,
+		ExifVersion         CHAR(4)      DEFAULT NULL,
+		ImageDescription    VARCHAR(255)    DEFAULT NULL,
+		Orientation         INTEGER     DEFAULT NULL,
+		DateTime            VARCHAR(19)     DEFAULT NULL,
+		DateTimeOriginal    VARCHAR(19)     DEFAULT NULL,
+		DateTimeDigitized   VARCHAR(19)     DEFAULT NULL,
+		OffsetTime          VARCHAR(6)     DEFAULT NULL,
+		OffsetTimeOriginal  VARCHAR(6)     DEFAULT NULL,
+		OffsetTimeDigitized VARCHAR(6)     DEFAULT NULL,
+		SubsecTime          VARCHAR(9)     DEFAULT NULL,
+		SubsecTimeOriginal  VARCHAR(9)     DEFAULT NULL,
+		SubsecTimeDigitized VARCHAR(9)     DEFAULT NULL,
+		HostComputer        VARCHAR(255) DEFAULT NULL,
+		Make                VARCHAR(255) DEFAULT NULL,
+		Model               VARCHAR(255) DEFAULT NULL,
+		ExifImageWidth      INTEGER DEFAULT NULL,
+		ExifImageLength     INTEGER DEFAULT NULL,
+		GPSLatitudeRef      CHAR(1)      DEFAULT NULL,
+		GPSLatitude         DOUBLE       DEFAULT NULL,
+		GPSLongitudeRef     CHAR(1)      DEFAULT NULL,
+		GPSLongitude        DOUBLE       DEFAULT NULL,
+		FOREIGN KEY (hash)  REFERENCES _file(hash)
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver (
@@ -94,7 +108,7 @@ func (db *DB) Create() error {
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver_file (
-		driverName VARCHAR(256)   NOT NULL,
+		driverName  VARCHAR(256)   NOT NULL,
 		dirPath     VARCHAR(32767) NOT NULL,
 		name        VARCHAR(255)   NOT NULL,
 	    version     INTEGER        NOT NULL,

@@ -11,60 +11,59 @@ import Exif from "./Exif";
 export default function ({ show }) {
     const [exifMap, setExifMap] = useState({});
     const [viewBy, setViewBy] = useState("所有照片");
-    const [chosenHostComputer, setChosenHostComputer] = useState([]);
-    const [hostComputerMap, setHostComputerMap] = useState([]);
+    const [chosenModel, setChosenModel] = useState([]);
+    const [ModelMap, setModelMap] = useState([]);
     return (
         <Stack style={{ width: "100%", height: "100%", display: show ? undefined : "none" }}>
             <Exif onNewExif={() => {
                 listExif().then(exifMap => {
                     setExifMap(exifMap);
-                    let hostComputerMap = {};
+                    let ModelMap = {};
                     Object.values(exifMap).forEach(exif => {
-                        if (hostComputerMap.hasOwnProperty(exif.hostComputer)) {
-                            hostComputerMap[exif.hostComputer]++;
+                        if (ModelMap.hasOwnProperty(exif.Model)) {
+                            ModelMap[exif.Model]++;
                         } else {
-                            hostComputerMap[exif.hostComputer] = 1;
+                            ModelMap[exif.Model] = 1;
                         }
                     })
-                    setHostComputerMap(hostComputerMap);
+                    setModelMap(ModelMap);
                 });
             }} />
-            <FormControl sx={{ minWidth: "10em" }}>
-                <InputLabel id="view-by">视图</InputLabel>
+            <Box>
+                <InputLabel sx={{display: "inline"}}>视图：</InputLabel>
                 <Select
-                    labelId="view-by"
                     value={viewBy}
                     onChange={e => setViewBy(e.target.value)}
-                    sx={{ width: "10em" }}
+                    size="small"
                 >
                     {["年", "月", "日", "所有照片"].map(value =>
                         <MenuItem key={value} value={value}>{value}</MenuItem>
                     )}
                 </Select>
-            </FormControl>
-            <FormGroup>
-                <InputLabel>拍摄设备</InputLabel>
-                {Object.keys(hostComputerMap).map((hostComputer, i) =>
+            </Box>
+            <Box>
+                <InputLabel sx={{display: "inline"}}>拍摄设备：</InputLabel>
+                {Object.keys(ModelMap).map((Model, i) =>
                     <FormControlLabel key={i} control={
-                        <Checkbox defaultChecked={chosenHostComputer.includes(hostComputer)} value={hostComputer} onChange={e => {
-                            setChosenHostComputer(prev => {
+                        <Checkbox defaultChecked={chosenModel.includes(Model)} value={Model} onChange={e => {
+                            setChosenModel(prev => {
                                 let set = new Set(prev);
                                 if (e.target.checked) {
-                                    set.add(hostComputer);
+                                    set.add(Model);
                                     return Array.from(set);
                                 } else {
-                                    set.delete(hostComputer);
+                                    set.delete(Model);
                                     return Array.from(set);
                                 }
                             })
                         }} />
-                    } label={(hostComputer ? hostComputer : "未知设备") + " (" + hostComputerMap[hostComputer] + ")"} />
+                    } label={(Model ? Model : "未知设备") + " (" + ModelMap[Model] + ")"} />
                 )}
-            </FormGroup>
-            {viewBy == "年" && <Year exifMap={exifMap} chosenHostComputer={chosenHostComputer} />}
-            {viewBy == "月" && <Month exifMap={exifMap} chosenHostComputer={chosenHostComputer} />}
-            {viewBy == "日" && <Date exifMap={exifMap} chosenHostComputer={chosenHostComputer} />}
-            {viewBy == "所有照片" && <All exifMap={exifMap} chosenHostComputer={chosenHostComputer} />}
+            </Box>
+            {viewBy == "年" && <Year exifMap={exifMap} chosenModel={chosenModel} />}
+            {viewBy == "月" && <Month exifMap={exifMap} chosenModel={chosenModel} />}
+            {viewBy == "日" && <Date exifMap={exifMap} chosenModel={chosenModel} />}
+            {viewBy == "所有照片" && <All exifMap={exifMap} chosenModel={chosenModel} />}
         </Stack>
     );
 }
