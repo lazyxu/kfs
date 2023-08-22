@@ -45,3 +45,7 @@ export function parseShotEquipment(exif) {
         return exif.HostComputer;
     }
 }
+
+export function toPrecent(n) {
+    return (Math.floor(n * 100000) / 1000).toFixed(3) + "%";
+}

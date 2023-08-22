@@ -6,6 +6,8 @@ import (
 )
 
 type Database interface {
+	IsSqlite() bool
+	DataSourceName() string
 	Size() (int64, error)
 	Remove() error
 	Create() error

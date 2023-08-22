@@ -11,8 +11,9 @@ import (
 )
 
 type DB struct {
-	db          *sql.DB
-	branchCache sync.Map
+	db             *sql.DB
+	branchCache    sync.Map
+	dataSourceName string
 }
 
 func New(dataSourceName string) (dao.Database, error) {
@@ -39,9 +40,18 @@ func open(dataSourceName string) (*DB, error) {
 		return nil, err
 	}
 	d := &DB{
-		db: db,
+		db:             db,
+		dataSourceName: dataSourceName,
 	}
 	return d, err
+}
+
+func (db *DB) IsSqlite() bool {
+	return false
+}
+
+func (db *DB) DataSourceName() string {
+	return db.dataSourceName
 }
 
 func (db *DB) Size() (int64, error) {

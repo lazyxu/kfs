@@ -38,6 +38,14 @@ func open(dataSourceName string) (*DB, error) {
 	return db, err
 }
 
+func (db *DB) IsSqlite() bool {
+	return true
+}
+
+func (db *DB) DataSourceName() string {
+	return db.dataSourceName
+}
+
 func (db *DB) Size() (int64, error) {
 	stat, err := os.Stat(db.dataSourceName)
 	if err != nil {

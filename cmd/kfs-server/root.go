@@ -129,10 +129,6 @@ var rootCmd = &cobra.Command{
 		}
 		defer kfsCore.Close()
 		//GetExifData("375667db5da6ed4017815f864ffe0563182523167ce40448c175298fe6af56d1")
-		err = diskUsage()
-		if err != nil {
-			println("diskUsage:", err.Error())
-		}
 		AnalysisFileType(context.TODO())
 
 		go func() {

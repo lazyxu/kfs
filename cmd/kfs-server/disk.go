@@ -2,39 +2,53 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"github.com/dustin/go-humanize"
+	"errors"
+	"github.com/labstack/echo/v4"
 	"github.com/shirou/gopsutil/v3/disk"
 	"io/fs"
 	"path/filepath"
 )
 
-func diskUsage() error {
-	info, err := disk.Usage("C://")
+type DiskUsage struct {
+	Total     uint64 `json:"total"`
+	Free      uint64 `json:"free"`
+	Thumbnail uint64 `json:"thumbnail"`
+	Metadata  uint64 `json:"metadata"`
+	File      uint64 `json:"file"`
+}
+
+func apiDiskUsage(c echo.Context) error {
+	if !kfsCore.Db.IsSqlite() {
+		return errors.New("is not sqlite")
+	}
+	var usage DiskUsage
+	abs, err := filepath.Abs(kfsCore.Db.DataSourceName())
 	if err != nil {
 		return err
 	}
-	fmt.Println("剩余空间", humanize.IBytes(info.Free))
-	var thumbnailSize uint64
+	info, err := disk.Usage(filepath.Dir(abs))
+	if err != nil {
+		return err
+	}
+	usage.Total = info.Total
+	usage.Free = info.Free
 	err = filepath.Walk("thumbnail", func(path string, info fs.FileInfo, err error) error {
 		if !info.IsDir() {
-			thumbnailSize += uint64(info.Size())
+			usage.Thumbnail += uint64(info.Size())
 		}
 		return nil
 	})
 	if err != nil {
 		return err
 	}
-	fmt.Println("缩略图总大小", humanize.IBytes(thumbnailSize))
 	dbSize, err := kfsCore.Db.Size()
 	if err != nil {
 		return err
 	}
-	fmt.Println("元数据总大小", humanize.IBytes(uint64(dbSize)))
-	fileSize, err := kfsCore.Db.SumFileSize(context.TODO())
+	usage.Metadata = uint64(dbSize)
+	usage.File, err = kfsCore.Db.SumFileSize(context.TODO())
 	if err != nil {
 		return err
 	}
-	fmt.Println("文件总大小", humanize.IBytes(fileSize))
-	return nil
+	return ok(c, usage)
 }
