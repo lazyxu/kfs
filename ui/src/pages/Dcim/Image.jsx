@@ -1,6 +1,11 @@
-export default function ({ hash, exif }) {
-    let time = exif.shotTime.isValid() ? exif.shotTime.format("YYYY年MM月DD日 HH:mm:ss") : "未知时间";
+import { Box } from "@mui/material";
+import SvgIcon from "components/Icon/SvgIcon";
+
+export default function ({ metadata }) {
+    let { hash, exif, fileType, shotTime, shotEquipment } = metadata;
+    let time = shotTime.isValid() ? shotTime.format("YYYY年MM月DD日 HH:mm:ss") : "未知时间";
     let transform = "";
+    console.log(metadata);
     switch (exif.Orientation) {
         case 2:
             transform = "rotateY(180deg)";
@@ -27,7 +32,8 @@ export default function ({ hash, exif }) {
     return (
         <img style={{ width: "100%", transform }} src={"http://127.0.0.1:1123/thumbnail?size=256&cutSquare=true&hash=" + hash} loading="lazy"
             title={time + "\n"
-                + (exif.Model ? (exif.Model + "\n") : "")
+                + shotEquipment + "\n"
+                + fileType.subType + "\n"
                 + (exif.GPSLatitudeRef ? (exif.GPSLatitudeRef + " " + exif.GPSLatitude + "\n") : "")
                 + (exif.GPSLongitudeRef ? (exif.GPSLongitudeRef + " " + exif.GPSLongitude + "\n") : "")
                 + hash}

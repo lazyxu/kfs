@@ -2,19 +2,18 @@ import Image from "./Image";
 import { Box, Grid } from "@mui/material";
 import { parseShotTime, timeSortFn } from "api/utils/api";
 
-export default function ({ exifMap, chosenShotEquipment }) {
-    let filterHashList = Object.keys(exifMap)
-        .filter(hash => chosenShotEquipment.includes(exifMap[hash].shotEquipment))
-        .sort((a, b) => timeSortFn(exifMap, a, b));
+export default function ({ metadataList, chosenShotEquipment, chosenFileType }) {
+    let filterMetadataList = metadataList
+        .filter(metadata => chosenShotEquipment.includes(metadata.shotEquipment) && chosenFileType.includes(metadata.fileType.subType))
+        .sort(timeSortFn);
     let dateMap = {};
-    filterHashList.forEach(hash => {
-        let date = parseShotTime(exifMap[hash]);
+    filterMetadataList.forEach(metadata => {
+        let date = parseShotTime(metadata.exif);
         date = date ? date.format("YYYY年MM月") : "未知时间";
-        let elm = { hash, ...exifMap[hash] };
         if (dateMap.hasOwnProperty(date)) {
-            dateMap[date].push(elm);
+            dateMap[date].push(metadata);
         } else {
-            dateMap[date] = [elm];
+            dateMap[date] = [metadata];
         }
     })
     return (
@@ -22,9 +21,9 @@ export default function ({ exifMap, chosenShotEquipment }) {
             {Object.keys(dateMap).map(date => <Grid item xs={12} style={{ width: "100%" }} key={date}>
                 <Box>{date}</Box>
                 <Grid container spacing={1}>
-                    {dateMap[date].sort((a, b) => timeSortFn(exifMap, a.hash, b.hash)).map(exif => {
-                        return <Grid item style={{ width: "256px", height: "256px" }} key={exif.hash}>
-                            <Image hash={exif.hash} exif={exif} />
+                    {dateMap[date].sort(timeSortFn).map(metadata => {
+                        return <Grid item style={{ width: "256px", height: "256px" }} key={metadata.hash}>
+                            <Image metadata={metadata} />
                         </Grid>
                     })}
                 </Grid>

@@ -1,7 +1,7 @@
 package dao
 
 type FileType struct {
-	Type      string
-	SubType   string
-	Extension string
+	Type      string `json:"type"`
+	SubType   string `json:"subType"`
+	Extension string `json:"extension"`
 }

@@ -23,3 +23,9 @@ type Exif struct {
 	GPSLongitudeRef     string
 	GPSLongitude        float64 // 经度
 }
+
+type ExifWithFileType struct {
+	Hash     string   `json:"hash"`
+	Exif     Exif     `json:"exif"`
+	FileType FileType `json:"fileType"`
+}

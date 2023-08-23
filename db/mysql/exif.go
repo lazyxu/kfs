@@ -25,3 +25,7 @@ func (db *DB) ListExpectExifCb(ctx context.Context, cb func(hash string)) (err e
 func (db *DB) ListExif(ctx context.Context) (exifMap map[string]dao.Exif, err error) {
 	return dbBase.ListExif(ctx, db.db)
 }
+
+func (db *DB) ListExifWithFileType(ctx context.Context) (list []dao.ExifWithFileType, err error) {
+	return dbBase.ListExifWithFileType(ctx, db.db)
+}

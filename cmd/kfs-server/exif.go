@@ -6,6 +6,7 @@ import (
 	"github.com/dsoprea/go-exif/v3"
 	exifcommon "github.com/dsoprea/go-exif/v3/common"
 	exifundefined "github.com/dsoprea/go-exif/v3/undefined"
+	"github.com/h2non/filetype/types"
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/dao"
 	"net/http"
@@ -48,11 +49,11 @@ func apiExifStatus(c echo.Context) error {
 }
 
 func apiListExif(c echo.Context) error {
-	exifMap, err := kfsCore.Db.ListExif(c.Request().Context())
+	data, err := kfsCore.Db.ListExifWithFileType(c.Request().Context())
 	if err != nil {
 		return err
 	}
-	return ok(c, exifMap)
+	return ok(c, data)
 }
 
 func AnalysisExifProcess() {
@@ -96,6 +97,21 @@ func AnalysisExif(ctx context.Context) (err error) {
 		case <-ctx.Done():
 			return context.DeadlineExceeded
 		default:
+		}
+		var fileType types.Type
+		fileType, err = GetFileType(hash)
+		if err != nil {
+			println("GetFileType", err.Error())
+			return err
+		}
+		_, err = kfsCore.Db.InsertFileType(ctx, hash, dao.FileType{
+			Type:      fileType.MIME.Type,
+			SubType:   fileType.MIME.Subtype,
+			Extension: fileType.Extension,
+		})
+		if err != nil {
+			println("InsertFileType", err.Error())
+			return err
 		}
 		var e dao.Exif
 		e, err = GetExifData(hash)

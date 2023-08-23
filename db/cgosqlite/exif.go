@@ -35,3 +35,9 @@ func (db *DB) ListExif(ctx context.Context) (exifMap map[string]dao.Exif, err er
 	defer db.putConn(conn)
 	return dbBase.ListExif(ctx, conn)
 }
+
+func (db *DB) ListExifWithFileType(ctx context.Context) (list []dao.ExifWithFileType, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListExifWithFileType(ctx, conn)
+}

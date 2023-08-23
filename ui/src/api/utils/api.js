@@ -25,13 +25,13 @@ export function parseShotTime(exif) {
     return moment.parseZone(exif.DateTimeDigitized + " " + exif.OffsetTimeDigitized, "YYYY:MM:DD HH:mm:ss ZZ");
 }
 
-export function timeSortFn(exifMap, a, b) {
-    if (!exifMap[a].shotTime.isValid()) {
+export function timeSortFn(a, b) {
+    if (!a.shotTime.isValid()) {
         return -1;
-    } else if (!exifMap[b].shotTime.isValid()) {
+    } else if (!b.shotTime.isValid()) {
         return 1;
     }
-    return exifMap[a].shotTime.isAfter(exifMap[b].shotTime) ? 1 : -1;
+    return a.shotTime.isAfter(b.shotTime) ? 1 : -1;
 }
 
 export function parseShotEquipment(exif) {

@@ -56,6 +56,7 @@ type Database interface {
 	ListExpectExif(ctx context.Context) (hashList []string, err error)
 	ListExpectExifCb(ctx context.Context, cb func(hash string)) (err error)
 	ListExif(ctx context.Context) (exifMap map[string]Exif, err error)
+	ListExifWithFileType(ctx context.Context) (list []ExifWithFileType, err error)
 
 	ListFile(ctx context.Context) (hashList []string, err error)
 

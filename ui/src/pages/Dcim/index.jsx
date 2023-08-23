@@ -10,17 +10,20 @@ import Exif from "./Exif";
 import { parseShotTime, parseShotEquipment } from "api/utils/api";
 
 export default function ({ show }) {
-    const [exifMap, setExifMap] = useState({});
+    const [metadataList, setMetadataList] = useState([]);
     const [viewBy, setViewBy] = useState("所有照片");
     const [chosenShotEquipment, setChosenShotEquipment] = useState([]);
-    const [shotEquipmentMap, setShotEquipmentMap] = useState([]);
+    const [shotEquipmentMap, setShotEquipmentMap] = useState({});
+    const [chosenFileType, setChosenFileType] = useState([]);
+    const [fileTypeMap, setFileTypeMap] = useState({});
     return (
         <Stack style={{ width: "100%", height: "100%", padding: "1em", display: show ? undefined : "none" }}>
             <Exif onNewExif={() => {
-                listExif().then(exifMap => {
+                listExif().then(metadataList => {
                     let shotEquipmentMap = {};
-                    Object.keys(exifMap).forEach(hash => {
-                        let exif = exifMap[hash];
+                    let fileTypeMap = {};
+                    metadataList.forEach(metadata => {
+                        let { exif, fileType } = metadata;
                         let shotEquipment = parseShotEquipment(exif);
                         let shotTime = parseShotTime(exif);
                         if (shotEquipmentMap.hasOwnProperty(shotEquipment)) {
@@ -28,11 +31,17 @@ export default function ({ show }) {
                         } else {
                             shotEquipmentMap[shotEquipment] = 1;
                         }
-                        exifMap[hash].shotEquipment = shotEquipment;
-                        exifMap[hash].shotTime = shotTime;
+                        if (fileTypeMap.hasOwnProperty(fileType.subType)) {
+                            fileTypeMap[fileType.subType]++;
+                        } else {
+                            fileTypeMap[fileType.subType] = 1;
+                        }
+                        metadata.shotEquipment = shotEquipment;
+                        metadata.shotTime = shotTime;
                     })
-                    setExifMap(exifMap);
+                    setMetadataList(metadataList);
                     setShotEquipmentMap(shotEquipmentMap);
+                    setFileTypeMap(fileTypeMap);
                 });
             }} />
             <Box>
@@ -67,10 +76,29 @@ export default function ({ show }) {
                     } label={(shotEquipment ? shotEquipment : "未知设备") + " (" + shotEquipmentMap[shotEquipment] + ")"} />
                 )}
             </Box>
-            {viewBy == "年" && <Year exifMap={exifMap} chosenShotEquipment={chosenShotEquipment} />}
-            {viewBy == "月" && <Month exifMap={exifMap} chosenShotEquipment={chosenShotEquipment} />}
-            {viewBy == "日" && <Date exifMap={exifMap} chosenShotEquipment={chosenShotEquipment} />}
-            {viewBy == "所有照片" && <All exifMap={exifMap} chosenShotEquipment={chosenShotEquipment} />}
+            <Box>
+                <InputLabel sx={{ display: "inline" }}>文件类型：</InputLabel>
+                {Object.keys(fileTypeMap).map((fileType, i) =>
+                    <FormControlLabel key={i} control={
+                        <Checkbox checked={chosenFileType.includes(fileType)} value={fileType} onChange={e => {
+                            setChosenFileType(prev => {
+                                let set = new Set(prev);
+                                if (e.target.checked) {
+                                    set.add(fileType);
+                                    return Array.from(set);
+                                } else {
+                                    set.delete(fileType);
+                                    return Array.from(set);
+                                }
+                            })
+                        }} />
+                    } label={fileType + " (" + fileTypeMap[fileType] + ")"} />
+                )}
+            </Box>
+            {viewBy == "年" && <Year metadataList={metadataList} chosenShotEquipment={chosenShotEquipment} chosenFileType={chosenFileType}/>}
+            {viewBy == "月" && <Month metadataList={metadataList} chosenShotEquipment={chosenShotEquipment} chosenFileType={chosenFileType}/>}
+            {viewBy == "日" && <Date metadataList={metadataList} chosenShotEquipment={chosenShotEquipment} chosenFileType={chosenFileType}/>}
+            {viewBy == "所有照片" && <All metadataList={metadataList} chosenShotEquipment={chosenShotEquipment} chosenFileType={chosenFileType}/>}
         </Stack>
     );
 }
