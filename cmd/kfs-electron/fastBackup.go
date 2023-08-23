@@ -161,6 +161,7 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 	if err != nil {
 		return p.err(req, err)
 	}
+	// TODO: failed to exit sometimes
 	w.Done <- struct{}{}
 	for i := 0; i < concurrent; i++ {
 		w.RespIfUpdated(i)

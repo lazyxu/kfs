@@ -39,6 +39,7 @@ func (h *uploadHandlersV2) StartWorker(ctx context.Context, index int) {
 	}
 	h.conns[index] = conn
 	go func() {
+		// TODO: may block here
 		<-ctx.Done()
 		if h.files[index] != nil {
 			h.files[index].Close()

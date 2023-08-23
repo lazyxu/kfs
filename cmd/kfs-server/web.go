@@ -2,7 +2,11 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/disintegration/imaging"
+	"github.com/h2non/filetype/matchers"
+	"github.com/h2non/filetype/types"
+	"github.com/jdeng/goheif"
 	"github.com/lazyxu/kfs/dao"
 	"image"
 	"net/http"
@@ -146,6 +150,31 @@ func init() {
 	}
 }
 
+func generateThumbnail(img image.Image, thumbnailFilePath string, cutSquare bool, size int) error {
+	x := img.Bounds().Size().X
+	y := img.Bounds().Size().Y
+	var newImg *image.NRGBA
+	if cutSquare {
+		newImg = imaging.Thumbnail(img, size, size, imaging.Lanczos)
+	} else {
+		var xx int
+		var yy int
+		if x > y {
+			xx = size
+			yy = int(float64(size) * float64(y) / float64(x))
+		} else {
+			xx = int(float64(size) * float64(x) / float64(y))
+			yy = size
+		}
+		newImg = imaging.Thumbnail(img, xx, yy, imaging.Lanczos)
+	}
+	err := imaging.Save(newImg, thumbnailFilePath)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func apiThumbnail(c echo.Context) error {
 	hash := c.QueryParam("hash")
 	sizeStr := c.QueryParam("size")
@@ -174,41 +203,47 @@ func apiThumbnail(c echo.Context) error {
 	thumbnailFilePath := filepath.Join("thumbnail", filename+".jpg")
 	f, err := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err) {
-		println("generate thumbnail for", filename)
-		var rc dao.SizedReadCloser
-		rc, err = kfsCore.S.ReadWithSize(hash)
+		var fileType types.Type
+		fileType, err = GetFileType(hash)
 		if err != nil {
-			println(err.Error())
-			c.Logger().Error(err)
 			return err
 		}
-		defer rc.Close()
-		var img image.Image
-		img, err = imaging.Decode(rc)
-		if err != nil {
-			println(err.Error())
-			c.Logger().Error(err)
-			return err
-		}
-		x := img.Bounds().Size().X
-		y := img.Bounds().Size().Y
-		var newImg *image.NRGBA
-		if cutSquare {
-			newImg = imaging.Thumbnail(img, size, size, imaging.Lanczos)
-		} else {
-			var xx int
-			var yy int
-			if x > y {
-				xx = size
-				yy = int(float64(size) * float64(y) / float64(x))
-			} else {
-				xx = int(float64(size) * float64(x) / float64(y))
-				yy = size
+		println("generate thumbnail for", filename, fileType.MIME.Value)
+		if fileType == matchers.TypeJpeg {
+			var rc dao.SizedReadCloser
+			rc, err = kfsCore.S.ReadWithSize(hash)
+			if err != nil {
+				return err
 			}
-			newImg = imaging.Thumbnail(img, xx, yy, imaging.Lanczos)
-		}
-		err = imaging.Save(newImg, thumbnailFilePath)
-		if err != nil {
+			defer rc.Close()
+			var img image.Image
+			img, err = imaging.Decode(rc)
+			if err != nil {
+				return err
+			}
+			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
+			if err != nil {
+				return err
+			}
+		} else if fileType == matchers.TypeHeif {
+			var rc dao.SizedReadCloser
+			rc, err = kfsCore.S.ReadWithSize(hash)
+			if err != nil {
+				return err
+			}
+			defer rc.Close()
+			var img image.Image
+			img, err = goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
+			if err != nil {
+				return err
+			}
+			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = fmt.Errorf("unsupport type %s for thumbnail", fileType.MIME)
+			c.Logger().Error(err)
 			return err
 		}
 		f, err = os.Open(thumbnailFilePath)
