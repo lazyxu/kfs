@@ -35,3 +35,14 @@ export async function download(driverName, filePath) {
     });
     return resp.data;
 }
+
+export async function openDcim(hash) {
+    console.log('web.openDcim', hash);
+    let resp = await axios.get(`http://127.0.0.1:1123/api/v1/openDcim`, {
+        params: {
+            hash
+        },
+        responseType: "arraybuffer",
+    });
+    return resp.data;
+}

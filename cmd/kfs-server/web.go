@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/h2non/filetype/matchers"
-	"github.com/h2non/filetype/types"
 	"github.com/jdeng/goheif"
 	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/rpc/server"
 	"image"
+	"image/jpeg"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -41,6 +40,7 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/list", apiList)
 	e.GET("/api/v1/openFile", apiOpenFile)
 	e.GET("/api/v1/downloadFile", apiDownloadFile)
+	e.GET("/api/v1/openDcim", apiOpenDcim)
 
 	e.GET("/thumbnail", apiThumbnail)
 	e.GET("/api/v1/analysisExif", apiExifStatus)
@@ -142,6 +142,36 @@ func apiDownloadFile(c echo.Context) error {
 	return c.Stream(http.StatusOK, "", rc)
 }
 
+func apiOpenDcim(c echo.Context) error {
+	hash := c.QueryParam("hash")
+	fileType := c.QueryParam("fileType")
+	if fileType == matchers.TypeHeif.MIME.Subtype {
+		rc, err := kfsCore.S.ReadWithSize(hash)
+		if err != nil {
+			return err
+		}
+		defer rc.Close()
+		img, err := goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
+		if err != nil {
+			return err
+		}
+		c.Response().Status = http.StatusOK
+		err = jpeg.Encode(c.Response(), img, &jpeg.Options{Quality: 100})
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	rc, err := kfsCore.S.ReadWithSize(hash)
+	if err != nil {
+		println(err.Error())
+		c.Logger().Error(err)
+		return err
+	}
+	defer rc.Close()
+	return c.Stream(http.StatusOK, "", rc)
+}
+
 func init() {
 	err := os.Mkdir("thumbnail", 0o700)
 	if os.IsExist(err) {
@@ -179,6 +209,7 @@ func generateThumbnail(img image.Image, thumbnailFilePath string, cutSquare bool
 func apiThumbnail(c echo.Context) error {
 	hash := c.QueryParam("hash")
 	sizeStr := c.QueryParam("size")
+	fileType := c.QueryParam("fileType")
 	size, err := strconv.Atoi(sizeStr)
 	if err != nil {
 		return err
@@ -204,13 +235,8 @@ func apiThumbnail(c echo.Context) error {
 	thumbnailFilePath := filepath.Join("thumbnail", filename+".jpg")
 	f, err := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err) {
-		var fileType types.Type
-		fileType, err = server.GetFileType(kfsCore, hash)
-		if err != nil {
-			return err
-		}
-		println("generate thumbnail for", filename, fileType.MIME.Value)
-		if fileType == matchers.TypeJpeg {
+		println("generate thumbnail for", filename, fileType)
+		if fileType == matchers.TypeJpeg.MIME.Subtype || fileType == matchers.TypePng.MIME.Subtype {
 			var rc dao.SizedReadCloser
 			rc, err = kfsCore.S.ReadWithSize(hash)
 			if err != nil {
@@ -226,7 +252,7 @@ func apiThumbnail(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-		} else if fileType == matchers.TypeHeif {
+		} else if fileType == matchers.TypeHeif.MIME.Subtype {
 			var rc dao.SizedReadCloser
 			rc, err = kfsCore.S.ReadWithSize(hash)
 			if err != nil {
@@ -243,7 +269,7 @@ func apiThumbnail(c echo.Context) error {
 				return err
 			}
 		} else {
-			err = fmt.Errorf("unsupport type %s for thumbnail", fileType.MIME)
+			err = fmt.Errorf("unsupport type %s for thumbnail", fileType)
 			c.Logger().Error(err)
 			return err
 		}

@@ -3,10 +3,10 @@ import {Dialog, DialogContent, DialogTitle, Grid} from "@mui/material";
 import useDialog from "hox/dialog";
 import useResourceManager from "hox/resourceManager";
 import IconButton from "@mui/material/IconButton";
-import CloseIcon from '@mui/icons-material/Close';
 import moment from "moment/moment";
 import humanize from "humanize";
 import {getPerm, modeIsDir} from "../../api/utils/api";
+import { Close } from '@mui/icons-material';
 
 function formatTime(t) {
     return moment(t / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
@@ -47,7 +47,7 @@ export default () => {
                         color: (theme) => theme.palette.grey[500],
                     }}
                 >
-                    <CloseIcon/>
+                    <Close/>
                 </IconButton>
             </DialogTitle>
             <DialogContent sx={{

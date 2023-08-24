@@ -61,7 +61,6 @@ func GetDriverFile(ctx context.Context, conn *sql.DB, driverName string, splitPa
 		&file.ChangeTime,
 		&file.AccessTime)
 	return
-	return
 }
 
 func UpsertDirItem(ctx context.Context, conn *sql.DB, db DbImpl, branchName string, splitPath []string, item dao.DirItem) (commit dao.Commit, branch dao.Branch, err error) {
