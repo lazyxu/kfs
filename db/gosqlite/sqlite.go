@@ -118,6 +118,15 @@ func (db *DB) Create() error {
 		FOREIGN KEY (hash) REFERENCES _file(hash)
 	);
 
+	CREATE TABLE IF NOT EXISTS _live_photo (
+		movHash                CHAR(64)     NOT NULL PRIMARY KEY,
+		heicHash               CHAR(64)     DEFAULT NULL,
+		jpgHash                CHAR(64)     DEFAULT NULL,
+		FOREIGN KEY (movHash)  REFERENCES   _file(hash),
+		FOREIGN KEY (heicHash) REFERENCES   _file(hash),
+		FOREIGN KEY (jpgHash)  REFERENCES   _file(hash)
+	);
+
 	CREATE TABLE IF NOT EXISTS _driver (
 		name        VARCHAR(256) NOT NULL PRIMARY KEY,
 		description VARCHAR(256) NOT NULL DEFAULT ""

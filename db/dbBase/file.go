@@ -7,7 +7,6 @@ import (
 	"errors"
 	"github.com/lazyxu/kfs/dao"
 	"os"
-	"strings"
 )
 
 func WriteFileWithTxOrDb(ctx context.Context, txOrDb TxOrDb, db DbImpl, file dao.File) error {
@@ -22,6 +21,8 @@ func WriteFileWithTxOrDb(ctx context.Context, txOrDb TxOrDb, db DbImpl, file dao
 	}
 	return err
 }
+
+var ErrNoSuchFileOrDir = errors.New("no such file or dir")
 
 func GetDriverFile(ctx context.Context, conn *sql.DB, driverName string, splitPath []string) (file dao.DriverFile, err error) {
 	if len(splitPath) == 0 {
@@ -48,7 +49,7 @@ func GetDriverFile(ctx context.Context, conn *sql.DB, driverName string, splitPa
 	}
 	defer rows.Close()
 	if !rows.Next() {
-		err = errors.New("no such file or dir: /" + strings.Join(splitPath, "/"))
+		err = ErrNoSuchFileOrDir
 		return
 	}
 	err = rows.Scan(

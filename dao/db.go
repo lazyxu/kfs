@@ -63,6 +63,8 @@ type Database interface {
 	InsertFileType(ctx context.Context, hash string, t FileType) (exist bool, err error)
 	ListExpectFileType(ctx context.Context) (hashList []string, err error)
 	ListFileType(ctx context.Context) (fileTypeMap map[string]FileType, err error)
+
+	UpsertLivePhoto(ctx context.Context, movHash string, heicHash string, jpgHash string) error
 }
 
 func DatabaseNewFunc(dataSourceName string, newDB func(dataSourceName string) (Database, error)) func() (Database, error) {

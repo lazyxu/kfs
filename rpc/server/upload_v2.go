@@ -101,6 +101,9 @@ func handleUploadV2File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
 		return err
 	}
-
+	err = upsertLivePhoto(kfsCore, req.Hash, req.DriverName, req.DirPath, req.Name)
+	if err != nil {
+		return err
+	}
 	return nil
 }
