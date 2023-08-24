@@ -8,6 +8,7 @@ import (
 	"github.com/h2non/filetype/types"
 	"github.com/jdeng/goheif"
 	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/rpc/server"
 	"image"
 	"net/http"
 	"os"
@@ -204,7 +205,7 @@ func apiThumbnail(c echo.Context) error {
 	f, err := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err) {
 		var fileType types.Type
-		fileType, err = GetFileType(hash)
+		fileType, err = server.GetFileType(kfsCore, hash)
 		if err != nil {
 			return err
 		}
