@@ -40,12 +40,13 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/list", apiList)
 	e.GET("/api/v1/openFile", apiOpenFile)
 	e.GET("/api/v1/downloadFile", apiDownloadFile)
-	e.GET("/api/v1/openDcim", apiOpenDcim)
+	e.GET("/api/v1/image", apiImage)
 
 	e.GET("/thumbnail", apiThumbnail)
 	e.GET("/api/v1/analysisExif", apiExifStatus)
 	e.POST("/api/v1/analysisExif", apiAnalysisExif)
 	e.GET("/api/v1/exif", apiListExif)
+	e.GET("/api/v1/metadata", apiGetMetadata)
 	e.GET("/api/v1/diskUsage", apiDiskUsage)
 
 	println("KFS web server listening at:", webPortString)
@@ -142,10 +143,13 @@ func apiDownloadFile(c echo.Context) error {
 	return c.Stream(http.StatusOK, "", rc)
 }
 
-func apiOpenDcim(c echo.Context) error {
+func apiImage(c echo.Context) error {
 	hash := c.QueryParam("hash")
-	fileType := c.QueryParam("fileType")
-	if fileType == matchers.TypeHeif.MIME.Subtype {
+	fileType, err := kfsCore.Db.GetFileType(c.Request().Context(), hash)
+	if err != nil {
+		return err
+	}
+	if fileType == server.NewFileType(matchers.TypeHeif) {
 		rc, err := kfsCore.S.ReadWithSize(hash)
 		if err != nil {
 			return err

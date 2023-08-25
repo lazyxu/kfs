@@ -58,6 +58,8 @@ func GetFileType(ctx context.Context, conn *sql.DB, hash string) (fileType dao.F
 		if err != nil {
 			return
 		}
+	} else {
+		err = ErrNoRecords
 	}
 	return
 }

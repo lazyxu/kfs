@@ -41,3 +41,9 @@ func (db *DB) ListExifWithFileType(ctx context.Context) (list []dao.ExifWithFile
 	defer db.putConn(conn)
 	return dbBase.ListExifWithFileType(ctx, conn)
 }
+
+func (db *DB) GetMetadata(ctx context.Context, hash string) (metadata dao.ExifWithFileType, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.GetMetadata(ctx, conn, hash)
+}

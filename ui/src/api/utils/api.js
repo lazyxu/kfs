@@ -49,3 +49,23 @@ export function parseShotEquipment(exif) {
 export function toPrecent(n) {
     return (Math.floor(n * 100000) / 1000).toFixed(3) + "%";
 }
+
+export function getTransform(orientation) {
+    switch (orientation) {
+        case 2:
+            return "rotateY(180deg)";
+        case 3:
+            return "rotate(180deg)";
+        case 4:
+            return "rotate(180deg)rotateY(180deg)";
+        case 5:
+            return "rotate(270deg)rotateY(180deg)";
+        case 6:
+            return "rotate(90deg)";
+        case 7:
+            return "rotate(90deg)rotateY(180deg)";
+        case 8:
+            return "rotate(270deg)";
+    }
+    return "";
+}

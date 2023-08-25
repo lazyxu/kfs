@@ -258,6 +258,8 @@ func SumFileSize(ctx context.Context, conn *sql.DB) (size uint64, err error) {
 		if err != nil {
 			return
 		}
+	} else {
+		err = ErrNoRecords
 	}
 	return
 }

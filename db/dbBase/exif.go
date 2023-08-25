@@ -3,6 +3,7 @@ package dbBase
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"github.com/lazyxu/kfs/dao"
 )
 
@@ -201,6 +202,66 @@ func ListExifWithFileType(ctx context.Context, conn *sql.DB) (list []dao.ExifWit
 			Exif:     e,
 			FileType: t,
 		})
+	}
+	return
+}
+
+var ErrNoRecords = errors.New("no such records in db")
+
+func GetMetadata(ctx context.Context, conn *sql.DB, hash string) (metadata dao.ExifWithFileType, err error) {
+	rows, err := conn.QueryContext(ctx, `
+	SELECT 
+		_exif.hash,
+		Type,
+		SubType,
+		Extension,
+		ExifVersion,
+		ImageDescription,
+		Orientation,
+		DateTime,
+		DateTimeOriginal,
+		DateTimeDigitized,
+		OffsetTime,
+		OffsetTimeOriginal,
+		OffsetTimeDigitized,
+		SubsecTime,
+		SubsecTimeOriginal,
+		SubsecTimeDigitized,
+		HostComputer,
+		Make,
+		Model,
+		ExifImageWidth,
+		ExifImageLength,
+		GPSLatitudeRef,
+		GPSLatitude,
+		GPSLongitudeRef,
+		GPSLongitude
+	FROM _exif LEFT JOIN _file_type WHERE  _exif.hash=? AND _file_type.hash=? AND _exif.exifVersion IS NOT NULL;
+	`, hash, hash)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if rows.Next() {
+		var hash string
+		var e dao.Exif
+		var t dao.FileType
+		err = rows.Scan(&hash, &t.Type, &t.SubType, &t.Extension,
+			&e.ExifVersion, &e.ImageDescription, &e.Orientation,
+			&e.DateTime, &e.DateTimeOriginal, &e.DateTimeDigitized,
+			&e.OffsetTime, &e.OffsetTimeOriginal, &e.OffsetTimeDigitized,
+			&e.SubsecTime, &e.SubsecTimeOriginal, &e.SubsecTimeDigitized,
+			&e.HostComputer, &e.Make, &e.Model,
+			&e.ExifImageWidth, &e.ExifImageLength,
+			&e.GPSLatitudeRef, &e.GPSLatitude, &e.GPSLongitudeRef, &e.GPSLongitude)
+		if err != nil {
+			return
+		}
+		metadata = dao.ExifWithFileType{
+			Hash:     hash,
+			Exif:     e,
+			FileType: t,
+		}
 	}
 	return
 }

@@ -50,6 +50,15 @@ func apiListExif(c echo.Context) error {
 	return ok(c, data)
 }
 
+func apiGetMetadata(c echo.Context) error {
+	hash := c.QueryParam("hash")
+	data, err := kfsCore.Db.GetMetadata(c.Request().Context(), hash)
+	if err != nil {
+		return err
+	}
+	return ok(c, data)
+}
+
 func AnalysisExifProcess() {
 	var ctx context.Context
 	var cancel context.CancelFunc

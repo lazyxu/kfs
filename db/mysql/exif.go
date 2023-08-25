@@ -29,3 +29,7 @@ func (db *DB) ListExif(ctx context.Context) (exifMap map[string]dao.Exif, err er
 func (db *DB) ListExifWithFileType(ctx context.Context) (list []dao.ExifWithFileType, err error) {
 	return dbBase.ListExifWithFileType(ctx, db.db)
 }
+
+func (db *DB) GetMetadata(ctx context.Context, hash string) (metadata dao.ExifWithFileType, err error) {
+	return dbBase.GetMetadata(ctx, db.db, hash)
+}

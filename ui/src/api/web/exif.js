@@ -16,3 +16,10 @@ export async function listExif() {
     console.log('web.exif');
     return await httpGet("/api/v1/exif");
 }
+
+export async function getMetadata(hash) {
+    console.log('web.getMetadata', hash);
+    return await httpGet("/api/v1/metadata", {
+        hash,
+    });
+}
