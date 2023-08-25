@@ -2,11 +2,11 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/h2non/filetype/matchers"
 	"github.com/jdeng/goheif"
 	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/rpc/server"
 	"image"
 	"image/jpeg"
 	"net/http"
@@ -209,7 +209,6 @@ func generateThumbnail(img image.Image, thumbnailFilePath string, cutSquare bool
 func apiThumbnail(c echo.Context) error {
 	hash := c.QueryParam("hash")
 	sizeStr := c.QueryParam("size")
-	fileType := c.QueryParam("fileType")
 	size, err := strconv.Atoi(sizeStr)
 	if err != nil {
 		return err
@@ -232,27 +231,15 @@ func apiThumbnail(c echo.Context) error {
 	} else {
 		filename = hash + "@" + sizeStr
 	}
+	fileType, err := kfsCore.Db.GetFileType(c.Request().Context(), hash)
+	if err != nil {
+		return err
+	}
 	thumbnailFilePath := filepath.Join("thumbnail", filename+".jpg")
 	f, err := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err) {
-		println("generate thumbnail for", filename, fileType)
-		if fileType == matchers.TypeJpeg.MIME.Subtype || fileType == matchers.TypePng.MIME.Subtype {
-			var rc dao.SizedReadCloser
-			rc, err = kfsCore.S.ReadWithSize(hash)
-			if err != nil {
-				return err
-			}
-			defer rc.Close()
-			var img image.Image
-			img, err = imaging.Decode(rc)
-			if err != nil {
-				return err
-			}
-			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
-			if err != nil {
-				return err
-			}
-		} else if fileType == matchers.TypeHeif.MIME.Subtype {
+		println("generate thumbnail for", filename, fileType.SubType)
+		if fileType == server.NewFileType(matchers.TypeHeif) {
 			var rc dao.SizedReadCloser
 			rc, err = kfsCore.S.ReadWithSize(hash)
 			if err != nil {
@@ -269,9 +256,21 @@ func apiThumbnail(c echo.Context) error {
 				return err
 			}
 		} else {
-			err = fmt.Errorf("unsupport type %s for thumbnail", fileType)
-			c.Logger().Error(err)
-			return err
+			var rc dao.SizedReadCloser
+			rc, err = kfsCore.S.ReadWithSize(hash)
+			if err != nil {
+				return err
+			}
+			defer rc.Close()
+			var img image.Image
+			img, err = imaging.Decode(rc)
+			if err != nil {
+				return err
+			}
+			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
+			if err != nil {
+				return err
+			}
 		}
 		f, err = os.Open(thumbnailFilePath)
 	}

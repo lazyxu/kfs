@@ -40,17 +40,20 @@ func InsertFileType(ctx context.Context, kfsCore *core.KFS, hash string) error {
 		return err
 	}
 	fmt.Printf("%s %+v\n", hash, fileType)
-	_, err = kfsCore.Db.InsertFileType(ctx, hash, dao.FileType{
-		Type:      fileType.MIME.Type,
-		SubType:   fileType.MIME.Subtype,
-		Extension: fileType.Extension,
-	})
+	_, err = kfsCore.Db.InsertFileType(ctx, hash, NewFileType(fileType))
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+func NewFileType(fileType types.Type) dao.FileType {
+	return dao.FileType{
+		Type:      fileType.MIME.Type,
+		SubType:   fileType.MIME.Subtype,
+		Extension: fileType.Extension,
+	}
+}
 func GetFileType(kfsCore *core.KFS, hash string) (t types.Type, err error) {
 	header, err := getHeader(kfsCore, hash)
 	if err != nil {

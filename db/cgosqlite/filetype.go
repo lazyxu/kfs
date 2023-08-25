@@ -18,8 +18,8 @@ func (db *DB) ListExpectFileType(ctx context.Context) (hashList []string, err er
 	return dbBase.ListExpectFileType(ctx, conn)
 }
 
-func (db *DB) ListFileType(ctx context.Context) (fileTypeMap map[string]dao.FileType, err error) {
+func (db *DB) GetFileType(ctx context.Context, hash string) (fileType dao.FileType, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.ListFileType(ctx, conn)
+	return dbBase.GetFileType(ctx, conn, hash)
 }

@@ -41,28 +41,23 @@ func ListExpectFileType(ctx context.Context, conn *sql.DB) (hashList []string, e
 	return
 }
 
-func ListFileType(ctx context.Context, conn *sql.DB) (fileTypeMap map[string]dao.FileType, err error) {
+func GetFileType(ctx context.Context, conn *sql.DB, hash string) (fileType dao.FileType, err error) {
 	rows, err := conn.QueryContext(ctx, `
 	SELECT 
-		hash,
 		Type,
 		SubType,
 		Extension
-	FROM _file_type WHERE fileTypeVersion IS NOT NULL;
-	`)
+	FROM _file_type WHERE hash=?;
+	`, hash)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
-	fileTypeMap = make(map[string]dao.FileType)
-	for rows.Next() {
-		var hash string
-		var t dao.FileType
-		err = rows.Scan(&hash, &t.Type, &t.SubType, &t.Extension)
+	if rows.Next() {
+		err = rows.Scan(&fileType.Type, &fileType.SubType, &fileType.Extension)
 		if err != nil {
 			return
 		}
-		fileTypeMap[hash] = t
 	}
 	return
 }

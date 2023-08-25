@@ -10,7 +10,7 @@ export function getPerm(mode) {
 
 export function isDCIM(name) {
     name = name.toLowerCase()
-    if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png")) {
+    if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") || name.endsWith(".heic")) {
         return true;
     }
     return false;
