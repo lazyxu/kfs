@@ -24,7 +24,7 @@ type WorkHandlers[T any] interface {
 	FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo, children []T) T
 	OnFileError(filePath string, info os.FileInfo, err error)
 	StackSizeHandler(size int)
-	StartWorker(ctx context.Context, index int)
+	StartWorker(ctx context.Context, index int) error
 	EndWorker(ctx context.Context, index int)
 	PushFile(info os.FileInfo)
 	StartFile(ctx context.Context, index int, filePath string, info os.FileInfo)
@@ -55,7 +55,8 @@ func (DefaultWalkHandlers[T]) OnFileError(filePath string, info os.FileInfo, err
 func (DefaultWalkHandlers[T]) StackSizeHandler(size int) {
 }
 
-func (DefaultWalkHandlers[T]) StartWorker(ctx context.Context, index int) {
+func (DefaultWalkHandlers[T]) StartWorker(ctx context.Context, index int) error {
+	return nil
 }
 
 func (DefaultWalkHandlers[T]) EndWorker(ctx context.Context, index int) {
@@ -87,7 +88,11 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 	wg.Add(concurrent)
 	for i := 0; i < concurrent; i++ {
 		go func(index int) {
-			handlers.StartWorker(ctx, index)
+			err := handlers.StartWorker(ctx, index)
+			if err != nil {
+				err1 = err
+				return
+			}
 			for {
 				select {
 				case <-ctx.Done():

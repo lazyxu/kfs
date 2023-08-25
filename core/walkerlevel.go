@@ -21,7 +21,7 @@ type WalkByLevelHandlers interface {
 	FileInfoFilter(filePath string, info os.FileInfo) bool
 	FileHandler(ctx context.Context, index int, filePath string, info os.FileInfo) error
 	OnFileError(filePath string, index int, info os.FileInfo, err error)
-	StartWorker(ctx context.Context, index int)
+	StartWorker(ctx context.Context, index int) error
 	EndWorker(ctx context.Context, index int)
 	AddToWorkList(info os.FileInfo)
 	HasEnqueuedAll()
@@ -80,7 +80,11 @@ func WalkByLevel(ctx context.Context, filePath string, concurrent int, handlers 
 	wg.Add(concurrent)
 	for i := 0; i < concurrent; i++ {
 		go func(index int) {
-			handlers.StartWorker(ctx, index)
+			err := handlers.StartWorker(ctx, index)
+			if err != nil {
+				err1 = err
+				return
+			}
 			for {
 				select {
 				case <-ctx.Done():

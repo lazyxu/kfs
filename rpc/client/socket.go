@@ -89,7 +89,7 @@ func (h *uploadHandlers) uploadFile(ctx context.Context, index int, filePath str
 	defer func() {
 		if err != nil {
 			fmt.Printf("reconnect %d: %s\n", index, err.Error())
-			h.reconnect(ctx, index)
+			err = h.reconnect(ctx, index)
 			return
 		}
 	}()

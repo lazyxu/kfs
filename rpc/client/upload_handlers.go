@@ -23,12 +23,11 @@ type uploadHandlers struct {
 	files            []*os.File
 }
 
-func (h *uploadHandlers) StartWorker(ctx context.Context, index int) {
+func (h *uploadHandlers) StartWorker(ctx context.Context, index int) error {
 	var d net.Dialer
 	conn, err := d.DialContext(ctx, "tcp", h.socketServerAddr)
 	if err != nil {
-		println(err.Error())
-		os.Exit(1)
+		return err
 	}
 	h.conns[index] = conn
 	fmt.Printf("StartWorker: %+v\n", conn)
@@ -38,17 +37,18 @@ func (h *uploadHandlers) StartWorker(ctx context.Context, index int) {
 			h.files[index].Close()
 		}
 	}()
+	return nil
 }
 
-func (h *uploadHandlers) reconnect(ctx context.Context, index int) {
+func (h *uploadHandlers) reconnect(ctx context.Context, index int) error {
 	h.conns[index].Close()
 	var d net.Dialer
 	conn, err := d.DialContext(ctx, "tcp", h.socketServerAddr)
 	if err != nil {
-		println(err.Error())
-		os.Exit(1)
+		return err
 	}
 	h.conns[index] = conn
+	return nil
 }
 
 func (h *uploadHandlers) EndWorker(ctx context.Context, index int) {

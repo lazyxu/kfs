@@ -161,8 +161,9 @@ func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string,
 	if err != nil {
 		return p.err(req, err)
 	}
-	// TODO: failed to exit sometimes
-	w.Done <- struct{}{}
+	for i := 0; i < concurrent; i++ {
+		w.Done <- struct{}{}
+	}
 	for i := 0; i < concurrent; i++ {
 		w.RespIfUpdated(i)
 	}
@@ -190,7 +191,7 @@ func NewWebUploadProcess(ctx context.Context, req WsReq, concurrent int, onResp 
 				case <-w.Done:
 					return
 				case <-ctx.Done():
-					w.Resp(i)
+					<-w.Done
 					return
 				default:
 					w.Resp(i)

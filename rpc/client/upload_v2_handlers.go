@@ -30,12 +30,11 @@ type uploadHandlersV2 struct {
 	dstPath          string
 }
 
-func (h *uploadHandlersV2) StartWorker(ctx context.Context, index int) {
+func (h *uploadHandlersV2) StartWorker(ctx context.Context, index int) error {
 	var d net.Dialer
 	conn, err := d.DialContext(ctx, "tcp", h.socketServerAddr)
 	if err != nil {
-		println(err.Error())
-		os.Exit(1)
+		return err
 	}
 	h.conns[index] = conn
 	go func() {
@@ -45,17 +44,18 @@ func (h *uploadHandlersV2) StartWorker(ctx context.Context, index int) {
 			h.files[index].Close()
 		}
 	}()
+	return nil
 }
 
-func (h *uploadHandlersV2) reconnect(ctx context.Context, index int) {
+func (h *uploadHandlersV2) reconnect(ctx context.Context, index int) error {
 	h.conns[index].Close()
 	var d net.Dialer
 	conn, err := d.DialContext(ctx, "tcp", h.socketServerAddr)
 	if err != nil {
-		println(err.Error())
-		os.Exit(1)
+		return err
 	}
 	h.conns[index] = conn
+	return nil
 }
 
 func (h *uploadHandlersV2) EndWorker(ctx context.Context, index int) {
@@ -77,7 +77,7 @@ func (h *uploadHandlersV2) FileHandler(ctx context.Context, index int, filePath 
 	}
 	defer func() {
 		if err != nil {
-			h.reconnect(ctx, index)
+			err = h.reconnect(ctx, index)
 			return
 		}
 	}()
