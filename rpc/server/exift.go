@@ -35,11 +35,18 @@ func GetExifData(kfsCore *core.KFS, hash string) (e dao.Exif, err error) {
 		return
 	}
 	defer rc.Close()
-	dt, err := exif.SearchAndExtractExifWithReader(rc)
+	return GetExifDataWithReadAtSeeker(rc)
+}
+
+// func GetExifDataWithReadAtSeeker(rc io.Reader) (e dao.Exif, err error) {
+func GetExifDataWithReadAtSeeker(rc exif.ReadAtSeeker) (e dao.Exif, err error) {
+	//rs, err := exif.SearchAndExtractExifWithReader(rc)
+	rs, err := exif.SearchAndExtractExifFromReadAtSeeker(rc)
 	if err != nil {
 		return
 	}
-	ets, _, err := exif.GetFlatExifData(dt, nil)
+	//ets, _, err := exif.GetFlatExifData(rs, nil)
+	ets, _, err := exif.GetFlatExifDataUniversalSearchWithReadSeeker(rs, nil, false)
 	if err != nil {
 		return
 	}
@@ -80,9 +87,9 @@ func GetExifData(kfsCore *core.KFS, hash string) (e dao.Exif, err error) {
 		case "HostComputer":
 			e.HostComputer = et.Value.(string)
 		case "Make":
-			e.Make = strings.TrimSuffix(et.Value.(string), "\x00")
+			e.Make = strings.TrimRight(et.Value.(string), "\x00")
 		case "Model":
-			e.Model = et.Value.(string)
+			e.Model = strings.TrimRight(et.Value.(string), "\x00")
 		case "ExifImageWidth":
 			e.ExifImageWidth = et.Value.(uint64)
 		case "ExifImageLength":

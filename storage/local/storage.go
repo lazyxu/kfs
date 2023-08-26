@@ -48,7 +48,7 @@ func Write(s dao.Storage, hash string, reader io.Reader) (bool, error) {
 }
 
 type sizedReaderCloser struct {
-	io.ReadCloser
+	*os.File
 	size int64
 }
 
