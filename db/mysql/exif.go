@@ -6,6 +6,14 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
+func (db *DB) InsertNullVideoMetadata(ctx context.Context, hash string) (exist bool, err error) {
+	return dbBase.InsertNullVideoMetadata(ctx, db.db, db, hash)
+}
+
+func (db *DB) InsertVideoMetadata(ctx context.Context, hash string, m dao.VideoMetadata) (exist bool, err error) {
+	return dbBase.InsertVideoMetadata(ctx, db.db, db, hash, m)
+}
+
 func (db *DB) InsertNullExif(ctx context.Context, hash string) (exist bool, err error) {
 	return dbBase.InsertNullExif(ctx, db.db, db, hash)
 }
@@ -26,10 +34,10 @@ func (db *DB) ListExif(ctx context.Context) (exifMap map[string]dao.Exif, err er
 	return dbBase.ListExif(ctx, db.db)
 }
 
-func (db *DB) ListExifWithFileType(ctx context.Context) (list []dao.ExifWithFileType, err error) {
-	return dbBase.ListExifWithFileType(ctx, db.db)
+func (db *DB) ListMetadata(ctx context.Context) (list []dao.Metadata, err error) {
+	return dbBase.ListMetadata(ctx, db.db)
 }
 
-func (db *DB) GetMetadata(ctx context.Context, hash string) (metadata dao.ExifWithFileType, err error) {
+func (db *DB) GetMetadata(ctx context.Context, hash string) (metadata dao.Metadata, err error) {
 	return dbBase.GetMetadata(ctx, db.db, hash)
 }

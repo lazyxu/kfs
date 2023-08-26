@@ -4,7 +4,7 @@ import { parseShotTime, timeSortFn } from "api/utils/api";
 
 export default function ({ metadataList, chosenShotEquipment, chosenFileType }) {
     let filterMetadataList = metadataList
-        .filter(metadata => chosenShotEquipment.includes(metadata.shotEquipment) && chosenFileType.includes(metadata.fileType.subType))
+        .filter(metadata => chosenShotEquipment.includes(metadata.shotEquipment) && chosenFileType.includes(metadata.fileType.extension))
         .sort(timeSortFn);
     let dateMap = {};
     filterMetadataList.forEach(metadata => {

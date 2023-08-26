@@ -2,10 +2,11 @@ import { useState } from "react";
 import styles from './image.module.scss';
 import ImageViewer from "components/FileViewer/ImageViewer";
 import { getTransform } from "api/utils/api";
+import moment from "moment";
 
 export default function ({ metadata }) {
     const [open, setOpen] = useState(false);
-    let { hash, exif, fileType, shotTime, shotEquipment } = metadata;
+    let { hash, exif, fileType, shotTime, shotEquipment, videoMetadata } = metadata;
     let time = shotTime.isValid() ? shotTime.format("YYYY年MM月DD日 HH:mm:ss") : "未知时间";
     return (
         <div>
@@ -16,6 +17,9 @@ export default function ({ metadata }) {
                     + fileType.type + "/" + fileType.subType + "\n"
                     + (exif.GPSLatitudeRef ? (exif.GPSLatitudeRef + " " + exif.GPSLatitude + "\n") : "")
                     + (exif.GPSLongitudeRef ? (exif.GPSLongitudeRef + " " + exif.GPSLongitude + "\n") : "")
+                    + (videoMetadata ? (videoMetadata.Codec + "\n") : "")
+                    + (videoMetadata ? (moment(videoMetadata.Created / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss") + "\n") : "")
+                    + (videoMetadata ? (videoMetadata.Duration + "s\n") : "")
                     + hash}
                 onClick={() => setOpen(true)}
             />

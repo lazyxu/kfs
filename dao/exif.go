@@ -24,8 +24,16 @@ type Exif struct {
 	GPSLongitude        float64 // 经度
 }
 
-type ExifWithFileType struct {
-	Hash     string   `json:"hash"`
-	Exif     Exif     `json:"exif"`
-	FileType FileType `json:"fileType"`
+type VideoMetadata struct {
+	Codec    string
+	Created  int64
+	Modified int64
+	Duration float64 // 容器中媒体数据的持续时间（秒）
+}
+
+type Metadata struct {
+	Hash          string        `json:"hash"`
+	Exif          Exif          `json:"exif"`
+	VideoMetadata VideoMetadata `json:"videoMetadata"`
+	FileType      FileType      `json:"fileType"`
 }

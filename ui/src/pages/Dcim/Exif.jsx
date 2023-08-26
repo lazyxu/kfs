@@ -57,6 +57,13 @@ export default function ({ onNewExif }) {
                     </Button>
                     {status.finished && <Typography component="label" color="text.secondary">已完成 {status.cnt}</Typography>}
                 </>}
+            <Button variant="outlined" sx={{ width: "10em" }}
+                onClick={e => {
+                    onNewExif?.();
+                }}
+            >
+                刷新
+            </Button>
         </Box>
     );
 }

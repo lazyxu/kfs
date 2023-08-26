@@ -2,40 +2,75 @@ package server
 
 import (
 	"context"
-	"strings"
-
 	"github.com/dsoprea/go-exif/v3"
 	exifcommon "github.com/dsoprea/go-exif/v3/common"
 	exifundefined "github.com/dsoprea/go-exif/v3/undefined"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
+	"strings"
 )
 
 func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType dao.FileType) (err error) {
-	if fileType.Type != "image" {
-		_, err = kfsCore.Db.InsertNullExif(ctx, hash)
+	if fileType.Type == "image" {
+		var e dao.Exif
+		e, err = GetExifData(kfsCore, hash)
+		if err != nil {
+			_, err = kfsCore.Db.InsertNullExif(ctx, hash)
+			// TODO: what if exist
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		_, err = kfsCore.Db.InsertExif(ctx, hash, e)
 		// TODO: what if exist
 		if err != nil {
 			return err
 		}
-		return err
-	}
-	var e dao.Exif
-	e, err = GetExifData(kfsCore, hash)
-	if err != nil {
-		_, err = kfsCore.Db.InsertNullExif(ctx, hash)
+		return nil
+	} else if fileType.Type == "video" {
+		var m dao.VideoMetadata
+		m, err = GetVideoMetadata(kfsCore, hash)
+		if err != nil {
+			_, err = kfsCore.Db.InsertNullVideoMetadata(ctx, hash)
+			// TODO: what if exist
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		_, err = kfsCore.Db.InsertVideoMetadata(ctx, hash, m)
 		// TODO: what if exist
 		if err != nil {
 			return err
 		}
-		return err
-	}
-	_, err = kfsCore.Db.InsertExif(ctx, hash, e)
-	// TODO: what if exist
-	if err != nil {
-		return err
+		return nil
 	}
 	return nil
+}
+
+func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, err error) {
+	rc, err := kfsCore.S.ReadWithSize(hash)
+	if err != nil {
+		return
+	}
+	defer rc.Close()
+	var fileInfo VideoFile
+	err = fileInfo.Open(rc)
+	if err != nil {
+		return
+	}
+	err = fileInfo.Parse()
+	if err != nil {
+		return
+	}
+	m = dao.VideoMetadata{
+		Codec:    fileInfo.Codec,
+		Created:  fileInfo.Movie.Created.UnixNano(),
+		Modified: fileInfo.Movie.Modified.UnixNano(),
+		Duration: fileInfo.Movie.Duration,
+	}
+	return
 }
 
 func GetExifData(kfsCore *core.KFS, hash string) (e dao.Exif, err error) {

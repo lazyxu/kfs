@@ -45,7 +45,7 @@ func webServer(webPortString string) {
 	e.GET("/thumbnail", apiThumbnail)
 	e.GET("/api/v1/analysisExif", apiExifStatus)
 	e.POST("/api/v1/analysisExif", apiAnalysisExif)
-	e.GET("/api/v1/exif", apiListExif)
+	e.GET("/api/v1/exif", apiListMetadata)
 	e.GET("/api/v1/metadata", apiGetMetadata)
 	e.GET("/api/v1/diskUsage", apiDiskUsage)
 
@@ -259,7 +259,7 @@ func apiThumbnail(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-		} else {
+		} else if fileType.Type == "image" {
 			var rc dao.SizedReadCloser
 			rc, err = kfsCore.S.ReadWithSize(hash)
 			if err != nil {
@@ -275,6 +275,8 @@ func apiThumbnail(c echo.Context) error {
 			if err != nil {
 				return err
 			}
+		} else {
+			return errors.New("unsupported file type")
 		}
 		f, err = os.Open(thumbnailFilePath)
 	}

@@ -51,13 +51,16 @@ type Database interface {
 	ListDriverFile(ctx context.Context, driverName string, filePath []string) (files []DriverFile, err error)
 	GetDriverFile(ctx context.Context, driverName string, splitPath []string) (file DriverFile, err error)
 
+	InsertNullVideoMetadata(ctx context.Context, hash string) (exist bool, err error)
+	InsertVideoMetadata(ctx context.Context, hash string, m VideoMetadata) (exist bool, err error)
+
 	InsertNullExif(ctx context.Context, hash string) (exist bool, err error)
 	InsertExif(ctx context.Context, hash string, e Exif) (exist bool, err error)
 	ListExpectExif(ctx context.Context) (hashList []string, err error)
 	ListExpectExifCb(ctx context.Context, cb func(hash string)) (err error)
 	ListExif(ctx context.Context) (exifMap map[string]Exif, err error)
-	ListExifWithFileType(ctx context.Context) (list []ExifWithFileType, err error)
-	GetMetadata(ctx context.Context, hash string) (ExifWithFileType, error)
+	ListMetadata(ctx context.Context) (list []Metadata, err error)
+	GetMetadata(ctx context.Context, hash string) (Metadata, error)
 
 	ListFile(ctx context.Context) (hashList []string, err error)
 

@@ -6,6 +6,18 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
+func (db *DB) InsertNullVideoMetadata(ctx context.Context, hash string) (exist bool, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.InsertNullVideoMetadata(ctx, conn, db, hash)
+}
+
+func (db *DB) InsertVideoMetadata(ctx context.Context, hash string, m dao.VideoMetadata) (exist bool, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.InsertVideoMetadata(ctx, conn, db, hash, m)
+}
+
 func (db *DB) InsertNullExif(ctx context.Context, hash string) (exist bool, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
@@ -36,13 +48,13 @@ func (db *DB) ListExif(ctx context.Context) (exifMap map[string]dao.Exif, err er
 	return dbBase.ListExif(ctx, conn)
 }
 
-func (db *DB) ListExifWithFileType(ctx context.Context) (list []dao.ExifWithFileType, err error) {
+func (db *DB) ListMetadata(ctx context.Context) (list []dao.Metadata, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.ListExifWithFileType(ctx, conn)
+	return dbBase.ListMetadata(ctx, conn)
 }
 
-func (db *DB) GetMetadata(ctx context.Context, hash string) (metadata dao.ExifWithFileType, err error) {
+func (db *DB) GetMetadata(ctx context.Context, hash string) (metadata dao.Metadata, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.GetMetadata(ctx, conn, hash)

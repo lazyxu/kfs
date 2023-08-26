@@ -42,8 +42,8 @@ func apiExifStatus(c echo.Context) error {
 	})
 }
 
-func apiListExif(c echo.Context) error {
-	data, err := kfsCore.Db.ListExifWithFileType(c.Request().Context())
+func apiListMetadata(c echo.Context) error {
+	data, err := kfsCore.Db.ListMetadata(c.Request().Context())
 	if err != nil {
 		return err
 	}

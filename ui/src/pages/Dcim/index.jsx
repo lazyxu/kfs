@@ -31,10 +31,10 @@ export default function ({ show }) {
                         } else {
                             shotEquipmentMap[shotEquipment] = 1;
                         }
-                        if (fileTypeMap.hasOwnProperty(fileType.subType)) {
-                            fileTypeMap[fileType.subType]++;
+                        if (fileTypeMap.hasOwnProperty(fileType.extension)) {
+                            fileTypeMap[fileType.extension]++;
                         } else {
-                            fileTypeMap[fileType.subType] = 1;
+                            fileTypeMap[fileType.extension] = 1;
                         }
                         metadata.shotEquipment = shotEquipment;
                         metadata.shotTime = shotTime;

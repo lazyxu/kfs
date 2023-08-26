@@ -81,33 +81,42 @@ func (db *DB) Create() error {
 	_, err := conn.Exec(`
 	CREATE TABLE IF NOT EXISTS _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
-		size INTEGER  NOT NULL
+		size INT8     NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS _exif (
 		hash                CHAR(64)     NOT NULL PRIMARY KEY,
 		ExifVersion         CHAR(4)      DEFAULT NULL,
-		ImageDescription    VARCHAR(255)    DEFAULT NULL,
-		Orientation         INTEGER     DEFAULT NULL,
-		DateTime            VARCHAR(19)     DEFAULT NULL,
-		DateTimeOriginal    VARCHAR(19)     DEFAULT NULL,
-		DateTimeDigitized   VARCHAR(19)     DEFAULT NULL,
-		OffsetTime          VARCHAR(6)     DEFAULT NULL,
-		OffsetTimeOriginal  VARCHAR(6)     DEFAULT NULL,
-		OffsetTimeDigitized VARCHAR(6)     DEFAULT NULL,
-		SubsecTime          VARCHAR(9)     DEFAULT NULL,
-		SubsecTimeOriginal  VARCHAR(9)     DEFAULT NULL,
-		SubsecTimeDigitized VARCHAR(9)     DEFAULT NULL,
+		ImageDescription    VARCHAR(255) DEFAULT NULL,
+		Orientation         INT1         DEFAULT NULL,
+		DateTime            VARCHAR(19)  DEFAULT NULL,
+		DateTimeOriginal    VARCHAR(19)  DEFAULT NULL,
+		DateTimeDigitized   VARCHAR(19)  DEFAULT NULL,
+		OffsetTime          VARCHAR(6)   DEFAULT NULL,
+		OffsetTimeOriginal  VARCHAR(6)   DEFAULT NULL,
+		OffsetTimeDigitized VARCHAR(6)   DEFAULT NULL,
+		SubsecTime          VARCHAR(9)   DEFAULT NULL,
+		SubsecTimeOriginal  VARCHAR(9)   DEFAULT NULL,
+		SubsecTimeDigitized VARCHAR(9)   DEFAULT NULL,
 		HostComputer        VARCHAR(255) DEFAULT NULL,
 		Make                VARCHAR(255) DEFAULT NULL,
 		Model               VARCHAR(255) DEFAULT NULL,
-		ExifImageWidth      INTEGER DEFAULT NULL,
-		ExifImageLength     INTEGER DEFAULT NULL,
+		ExifImageWidth      INT8         DEFAULT NULL,
+		ExifImageLength     INT8         DEFAULT NULL,
 		GPSLatitudeRef      CHAR(1)      DEFAULT NULL,
 		GPSLatitude         DOUBLE       DEFAULT NULL,
 		GPSLongitudeRef     CHAR(1)      DEFAULT NULL,
 		GPSLongitude        DOUBLE       DEFAULT NULL,
-		FOREIGN KEY (hash)  REFERENCES _file(hash)
+		FOREIGN KEY (hash)  REFERENCES   _file(hash)
+	);
+
+	CREATE TABLE IF NOT EXISTS _video_metadata (
+		hash                CHAR(64)     NOT NULL PRIMARY KEY,
+		Codec               VARCHAR(255) DEFAULT NULL,
+		Created             INT8         DEFAULT NULL,
+		Modified            INT8         DEFAULT NULL,
+		Duration            DOUBLE       DEFAULT NULL,
+		FOREIGN KEY (hash)  REFERENCES   _file(hash)
 	);
 
 	CREATE TABLE IF NOT EXISTS _file_type (
@@ -115,7 +124,7 @@ func (db *DB) Create() error {
 		Type               VARCHAR(255) NOT NULL,
 		SubType            VARCHAR(255) NOT NULL,
 		Extension          VARCHAR(255) NOT NULL,
-		FOREIGN KEY (hash) REFERENCES _file(hash)
+		FOREIGN KEY (hash) REFERENCES   _file(hash)
 	);
 
 	CREATE TABLE IF NOT EXISTS _live_photo (
@@ -136,14 +145,14 @@ func (db *DB) Create() error {
 		driverName  VARCHAR(256)   NOT NULL,
 		dirPath     VARCHAR(32767) NOT NULL,
 		name        VARCHAR(255)   NOT NULL,
-	    version     INTEGER        NOT NULL,
+	    version     INT8           NOT NULL,
 		hash        CHAR(64)       NOT NULL,
-		mode        INTEGER        NOT NULL,
-		size        INTEGER        NOT NULL,
-		createTime  INTEGER        NOT NULL,
-		modifyTime  INTEGER        NOT NULL,
-		changeTime  INTEGER        NOT NULL,
-		accessTime  INTEGER        NOT NULL,
+		mode        INT8           NOT NULL,
+		size        INT8           NOT NULL,
+		createTime  INT8           NOT NULL,
+		modifyTime  INT8           NOT NULL,
+		changeTime  INT8           NOT NULL,
+		accessTime  INT8           NOT NULL,
 		PRIMARY KEY (driverName, dirPath, name, version),
 		FOREIGN KEY (driverName)  REFERENCES _driver(name)
 	);
