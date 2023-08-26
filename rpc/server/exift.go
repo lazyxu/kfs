@@ -2,15 +2,24 @@ package server
 
 import (
 	"context"
+	"strings"
+
 	"github.com/dsoprea/go-exif/v3"
 	exifcommon "github.com/dsoprea/go-exif/v3/common"
 	exifundefined "github.com/dsoprea/go-exif/v3/undefined"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
-	"strings"
 )
 
-func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string) (err error) {
+func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType dao.FileType) (err error) {
+	if fileType.Type != "image" {
+		_, err = kfsCore.Db.InsertNullExif(ctx, hash)
+		// TODO: what if exist
+		if err != nil {
+			return err
+		}
+		return err
+	}
 	var e dao.Exif
 	e, err = GetExifData(kfsCore, hash)
 	if err != nil {
@@ -80,9 +89,9 @@ func GetExifData(kfsCore *core.KFS, hash string) (e dao.Exif, err error) {
 		case "HostComputer":
 			e.HostComputer = et.Value.(string)
 		case "Make":
-			e.Make = strings.TrimSuffix(et.Value.(string), "\x00")
+			e.Make = strings.TrimRight(et.Value.(string), "\x00")
 		case "Model":
-			e.Model = et.Value.(string)
+			e.Model = strings.TrimRight(et.Value.(string), "\x00")
 		case "ExifImageWidth":
 			e.ExifImageWidth = et.Value.(uint64)
 		case "ExifImageLength":

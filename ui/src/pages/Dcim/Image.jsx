@@ -13,7 +13,7 @@ export default function ({ metadata }) {
                 src={`http://127.0.0.1:1123/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
                 title={time + "\n"
                     + shotEquipment + "\n"
-                    + fileType.subType + "\n"
+                    + fileType.type + "/" + fileType.subType + "\n"
                     + (exif.GPSLatitudeRef ? (exif.GPSLatitudeRef + " " + exif.GPSLatitude + "\n") : "")
                     + (exif.GPSLongitudeRef ? (exif.GPSLongitudeRef + " " + exif.GPSLongitude + "\n") : "")
                     + hash}

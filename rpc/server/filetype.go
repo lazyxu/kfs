@@ -22,7 +22,7 @@ func AnalysisFileType(ctx context.Context, kfsCore *core.KFS) error {
 			return context.DeadlineExceeded
 		default:
 		}
-		err = InsertFileType(ctx, kfsCore, hash)
+		_, err = InsertFileType(ctx, kfsCore, hash)
 		if err != nil {
 			return err
 		}
@@ -30,21 +30,22 @@ func AnalysisFileType(ctx context.Context, kfsCore *core.KFS) error {
 	return nil
 }
 
-func InsertFileType(ctx context.Context, kfsCore *core.KFS, hash string) error {
+func InsertFileType(ctx context.Context, kfsCore *core.KFS, hash string) (ft dao.FileType, err error) {
 	header, err := getHeader(kfsCore, hash)
 	if err != nil {
-		return err
+		return
 	}
 	fileType, err := filetype.Get(header)
 	if err != nil {
-		return err
+		return
 	}
 	fmt.Printf("%s %+v\n", hash, fileType)
-	_, err = kfsCore.Db.InsertFileType(ctx, hash, NewFileType(fileType))
+	ft = NewFileType(fileType)
+	_, err = kfsCore.Db.InsertFileType(ctx, hash, ft)
 	if err != nil {
-		return err
+		return
 	}
-	return nil
+	return
 }
 
 func NewFileType(fileType types.Type) dao.FileType {

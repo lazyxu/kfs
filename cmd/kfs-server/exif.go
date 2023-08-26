@@ -101,13 +101,13 @@ func AnalysisExif(ctx context.Context) (err error) {
 			return context.DeadlineExceeded
 		default:
 		}
-		err = server.InsertFileType(ctx, kfsCore, hash)
+		ft, err := server.InsertFileType(ctx, kfsCore, hash)
 		if err != nil {
 			println("InsertFileType", err.Error())
 			exifCnt.Add(1)
 			continue
 		}
-		err = server.InsertExif(ctx, kfsCore, hash)
+		err = server.InsertExif(ctx, kfsCore, hash, ft)
 		if err != nil {
 			println("InsertExif", err.Error())
 			exifCnt.Add(1)

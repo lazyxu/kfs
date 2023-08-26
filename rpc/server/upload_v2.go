@@ -101,11 +101,11 @@ func handleUploadV2File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
 		return err
 	}
-	err = InsertFileType(context.TODO(), kfsCore, req.Hash)
+	ft, err := InsertFileType(context.TODO(), kfsCore, req.Hash)
 	if err != nil {
 		return err
 	}
-	err = InsertExif(context.TODO(), kfsCore, req.Hash)
+	err = InsertExif(context.TODO(), kfsCore, req.Hash, ft)
 	if err != nil {
 		return err
 	}

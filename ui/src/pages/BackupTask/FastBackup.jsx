@@ -162,6 +162,7 @@ export default function ({ show }) {
                     }
                     <Typography>进度：{humanize.filesize(lastJsonMessage.data.size)}/{humanize.filesize(lastJsonMessage.data.totalSize)}</Typography>
                     <Typography>耗时：{humanizeDuration(Math.floor(lastJsonMessage.data.cost / 1000) * 1000)}</Typography>
+                    <Typography>平均上传速度：{humanize.filesize(lastJsonMessage.data.size * 1000 / lastJsonMessage.data.cost)}/s</Typography>
                     <Typography>预计剩余时间：{humanizeDuration(Math.floor(lastJsonMessage.data.totalSize === lastJsonMessage.data.size ? 0 : lastJsonMessage.data.cost / lastJsonMessage.data.size * (lastJsonMessage.data.totalSize - lastJsonMessage.data.size) / 1000) * 1000)}</Typography>
                     <Typography>文件：{lastJsonMessage.data.fileCount}/{lastJsonMessage.data.totalFileCount}</Typography>
                     <Typography>目录：{lastJsonMessage.data.dirCount}/{lastJsonMessage.data.totalDirCount}</Typography>
@@ -170,7 +171,7 @@ export default function ({ show }) {
                         process.filePath ? <Typography key={i}>{i + 1}： {StatusList[process.status]} {humanize.filesize(process.size)} {process.filePath}</Typography>
                             : <Typography key={i}>{i + 1}：空闲</Typography>
                     )}
-                </Alert>:<Box/>}
+                </Alert> : <Box />}
             {errs.map(err =>
                 <Alert variant="outlined" classes={{ message: "width100" }} severity="error" key={err.filePath}>
                     <Typography>{err.filePath}</Typography>
