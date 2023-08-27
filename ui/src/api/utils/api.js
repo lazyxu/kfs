@@ -18,13 +18,22 @@ export function isDCIM(name) {
     return false;
 }
 
-export function parseShotTime(exif) {
-    if (exif.DateTime) {
-        return moment.parseZone(exif.DateTime + " " + exif.OffsetTime, "YYYY:MM:DD HH:mm:ss ZZ");
-    } else if (exif.DateTimeOriginal) {
-        return moment.parseZone(exif.DateTimeOriginal + " " + exif.OffsetTimeOriginal, "YYYY:MM:DD HH:mm:ss ZZ");
+export function parseShotTime(metadata) {
+    let { exif, videoMetadata } = metadata;
+    if (exif) {
+        if (exif.DateTime) {
+            return moment.parseZone(exif.DateTime + " " + exif.OffsetTime, "YYYY:MM:DD HH:mm:ss ZZ");
+        } else if (exif.DateTimeOriginal) {
+            return moment.parseZone(exif.DateTimeOriginal + " " + exif.OffsetTimeOriginal, "YYYY:MM:DD HH:mm:ss ZZ");
+        }
+        return moment.parseZone(exif.DateTimeDigitized + " " + exif.OffsetTimeDigitized, "YYYY:MM:DD HH:mm:ss ZZ");
+    } else if (videoMetadata) {
+        if (videoMetadata.Created) {
+            return moment(videoMetadata.Created / 1000 / 1000);
+        }
+        return moment(videoMetadata.Modified / 1000 / 1000);
     }
-    return moment.parseZone(exif.DateTimeDigitized + " " + exif.OffsetTimeDigitized, "YYYY:MM:DD HH:mm:ss ZZ");
+    return moment.invalid();
 }
 
 export function timeSortFn(a, b) {
@@ -36,16 +45,20 @@ export function timeSortFn(a, b) {
     return a.shotTime.isAfter(b.shotTime) ? 1 : -1;
 }
 
-export function parseShotEquipment(exif) {
-    if (exif.Model) {
-        if (exif.Model.includes(exif.Make)) {
-            return exif.Model;
+export function parseShotEquipment(metadata) {
+    let { exif } = metadata;
+    if (exif) {
+        if (exif.Model) {
+            if (exif.Model.includes(exif.Make)) {
+                return exif.Model;
+            } else {
+                return exif.Make + " " + exif.Model;
+            }
         } else {
-            return exif.Make + " " + exif.Model;
+            return exif.HostComputer;
         }
-    } else {
-        return exif.HostComputer;
     }
+    return "";
 }
 
 export function toPrecent(n) {

@@ -6,7 +6,6 @@ import (
 	"github.com/h2non/filetype/matchers"
 	"github.com/jdeng/goheif"
 	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/rpc/server"
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 	"image"
 	"image/jpeg"
@@ -150,7 +149,7 @@ func apiImage(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if fileType == server.NewFileType(matchers.TypeHeif) {
+	if fileType.Extension == matchers.TypeHeif.Extension {
 		rc, err := kfsCore.S.ReadWithSize(hash)
 		if err != nil {
 			return err
@@ -166,7 +165,7 @@ func apiImage(c echo.Context) error {
 			return err
 		}
 		return nil
-	} else if fileType == server.NewFileType(matchers.TypeMov) {
+	} else if fileType.Extension == matchers.TypeMov.Extension {
 		src := kfsCore.S.GetFilePath(hash)
 		thumbnailFilePath := filepath.Join("thumbnail", hash+".mp4")
 		err := ffmpeg_go.Input(src).
@@ -259,7 +258,7 @@ func apiThumbnail(c echo.Context) error {
 	f, err := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err) {
 		println("generate thumbnail for", filename, fileType.SubType)
-		if fileType == server.NewFileType(matchers.TypeHeif) {
+		if fileType.Extension == matchers.TypeHeif.Extension {
 			var rc dao.SizedReadCloser
 			rc, err = kfsCore.S.ReadWithSize(hash)
 			if err != nil {

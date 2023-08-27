@@ -8,7 +8,7 @@ export default function ({ metadataList, chosenShotEquipment, chosenFileType }) 
         .sort(timeSortFn);
     let dateMap = {};
     filterMetadataList.forEach(metadata => {
-        let date = parseShotTime(metadata.exif);
+        let date = parseShotTime(metadata);
         date = date ? date.format("YYYY年") : "未知时间";
         if (dateMap.hasOwnProperty(date)) {
             dateMap[date].push(metadata);

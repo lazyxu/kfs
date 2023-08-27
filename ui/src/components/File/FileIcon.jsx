@@ -4,6 +4,7 @@ import { Box, Stack } from "@mui/material";
 import { getMetadata } from "api/web/exif";
 import ImageViewer from "components/FileViewer/ImageViewer";
 import { useState } from "react";
+import VideoViewer from "components/FileViewer/VideoViewer";
 
 export default function ({ dirItem }) {
     const [open, setOpen] = useState(false);

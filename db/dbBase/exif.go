@@ -207,8 +207,8 @@ func ListMetadata(ctx context.Context, conn *sql.DB) (list []dao.Metadata, err e
 			}
 			list = append(list, dao.Metadata{
 				Hash:          hash,
-				FileType:      t,
-				VideoMetadata: m,
+				FileType:      &t,
+				VideoMetadata: &m,
 			})
 		}
 	}
@@ -264,8 +264,8 @@ func ListMetadata(ctx context.Context, conn *sql.DB) (list []dao.Metadata, err e
 			}
 			list = append(list, dao.Metadata{
 				Hash:     hash,
-				FileType: t,
-				Exif:     e,
+				FileType: &t,
+				Exif:     &e,
 			})
 		}
 	}
@@ -275,12 +275,56 @@ func ListMetadata(ctx context.Context, conn *sql.DB) (list []dao.Metadata, err e
 var ErrNoRecords = errors.New("no such records in db")
 
 func GetMetadata(ctx context.Context, conn *sql.DB, hash string) (metadata dao.Metadata, err error) {
+	t, err := GetFileType(ctx, conn, hash)
+	if err != nil {
+		return
+	}
+	e, err := GetExif(ctx, conn, hash)
+	if err != nil && !errors.Is(err, ErrNoRecords) {
+		return
+	}
+	m, err := GetVideoMetadata(ctx, conn, hash)
+	if err != nil && !errors.Is(err, ErrNoRecords) {
+		return
+	}
+	metadata = dao.Metadata{
+		Hash:          hash,
+		Exif:          e,
+		FileType:      t,
+		VideoMetadata: m,
+	}
+	return metadata, nil
+}
+
+func GetVideoMetadata(ctx context.Context, conn *sql.DB, hash string) (metadata *dao.VideoMetadata, err error) {
 	rows, err := conn.QueryContext(ctx, `
-	SELECT 
-		_exif.hash,
-		_file_type.Type,
-		_file_type.SubType,
-		_file_type.Extension,
+	SELECT
+		Codec,
+		Created,
+		Modified,
+		Duration
+	FROM _video_metadata WHERE hash=? AND Codec IS NOT NULL;
+	`, hash)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if rows.Next() {
+		var m dao.VideoMetadata
+		metadata = &m
+		err = rows.Scan(&m.Codec, &m.Created, &m.Modified, &m.Duration)
+		if err != nil {
+			return
+		}
+	} else {
+		err = ErrNoRecords
+	}
+	return
+}
+
+func GetExif(ctx context.Context, conn *sql.DB, hash string) (exif *dao.Exif, err error) {
+	rows, err := conn.QueryContext(ctx, `
+	SELECT
 		ExifVersion,
 		ImageDescription,
 		Orientation,
@@ -302,18 +346,16 @@ func GetMetadata(ctx context.Context, conn *sql.DB, hash string) (metadata dao.M
 		GPSLatitude,
 		GPSLongitudeRef,
 		GPSLongitude
-	FROM _exif LEFT JOIN _file_type WHERE  _exif.hash=? AND _file_type.hash=? AND _exif.exifVersion IS NOT NULL;
-	`, hash, hash)
+	FROM _exif WHERE hash=? AND exifVersion IS NOT NULL;
+	`, hash)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	if rows.Next() {
-		var hash string
 		var e dao.Exif
-		var t dao.FileType
-		err = rows.Scan(&hash, &t.Type, &t.SubType, &t.Extension,
-			&e.ExifVersion, &e.ImageDescription, &e.Orientation,
+		exif = &e
+		err = rows.Scan(&e.ExifVersion, &e.ImageDescription, &e.Orientation,
 			&e.DateTime, &e.DateTimeOriginal, &e.DateTimeDigitized,
 			&e.OffsetTime, &e.OffsetTimeOriginal, &e.OffsetTimeDigitized,
 			&e.SubsecTime, &e.SubsecTimeOriginal, &e.SubsecTimeDigitized,
@@ -323,11 +365,8 @@ func GetMetadata(ctx context.Context, conn *sql.DB, hash string) (metadata dao.M
 		if err != nil {
 			return
 		}
-		metadata = dao.Metadata{
-			Hash:     hash,
-			Exif:     e,
-			FileType: t,
-		}
+	} else {
+		err = ErrNoRecords
 	}
 	return
 }

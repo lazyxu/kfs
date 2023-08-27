@@ -23,9 +23,9 @@ export default function ({ show }) {
                     let shotEquipmentMap = {};
                     let fileTypeMap = {};
                     metadataList.forEach(metadata => {
-                        let { exif, fileType } = metadata;
-                        let shotEquipment = parseShotEquipment(exif);
-                        let shotTime = parseShotTime(exif);
+                        let { fileType } = metadata;
+                        let shotEquipment = parseShotEquipment(metadata);
+                        let shotTime = parseShotTime(metadata);
                         if (shotEquipmentMap.hasOwnProperty(shotEquipment)) {
                             shotEquipmentMap[shotEquipment]++;
                         } else {

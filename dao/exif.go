@@ -32,8 +32,8 @@ type VideoMetadata struct {
 }
 
 type Metadata struct {
-	Hash          string        `json:"hash"`
-	Exif          Exif          `json:"exif"`
-	VideoMetadata VideoMetadata `json:"videoMetadata"`
-	FileType      FileType      `json:"fileType"`
+	Hash          string         `json:"hash"`
+	FileType      *FileType      `json:"fileType"`
+	Exif          *Exif          `json:"exif"`
+	VideoMetadata *VideoMetadata `json:"videoMetadata"`
 }
