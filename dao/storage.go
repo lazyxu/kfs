@@ -5,6 +5,7 @@ import "io"
 type Storage interface {
 	Write(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error)
 	ReadWithSize(hash string) (SizedReadCloser, error)
+	GetFilePath(hash string) string
 
 	Remove() error
 	Create() error

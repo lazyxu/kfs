@@ -20,7 +20,8 @@ export default function ({ dirItem }) {
                     :
                     <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit" />
             }
-            {isDCIM(dirItem.name) && metadata && <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={dirItem.hash}/>}
+            {metadata?.fileType?.type == "video" && <VideoViewer open={open} setOpen={setOpen} metadata={metadata} hash={metadata.hash} />}
+            {metadata?.fileType?.type == "image" && <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={metadata.hash} />}
         </Box>
     );
 }

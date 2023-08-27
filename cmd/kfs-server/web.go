@@ -7,6 +7,7 @@ import (
 	"github.com/jdeng/goheif"
 	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/rpc/server"
+	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 	"image"
 	"image/jpeg"
 	"net/http"
@@ -165,6 +166,21 @@ func apiImage(c echo.Context) error {
 			return err
 		}
 		return nil
+	} else if fileType == server.NewFileType(matchers.TypeMov) {
+		src := kfsCore.S.GetFilePath(hash)
+		thumbnailFilePath := filepath.Join("thumbnail", hash+".mp4")
+		err := ffmpeg_go.Input(src).
+			Output(thumbnailFilePath, ffmpeg_go.KwArgs{"qscale": "0"}).
+			OverWriteOutput().ErrorToStdOut().Run()
+		if err != nil {
+			return err
+		}
+		f, err := os.OpenFile(thumbnailFilePath, os.O_RDONLY, 0o200)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		return c.Stream(http.StatusOK, "", f)
 	}
 	rc, err := kfsCore.S.ReadWithSize(hash)
 	if err != nil {

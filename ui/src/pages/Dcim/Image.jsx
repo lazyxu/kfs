@@ -3,6 +3,7 @@ import styles from './image.module.scss';
 import ImageViewer from "components/FileViewer/ImageViewer";
 import { getTransform } from "api/utils/api";
 import moment from "moment";
+import VideoViewer from "components/FileViewer/VideoViewer";
 
 export default function ({ metadata }) {
     const [open, setOpen] = useState(false);
@@ -23,7 +24,8 @@ export default function ({ metadata }) {
                     + hash}
                 onClick={() => setOpen(true)}
             />
-            <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />
+            {fileType.type == "video" && <VideoViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
+            {fileType.type == "image" && <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
         </div>
     );
 }

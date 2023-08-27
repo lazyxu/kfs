@@ -51,6 +51,10 @@ func (s *Storage5) getFile(hash string) (*os.File, error) {
 	return f, nil
 }
 
+func (s *Storage5) GetFilePath(hash string) string {
+	return path.Join(s.root, files, hash[:2], hash[2:])
+}
+
 func (s *Storage5) getLocalLock(hash string) (*flock.Flock, error) {
 	globalLock := flock.New(path.Join(s.root, lockFileName))
 	err := globalLock.Lock()

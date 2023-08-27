@@ -51,6 +51,10 @@ func (s *Storage4) getFile(hash string) (*os.File, error) {
 	return f, nil
 }
 
+func (s *Storage4) GetFilePath(hash string) string {
+	return path.Join(s.root, files, hash[:2], hash[2:])
+}
+
 func (s *Storage4) Write(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
 	lock := flock.New(path.Join(s.root, lockFileName))
 	err := lock.Lock()

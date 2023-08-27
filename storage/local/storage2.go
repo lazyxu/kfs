@@ -52,6 +52,10 @@ func (s *Storage2) getLocalLock(hash string) (*flock.Flock, error) {
 	return flock.New(localLockFilePath), nil
 }
 
+func (s *Storage2) GetFilePath(hash string) string {
+	return path.Join(s.root, files, hash)
+}
+
 func (s *Storage2) Write(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
 	localLock, err := s.getLocalLock(hash)
 	if err != nil {

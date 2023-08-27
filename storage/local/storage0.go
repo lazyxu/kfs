@@ -31,6 +31,10 @@ func NewStorage0(root string) (dao.Storage, error) {
 	return s, nil
 }
 
+func (s *Storage0) GetFilePath(hash string) string {
+	return path.Join(s.root, files, hash)
+}
+
 func (s *Storage0) Write(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
 	lock := flock.New(path.Join(s.root, lockFileName))
 	err := lock.Lock()

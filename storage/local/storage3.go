@@ -29,6 +29,10 @@ func NewStorage3(root string) (dao.Storage, error) {
 	return s, nil
 }
 
+func (s *Storage3) GetFilePath(hash string) string {
+	return path.Join(s.root, files, hash)
+}
+
 func (s *Storage3) Write(hash string, fn func(w io.Writer, hasher io.Writer) error) (bool, error) {
 	p := path.Join(s.root, files, hash)
 	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE, 0o200)
