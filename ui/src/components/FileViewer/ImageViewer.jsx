@@ -36,7 +36,7 @@ export default function ({ open, setOpen, metadata, hash }) {
                     textAlign: "center"
                 }}
                 >
-                    <img style={{ maxWidth: "100%", maxHeight: "100%", transform: getTransform(exif.Orientation) }} src={`http://127.0.0.1:1123/api/v1/image?hash=${hash}`} />
+                    <img style={{ maxWidth: "100%", maxHeight: "100%", transform: getTransform(exif.Orientation) }} src={`${location.origin}/api/v1/image?hash=${hash}`} />
                 </Box>
             </Box>
         </Modal>

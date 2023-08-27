@@ -11,7 +11,7 @@ export default function ({ open, setOpen, metadata, hash }) {
         responsive: true,
         fluid: true,
         sources: [{
-          src: `http://127.0.0.1:1123/api/v1/image?hash=${hash}`,
+          src: `${location.origin}/api/v1/image?hash=${hash}`,
           type: `${fileType.type}/${fileType.subType}`
         }]
       };
@@ -60,7 +60,7 @@ export default function ({ open, setOpen, metadata, hash }) {
                 }}
                 >
                     <video ref={playerRef} controls style={{ maxWidth: "100%", maxHeight: "100%" }} data-setup='{}'>
-                        <source src={`http://127.0.0.1:1123/api/v1/image?hash=${hash}`} />
+                        <source src={`${location.origin}/api/v1/image?hash=${hash}`} />
                         您的浏览器不支持 HTML5 video 标签。
                     </video>
                     {/* <Button onClick={() => playerRef.current?.play()}>播放</Button>

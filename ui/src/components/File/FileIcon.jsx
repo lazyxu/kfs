@@ -14,7 +14,7 @@ export default function ({ dirItem }) {
             {modeIsDir(dirItem.mode) ?
                 <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit" /> :
                 isDCIM(dirItem.name) ?
-                    <img src={`http://127.0.0.1:1123/thumbnail?size=64&hash=${dirItem.hash}`} loading="lazy" onClick={() => getMetadata(dirItem.hash).then(m => {
+                    <img src={`${location.origin}/thumbnail?size=64&hash=${dirItem.hash}`} loading="lazy" onClick={() => getMetadata(dirItem.hash).then(m => {
                         setMetadata(m);
                         setOpen(true);
                     })} />

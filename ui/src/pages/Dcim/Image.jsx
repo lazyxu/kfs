@@ -12,7 +12,7 @@ export default function ({ metadata }) {
     return (
         <>
             {fileType.type == "image" && <img style={{ width: "100%", transform: getTransform(exif.Orientation) }} className={styles.clickable}
-                src={`http://127.0.0.1:1123/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
+                src={`${location.origin}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
                 title={time + "\n"
                     + shotEquipment + "\n"
                     + fileType.type + "/" + fileType.subType + "\n"
@@ -22,7 +22,7 @@ export default function ({ metadata }) {
                 onClick={() => setOpen(true)}
             />}
             {fileType.type == "video" && <img style={{ width: "100%" }} className={styles.clickable}
-                src={`http://127.0.0.1:1123/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
+                src={`${location.origin}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
                 title={time + "\n"
                     + shotEquipment + "\n"
                     + fileType.type + "/" + fileType.subType + "\n"

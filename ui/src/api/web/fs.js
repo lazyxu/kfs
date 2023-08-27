@@ -12,7 +12,7 @@ export async function list(driverName, filePath) {
 
 export async function openFile(driverName, filePath) {
     console.log('web.openFile', driverName, filePath);
-    let resp = await axios.get(`http://127.0.0.1:1123/api/v1/openFile`, {
+    let resp = await axios.get(`${location.origin}/api/v1/openFile`, {
         params: {
             driverName,
             filePath,
@@ -26,7 +26,7 @@ export async function openFile(driverName, filePath) {
 
 export async function download(driverName, filePath) {
     console.log('web.download', driverName, filePath);
-    let resp = await axios.get(`http://127.0.0.1:1123/api/v1/downloadFile`, {
+    let resp = await axios.get(`${location.origin}/api/v1/downloadFile`, {
         params: {
             driverName,
             filePath,
@@ -38,7 +38,7 @@ export async function download(driverName, filePath) {
 
 export async function getImage(hash) {
     console.log('web.getImage', hash);
-    let resp = await axios.get(`http://127.0.0.1:1123/api/v1/getImage`, {
+    let resp = await axios.get(`${location.origin}/api/v1/getImage`, {
         params: {
             hash
         },
