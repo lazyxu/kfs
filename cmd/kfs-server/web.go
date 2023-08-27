@@ -290,6 +290,15 @@ func apiThumbnail(c echo.Context) error {
 			if err != nil {
 				return err
 			}
+		} else if fileType.Type == "video" {
+			src := kfsCore.S.GetFilePath(hash)
+			//thumbnailFilePath = filepath.Join("thumbnail", hash+".gif")
+			err = ffmpeg_go.Input(src).
+				Output(thumbnailFilePath, ffmpeg_go.KwArgs{"vframes": 1}, ffmpeg_go.KwArgs{"s": sizeStr + "x" + sizeStr}).
+				OverWriteOutput().ErrorToStdOut().Run()
+			if err != nil {
+				return err
+			}
 		} else {
 			return errors.New("unsupported file type")
 		}
