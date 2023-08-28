@@ -3,16 +3,18 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/labstack/echo/v4"
-	"github.com/shirou/gopsutil/v3/disk"
 	"io/fs"
 	"path/filepath"
+
+	"github.com/labstack/echo/v4"
+	"github.com/shirou/gopsutil/v3/disk"
 )
 
 type DiskUsage struct {
 	Total     uint64 `json:"total"`
 	Free      uint64 `json:"free"`
 	Thumbnail uint64 `json:"thumbnail"`
+	TransCode uint64 `json:"transCode"`
 	Metadata  uint64 `json:"metadata"`
 	File      uint64 `json:"file"`
 }
@@ -32,9 +34,18 @@ func apiDiskUsage(c echo.Context) error {
 	}
 	usage.Total = info.Total
 	usage.Free = info.Free
-	err = filepath.Walk("thumbnail", func(path string, info fs.FileInfo, err error) error {
+	err = filepath.Walk(kfsCore.ThumbnailDir(), func(path string, info fs.FileInfo, err error) error {
 		if !info.IsDir() {
 			usage.Thumbnail += uint64(info.Size())
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	err = filepath.Walk(kfsCore.TransCodeDir(), func(path string, info fs.FileInfo, err error) error {
+		if !info.IsDir() {
+			usage.TransCode += uint64(info.Size())
 		}
 		return nil
 	})

@@ -119,7 +119,7 @@ case $1 in
         cp kfs-electron $root/ui
         cd $root/ui
         yarn
-        NODE_ENV=production REACT_APP_PLATFORM=$(go env GOOS) BUILD_PATH=electron-production PUBLIC_URL=. yarn build
+        DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production REACT_APP_PLATFORM=$(go env GOOS) BUILD_PATH=electron-production PUBLIC_URL=. yarn build
         yarn build:electron
         ;;
 

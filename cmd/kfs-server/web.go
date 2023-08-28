@@ -2,17 +2,18 @@ package main
 
 import (
 	"errors"
-	"github.com/disintegration/imaging"
-	"github.com/h2non/filetype/matchers"
-	"github.com/jdeng/goheif"
-	"github.com/lazyxu/kfs/dao"
-	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 	"image"
 	"image/jpeg"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/disintegration/imaging"
+	"github.com/h2non/filetype/matchers"
+	"github.com/jdeng/goheif"
+	"github.com/lazyxu/kfs/dao"
+	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -167,14 +168,17 @@ func apiImage(c echo.Context) error {
 		return nil
 	} else if fileType.Extension == matchers.TypeMov.Extension {
 		src := kfsCore.S.GetFilePath(hash)
-		thumbnailFilePath := filepath.Join("thumbnail", hash+".mp4")
-		err := ffmpeg_go.Input(src).
-			Output(thumbnailFilePath, ffmpeg_go.KwArgs{"qscale": "0"}).
-			OverWriteOutput().ErrorToStdOut().Run()
-		if err != nil {
-			return err
+		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".mp4")
+		f, err := os.Open(thumbnailFilePath)
+		if os.IsNotExist(err) {
+			err = ffmpeg_go.Input(src).
+				Output(thumbnailFilePath, ffmpeg_go.KwArgs{"qscale": "0"}).
+				OverWriteOutput().ErrorToStdOut().Run()
+			if err != nil {
+				return err
+			}
+			f, err = os.Open(thumbnailFilePath)
 		}
-		f, err := os.OpenFile(thumbnailFilePath, os.O_RDONLY, 0o200)
 		if err != nil {
 			return err
 		}
@@ -189,15 +193,6 @@ func apiImage(c echo.Context) error {
 	}
 	defer rc.Close()
 	return c.Stream(http.StatusOK, "", rc)
-}
-
-func init() {
-	err := os.Mkdir("thumbnail", 0o700)
-	if os.IsExist(err) {
-		return
-	} else if err != nil {
-		panic(err)
-	}
 }
 
 func generateThumbnail(img image.Image, thumbnailFilePath string, cutSquare bool, size int) error {
@@ -254,7 +249,7 @@ func apiThumbnail(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	thumbnailFilePath := filepath.Join("thumbnail", filename+".jpg")
+	thumbnailFilePath := filepath.Join(kfsCore.ThumbnailDir(), filename+".jpg")
 	f, err := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err) {
 		println("generate thumbnail for", filename, fileType.SubType)
@@ -292,7 +287,6 @@ func apiThumbnail(c echo.Context) error {
 			}
 		} else if fileType.Type == "video" {
 			src := kfsCore.S.GetFilePath(hash)
-			//thumbnailFilePath = filepath.Join("thumbnail", hash+".gif")
 			err = ffmpeg_go.Input(src).
 				Output(thumbnailFilePath, ffmpeg_go.KwArgs{"vframes": 1}, ffmpeg_go.KwArgs{"s": sizeStr + "x" + sizeStr}).
 				OverWriteOutput().ErrorToStdOut().Run()

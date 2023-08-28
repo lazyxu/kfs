@@ -30,33 +30,6 @@ export default function ({ onNewExif }) {
     }, []);
     return (
         <Box sx={{ width: "100%" }}>
-            {status.analyzing ?
-                <>
-                    <LinearProgressWithLabel variant="determinate" value={status.cnt / status.total * 100} />
-                    <Box sx={{ paddingLeft: "0.5em" }}>
-                        <Typography variant="body2" color="text.secondary">{`${status.cnt}/${status.total}`}</Typography>
-                    </Box>
-                    <Button variant="outlined" sx={{ width: "10em" }}
-                        onClick={e => {
-                            analysisExif(false);
-                        }}
-                    >
-                        取消解析exif
-                    </Button>
-                </> :
-                <>
-                    <Button variant="outlined" sx={{ width: "10em" }}
-                        onClick={e => {
-                            analysisExif(true);
-                            setTimeout(() => {
-                                exifStatus().then(exifStatusCb);
-                            }, 500);
-                        }}
-                    >
-                        开始解析exif
-                    </Button>
-                    {status.finished && <Typography component="label" color="text.secondary">已完成 {status.cnt}</Typography>}
-                </>}
             <Button variant="outlined" sx={{ width: "10em" }}
                 onClick={e => {
                     onNewExif?.();

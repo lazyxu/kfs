@@ -21,7 +21,7 @@ export default function () {
             bottom: "0",
             fontFamily: "KaiTi, STKaiti;",
         }}>
-            <Typography>WebSocket: {connectionStatus}</Typography>
+            {process.env.REACT_APP_PLATFORM !== 'web' && <Typography>WebSocket: {connectionStatus}</Typography>}
             <Typography>
                 {process.env.REACT_APP_PLATFORM}.{process.env.NODE_ENV}
             </Typography>

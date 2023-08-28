@@ -30,6 +30,8 @@ const (
 	DataSourceNameStr = "data-source-name"
 	StorageTypeStr    = "storage-type"
 	StorageDirStr     = "storage-dir"
+	ThumbnailDirStr   = "thumbnail-dir"
+	TransCodeDirStr   = "transcode-dir"
 )
 
 func init() {
@@ -39,6 +41,8 @@ func init() {
 	rootCmd.PersistentFlags().String(DataSourceNameStr, "kfs.db", "data source name")
 	rootCmd.PersistentFlags().String(StorageTypeStr, "1", "storage type, [0, 5]")
 	rootCmd.PersistentFlags().String(StorageDirStr, "tmp", "storage dir path")
+	rootCmd.PersistentFlags().String(ThumbnailDirStr, "thumbnail", "thumbnail dir path")
+	rootCmd.PersistentFlags().String(TransCodeDirStr, "transcode", "transcode dir path")
 }
 
 //go:embed build/*
@@ -122,7 +126,9 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		kfsCore, err = core.New(dao.DatabaseNewFunc(dataSourceName, newDatabase), dao.StorageNewFunc(storageDir, newStorage))
+		thumbnailDir := cmd.Flag(ThumbnailDirStr).Value.String()
+		transCodeDir := cmd.Flag(TransCodeDirStr).Value.String()
+		kfsCore, err = core.New2(dao.DatabaseNewFunc(dataSourceName, newDatabase), dao.StorageNewFunc(storageDir, newStorage), thumbnailDir, transCodeDir)
 		if err != nil {
 			return
 		}
