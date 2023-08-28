@@ -1,6 +1,6 @@
-import {httpGet} from "./common";
+import { httpGet } from "./common";
 import axios from "axios";
-import {getSysConfig} from "hox/sysConfig";
+import { getSysConfig } from "hox/sysConfig";
 
 export async function list(driverName, filePath) {
     console.log('web.list', driverName, filePath);
@@ -12,21 +12,21 @@ export async function list(driverName, filePath) {
 
 export async function openFile(driverName, filePath) {
     console.log('web.openFile', driverName, filePath);
-    let resp = await axios.get(`${location.origin}/api/v1/openFile`, {
+    let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/openFile`, {
         params: {
             driverName,
             filePath,
             maxContentSize: getSysConfig().sysConfig.maxContentSize,
         },
-        transformResponse: x=>x,
+        transformResponse: x => x,
     });
     let tooLarge = resp.headers.get("Kfs-Too-Large");
-    return {tooLarge, content: resp.data}
+    return { tooLarge, content: resp.data }
 }
 
 export async function download(driverName, filePath) {
     console.log('web.download', driverName, filePath);
-    let resp = await axios.get(`${location.origin}/api/v1/downloadFile`, {
+    let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/downloadFile`, {
         params: {
             driverName,
             filePath,
@@ -38,7 +38,7 @@ export async function download(driverName, filePath) {
 
 export async function getImage(hash) {
     console.log('web.getImage', hash);
-    let resp = await axios.get(`${location.origin}/api/v1/getImage`, {
+    let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/getImage`, {
         params: {
             hash
         },

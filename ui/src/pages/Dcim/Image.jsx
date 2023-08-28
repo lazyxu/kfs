@@ -4,15 +4,17 @@ import ImageViewer from "components/FileViewer/ImageViewer";
 import { getTransform } from "api/utils/api";
 import moment from "moment";
 import VideoViewer from "components/FileViewer/VideoViewer";
+import { getSysConfig } from "hox/sysConfig";
 
 export default function ({ metadata }) {
+    const sysConfig = getSysConfig().sysConfig;
     const [open, setOpen] = useState(false);
     let { hash, exif, fileType, shotTime, shotEquipment, videoMetadata } = metadata;
     let time = shotTime.isValid() ? shotTime.format("YYYY年MM月DD日 HH:mm:ss") : "未知时间";
     return (
         <>
             {fileType.type == "image" && <img style={{ width: "100%", transform: getTransform(exif.Orientation) }} className={styles.clickable}
-                src={`${location.origin}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
+                src={`${sysConfig.webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
                 title={time + "\n"
                     + shotEquipment + "\n"
                     + fileType.type + "/" + fileType.subType + "\n"
@@ -22,7 +24,7 @@ export default function ({ metadata }) {
                 onClick={() => setOpen(true)}
             />}
             {fileType.type == "video" && <img style={{ width: "100%" }} className={styles.clickable}
-                src={`${location.origin}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
+                src={`${sysConfig.webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
                 title={time + "\n"
                     + shotEquipment + "\n"
                     + fileType.type + "/" + fileType.subType + "\n"

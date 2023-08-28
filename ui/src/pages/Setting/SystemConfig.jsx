@@ -50,35 +50,48 @@ export default ({ show }) => {
                                 )}
                             </RadioGroup>
                         </Box>
-                        <Box>
-                            <InputLabel sx={{ display: "inline" }}>API：</InputLabel>
-                            <RadioGroup sx={{ display: "inline" }}
-                                row
-                                value={sysConfig.api}
-                                onChange={e => setSysConfig(c => ({ ...c, api: e.target.value }))}
-                                size="small"
-                            >
-                                {["mock", "web"].map(value =>
-                                    <FormControlLabel key={value} value={value} control={<Radio />} label={value} />
-                                )}
-                            </RadioGroup>
-                        </Box>
                         {process.env.NODE_ENV === 'production' ? [] :
-                            <Box>
-                                <InputLabel sx={{ display: "inline" }}>Web服务器：</InputLabel>
-                                <TextField variant="standard" size="small"
-                                    value={sysConfig.webServer}
-                                    onChange={e => setSysConfig(c => ({ ...c, webServer: e.target.value }))}
-                                />
-                            </Box>
+                            <>
+                                <Box>
+                                    <InputLabel sx={{ display: "inline" }}>API：</InputLabel>
+                                    <RadioGroup sx={{ display: "inline" }}
+                                        row
+                                        value={sysConfig.api}
+                                        onChange={e => setSysConfig(c => ({ ...c, api: e.target.value }))}
+                                        size="small"
+                                    >
+                                        {["mock", "web"].map(value =>
+                                            <FormControlLabel key={value} value={value} control={<Radio />} label={value} />
+                                        )}
+                                    </RadioGroup>
+                                </Box>
+                                <Box>
+                                    <InputLabel sx={{ display: "inline" }}>Web服务器：</InputLabel>
+                                    <TextField variant="standard" size="small"
+                                        value={sysConfig.webServer}
+                                        onChange={e => setSysConfig(c => ({ ...c, webServer: e.target.value }))}
+                                    />
+                                </Box>
+                            </>
                         }
-                        <Box>
-                            <InputLabel sx={{ display: "inline" }}>客户端WebSocket端口：</InputLabel>
-                            <TextField variant="standard" size="small"
-                                value={sysConfig.port}
-                                onChange={e => setSysConfig(c => ({ ...c, port: e.target.value }))}
-                            />
-                        </Box>
+                        {process.env.REACT_APP_PLATFORM === 'web' ? [] :
+                            <>
+                                <Box>
+                                    <InputLabel sx={{ display: "inline" }}>Socket服务器：</InputLabel>
+                                    <TextField variant="standard" size="small"
+                                        value={sysConfig.socketServer}
+                                        onChange={e => setSysConfig(c => ({ ...c, socketServer: e.target.value }))}
+                                    />
+                                </Box>
+                                <Box>
+                                    <InputLabel sx={{ display: "inline" }}>客户端WebSocket端口：</InputLabel>
+                                    <TextField variant="standard" size="small"
+                                        value={sysConfig.port}
+                                        onChange={e => setSysConfig(c => ({ ...c, port: e.target.value }))}
+                                    />
+                                </Box>
+                            </>
+                        }
                     </>
                 )}
         </Stack>

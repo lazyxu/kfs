@@ -7,6 +7,9 @@ import defaultConfig from 'kfsConfig/default';
 function useFunc() {
   const [sysConfig, setSysConfig] = useState(kfsConfig.get() || defaultConfig);
   useEffect(() => {
+    if (process.env.REACT_APP_PLATFORM === 'web') {
+      sysConfig.webServer = location.origin;
+    }
     kfsConfig.set(sysConfig);
   }, [sysConfig]);
   return {

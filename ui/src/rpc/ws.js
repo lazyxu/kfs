@@ -79,7 +79,7 @@ const CommandOpen = 3;
 export function list(sysConfig, driverName, path, onTotal, onDirItem) {
   console.log('list', driverName, path, path.join('/'))
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(`ws://${sysConfig.webServer}/ws`);
+    const ws = new WebSocket(`ws://${sysConfig.socketServer}/ws`);
     ws.addEventListener('open', async () => {
       try {
         ws.send(new Uint8Array([CommandList]));
@@ -120,7 +120,7 @@ export function list(sysConfig, driverName, path, onTotal, onDirItem) {
 export function open(sysConfig, driverName, path, onFile, onTotal, onDirItem) {
   console.log('open', driverName, path, path.join('/'))
   return new Promise((resolve, reject) => {
-    const ws = new WebSocket(`ws://${sysConfig.webServer}/ws`);
+    const ws = new WebSocket(`ws://${sysConfig.socketServer}/ws`);
     ws.addEventListener('open', async () => {
       try {
         ws.send(new Uint8Array([CommandOpen]));

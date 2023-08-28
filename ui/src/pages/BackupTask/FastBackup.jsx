@@ -142,7 +142,7 @@ export default function ({ show }) {
                         sendJsonMessage({
                             type: "fastBackup", id: newId, data: {
                                 srcPath, concurrent, encoder,
-                                serverAddr: sysConfig.webServer,
+                                serverAddr: sysConfig.socketServer,
                                 driverName,
                                 dstPath
                             }

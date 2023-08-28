@@ -1,8 +1,10 @@
 import { Close } from "@mui/icons-material";
 import { Box, Button, IconButton, Modal } from "@mui/material";
+import { getSysConfig } from "hox/sysConfig";
 import { useRef } from "react";
 
 export default function ({ open, setOpen, metadata, hash }) {
+    const sysConfig = getSysConfig().sysConfig;
     let { hash: hash2, videoMetadata, fileType } = metadata;
     const playerRef = useRef(null);
     const videoJsOptions = {
@@ -11,7 +13,7 @@ export default function ({ open, setOpen, metadata, hash }) {
         responsive: true,
         fluid: true,
         sources: [{
-          src: `${location.origin}/api/v1/image?hash=${hash}`,
+          src: `${sysConfig.webServer}/api/v1/image?hash=${hash}`,
           type: `${fileType.type}/${fileType.subType}`
         }]
       };
@@ -60,7 +62,7 @@ export default function ({ open, setOpen, metadata, hash }) {
                 }}
                 >
                     <video ref={playerRef} controls style={{ maxWidth: "100%", maxHeight: "100%" }} data-setup='{}'>
-                        <source src={`${location.origin}/api/v1/image?hash=${hash}`} />
+                        <source src={`${sysConfig.webServer}/api/v1/image?hash=${hash}`} />
                         您的浏览器不支持 HTML5 video 标签。
                     </video>
                     {/* <Button onClick={() => playerRef.current?.play()}>播放</Button>
