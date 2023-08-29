@@ -139,10 +139,10 @@ export default function ({ show }) {
             </Box>
             <Typography>共{metadataList.filter(m => m.fileType.type === "image").length}张照片、{metadataList.filter(m => m.fileType.type === "video").length}个视频</Typography>
             <Typography>筛选出{filteredMetadataList.filter(m => m.fileType.type === "image").length}张照片、{filteredMetadataList.filter(m => m.fileType.type === "video").length}个视频</Typography>
-            {viewBy == "年" && <Year metadataList={filteredMetadataList} />}
-            {viewBy == "月" && <Month metadataList={filteredMetadataList} />}
-            {viewBy == "日" && <Date metadataList={filteredMetadataList} />}
-            {viewBy == "所有照片" && <All metadataList={filteredMetadataList} />}
+            {viewBy === "年" && <Year metadataList={filteredMetadataList} />}
+            {viewBy === "月" && <Month metadataList={filteredMetadataList} />}
+            {viewBy === "日" && <Date metadataList={filteredMetadataList} />}
+            {viewBy === "所有照片" && <All metadataList={filteredMetadataList} />}
         </Stack>
     );
 }

@@ -13,7 +13,7 @@ export default function ({ metadata }) {
     let time = shotTime.isValid() ? shotTime.format("YYYY年MM月DD日 HH:mm:ss") : "未知时间";
     return (
         <>
-            {fileType.type == "image" && <img style={{ width: "100%", transform: getTransform(exif.Orientation) }} className={styles.clickable}
+            {fileType.type === "image" && <img style={{ width: "100%", transform: getTransform(exif.Orientation) }} className={styles.clickable}
                 src={`${sysConfig.webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
                 title={time + "\n"
                     + shotEquipment + "\n"
@@ -23,7 +23,7 @@ export default function ({ metadata }) {
                     + hash}
                 onClick={() => setOpen(true)}
             />}
-            {fileType.type == "video" && <img style={{ width: "100%" }} className={styles.clickable}
+            {fileType.type === "video" && <img style={{ width: "100%" }} className={styles.clickable}
                 src={`${sysConfig.webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
                 title={time + "\n"
                     + shotEquipment + "\n"
@@ -34,8 +34,8 @@ export default function ({ metadata }) {
                     + hash}
                 onClick={() => setOpen(true)}
             />}
-            {fileType.type == "video" && <VideoViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
-            {fileType.type == "image" && <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
+            {fileType.type === "video" && <VideoViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
+            {fileType.type === "image" && <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
         </>
     );
 }

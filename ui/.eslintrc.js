@@ -28,5 +28,6 @@ module.exports = {
         "react/no-unescaped-entities": "off",
         "no-param-reassign": "off",
         "no-return-assign": "off",
+        "react/self-closing-comp": "off",
     },
 };

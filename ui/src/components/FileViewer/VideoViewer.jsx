@@ -7,28 +7,6 @@ export default function ({ open, setOpen, metadata, hash }) {
     const sysConfig = getSysConfig().sysConfig;
     let { hash: hash2, videoMetadata, fileType } = metadata;
     const playerRef = useRef(null);
-    const videoJsOptions = {
-        autoplay: true,
-        controls: true,
-        responsive: true,
-        fluid: true,
-        sources: [{
-          src: `${sysConfig.webServer}/api/v1/image?hash=${hash}`,
-          type: `${fileType.type}/${fileType.subType}`
-        }]
-      };
-      const handlePlayerReady = (player) => {
-        playerRef.current = player;
-    
-        // You can handle player events here, for example:
-        player.on('waiting', () => {
-          videojs.log('player is waiting');
-        });
-    
-        player.on('dispose', () => {
-          videojs.log('player will dispose');
-        });
-      };
     return (
         <Modal
             open={open}
