@@ -40,6 +40,7 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/list", apiList)
 	e.GET("/api/v1/openFile", apiOpenFile)
 	e.GET("/api/v1/downloadFile", apiDownloadFile)
+	e.GET("/api/v1/download", apiDownload)
 	e.GET("/api/v1/image", apiImage)
 
 	e.GET("/thumbnail", apiThumbnail)
@@ -140,6 +141,19 @@ func apiDownloadFile(c echo.Context) error {
 		return err
 	}
 	defer rc.Close()
+	return c.Stream(http.StatusOK, "", rc)
+}
+
+func apiDownload(c echo.Context) error {
+	hash := c.QueryParam("hash")
+	rc, err := kfsCore.S.ReadWithSize(hash)
+	if err != nil {
+		println(err.Error())
+		c.Logger().Error(err)
+		return err
+	}
+	defer rc.Close()
+	c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 	return c.Stream(http.StatusOK, "", rc)
 }
 

@@ -61,28 +61,9 @@ export default function ({ show }) {
                 alignItems="flex-end"
                 spacing={0.5}
             >
-                <IconButton
-                    color="inherit"
-                    onClick={() => refersh()}
-                    sx={{}}
-                >
-                    <Refresh />
-                </IconButton>
-                <IconButton
-                    color="inherit"
-                    onClick={() => setCalendar(f => !f)}
-                    sx={{}}
-                >
-                    <CalendarMonth />
-                </IconButton>
-                <IconButton
-                    color="inherit"
-                    onClick={() => setFilter(f => !f)}
-                    edge="end"
-                    sx={{}}
-                >
-                    <FilterAlt />
-                </IconButton>
+                <IconButton onClick={() => refersh()} ><Refresh /></IconButton>
+                <IconButton onClick={() => setCalendar(f => !f)}><CalendarMonth /></IconButton>
+                <IconButton onClick={() => setFilter(f => !f)}><FilterAlt /></IconButton>
             </Stack>
             <Box sx={{ ...(!calendar && { display: 'none' }) }}>
                 <InputLabel sx={{ display: "inline" }}>视图：</InputLabel>

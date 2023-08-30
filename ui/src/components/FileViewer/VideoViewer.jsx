@@ -1,52 +1,84 @@
-import { Close } from "@mui/icons-material";
-import { Box, Button, IconButton, Modal } from "@mui/material";
+import { Close, Download, Info } from "@mui/icons-material";
+import { Box, Drawer, IconButton, Modal, Stack, Typography } from "@mui/material";
 import { getSysConfig } from "hox/sysConfig";
-import { useRef } from "react";
+import { useState } from "react";
 
 export default function ({ open, setOpen, metadata, hash }) {
+    const [info, setInfo] = useState(false);
     const sysConfig = getSysConfig().sysConfig;
-    let { hash: hash2, videoMetadata, fileType } = metadata;
-    const playerRef = useRef(null);
+    let { hash: hash2, exif, fileType } = metadata;
     return (
-        <Modal
-            open={open}
-            onClose={() => setOpen(false)}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-        >
-            <Box sx={{
-                width: "100%",
-                height: "100%",
-                backgroundColor: theme => theme.background.primary,
-                color: theme => theme.context.primary
-            }}
+        <>
+            <Modal
+                open={open}
+                onClose={() => setOpen(false)}
+                aria-labelledby="modal-modal-title"
+                aria-describedby="modal-modal-description"
             >
-                <IconButton
-                    aria-label="close"
-                    onClick={() => setOpen(false)}
-                    sx={{
-                        position: 'absolute',
-                        right: 8,
-                        top: 8,
-                        color: (theme) => theme.palette.grey[500],
-                    }}
-                >
-                    <Close />
-                </IconButton>
                 <Box sx={{
                     width: "100%",
                     height: "100%",
-                    textAlign: "center"
+                    backgroundColor: theme => theme.background.primary,
+                    color: theme => theme.context.primary
                 }}
                 >
-                    <video ref={playerRef} controls style={{ maxWidth: "100%", maxHeight: "100%" }} data-setup='{}'>
-                        <source src={`${sysConfig.webServer}/api/v1/image?hash=${hash}`} />
-                        您的浏览器不支持 HTML5 video 标签。
-                    </video>
-                    {/* <Button onClick={() => playerRef.current?.play()}>播放</Button>
-                    <Button onClick={() => playerRef.current?.pause()}>暂停</Button> */}
+                    <Stack
+                        sx={{
+                            position: 'absolute',
+                            right: 8,
+                            top: 8,
+                        }}
+                        direction="row"
+                        justifyContent="flex-end"
+                        alignItems="flex-end"
+                        spacing={0.5}
+                    >
+                        <IconButton
+                            href={`${sysConfig.webServer}/api/v1/download?hash=${hash}`}
+                            download=""
+                        >
+                            <Download />
+                        </IconButton>
+                        <IconButton
+                            onClick={() => setInfo(true)}
+                        >
+                            <Info />
+                        </IconButton>
+                        <IconButton
+                            onClick={() => setOpen(false)}
+                        >
+                            <Close />
+                        </IconButton>
+                    </Stack>
+                    <Box sx={{
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                    >
+                        <video controls style={{ maxWidth: "100%", maxHeight: "100%" }} data-setup='{}'>
+                            <source src={`${sysConfig.webServer}/api/v1/image?hash=${hash}`} />
+                            您的浏览器不支持 HTML5 video 标签。
+                        </video>
+                    </Box>
                 </Box>
-            </Box>
-        </Modal>
+            </Modal>
+            <Drawer
+                anchor="right"
+                open={info}
+                onClose={() => setInfo(false)}
+                sx={{ zIndex: 1350 }}
+                SlideProps={{ sx: { maxWidth: "90%" } }}
+            >
+                <Box
+                    sx={{ whiteSpace: "pre" }}
+                    role="presentation"
+                >
+                    {JSON.stringify(metadata, null, 2)}
+                </Box>
+            </Drawer>
+        </>
     );
 }

@@ -15,7 +15,7 @@ export default function ({ onNewExif }) {
                     exifStatus().then(exifStatusCb);
                 }, 500);
             }
-            if (status.cnt != newStatus.cnt) {
+            if (status.cnt !== newStatus.cnt) {
                 onNewExif?.();
             }
         } else {
