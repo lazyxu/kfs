@@ -1,6 +1,5 @@
 import { Close } from "@mui/icons-material";
 import { Box, IconButton, Modal } from "@mui/material";
-import { getTransform } from "api/utils/api";
 import { getSysConfig } from "hox/sysConfig";
 
 export default function ({ open, setOpen, metadata, hash }) {
@@ -38,7 +37,7 @@ export default function ({ open, setOpen, metadata, hash }) {
                     textAlign: "center"
                 }}
                 >
-                    <img style={{ maxWidth: "100%", maxHeight: "100%", transform: getTransform(exif.Orientation) }} src={`${sysConfig.webServer}/api/v1/image?hash=${hash}`} />
+                    <img style={{ maxWidth: "100%", maxHeight: "100%" }} src={`${sysConfig.webServer}/api/v1/image?hash=${hash}`} />
                 </Box>
             </Box>
         </Modal>

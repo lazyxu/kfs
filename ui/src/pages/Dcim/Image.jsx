@@ -1,7 +1,6 @@
 import { useState } from "react";
 import styles from './image.module.scss';
 import ImageViewer from "components/FileViewer/ImageViewer";
-import { getTransform } from "api/utils/api";
 import moment from "moment";
 import VideoViewer from "components/FileViewer/VideoViewer";
 import { getSysConfig } from "hox/sysConfig";
@@ -13,7 +12,7 @@ export default function ({ metadata }) {
     let time = shotTime.isValid() ? shotTime.format("YYYY年MM月DD日 HH:mm:ss") : "未知时间";
     return (
         <>
-            {fileType.type === "image" && <img style={{ width: "100%", transform: getTransform(exif.Orientation) }} className={styles.clickable}
+            {fileType.type === "image" && <img style={{ width: "100%" }} className={styles.clickable}
                 src={`${sysConfig.webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
                 title={time + "\n"
                     + shotEquipment + "\n"

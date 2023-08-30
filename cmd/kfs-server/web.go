@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"image"
-	"image/jpeg"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -146,26 +145,37 @@ func apiDownloadFile(c echo.Context) error {
 
 func apiImage(c echo.Context) error {
 	hash := c.QueryParam("hash")
-	fileType, err := kfsCore.Db.GetFileType(c.Request().Context(), hash)
-	if err != nil {
-		return err
+	m, err1 := kfsCore.Db.GetMetadata(c.Request().Context(), hash)
+	if err1 != nil {
+		return err1
 	}
+	fileType := m.FileType
 	if fileType.Extension == matchers.TypeHeif.Extension {
-		rc, err := kfsCore.S.ReadWithSize(hash)
-		if err != nil {
-			return err
+		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".jpg")
+		f, err2 := os.Open(thumbnailFilePath)
+		if os.IsNotExist(err2) {
+			rc, err := kfsCore.S.ReadWithSize(hash)
+			if err != nil {
+				return err
+			}
+			defer rc.Close()
+			img, err := goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
+			if err != nil {
+				return err
+			}
+			img = orientation(img, m.Exif)
+			err = imaging.Save(img, thumbnailFilePath)
+			if err != nil {
+				return err
+			}
+			f, err2 = os.Open(thumbnailFilePath)
 		}
-		defer rc.Close()
-		img, err := goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
-		if err != nil {
-			return err
+		if err2 != nil {
+			return err2
 		}
-		c.Response().Status = http.StatusOK
-		err = jpeg.Encode(c.Response(), img, &jpeg.Options{Quality: 100})
-		if err != nil {
-			return err
-		}
-		return nil
+		defer f.Close()
+		c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
+		return c.Stream(http.StatusOK, "", f)
 	} else if fileType.Extension == matchers.TypeMov.Extension {
 		src := kfsCore.S.GetFilePath(hash)
 		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".mp4")
@@ -183,6 +193,7 @@ func apiImage(c echo.Context) error {
 			return err
 		}
 		defer f.Close()
+		c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 		return c.Stream(http.StatusOK, "", f)
 	}
 	rc, err := kfsCore.S.ReadWithSize(hash)
@@ -192,6 +203,7 @@ func apiImage(c echo.Context) error {
 		return err
 	}
 	defer rc.Close()
+	c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 	return c.Stream(http.StatusOK, "", rc)
 }
 
@@ -220,12 +232,35 @@ func generateThumbnail(img image.Image, thumbnailFilePath string, cutSquare bool
 	return nil
 }
 
+func orientation(img image.Image, exif *dao.Exif) image.Image {
+	if exif == nil {
+		return img
+	}
+	switch exif.Orientation {
+	case 2:
+		return imaging.FlipH(img)
+	case 3:
+		return imaging.Rotate180(img)
+	case 4:
+		return imaging.Rotate180(imaging.FlipH(img))
+	case 5:
+		return imaging.Rotate90(imaging.FlipH(img))
+	case 6:
+		return imaging.Rotate270(img)
+	case 7:
+		return imaging.Rotate270(imaging.FlipH(img))
+	case 8:
+		return imaging.Rotate90(img)
+	}
+	return img
+}
+
 func apiThumbnail(c echo.Context) error {
 	hash := c.QueryParam("hash")
 	sizeStr := c.QueryParam("size")
-	size, err := strconv.Atoi(sizeStr)
-	if err != nil {
-		return err
+	size, err1 := strconv.Atoi(sizeStr)
+	if err1 != nil {
+		return err1
 	}
 	if size != 64 && size != 128 && size != 256 {
 		return errors.New("invalid size, expected 64, 128 or 256")
@@ -233,9 +268,9 @@ func apiThumbnail(c echo.Context) error {
 	cutSquareStr := c.QueryParam("cutSquare")
 	cutSquare := false
 	if cutSquareStr != "" {
-		cutSquare, err = strconv.ParseBool(cutSquareStr)
-		if err != nil {
-			return err
+		cutSquare, err1 = strconv.ParseBool(cutSquareStr)
+		if err1 != nil {
+			return err1
 		}
 	}
 	// TODO: save it to storage.
@@ -245,61 +280,74 @@ func apiThumbnail(c echo.Context) error {
 	} else {
 		filename = hash + "@" + sizeStr
 	}
-	fileType, err := kfsCore.Db.GetFileType(c.Request().Context(), hash)
-	if err != nil {
-		return err
+	m, err1 := kfsCore.Db.GetMetadata(c.Request().Context(), hash)
+	if err1 != nil {
+		return err1
 	}
+	fileType := m.FileType
 	thumbnailFilePath := filepath.Join(kfsCore.ThumbnailDir(), filename+".jpg")
-	f, err := os.Open(thumbnailFilePath)
-	if os.IsNotExist(err) {
+	f, err1 := os.Open(thumbnailFilePath)
+	if os.IsNotExist(err1) {
 		println("generate thumbnail for", filename, fileType.SubType)
 		if fileType.Extension == matchers.TypeHeif.Extension {
-			var rc dao.SizedReadCloser
-			rc, err = kfsCore.S.ReadWithSize(hash)
+			rc, err := kfsCore.S.ReadWithSize(hash)
 			if err != nil {
 				return err
 			}
 			defer rc.Close()
-			var img image.Image
-			img, err = goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
+			img, err := goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
 			if err != nil {
 				return err
 			}
+			img = orientation(img, m.Exif)
 			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
 			if err != nil {
 				return err
 			}
 		} else if fileType.Type == "image" {
-			var rc dao.SizedReadCloser
-			rc, err = kfsCore.S.ReadWithSize(hash)
+			rc, err := kfsCore.S.ReadWithSize(hash)
 			if err != nil {
 				return err
 			}
 			defer rc.Close()
-			var img image.Image
-			img, err = imaging.Decode(rc)
+			img, err := imaging.Decode(rc)
 			if err != nil {
 				return err
 			}
+			img = orientation(img, m.Exif)
 			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
 			if err != nil {
 				return err
 			}
 		} else if fileType.Type == "video" {
+			originFilePath := filepath.Join(kfsCore.ThumbnailDir(), filename+".origin.jpg")
 			src := kfsCore.S.GetFilePath(hash)
-			err = ffmpeg_go.Input(src).
-				Output(thumbnailFilePath, ffmpeg_go.KwArgs{"vframes": 1}, ffmpeg_go.KwArgs{"s": sizeStr + "x" + sizeStr}).
+			err := ffmpeg_go.Input(src).
+				Output(originFilePath, ffmpeg_go.KwArgs{"vframes": 1}).
 				OverWriteOutput().ErrorToStdOut().Run()
+			if err != nil {
+				return err
+			}
+			f, err := os.Open(originFilePath)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+			img, err := imaging.Decode(f)
+			if err != nil {
+				return err
+			}
+			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
 			if err != nil {
 				return err
 			}
 		} else {
 			return errors.New("unsupported file type")
 		}
-		f, err = os.Open(thumbnailFilePath)
+		f, err1 = os.Open(thumbnailFilePath)
 	}
-	if err != nil {
-		return err
+	if err1 != nil {
+		return err1
 	}
 	c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 	defer f.Close()

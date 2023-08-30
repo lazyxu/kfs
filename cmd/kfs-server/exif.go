@@ -56,6 +56,7 @@ func apiGetMetadata(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 	return ok(c, data)
 }
 
