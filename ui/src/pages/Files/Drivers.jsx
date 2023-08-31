@@ -17,7 +17,7 @@ export default function () {
         <>
             <AbsolutePath/>
             <Grid container margin={1} spacing={1}
-                  style={{flex: "auto", overflowY: "scroll"}}
+                  style={{flex: "auto"}}
                   ref={driversElm} onContextMenu={(e) => {
                 e.preventDefault();
                 // console.log(e.target, e.currentTarget, e.target === e.currentTarget);

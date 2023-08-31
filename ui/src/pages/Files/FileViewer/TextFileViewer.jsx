@@ -1,11 +1,11 @@
-import {download} from "../../../api/fs";
+import { download } from "../../../api/fs";
 import humanize from 'humanize';
 import useResourceManager from "../../../hox/resourceManager";
-import {Link} from "@mui/material";
-import {getSysConfig} from "../../../hox/sysConfig";
+import { Link, Typography } from "@mui/material";
+import { getSysConfig } from "../../../hox/sysConfig";
 import Editor from "@monaco-editor/react";
 
-export default ({file}) => {
+export default ({ file }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     console.log("fileViewer", file)
     return (
@@ -16,10 +16,8 @@ export default ({file}) => {
                     download(resourceManager.driverName, resourceManager.filePath)
                 }}>下载该文件</Link>。
             </> :
-            <Editor
-                height="100%"
-                defaultValue={file.content}
-                defaultPath={file.name}
-            />
+            <Typography sx={{ wordBreak: "break-all" }}>
+                {file.content}
+            </Typography>
     )
 };

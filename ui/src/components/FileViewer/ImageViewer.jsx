@@ -10,6 +10,7 @@ export default function ({ open, setOpen, metadata, hash, attribute }) {
     const [openMetadata, setOpenMetadata] = useState(false);
     const [openSameFiles, setOpenSameFiles] = useState(false);
     const [openAttribute, setOpenAttribute] = useState(false);
+    const [sameFiles, setSameFiles] = useState([]);
     const sysConfig = getSysConfig().sysConfig;
     let { hash: hash2, exif, fileType } = metadata;
     return (
@@ -40,7 +41,7 @@ export default function ({ open, setOpen, metadata, hash, attribute }) {
                     >
                         <IconButton
                             href={`${sysConfig.webServer}/api/v1/download?hash=${hash}`}
-                            download="test.jpg"
+                            download={attribute ? attribute.name : sameFiles[0].name}
                         >
                             <Download />
                         </IconButton>
@@ -77,7 +78,7 @@ export default function ({ open, setOpen, metadata, hash, attribute }) {
                     </Box>
                 </Box>
             </Modal>
-            <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={hash} />
+            <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={hash} sameFiles={sameFiles} setSameFiles={setSameFiles} />
             <Metadata open={openMetadata} setOpen={setOpenMetadata} metadata={metadata} />
             {attribute && <Attribute open={openAttribute} setOpen={setOpenAttribute} attribute={attribute} />}
         </>

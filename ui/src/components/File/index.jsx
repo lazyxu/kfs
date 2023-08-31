@@ -31,14 +31,8 @@ export default function ({ dirItem, filesElm }) {
                     x, y, width, height,
                 })
             }}>
-            <Box onMouseDown={useClick(null, () => {
-                if (modeIsDir(mode)) {
-                    list(setResourceManager, driverName, filePath);
-                } else {
-                    openFile(setResourceManager, driverName, filePath, dirItem);
-                }
-            })}>
-                <FileIcon dirItem={dirItem}/>
+            <Box>
+                <FileIcon dirItem={dirItem} filePath={filePath}/>
             </Box>
             <Box kfs-attr="file" style={{ width: "100%", overflowWrap: "break-word", textAlign: "center" }}>{name}</Box>
         </Stack>

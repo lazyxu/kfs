@@ -13,7 +13,7 @@ export default function ({dirItems}) {
     return (
         <>
             <AbsolutePath/>
-            <Box style={{flex: "auto", overflowY: "scroll"}}
+            <Box style={{flex: "auto"}}
                  ref={filesElm} onContextMenu={(e) => {
                 e.preventDefault();
                 // console.log(e.target, e.currentTarget, e.target === e.currentTarget);

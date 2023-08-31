@@ -24,8 +24,12 @@
     color: var(--mui-palette-file);
     //border: 1px solid var(--mui-palette-file);
   }
+  .file-icon-file-viewable {
+    cursor: pointer;
+  }
   .file-icon-folder {
     color: var(--mui-palette-folder);
+    cursor: pointer;
     //border: 1px solid var(--mui-palette-folder);
   }
   .file-name-wrapper {

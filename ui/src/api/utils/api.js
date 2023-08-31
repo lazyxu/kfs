@@ -18,6 +18,16 @@ export function isDCIM(name) {
     return false;
 }
 
+export function isViewable(name) {
+    name = name.toLowerCase()
+    if (name.endsWith(".txt") || name.endsWith(".md") ||
+        name.endsWith(".go") || name.endsWith(".js") || name.endsWith(".java") || name.endsWith(".c")
+    ) {
+        return true;
+    }
+    return false;
+}
+
 export function parseShotTime(metadata) {
     let { exif, videoMetadata } = metadata;
     if (exif) {

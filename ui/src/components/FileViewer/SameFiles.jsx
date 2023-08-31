@@ -2,8 +2,7 @@ import { Box, Drawer } from "@mui/material";
 import { useEffect, useState } from "react";
 import { listDriverFileByHash } from "api/web/fs";
 
-export default function ({ hash, open, setOpen }) {
-    const [sameFiles, setSameFiles] = useState([]);
+export default function ({ hash, open, setOpen, sameFiles, setSameFiles }) {
     useEffect(() => {
         listDriverFileByHash(hash).then(setSameFiles);
     }, []);
