@@ -170,6 +170,14 @@ func arrayToJson(arr []string) []byte {
 	return data
 }
 
+func jsonToArray(data []byte) (arr []string) {
+	err := json.Unmarshal(data, &arr)
+	if err != nil {
+		panic(err)
+	}
+	return arr
+}
+
 func UpsertDriverFile(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _driver_file (

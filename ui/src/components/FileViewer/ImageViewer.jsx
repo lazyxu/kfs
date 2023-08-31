@@ -1,10 +1,15 @@
-import { Close, Download, Info } from "@mui/icons-material";
-import { Box, Drawer, IconButton, Modal, Stack, Typography } from "@mui/material";
+import { AllInbox, Close, Download, Info, PrivacyTip } from "@mui/icons-material";
+import { Box, IconButton, Modal, Stack } from "@mui/material";
 import { getSysConfig } from "hox/sysConfig";
 import { useState } from "react";
+import SameFiles from "./SameFiles";
+import Metadata from "./Metadata";
+import Attribute from "./Attribute";
 
-export default function ({ open, setOpen, metadata, hash }) {
-    const [info, setInfo] = useState(false);
+export default function ({ open, setOpen, metadata, hash, attribute }) {
+    const [openMetadata, setOpenMetadata] = useState(false);
+    const [openSameFiles, setOpenSameFiles] = useState(false);
+    const [openAttribute, setOpenAttribute] = useState(false);
     const sysConfig = getSysConfig().sysConfig;
     let { hash: hash2, exif, fileType } = metadata;
     return (
@@ -40,9 +45,19 @@ export default function ({ open, setOpen, metadata, hash }) {
                             <Download />
                         </IconButton>
                         <IconButton
-                            onClick={() => setInfo(true)}
+                            onClick={() => setOpenSameFiles(true)}
+                        >
+                            <AllInbox />
+                        </IconButton>
+                        {attribute && <IconButton
+                            onClick={() => setOpenAttribute(true)}
                         >
                             <Info />
+                        </IconButton>}
+                        <IconButton
+                            onClick={() => setOpenMetadata(true)}
+                        >
+                            <PrivacyTip />
                         </IconButton>
                         <IconButton
                             onClick={() => setOpen(false)}
@@ -62,20 +77,9 @@ export default function ({ open, setOpen, metadata, hash }) {
                     </Box>
                 </Box>
             </Modal>
-            <Drawer
-                anchor="right"
-                open={info}
-                onClose={() => setInfo(false)}
-                sx={{ zIndex: 1350 }}
-                SlideProps={{ sx: { maxWidth: "90%" } }}
-            >
-                <Box
-                    sx={{ whiteSpace: "pre" }}
-                    role="presentation"
-                >
-                    {JSON.stringify(metadata, null, 2)}
-                </Box>
-            </Drawer>
+            <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={hash} />
+            <Metadata open={openMetadata} setOpen={setOpenMetadata} metadata={metadata} />
+            {attribute && <Attribute open={openAttribute} setOpen={setOpenAttribute} attribute={attribute} />}
         </>
     );
 }

@@ -50,6 +50,7 @@ type Database interface {
 	UpsertDriverFile(ctx context.Context, f DriverFile) error
 	ListDriverFile(ctx context.Context, driverName string, filePath []string) (files []DriverFile, err error)
 	GetDriverFile(ctx context.Context, driverName string, splitPath []string) (file DriverFile, err error)
+	ListDriverFileByHash(ctx context.Context, hash string) (files []DriverFile, err error)
 
 	InsertNullVideoMetadata(ctx context.Context, hash string) (exist bool, err error)
 	InsertVideoMetadata(ctx context.Context, hash string, m VideoMetadata) (exist bool, err error)

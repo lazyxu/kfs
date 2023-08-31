@@ -38,6 +38,7 @@ func webServer(webPortString string) {
 	e.POST("/api/v1/drivers", apiNewDriver)
 	e.DELETE("/api/v1/drivers", apiDeleteDriver)
 	e.GET("/api/v1/list", apiList)
+	e.GET("/api/v1/listDriverFileByHash", apiListDriverFileByHash)
 	e.GET("/api/v1/openFile", apiOpenFile)
 	e.GET("/api/v1/downloadFile", apiDownloadFile)
 	e.GET("/api/v1/download", apiDownload)
@@ -155,6 +156,17 @@ func apiDownload(c echo.Context) error {
 	defer rc.Close()
 	c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 	return c.Stream(http.StatusOK, "", rc)
+}
+
+func apiListDriverFileByHash(c echo.Context) error {
+	hash := c.QueryParam("hash")
+	list, err := kfsCore.Db.ListDriverFileByHash(c.Request().Context(), hash)
+	if err != nil {
+		println(err.Error())
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, list)
 }
 
 func apiImage(c echo.Context) error {

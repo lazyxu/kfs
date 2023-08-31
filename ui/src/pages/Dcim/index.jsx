@@ -54,7 +54,7 @@ export default function ({ show }) {
             (!chosenFileType || chosenFileType.includes(metadata.fileType.extension)))
         .sort(timeSortFn);
     return (
-        <Stack style={{ height: "100%", display: show ? undefined : "none" }}>
+        <Stack style={{ height: "100%", display: show===false ? "none" : undefined }}>
             <Stack
                 direction="row"
                 justifyContent="flex-end"

@@ -83,3 +83,33 @@ func ListDriverFile(ctx context.Context, conn *sql.DB, driverName string, filePa
 	}
 	return
 }
+
+func ListDriverFileByHash(ctx context.Context, conn *sql.DB, hash string) (files []dao.DriverFile, err error) {
+	rows, err := conn.QueryContext(ctx, `
+		SELECT driverName,
+			dirPath,
+			name,
+			version
+		FROM _driver_file WHERE hash=?
+	`, hash)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	files = make([]dao.DriverFile, 0)
+	for rows.Next() {
+		var file dao.DriverFile
+		var dirPathJson []byte
+		err = rows.Scan(
+			&file.DriverName,
+			&dirPathJson,
+			&file.Name,
+			&file.Version)
+		if err != nil {
+			return
+		}
+		file.DirPath = jsonToArray(dirPathJson)
+		files = append(files, file)
+	}
+	return
+}

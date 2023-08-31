@@ -10,6 +10,13 @@ export async function list(driverName, filePath) {
     });
 }
 
+export async function listDriverFileByHash(hash) {
+    console.log('web.listDriverFileByHash', hash);
+    return await httpGet("/api/v1/listDriverFileByHash", {
+        hash
+    });
+}
+
 export async function openFile(driverName, filePath) {
     console.log('web.openFile', driverName, filePath);
     let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/openFile`, {

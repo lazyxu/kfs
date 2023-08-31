@@ -33,8 +33,8 @@ export default function ({ metadata }) {
                     + hash}
                 onClick={() => setOpen(true)}
             />}
-            {fileType.type === "video" && <VideoViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
-            {fileType.type === "image" && <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
+            {open && fileType.type === "video" && <VideoViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
+            {open && fileType.type === "image" && <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
         </>
     );
 }

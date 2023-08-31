@@ -27,7 +27,7 @@ export default ({ show }) => {
                         <InputLabel><Box style={{ display: "inline-block", background: "green", height: "1em", width: "1em", borderRadius: "1em" }} /> 云盘文件：{humanize.filesize(diskUsage.file)} {toPrecent(diskUsage.file / diskUsage.total)}</InputLabel>
                         <InputLabel><Box style={{ display: "inline-block", background: "blueviolet", height: "1em", width: "1em", borderRadius: "1em" }} /> 元数据：{humanize.filesize(diskUsage.metadata)} {toPrecent(diskUsage.metadata / diskUsage.total)}</InputLabel>
                         <InputLabel><Box style={{ display: "inline-block", background: "orange", height: "1em", width: "1em", borderRadius: "1em" }} /> 缩略图：{humanize.filesize(diskUsage.thumbnail)} {toPrecent(diskUsage.thumbnail / diskUsage.total)}</InputLabel>
-                        <InputLabel><Box style={{ display: "inline-block", background: "yellowgreen", height: "1em", width: "1em", borderRadius: "1em" }} /> 视频转码：{humanize.filesize(diskUsage.transCode)} {toPrecent(diskUsage.transCode / diskUsage.total)}</InputLabel>
+                        <InputLabel><Box style={{ display: "inline-block", background: "yellowgreen", height: "1em", width: "1em", borderRadius: "1em" }} /> 图片视频转码：{humanize.filesize(diskUsage.transCode)} {toPrecent(diskUsage.transCode / diskUsage.total)}</InputLabel>
                         <InputLabel><Box style={{ display: "inline-block", background: "cornflowerblue", height: "1em", width: "1em", borderRadius: "1em" }} /> 剩余：{humanize.filesize(diskUsage.free)} {toPrecent(diskUsage.free / diskUsage.total)}</InputLabel>
                     </Box>
                 </Box>

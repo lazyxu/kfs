@@ -23,8 +23,8 @@ export default function ({ dirItem }) {
                     :
                     <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit" />
             }
-            {metadata?.fileType?.type === "video" && <VideoViewer open={open} setOpen={setOpen} metadata={metadata} hash={metadata.hash} />}
-            {metadata?.fileType?.type === "image" && <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={metadata.hash} />}
+            {open && metadata?.fileType?.type === "video" && <VideoViewer open={open} setOpen={setOpen} metadata={metadata} hash={metadata.hash} attribute={dirItem}/>}
+            {open && metadata?.fileType?.type === "image" && <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={metadata.hash} attribute={dirItem} />}
         </Box>
     );
 }

@@ -139,6 +139,7 @@ export default function ({ show }) {
                         setId(newId);
                         setErrs([]);
                         console.log("fastBackup", newId, srcPath);
+                        // TODO: 不同的备份策略
                         sendJsonMessage({
                             type: "fastBackup", id: newId, data: {
                                 srcPath, concurrent, encoder,

@@ -47,3 +47,7 @@ func (db *DB) SumFileSize(ctx context.Context) (size uint64, err error) {
 func (db *DB) ListFile(ctx context.Context) (hashList []string, err error) {
 	return dbBase.ListFile(ctx, db.db)
 }
+
+func (db *DB) ListDriverFileByHash(ctx context.Context, hash string) (files []dao.DriverFile, err error) {
+	return dbBase.ListDriverFileByHash(ctx, db.db, hash)
+}

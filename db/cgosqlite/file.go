@@ -67,3 +67,9 @@ func (db *DB) ListFile(ctx context.Context) (hashList []string, err error) {
 	defer db.putConn(conn)
 	return dbBase.ListFile(ctx, conn)
 }
+
+func (db *DB) ListDriverFileByHash(ctx context.Context, hash string) (files []dao.DriverFile, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListDriverFileByHash(ctx, conn, hash)
+}

@@ -139,7 +139,7 @@ function App() {
             }}>
                 <DrawerHeader />
                 <Files show={menu === '我的云盘'} />
-                <Dcim show={menu === '我的相册'} />
+                {menu === '我的相册' && <Dcim />}
                 {process.env.REACT_APP_PLATFORM !== 'web' && <BackupTask show={menu === '备份任务'} />}
                 <SystemConfig show={menu === '设置'} />
                 <DedicatedSpace show={menu === '存储空间'} />
