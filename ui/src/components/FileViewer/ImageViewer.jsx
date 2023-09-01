@@ -41,7 +41,7 @@ export default function ({ open, setOpen, metadata, hash, attribute }) {
                     >
                         <IconButton
                             href={`${sysConfig.webServer}/api/v1/download?hash=${hash}`}
-                            download={attribute ? attribute.name : sameFiles[0].name}
+                            download={attribute ? attribute.name : sameFiles.length > 0 ? sameFiles[0].name : undefined}
                         >
                             <Download />
                         </IconButton>

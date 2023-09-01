@@ -32,7 +32,7 @@ export default ({driversElm, driver}) => {
                     {/* <Typography>可读取该云盘的设备：any</Typography> */}
                 </Box>
                 <Box color="text.secondary">
-                    描述：{driver.description}
+                    {driver.description}
                 </Box>
             </CardContent>
             <CardActions>

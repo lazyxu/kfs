@@ -13,11 +13,11 @@ export default function ({ show }) {
         listDriver(setResourceManager);
     }, []);
     return (
-        <Stack sx={{ display: show ? undefined : "none", overflowY: 'auto' }}>
+        <Box sx={{ display: show ? 'flex' : "none", flex: "1", flexDirection: 'column', minHeight: '0' }}>
             <AbsolutePath />
             {resourceManager.drivers && <Drivers />}
             {resourceManager.file && <FileViewer file={resourceManager.file} />}
             {resourceManager.dirItems && <DirItems dirItems={resourceManager.dirItems} />}
-        </Stack>
+        </Box>
     );
 }
