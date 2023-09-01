@@ -15,8 +15,7 @@ export default function () {
 
     return (
         <>
-            <AbsolutePath/>
-            <Grid container margin={1} spacing={1}
+            <Grid container padding={1} spacing={1}
                   style={{flex: "auto"}}
                   ref={driversElm} onContextMenu={(e) => {
                 e.preventDefault();

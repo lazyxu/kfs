@@ -38,7 +38,12 @@ function App() {
         justifyContent: 'flex-end',
     }));
     return (
-        <Stack sx={{ width: "100%", height: "100%", position: "fixed" }} direction="row">
+        <Box sx={{
+            position: 'fixed', width: "100%", height: "100%",
+            display: 'flex', flexDirection: 'column',
+            backgroundColor: theme => theme.background.primary,
+            color: theme => theme.context.primary
+        }}>
             <AppBar position="fixed" open={open}>
                 <Toolbar>
                     <IconButton
@@ -131,20 +136,13 @@ function App() {
                 </Box>
                 <Version />
             </Drawer>
-            <Box sx={{
-                flex: 1,
-                position: "relative",
-                backgroundColor: theme => theme.background.primary,
-                color: theme => theme.context.primary
-            }}>
-                <DrawerHeader />
-                <Files show={menu === '我的云盘'} />
-                {menu === '我的相册' && <Dcim />}
-                {process.env.REACT_APP_PLATFORM !== 'web' && <BackupTask show={menu === '备份任务'} />}
-                <SystemConfig show={menu === '设置'} />
-                <DedicatedSpace show={menu === '存储空间'} />
-            </Box>
-        </Stack>
+            <DrawerHeader />
+            <Files show={menu === '我的云盘'} />
+            {menu === '我的相册' && <Dcim />}
+            {process.env.REACT_APP_PLATFORM !== 'web' && <BackupTask show={menu === '备份任务'} />}
+            <SystemConfig show={menu === '设置'} />
+            <DedicatedSpace show={menu === '存储空间'} />
+        </Box>
     );
 }
 

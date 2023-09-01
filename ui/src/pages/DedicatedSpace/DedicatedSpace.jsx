@@ -10,7 +10,7 @@ export default ({ show }) => {
         getDiskUsage().then(setDiskUsage);
     }, []);
     return (
-        <Stack style={{ padding: "1em", display: show ? undefined : "none" }}>
+        <Stack style={{ padding: "1em", display: show ? undefined : "none", overflowY: 'auto' }}>
             {!diskUsage ? <Typography>正在获取...</Typography> :
                 <Box>
                     <Box sx={{ width: "100%", height: "1em", paddingBottom: "1em" }}>

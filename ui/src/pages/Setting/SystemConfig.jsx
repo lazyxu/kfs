@@ -4,7 +4,7 @@ import useSysConfig from 'hox/sysConfig';
 export default ({ show }) => {
     const { sysConfig, setSysConfig, resetSysConfig } = useSysConfig();
     return (
-        <Stack style={{ padding: "1em", display: show ? undefined : "none" }}>
+        <Stack style={{ padding: "1em", display: show ? undefined : "none", overflowY: 'auto' }}>
             {!sysConfig ? <span>加载中...</span>
                 : (
                     <>

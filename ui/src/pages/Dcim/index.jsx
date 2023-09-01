@@ -10,7 +10,7 @@ import Exif from "./Exif";
 import { parseShotTime, parseShotEquipment, timeSortFn } from "api/utils/api";
 import { CalendarMonth, FilterAlt, FilterAltOff, Refresh } from "@mui/icons-material";
 
-export default function ({ show }) {
+export default function () {
     const [metadataList, setMetadataList] = useState([]);
     const [viewBy, setViewBy] = useState("所有照片");
     const [calendar, setCalendar] = useState(false);
@@ -54,7 +54,7 @@ export default function ({ show }) {
             (!chosenFileType || chosenFileType.includes(metadata.fileType.extension)))
         .sort(timeSortFn);
     return (
-        <Stack style={{ height: "100%", display: show===false ? "none" : undefined }}>
+        <Stack style={{ overflowY: 'auto' }}>
             <Stack
                 direction="row"
                 justifyContent="flex-end"

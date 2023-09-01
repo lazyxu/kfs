@@ -12,7 +12,6 @@ export default function ({dirItems}) {
     const filesElm = useRef(null);
     return (
         <>
-            <AbsolutePath/>
             <Box style={{flex: "auto"}}
                  ref={filesElm} onContextMenu={(e) => {
                 e.preventDefault();
