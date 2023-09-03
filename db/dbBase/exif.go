@@ -8,6 +8,20 @@ import (
 	"github.com/lazyxu/kfs/dao"
 )
 
+func InsertHeightWidth(ctx context.Context, conn *sql.DB, db DbImpl, hash string, hw dao.HeightWidth) (exist bool, err error) {
+	_, err = conn.ExecContext(ctx, `
+	INSERT INTO _height_width (
+		hash,
+		height,
+		width
+	) VALUES (?, ?, ?)`, hash, hw.Height, hw.Width)
+	if db.IsUniqueConstraintError(err) {
+		exist = true
+		err = nil
+	}
+	return
+}
+
 func InsertNullVideoMetadata(ctx context.Context, conn *sql.DB, db DbImpl, hash string) (exist bool, err error) {
 	_, err = conn.ExecContext(ctx, `
 	INSERT INTO _video_metadata (

@@ -2,18 +2,78 @@ package server
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/dsoprea/go-exif/v3"
 	exifcommon "github.com/dsoprea/go-exif/v3/common"
 	exifundefined "github.com/dsoprea/go-exif/v3/undefined"
+	jpegimage "github.com/dsoprea/go-jpeg-image-structure/v2"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
+	"image"
 	"strings"
 )
 
-func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType dao.FileType) (err error) {
+func GetJpegExifData(kfsCore *core.KFS, hash string) (e dao.Exif, err error) {
+	rc, err := kfsCore.S.ReadWithSize(hash)
+	if err != nil {
+		return
+	}
+	defer rc.Close()
+	parse, err := jpegimage.NewJpegMediaParser().Parse(rc, int(rc.Size()))
+	if err != nil {
+		return
+	}
+	ifd, i, err := parse.Exif()
+	if err != nil {
+		return
+	}
+	thumbnail, err := ifd.Thumbnail()
+	if err != nil && !errors.Is(err, exif.ErrNoThumbnail) {
+		return
+	}
+	fmt.Printf("thumbnail: %d\n", len(thumbnail))
+	ets, _, err := exif.GetFlatExifData(i, nil)
+	if err != nil {
+		return
+	}
+	for _, et := range ets {
+		fmt.Printf("exif: %s %v\n", et.TagName, et.Value)
+	}
+	return
+}
+
+func getImageHeightWidth(kfsCore *core.KFS, hash string) (hw dao.HeightWidth, err error) {
+	rc, err := kfsCore.S.ReadWithSize(hash)
+	if err != nil {
+		return
+	}
+	defer rc.Close()
+	conf, _, err := image.DecodeConfig(rc)
+	if err != nil {
+		return
+	}
+	return dao.HeightWidth{
+		Width:  uint64(conf.Width),
+		Height: uint64(conf.Height),
+	}, nil
+}
+
+func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType dao.FileType) error {
 	if fileType.Type == "image" {
-		var e dao.Exif
-		e, err = GetExifData(kfsCore, hash)
+		//if fileType.SubType == matchers.TypeJpeg.MIME.Subtype {
+		//	GetJpegExifData(kfsCore, hash)
+		//}
+		hw, err := getImageHeightWidth(kfsCore, hash)
+		if err != nil {
+			return err
+		}
+		_, err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+		// TODO: what if exist
+		if err != nil {
+			return err
+		}
+		e, err := GetExifData(kfsCore, hash)
 		if err != nil {
 			_, err = kfsCore.Db.InsertNullExif(ctx, hash)
 			// TODO: what if exist
@@ -29,15 +89,24 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType da
 		}
 		return nil
 	} else if fileType.Type == "video" {
-		var m dao.VideoMetadata
-		m, err = GetVideoMetadata(kfsCore, hash)
+		m, hw, err := GetVideoMetadata(kfsCore, hash)
 		if err != nil {
+			_, err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+			// TODO: what if exist
+			if err != nil {
+				return err
+			}
 			_, err = kfsCore.Db.InsertNullVideoMetadata(ctx, hash)
 			// TODO: what if exist
 			if err != nil {
 				return err
 			}
 			return nil
+		}
+		_, err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+		// TODO: what if exist
+		if err != nil {
+			return err
 		}
 		_, err = kfsCore.Db.InsertVideoMetadata(ctx, hash, m)
 		// TODO: what if exist
@@ -49,7 +118,7 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType da
 	return nil
 }
 
-func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, err error) {
+func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, hw dao.HeightWidth, err error) {
 	rc, err := kfsCore.S.ReadWithSize(hash)
 	if err != nil {
 		return
@@ -69,6 +138,14 @@ func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, err 
 		Created:  fileInfo.Movie.Created.UnixNano(),
 		Modified: fileInfo.Movie.Modified.UnixNano(),
 		Duration: fileInfo.Movie.Duration,
+	}
+	for _, track := range fileInfo.Movie.Tracks {
+		if track.Height != 0 && track.Width != 0 {
+			hw = dao.HeightWidth{
+				Width:  uint64(track.Width),
+				Height: uint64(track.Height),
+			}
+		}
 	}
 	return
 }

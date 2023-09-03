@@ -81,14 +81,14 @@ func (db *DB) Create() error {
 	_, err := conn.Exec(`
 	CREATE TABLE IF NOT EXISTS _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
-		size INT8     NOT NULL
+		size INT64    NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS _exif (
 		hash                CHAR(64)     NOT NULL PRIMARY KEY,
 		ExifVersion         CHAR(4)      DEFAULT NULL,
 		ImageDescription    VARCHAR(255) DEFAULT NULL,
-		Orientation         INT1         DEFAULT NULL,
+		Orientation         INT8         DEFAULT NULL,
 		DateTime            VARCHAR(19)  DEFAULT NULL,
 		DateTimeOriginal    VARCHAR(19)  DEFAULT NULL,
 		DateTimeDigitized   VARCHAR(19)  DEFAULT NULL,
@@ -101,8 +101,8 @@ func (db *DB) Create() error {
 		HostComputer        VARCHAR(255) DEFAULT NULL,
 		Make                VARCHAR(255) DEFAULT NULL,
 		Model               VARCHAR(255) DEFAULT NULL,
-		ExifImageWidth      INT8         DEFAULT NULL,
-		ExifImageLength     INT8         DEFAULT NULL,
+		ExifImageWidth      INT64        DEFAULT NULL,
+		ExifImageLength     INT64        DEFAULT NULL,
 		GPSLatitudeRef      CHAR(1)      DEFAULT NULL,
 		GPSLatitude         DOUBLE       DEFAULT NULL,
 		GPSLongitudeRef     CHAR(1)      DEFAULT NULL,
@@ -110,11 +110,18 @@ func (db *DB) Create() error {
 		FOREIGN KEY (hash)  REFERENCES   _file(hash)
 	);
 
+	CREATE TABLE IF NOT EXISTS _height_width (
+		hash       CHAR(64)     NOT NULL PRIMARY KEY,
+		height     INT64        DEFAULT NULL,
+		width      INT64        DEFAULT NULL,
+		FOREIGN KEY (hash)  REFERENCES   _file(hash)
+	);
+
 	CREATE TABLE IF NOT EXISTS _video_metadata (
 		hash                CHAR(64)     NOT NULL PRIMARY KEY,
 		Codec               VARCHAR(255) DEFAULT NULL,
-		Created             INT8         DEFAULT NULL,
-		Modified            INT8         DEFAULT NULL,
+		Created             INT64        DEFAULT NULL,
+		Modified            INT64        DEFAULT NULL,
 		Duration            DOUBLE       DEFAULT NULL,
 		FOREIGN KEY (hash)  REFERENCES   _file(hash)
 	);
@@ -145,14 +152,14 @@ func (db *DB) Create() error {
 		driverName  VARCHAR(256)   NOT NULL,
 		dirPath     VARCHAR(32767) NOT NULL,
 		name        VARCHAR(255)   NOT NULL,
-	    version     INT8           NOT NULL,
+	    version     INT64          NOT NULL,
 		hash        CHAR(64)       NOT NULL,
-		mode        INT8           NOT NULL,
-		size        INT8           NOT NULL,
-		createTime  INT8           NOT NULL,
-		modifyTime  INT8           NOT NULL,
-		changeTime  INT8           NOT NULL,
-		accessTime  INT8           NOT NULL,
+		mode        INT64          NOT NULL,
+		size        INT64          NOT NULL,
+		createTime  INT64          NOT NULL,
+		modifyTime  INT64          NOT NULL,
+		changeTime  INT64          NOT NULL,
+		accessTime  INT64          NOT NULL,
 		PRIMARY KEY (driverName, dirPath, name, version),
 		FOREIGN KEY (driverName)  REFERENCES _driver(name)
 	);

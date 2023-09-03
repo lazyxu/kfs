@@ -31,9 +31,15 @@ type VideoMetadata struct {
 	Duration float64 // 容器中媒体数据的持续时间（秒）
 }
 
+type HeightWidth struct {
+	Width  uint64
+	Height uint64
+}
+
 type Metadata struct {
 	Hash          string         `json:"hash"`
 	FileType      *FileType      `json:"fileType"`
+	HeightWidth   *HeightWidth   `json:"heightWidth"`
 	Exif          *Exif          `json:"exif"`
 	VideoMetadata *VideoMetadata `json:"videoMetadata"`
 }

@@ -6,6 +6,10 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
+func (db *DB) InsertHeightWidth(ctx context.Context, hash string, hw dao.HeightWidth) (exist bool, err error) {
+	return dbBase.InsertHeightWidth(ctx, db.db, db, hash, hw)
+}
+
 func (db *DB) InsertNullVideoMetadata(ctx context.Context, hash string) (exist bool, err error) {
 	return dbBase.InsertNullVideoMetadata(ctx, db.db, db, hash)
 }

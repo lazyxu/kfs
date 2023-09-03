@@ -52,6 +52,7 @@ type Database interface {
 	GetDriverFile(ctx context.Context, driverName string, splitPath []string) (file DriverFile, err error)
 	ListDriverFileByHash(ctx context.Context, hash string) (files []DriverFile, err error)
 
+	InsertHeightWidth(ctx context.Context, hash string, hw HeightWidth) (exist bool, err error)
 	InsertNullVideoMetadata(ctx context.Context, hash string) (exist bool, err error)
 	InsertVideoMetadata(ctx context.Context, hash string, m VideoMetadata) (exist bool, err error)
 

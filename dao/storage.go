@@ -13,7 +13,7 @@ type Storage interface {
 }
 
 type SizedReadCloser interface {
-	io.ReadCloser
+	io.ReadSeekCloser
 	Size() int64
 }
 
