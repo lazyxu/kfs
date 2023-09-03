@@ -31,6 +31,16 @@ type VideoMetadata struct {
 	Duration float64 // 容器中媒体数据的持续时间（秒）
 }
 
+// VideoMetadataFfmpeg ffprobe.exe -v quiet -show_format -show_streams -print_format json 9638.mp4
+type VideoMetadataFfmpeg struct {
+	Height   string  // streams[0].height
+	Width    string  // streams[0].width
+	Created  int64   // format.tags.creation_time
+	Duration float64 // format.duration
+	Make     string  // format.tags. com.apple.quicktime.make
+	Model    string  // format.tags. com.apple.quicktime.modal
+}
+
 type HeightWidth struct {
 	Width  uint64
 	Height uint64
