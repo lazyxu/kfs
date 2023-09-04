@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	_ "modernc.org/sqlite"
+	"os"
 	"path/filepath"
 )
 
@@ -59,22 +61,24 @@ func (db *DB) Create() error {
 	defer db.putConn(conn)
 	_, err := conn.Exec(`
 	CREATE TABLE IF NOT EXISTS _file (
-	    id      INTEGER NOT NULL,
-		path    TEXT    NOT NULL,
-	    dirname TEXT    NOT NULL,
-		name    TEXT    NOT NULL,
-	    typ     INTEGER NOT NULL,
-		count   INTEGER NOT NULL,
-		size    INTEGER NOT NULL,
-	    PRIMARY KEY(id, path)
+	    taskName    INT64          NOT NULL,
+	    dirname     VARCHAR(32767) NOT NULL,
+		name        VARCHAR(255)   NOT NULL,
+		hash        CHAR(64)       NOT NULL,
+	    mode        INT64          NOT NULL,
+		size        INT64          NOT NULL,
+		modifyTime  INT64          NOT NULL,
+		PRIMARY KEY (taskName, dirname, name),
+		FOREIGN KEY (taskName)     REFERENCES _backup_task(name)
 	);
-	CREATE TABLE IF NOT EXISTS _scan_history (
-	    id        INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-		time      INTEGER NOT NULL,
-		dirname   TEXT    NOT NULL,
-	    fileSize  INTEGER NOT NULL,
-	    fileCount INTEGER NOT NULL,
-	    dirCount  INTEGER NOT NULL
+	CREATE TABLE IF NOT EXISTS _backup_task (
+		name        VARCHAR(256)   NOT NULL PRIMARY KEY,
+		description VARCHAR(256)   NOT NULL,
+		srcPath     VARCHAR(32767) NOT NULL,
+		driverName  VARCHAR(256)   NOT NULL,
+		dstPath     VARCHAR(32767) NOT NULL,
+		encoder     VARCHAR(64)    NOT NULL,
+	    concurrent  INT8           NOT NULL
 	);
 	`)
 	return err
@@ -89,11 +93,51 @@ func (db *DB) Close() error {
 	}
 }
 
-func (db *DB) InsertFile(ctx context.Context, time int64, path string, isDir bool, count int64, size int64) error {
+func (db *DB) UpsertFile(ctx context.Context, taskName string, path string, hash string, mode os.FileMode, size int64, modifyTime int64) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	_, err := conn.ExecContext(ctx, `
-	INSERT INTO _file VALUES (?, ?, ?, ?, ?, ?, ?);
-	`, time, path, filepath.Dir(path), filepath.Base(path), isDir, count, size)
+	INSERT INTO _file VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(taskName, dirname, name) DO UPDATE SET
+		hash=?,
+		mode=?,
+		size=?,
+		modifyTime=?;
+	`, taskName, filepath.Dir(path), filepath.Base(path), hash, mode, size, modifyTime, hash, mode, size, modifyTime)
 	return err
+}
+
+func (db *DB) UpsertBackupTask(ctx context.Context, name string, description string, srcPath string, driverName string, dstPath string, encoder string, concurrent int) error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	_, err := conn.ExecContext(ctx, `
+	INSERT INTO _backup_task VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(name) DO UPDATE SET
+		description=?,
+		srcPath=?,
+		driverName=?,
+		dstPath=?,
+		encoder=?,
+		concurrent=?;
+	`, name, description, srcPath, driverName, dstPath, encoder, concurrent, description, srcPath, driverName, dstPath, encoder, concurrent)
+	return err
+}
+
+func (db *DB) GetBackupTask(ctx context.Context, name string) (description string, srcPath string, driverName string, dstPath string, encoder string, concurrent int, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	rows, err := conn.QueryContext(ctx, `
+	SELECT * FROM _backup_task WHERE name=?;
+	`, name)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		err = errors.New("no such backup task: " + name)
+		return
+	}
+	err = rows.Scan(&description, &srcPath, &driverName, &dstPath, &encoder, &concurrent)
+	if err != nil {
+		return
+	}
+	return
 }

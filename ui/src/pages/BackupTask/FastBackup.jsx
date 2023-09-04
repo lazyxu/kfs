@@ -51,6 +51,8 @@ export default function ({ show }) {
     useEffect(() => {
         getDriverApi().listDriver().then(setDrivers);
     }, []);
+    const [name, setName] = useState('');
+    const [description, setDescription] = useState('');
     const [driverName, setDriverName] = useState('');
     const [concurrent, setConcurrent] = useState(2);
     const [encoder, setEncoder] = useState("none");
@@ -76,6 +78,12 @@ export default function ({ show }) {
     }, [lastJsonMessage]);
     return (
         <Stack spacing={2} style={{ display: show ? undefined : "none" }}>
+            <TextField variant="standard" label="备份名" type="search" sx={{ minWidth: "50%" }}
+                value={name}
+                onChange={e => setName(e.target.value)} />
+            <TextField variant="standard" label="描述" type="search" sx={{ minWidth: "50%" }}
+                value={description}
+                onChange={e => setDescription(e.target.value)} />
             <TextField variant="standard" label="本地文件夹路径" type="search" sx={{ minWidth: "50%" }}
                 value={srcPath}
                 onChange={e => setSrcPath(e.target.value)} />
@@ -133,7 +141,7 @@ export default function ({ show }) {
                 </Button>
                 :
                 <Button variant="outlined" sx={{ width: "10em" }}
-                    disabled={isInvalidSrcPath(srcPath) || isInvalidDriverName(driverName)}
+                    disabled={isInvalidSrcPath(srcPath) || isInvalidDriverName(driverName) || name === ""}
                     onClick={e => {
                         let newId = uuid();
                         setId(newId);
@@ -142,6 +150,7 @@ export default function ({ show }) {
                         // TODO: 不同的备份策略
                         sendJsonMessage({
                             type: "fastBackup", id: newId, data: {
+                                name, description,
                                 srcPath, concurrent, encoder,
                                 serverAddr: sysConfig.socketServer,
                                 driverName,

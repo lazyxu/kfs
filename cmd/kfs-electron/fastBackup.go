@@ -132,7 +132,37 @@ func (w *WebUploadProcess) Verbose() bool {
 	return true
 }
 
-func (p *WsProcessor) fastBackup(ctx context.Context, req WsReq, srcPath string, serverAddr string, driverName string, dstPath string, concurrent int, encoder string) error {
+func upsertBackup(ctx context.Context, db *DB, name, description, srcPath, driverName, dstPath, encoder string, concurrent int) error {
+	if !filepath.IsAbs(srcPath) {
+		return errors.New("请输入绝对路径")
+	}
+	info, err := os.Lstat(srcPath)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return errors.New("请输入一个目录")
+	}
+	err = db.UpsertBackupTask(ctx, name, description, srcPath, driverName, dstPath, encoder, concurrent)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *WsProcessor) upsertBackup(ctx context.Context, db *DB, req WsReq, name, description, srcPath, driverName, dstPath, encoder string, concurrent int) error {
+	err := upsertBackup(ctx, db, name, description, srcPath, driverName, dstPath, encoder, concurrent)
+	if err != nil {
+		return p.err(req, err)
+	}
+	return nil
+}
+
+func (p *WsProcessor) fastBackup(ctx context.Context, db *DB, req WsReq, name, description, srcPath, serverAddr, driverName, dstPath, encoder string, concurrent int) error {
+	err := upsertBackup(ctx, db, name, description, srcPath, driverName, dstPath, encoder, concurrent)
+	if err != nil {
+		return p.err(req, err)
+	}
 	if !filepath.IsAbs(srcPath) {
 		return p.err(req, errors.New("请输入绝对路径"))
 	}
