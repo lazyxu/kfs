@@ -1,4 +1,4 @@
-import {httpGet, httpPost} from "./common";
+import {httpGet, httpPost} from "./webServer";
 
 export async function analysisExif(start) {
     console.log('web.analysisExif', start);

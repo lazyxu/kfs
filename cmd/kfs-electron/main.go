@@ -36,13 +36,20 @@ func rootCmd() *cobra.Command {
 	return cmd
 }
 
+var db *DB
+
 func runRoot(cmd *cobra.Command, args []string) {
 	serverAddr := args[0]
 
-	db, err := NewDb("electron.db")
+	var err error
+	db, err = NewDb("electron.db")
 	if err != nil {
 		panic(err)
 	}
+
+	go func() {
+		webServer("11235")
+	}()
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		wsHandler(w, r, serverAddr, db)

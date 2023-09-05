@@ -141,3 +141,35 @@ func (db *DB) GetBackupTask(ctx context.Context, name string) (description strin
 	}
 	return
 }
+
+type BackupTask struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	SrcPath     string `json:"srcPath"`
+	DriverName  string `json:"driverName"`
+	DstPath     string `json:"dstPath"`
+	Encoder     string `json:"encoder"`
+	Concurrent  int    `json:"concurrent"`
+}
+
+func (db *DB) ListBackupTask(ctx context.Context) (list []BackupTask, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	rows, err := conn.QueryContext(ctx, `
+	SELECT * FROM _backup_task;
+	`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	list = []BackupTask{}
+	for rows.Next() {
+		var t BackupTask
+		err = rows.Scan(&t.Name, &t.Description, &t.SrcPath, &t.DriverName, &t.DstPath, &t.Encoder, &t.Concurrent)
+		if err != nil {
+			return
+		}
+		list = append(list, t)
+	}
+	return
+}

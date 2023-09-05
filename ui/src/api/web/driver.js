@@ -1,4 +1,4 @@
-import {httpDelete, httpGet, httpPost} from "./common";
+import {httpDelete, httpGet, httpPost} from "./webServer";
 
 export async function listDriver() {
     console.log('web.listDriver');

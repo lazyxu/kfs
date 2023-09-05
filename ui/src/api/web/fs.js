@@ -1,4 +1,4 @@
-import { httpGet } from "./common";
+import { httpGet } from "./webServer";
 import axios from "axios";
 import { getSysConfig } from "hox/sysConfig";
 
