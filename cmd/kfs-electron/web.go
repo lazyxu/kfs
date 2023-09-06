@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"net/http"
+	"strconv"
 )
 
 func webServer(webPortString string) {
@@ -21,6 +22,7 @@ func webServer(webPortString string) {
 
 	// Routes
 	e.GET("/api/v1/backupTask", apiBackupTask)
+	e.POST("/api/v1/backupTask", apiNewBackupTask)
 
 	println("KFS electron web server listening at:", webPortString)
 	// Start server
@@ -46,4 +48,23 @@ func apiBackupTask(c echo.Context) error {
 		return err
 	}
 	return ok(c, list)
+}
+
+func apiNewBackupTask(c echo.Context) error {
+	name := c.QueryParam("name")
+	description := c.QueryParam("description")
+	srcPath := c.QueryParam("srcPath")
+	driverName := c.QueryParam("driverName")
+	dstPath := c.QueryParam("dstPath")
+	encoder := c.QueryParam("encoder")
+	concurrentStr := c.QueryParam("concurrent")
+	concurrent, err := strconv.Atoi(concurrentStr)
+	if err != nil {
+		return err
+	}
+	err = upsertBackup(c.Request().Context(), db, name, description, srcPath, driverName, dstPath, encoder, concurrent)
+	if err != nil {
+		return err
+	}
+	return c.String(http.StatusOK, "")
 }

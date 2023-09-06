@@ -1,8 +1,8 @@
 import { Box, Button, Paper, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs } from "@mui/material";
 import { useEffect, useState } from "react";
-import Scan from "./Scan";
 import FastBackup from "./FastBackup";
 import { listBackupTask } from "api/web/backup";
+import NewTask from "./NewTask";
 
 function createData(name, calories, fat, carbs, protein) {
     return { name, calories, fat, carbs, protein };
@@ -17,13 +17,19 @@ const rows = [
 ];
 
 export default function ({ show }) {
+    const [open, setOpen] = useState(false);
     const [backupTasks, setBackupTasks] = useState([]);
     useEffect(() => {
         listBackupTask().then(setBackupTasks);
     }, []);
     return (
         <Box style={{ display: show ? 'flex' : "none", flex: "1", flexDirection: 'column', minHeight: '0' }}>
-            <TableContainer component={Paper} sx={{ width: "100%", flex: "1", overflowY: 'auto', alignContent: "flex-start" }}>
+            <TableContainer sx={{
+                width: "100%", flex: "1", overflowY: 'auto', alignContent: "flex-start",
+                backgroundColor: theme => theme.background.primary,
+                color: theme => theme.context.primary
+            }}
+            >
                 <Table aria-label="simple table">
                     <TableHead>
                         <TableRow>
@@ -69,8 +75,9 @@ export default function ({ show }) {
                 alignItems="center"
                 spacing={1}
             >
-                <Button variant="outlined">创建新任务</Button>
+                <Button variant="outlined" onClick={() => setOpen(true)}>创建新的备份任务</Button>
             </Stack>
+            <NewTask open={open} setOpen={setOpen} />
         </Box>
     );
 }

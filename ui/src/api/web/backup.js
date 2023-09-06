@@ -1,6 +1,11 @@
-import { httpGet } from "./localServer";
+import { httpGet, httpPost } from "./localServer";
 
 export async function listBackupTask() {
     console.log('web.listBackupTask');
     return await httpGet("/api/v1/backupTask");
+}
+
+export async function newBackupTask(name, description, srcPath, driverName, dstPath, encoder, concurrent) {
+    console.log('web.newBackupTask', name, description, srcPath, driverName, dstPath, encoder, concurrent);
+    return await httpPost("/api/v1/backupTask", { name, description, srcPath, driverName, dstPath, encoder, concurrent });
 }
