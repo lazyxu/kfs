@@ -10,6 +10,7 @@
     "url": "https://github.com/lazyxu/kfs.git"
   },
   "dependencies": {
+    "@capacitor/core": "^5.3.0",
     "@electron/remote": "^2.0.8",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
@@ -39,7 +40,9 @@
     "build:electron": "electron-builder -c electron-builder.yml --publish=never",
     "watch": "cra-build-watch -b electron-development",
     "test": "react-scripts test --ci",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "ionic:build": "npm run build",
+    "ionic:serve": "npm run start"
   },
   "eslintConfig": {
     "extends": [
@@ -62,6 +65,7 @@
   "devDependencies": {
     "@babel/eslint-parser": "^7.18.9",
     "@babel/preset-react": "^7.18.6",
+    "@capacitor/cli": "^5.3.0",
     "@craco/craco": "^6.4.5",
     "@jagannathbhat/cra-build-watch": "^1.0.1",
     "@testing-library/jest-dom": "^5.14.1",

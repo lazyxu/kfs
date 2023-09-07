@@ -1,0 +1,7 @@
+{
+  "name": "koala-drive",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "custom"
+}

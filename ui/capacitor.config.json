@@ -1,0 +1,8 @@
+{
+  "appId": "com.koala.drive",
+  "appName": "考拉云盘",
+  "webDir": "build",
+  "server": {
+    "androidScheme": "https"
+  }
+}
