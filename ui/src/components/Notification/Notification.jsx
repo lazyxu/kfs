@@ -1,4 +1,14 @@
-import { enqueueSnackbar } from "notistack"
+import { Close } from "@mui/icons-material";
+import { IconButton } from "@mui/material";
+import { closeSnackbar, enqueueSnackbar } from "notistack";
+
+export function SnackbarAction(snackbarId) {
+    return (
+        <IconButton onClick={() => closeSnackbar(snackbarId)} >
+            <Close />
+        </IconButton>
+    );
+}
 
 export function noteSuccess(msg) {
     enqueueSnackbar(msg, { variant: "success" });

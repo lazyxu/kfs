@@ -32,7 +32,6 @@ export default function ({ open, setOpen }) {
     const [srcPath, setSrcPath] = useState('');
     const [dstPath, setDstPath] = useState('/');
     return (
-        <>
         <Dialog fullWidth={true} open={open} onClose={() => setOpen(false)} >
             <DialogTitle sx={{
                 backgroundColor: theme => theme.background.primary,
@@ -127,6 +126,5 @@ export default function ({ open, setOpen }) {
                 </Stack>
             </DialogContent>
         </Dialog>
-        </>
     )
 }

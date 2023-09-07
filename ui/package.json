@@ -10,6 +10,7 @@
     "url": "https://github.com/lazyxu/kfs.git"
   },
   "dependencies": {
+    "@capacitor/android": "5.3.0",
     "@capacitor/core": "^5.3.0",
     "@electron/remote": "^2.0.8",
     "@emotion/react": "^11.10.5",

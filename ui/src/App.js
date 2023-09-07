@@ -12,6 +12,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { Close, Inbox, Mail } from '@mui/icons-material';
 import DedicatedSpace from 'pages/DedicatedSpace/DedicatedSpace';
 import { SnackbarProvider, closeSnackbar } from 'notistack';
+import { SnackbarAction } from 'components/Notification/Notification';
 
 function App() {
     const { sysConfig } = useSysConfig();
@@ -39,13 +40,7 @@ function App() {
         justifyContent: 'flex-end',
     }));
     return (
-        <SnackbarProvider
-            action={(snackbarId) => (
-                <IconButton onClick={() => closeSnackbar(snackbarId)} >
-                    <Close />
-                </IconButton>
-            )}
-        >
+        <SnackbarProvider action={SnackbarAction} >
             <Box sx={{
                 position: 'fixed', width: "100%", height: "100%",
                 display: 'flex', flexDirection: 'column',
