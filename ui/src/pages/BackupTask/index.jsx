@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import FastBackup from "./FastBackup";
 import { listBackupTask } from "api/web/backup";
 import NewTask from "./NewTask";
+import { noteError, noteInfo } from "components/Notification/Notification";
+import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 
 function createData(name, calories, fat, carbs, protein) {
     return { name, calories, fat, carbs, protein };
@@ -20,7 +22,39 @@ export default function ({ show }) {
     const [open, setOpen] = useState(false);
     const [backupTasks, setBackupTasks] = useState([]);
     useEffect(() => {
-        listBackupTask().then(setBackupTasks);
+        fetchEventSource('http://127.0.0.1:11235/api/v1/event/backupTask', {
+            async onopen(response) {
+                if (response.ok && response.headers.get('content-type') === EventStreamContentType) {
+                    return; // everything's good
+                }
+                console.error(response);
+                noteError("event/backupTask.onopen: " + response.status);
+            },
+            onmessage(msg) {
+                // if the server emits an error message, throw an exception
+                // so it gets handled by the onerror callback below:
+                if (msg.event === 'FatalError') {
+                    console.error(msg);
+                    noteError("event/backupTask.onmessage: " + msg);
+                    return;
+                }
+                setBackupTasks(JSON.parse(msg.data));
+            },
+            onclose() {
+                // if the server closes the connection unexpectedly, retry:
+                noteError("event/backupTask.onclose");
+            },
+            onerror(err) {
+                console.error(err);
+                noteError("event/backupTask.onerror: " + err.message);
+                // if (err instanceof FatalError) {
+                //     throw err; // rethrow to stop the operation
+                // } else {
+                //     // do nothing to automatically retry. You can also
+                //     // return a specific retry interval here.
+                // }
+            }
+        });
     }, []);
     return (
         <Box style={{ display: show ? 'flex' : "none", flex: "1", flexDirection: 'column', minHeight: '0' }}>
