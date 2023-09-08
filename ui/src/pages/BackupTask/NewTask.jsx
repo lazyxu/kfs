@@ -21,6 +21,7 @@ import AsyncSelect from "components/AsyncSelect";
 import './index.scss';
 import { newBackupTask } from "api/web/backup";
 import { Close } from "@mui/icons-material";
+import { noteError } from "components/Notification/Notification";
 
 export default function ({ open, setOpen }) {
     const sysConfig = getSysConfig().sysConfig;
@@ -117,7 +118,7 @@ export default function ({ open, setOpen }) {
                             disabled={srcPath === "" || driverName === "" || name === ""}
                             onClick={e => {
                                 newBackupTask(name, description, srcPath, driverName, dstPath, encoder, concurrent)
-                                    .then(() => setOpen(false))
+                                    .then(() => setOpen(false)).catch(e=>noteError(e.message))
                             }}
                         >
                             确定

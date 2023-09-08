@@ -122,3 +122,13 @@ func apiNewBackupTask(c echo.Context) error {
 	noteTaskListToClients()
 	return c.String(http.StatusOK, "")
 }
+
+func apiDeleteBackupTask(c echo.Context) error {
+	name := c.QueryParam("name")
+	err := db.DeleteBackupTask(c.Request().Context(), name)
+	if err != nil {
+		return err
+	}
+	noteTaskListToClients()
+	return c.String(http.StatusOK, "")
+}

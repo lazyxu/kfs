@@ -23,6 +23,7 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/backupTask", apiBackupTask)
 	e.GET("/api/v1/event/backupTask", apiEventBackupTask)
 	e.POST("/api/v1/backupTask", apiNewBackupTask)
+	e.DELETE("/api/v1/backupTask", apiDeleteBackupTask)
 
 	println("KFS electron web server listening at:", webPortString)
 	// Start server

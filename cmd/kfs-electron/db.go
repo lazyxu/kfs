@@ -121,6 +121,17 @@ func (db *DB) UpsertBackupTask(ctx context.Context, name string, description str
 	return err
 }
 
+func (db *DB) DeleteBackupTask(ctx context.Context, name string) error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	_, err := conn.ExecContext(ctx, `
+	DELETE FROM _backup_task WHERE name = ?`, name)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 func (db *DB) GetBackupTask(ctx context.Context, name string) (description string, srcPath string, driverName string, dstPath string, encoder string, concurrent int, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)

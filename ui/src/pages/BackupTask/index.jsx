@@ -1,10 +1,11 @@
-import { Box, Button, Paper, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs } from "@mui/material";
+import { Box, Button, IconButton, Paper, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs } from "@mui/material";
 import { useEffect, useState } from "react";
 import FastBackup from "./FastBackup";
-import { listBackupTask } from "api/web/backup";
+import { deleteBackupTask, listBackupTask } from "api/web/backup";
 import NewTask from "./NewTask";
-import { noteError, noteInfo } from "components/Notification/Notification";
+import { noteError, noteInfo, noteSuccess } from "components/Notification/Notification";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
+import { Close, Info, PlayArrow, RestartAlt, SettingsApplications, Start, Stop } from "@mui/icons-material";
 
 function createData(name, calories, fat, carbs, protein) {
     return { name, calories, fat, carbs, protein };
@@ -46,7 +47,7 @@ export default function ({ show }) {
             },
             onerror(err) {
                 console.error(err);
-                noteError("event/backupTask.onerror: " + err.message);
+                // noteError("event/backupTask.onerror: " + err.message);
                 // if (err instanceof FatalError) {
                 //     throw err; // rethrow to stop the operation
                 // } else {
@@ -86,17 +87,33 @@ export default function ({ show }) {
                                 <TableCell component="th" scope="row">
                                     {task.name}
                                 </TableCell>
-                                <TableCell align="right">未知状态</TableCell>
-                                <TableCell align="right">{task.srcPath}</TableCell>
+                                <TableCell align="left">未知状态</TableCell>
+                                <TableCell align="left">{task.srcPath}</TableCell>
                                 <TableCell align="left">未知方式</TableCell>
-                                <TableCell align="right">{task.driverName}</TableCell>
-                                <TableCell align="right">{task.dstPath}</TableCell>
+                                <TableCell align="left">{task.driverName}</TableCell>
+                                <TableCell align="left">{task.dstPath}</TableCell>
                                 <TableCell align="left">未知时间</TableCell>
                                 <TableCell align="left">
-                                    <Button>重新运行</Button>
-                                    <Button>停止</Button>
-                                    <Button>设置</Button>
-                                    <Button>删除</Button>
+                                    <IconButton disabled>
+                                        <RestartAlt />
+                                    </IconButton>
+                                    <IconButton disabled>
+                                        <PlayArrow />
+                                    </IconButton>
+                                    <IconButton disabled>
+                                        <Stop />
+                                    </IconButton>
+                                    <IconButton disabled>
+                                        <SettingsApplications />
+                                    </IconButton>
+                                    <IconButton
+                                        onClick={e => {
+                                            deleteBackupTask(task.name)
+                                                .then(() => noteSuccess("删除备份任务：" + task.name))
+                                                .catch(e => noteError(e.message))
+                                        }} >
+                                        <Close />
+                                    </IconButton>
                                 </TableCell>
                             </TableRow>
                         ))}
