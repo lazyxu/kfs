@@ -3,12 +3,16 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
+	"time"
 )
 
 func apiBackupTask(c echo.Context) error {
@@ -49,7 +53,7 @@ func apiEventBackupTask(c echo.Context) error {
 		fmt.Println("Closing connection")
 	}()
 
-	obj, err := getTaskList(c.Request().Context())
+	obj, err := getTaskInfos(c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -81,24 +85,35 @@ func apiEventBackupTask(c echo.Context) error {
 	}
 }
 
-func getTaskList(ctc context.Context) (list []BackupTask, err error) {
-	list, err = db.ListBackupTask(ctc)
+type TaskInfos struct {
+	List         []BackupTask                  `json:"list"`
+	RunningTasks map[string]*RunningBackupTask `json:"runningTasks"`
+}
+
+func getTaskInfos(ctc context.Context) (info TaskInfos, err error) {
+	list, err := db.ListBackupTask(ctc)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return list, nil
+	runningTasksMutex.RLock()
+	defer runningTasksMutex.RUnlock()
+
+	return TaskInfos{
+		List:         list,
+		RunningTasks: runningTasks,
+	}, nil
 }
 
 func noteTaskListToClients() {
 	clients.Range(func(key, value any) bool {
 		c := key.(echo.Context)
 		client := value.(*Client)
-		list, err := getTaskList(c.Request().Context())
+		obj, err := getTaskInfos(c.Request().Context())
 		if err != nil {
 			c.Logger().Error(err)
 			return true
 		}
-		client.sseJsonChannel <- list
+		client.sseJsonChannel <- obj
 		return true
 	})
 }
@@ -131,4 +146,134 @@ func apiDeleteBackupTask(c echo.Context) error {
 	}
 	noteTaskListToClients()
 	return c.String(http.StatusOK, "")
+}
+
+type RunningBackupTask struct {
+	cancel context.CancelFunc
+	Status int `json:"status"`
+}
+
+var (
+	StatusIdle        = 0
+	StatusWaitRunning = 1
+	StatusRunning     = 2
+)
+
+var runningTasks = make(map[string]*RunningBackupTask)
+var runningTasksMutex = &sync.RWMutex{}
+
+func apiStartBackupTask(c echo.Context) error {
+	name := c.QueryParam("name")
+	startStr := c.QueryParam("start")
+	serverAddr := c.QueryParam("serverAddr")
+	start, err := strconv.ParseBool(startStr)
+	if err != nil {
+		return err
+	}
+	task, err := db.GetBackupTask(c.Request().Context(), name)
+	if err != nil {
+		return err
+	}
+	runningTasksMutex.Lock()
+	defer runningTasksMutex.Unlock()
+	runningTask, exist := runningTasks[task.Name]
+	if !exist {
+		runningTask = &RunningBackupTask{
+			cancel: nil,
+			Status: StatusIdle,
+		}
+		runningTasks[task.Name] = runningTask
+		if !start {
+			return c.String(http.StatusOK, "")
+		}
+		tryStartBackup(task, runningTask, serverAddr)
+	} else {
+		if !start {
+			runningTask.cancel()
+			return c.String(http.StatusOK, "")
+		}
+		tryStartBackup(task, runningTask, serverAddr)
+	}
+	return c.String(http.StatusOK, "")
+}
+
+func tryStartBackup(task BackupTask, runningTask *RunningBackupTask, serverAddr string) {
+	if runningTask.Status != StatusIdle {
+		return
+	}
+	runningTask.Status = StatusWaitRunning
+	ctx, cancel := context.WithCancel(context.TODO())
+	runningTask.cancel = cancel
+	go func() {
+		err := eventSourceBackup(ctx, task.Name, task.Description, task.SrcPath, serverAddr, task.DriverName, task.DstPath, task.Encoder, task.Concurrent)
+		if err != nil {
+			return
+		}
+	}()
+}
+
+func setTaskRunning(name string) {
+	runningTasksMutex.Lock()
+	runningTask := runningTasks[name]
+	runningTask.Status = StatusRunning
+	runningTasksMutex.Unlock()
+	noteTaskListToClients()
+}
+
+func setTaskIdle(name string) {
+	runningTasksMutex.Lock()
+	runningTask := runningTasks[name]
+	runningTask.Status = StatusIdle
+	runningTasksMutex.Unlock()
+	noteTaskListToClients()
+}
+
+func eventSourceBackup(ctx context.Context, name, description, srcPath, serverAddr, driverName, dstPath, encoder string, concurrent int) error {
+	setTaskRunning(name)
+	defer func() {
+		setTaskIdle(name)
+	}()
+	if !filepath.IsAbs(srcPath) {
+		return errors.New("请输入绝对路径")
+	}
+	info, err := os.Lstat(srcPath)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return errors.New("源目录不存在")
+	}
+	fmt.Println("backup start")
+	time.Sleep(time.Second * 10)
+	fmt.Println("backup finish")
+	return nil
+	//fs := &client.RpcFs{
+	//	SocketServerAddr: serverAddr,
+	//}
+
+	//w := NewWebUploadProcess(ctx, req, concurrent, func(finished bool, data interface{}) error {
+	//	return fmt.Printf(req, finished, data)
+	//})
+	//
+	//err = fs.UploadV2(ctx, driverName, dstPath, srcPath, core.UploadConfig{
+	//	UploadProcess: w,
+	//	Encoder:       encoder,
+	//	Concurrent:    concurrent,
+	//	Verbose:       false,
+	//})
+	//if err != nil {
+	//	return p.err(req, err)
+	//}
+	//for i := 0; i < concurrent; i++ {
+	//	w.Done <- struct{}{}
+	//}
+	//for i := 0; i < concurrent; i++ {
+	//	w.RespIfUpdated(i)
+	//}
+	//fmt.Printf("w=%+v\n", w)
+	//return p.ok(req, true, WebBackupResp{
+	//	Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
+	//	TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
+	//	Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack, Cost: time.Now().Sub(w.StartTime).Milliseconds(),
+	//})
 }

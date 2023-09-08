@@ -1,11 +1,12 @@
 import { Box, Button, IconButton, Paper, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs } from "@mui/material";
 import { useEffect, useState } from "react";
 import FastBackup from "./FastBackup";
-import { deleteBackupTask, listBackupTask } from "api/web/backup";
+import { deleteBackupTask, listBackupTask, startBackupTask } from "api/web/backup";
 import NewTask from "./NewTask";
 import { noteError, noteInfo, noteSuccess } from "components/Notification/Notification";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { Close, Info, PlayArrow, RestartAlt, SettingsApplications, Start, Stop } from "@mui/icons-material";
+import { getSysConfig } from "hox/sysConfig";
 
 function createData(name, calories, fat, carbs, protein) {
     return { name, calories, fat, carbs, protein };
@@ -20,6 +21,7 @@ const rows = [
 ];
 
 export default function ({ show }) {
+    const sysConfig = getSysConfig().sysConfig;
     const [open, setOpen] = useState(false);
     const [backupTasks, setBackupTasks] = useState([]);
     useEffect(() => {
@@ -39,7 +41,9 @@ export default function ({ show }) {
                     noteError("event/backupTask.onmessage: " + msg);
                     return;
                 }
-                setBackupTasks(JSON.parse(msg.data));
+                let info = JSON.parse(msg.data);
+                console.log(info);
+                setBackupTasks(info.list);
             },
             onclose() {
                 // if the server closes the connection unexpectedly, retry:
@@ -97,21 +101,25 @@ export default function ({ show }) {
                                     <IconButton disabled>
                                         <RestartAlt />
                                     </IconButton>
-                                    <IconButton disabled>
+                                    <IconButton onClick={e => startBackupTask(task.name, sysConfig.socketServer, true)
+                                        .then(() => noteSuccess("运行备份任务：" + task.name))
+                                        .catch(e => noteError(e.message))
+                                    }>
                                         <PlayArrow />
                                     </IconButton>
-                                    <IconButton disabled>
+                                    <IconButton onClick={e => startBackupTask(task.name, sysConfig.socketServer, false)
+                                        .then(() => noteSuccess("停止备份任务：" + task.name))
+                                        .catch(e => noteError(e.message))
+                                    }>
                                         <Stop />
                                     </IconButton>
                                     <IconButton disabled>
                                         <SettingsApplications />
                                     </IconButton>
-                                    <IconButton
-                                        onClick={e => {
-                                            deleteBackupTask(task.name)
-                                                .then(() => noteSuccess("删除备份任务：" + task.name))
-                                                .catch(e => noteError(e.message))
-                                        }} >
+                                    <IconButton onClick={e => deleteBackupTask(task.name)
+                                        .then(() => noteSuccess("删除备份任务：" + task.name))
+                                        .catch(e => noteError(e.message))
+                                    }>
                                         <Close />
                                     </IconButton>
                                 </TableCell>

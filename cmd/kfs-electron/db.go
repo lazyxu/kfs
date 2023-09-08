@@ -132,11 +132,17 @@ func (db *DB) DeleteBackupTask(ctx context.Context, name string) error {
 	return err
 }
 
-func (db *DB) GetBackupTask(ctx context.Context, name string) (description string, srcPath string, driverName string, dstPath string, encoder string, concurrent int, err error) {
+func (db *DB) GetBackupTask(ctx context.Context, name string) (t BackupTask, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	rows, err := conn.QueryContext(ctx, `
-	SELECT * FROM _backup_task WHERE name=?;
+	SELECT  description,
+			srcPath,
+			driverName,
+			dstPath,
+			encoder,
+			concurrent
+	FROM _backup_task WHERE name=?;
 	`, name)
 	if err != nil {
 		return
@@ -146,7 +152,8 @@ func (db *DB) GetBackupTask(ctx context.Context, name string) (description strin
 		err = errors.New("no such backup task: " + name)
 		return
 	}
-	err = rows.Scan(&description, &srcPath, &driverName, &dstPath, &encoder, &concurrent)
+	t.Name = name
+	err = rows.Scan(&t.Description, &t.SrcPath, &t.DriverName, &t.DstPath, &t.Encoder, &t.Concurrent)
 	if err != nil {
 		return
 	}

@@ -14,3 +14,8 @@ export async function deleteBackupTask(name) {
     console.log('web.deleteBackupTask', name);
     return await httpDelete("/api/v1/backupTask", { name });
 }
+
+export async function startBackupTask(name, serverAddr, start) {
+    console.log('web.startBackupTask', name, serverAddr, start);
+    return await httpPost("/api/v1/startBackupTask", { name, serverAddr, start });
+}
