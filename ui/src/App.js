@@ -144,7 +144,7 @@ function App() {
                 {menu === '我的相册' && <Dcim />}
                 {process.env.REACT_APP_PLATFORM !== 'web' && <BackupTask show={menu === '备份任务'} />}
                 <SystemConfig show={menu === '设置'} />
-                <DedicatedSpace show={menu === '存储空间'} />
+                {menu === '存储空间' && <DedicatedSpace />}
             </Box>
         </SnackbarProvider>
     );

@@ -5,7 +5,7 @@ import { deleteBackupTask, listBackupTask, startBackupTask } from "api/web/backu
 import NewTask from "./NewTask";
 import { noteError, noteInfo, noteSuccess } from "components/Notification/Notification";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
-import { Close, Info, PlayArrow, RestartAlt, SettingsApplications, Start, Stop } from "@mui/icons-material";
+import { Close, HourglassTop, Info, PlayArrow, RestartAlt, SettingsApplications, Start, Stop } from "@mui/icons-material";
 import { getSysConfig } from "hox/sysConfig";
 
 function createData(name, calories, fat, carbs, protein) {
@@ -20,10 +20,26 @@ const rows = [
     createData('Gingerbread', 356, 16.0, 49, 3.9),
 ];
 
+const StatusIdle = 0;
+const StatusWaitRunning = 1;
+const StatusRunning = 2;
+const StatusFinished = 3;
+const StatusCanceled = 4;
+const StatusError = 5;
+const StatusMsgs = {
+    undefined: "空闲",
+    0: "空闲", 
+    1: "等待运行", 
+    2: "正在运行", 
+    3: "已完成", 
+    4: "已取消", 
+    5: "错误",
+};
+
 export default function ({ show }) {
     const sysConfig = getSysConfig().sysConfig;
     const [open, setOpen] = useState(false);
-    const [backupTasks, setBackupTasks] = useState([]);
+    const [taskInfos, setTaskInfos] = useState({ list: [], runningTasks: {} });
     useEffect(() => {
         fetchEventSource('http://127.0.0.1:11235/api/v1/event/backupTask', {
             async onopen(response) {
@@ -43,7 +59,7 @@ export default function ({ show }) {
                 }
                 let info = JSON.parse(msg.data);
                 console.log(info);
-                setBackupTasks(info.list);
+                setTaskInfos(info);
             },
             onclose() {
                 // if the server closes the connection unexpectedly, retry:
@@ -83,7 +99,7 @@ export default function ({ show }) {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {backupTasks.map((task) => (
+                        {taskInfos.list.map((task) => (
                             <TableRow
                                 key={task.name}
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -91,7 +107,7 @@ export default function ({ show }) {
                                 <TableCell component="th" scope="row">
                                     {task.name}
                                 </TableCell>
-                                <TableCell align="left">未知状态</TableCell>
+                                <TableCell align="left">{StatusMsgs[taskInfos.runningTasks[task.name]?.status]}</TableCell>
                                 <TableCell align="left">{task.srcPath}</TableCell>
                                 <TableCell align="left">未知方式</TableCell>
                                 <TableCell align="left">{task.driverName}</TableCell>
@@ -101,18 +117,32 @@ export default function ({ show }) {
                                     <IconButton disabled>
                                         <RestartAlt />
                                     </IconButton>
-                                    <IconButton onClick={e => startBackupTask(task.name, sysConfig.socketServer, true)
-                                        .then(() => noteSuccess("运行备份任务：" + task.name))
-                                        .catch(e => noteError(e.message))
-                                    }>
-                                        <PlayArrow />
-                                    </IconButton>
-                                    <IconButton onClick={e => startBackupTask(task.name, sysConfig.socketServer, false)
-                                        .then(() => noteSuccess("停止备份任务：" + task.name))
-                                        .catch(e => noteError(e.message))
-                                    }>
-                                        <Stop />
-                                    </IconButton>
+                                    {(taskInfos.runningTasks[task.name]?.status === undefined ||
+                                        taskInfos.runningTasks[task.name]?.status === StatusIdle ||
+                                        taskInfos.runningTasks[task.name]?.status === StatusFinished ||
+                                        taskInfos.runningTasks[task.name]?.status === StatusCanceled ||
+                                        taskInfos.runningTasks[task.name]?.status === StatusError) &&
+                                        <IconButton onClick={e => startBackupTask(task.name, sysConfig.socketServer, true)
+                                            .then(() => noteSuccess("运行备份任务：" + task.name))
+                                            .catch(e => noteError(e.message))
+                                        }>
+                                            <PlayArrow />
+                                        </IconButton>
+                                    }
+                                    {taskInfos.runningTasks[task.name]?.status === StatusWaitRunning &&
+                                        <IconButton>
+                                            <HourglassTop />
+                                        </IconButton>
+                                    }
+                                    {taskInfos.runningTasks[task.name]?.status === StatusRunning &&
+                                        <IconButton onClick={e => startBackupTask(task.name, sysConfig.socketServer, false)
+                                            .then(() => noteSuccess("停止备份任务：" + task.name))
+                                            .catch(e => noteError(e.message))
+                                        }>
+                                            <Stop />
+                                        </IconButton>
+                                    }
+
                                     <IconButton disabled>
                                         <SettingsApplications />
                                     </IconButton>

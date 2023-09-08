@@ -157,6 +157,9 @@ var (
 	StatusIdle        = 0
 	StatusWaitRunning = 1
 	StatusRunning     = 2
+	StatusFinished    = 3
+	StatusCanceled    = 4
+	StatusError       = 5
 )
 
 var runningTasks = make(map[string]*RunningBackupTask)
@@ -198,41 +201,36 @@ func apiStartBackupTask(c echo.Context) error {
 }
 
 func tryStartBackup(task BackupTask, runningTask *RunningBackupTask, serverAddr string) {
-	if runningTask.Status != StatusIdle {
+	if runningTask.Status == StatusWaitRunning || runningTask.Status == StatusRunning {
 		return
 	}
 	runningTask.Status = StatusWaitRunning
 	ctx, cancel := context.WithCancel(context.TODO())
 	runningTask.cancel = cancel
 	go func() {
+		setTaskStatus(task.Name, StatusRunning)
 		err := eventSourceBackup(ctx, task.Name, task.Description, task.SrcPath, serverAddr, task.DriverName, task.DstPath, task.Encoder, task.Concurrent)
-		if err != nil {
+		if err == nil {
+			setTaskStatus(task.Name, StatusFinished)
 			return
 		}
+		if errors.Is(err, context.DeadlineExceeded) {
+			setTaskStatus(task.Name, StatusCanceled)
+			return
+		}
+		setTaskStatus(task.Name, StatusError)
 	}()
 }
 
-func setTaskRunning(name string) {
+func setTaskStatus(name string, status int) {
 	runningTasksMutex.Lock()
 	runningTask := runningTasks[name]
-	runningTask.Status = StatusRunning
-	runningTasksMutex.Unlock()
-	noteTaskListToClients()
-}
-
-func setTaskIdle(name string) {
-	runningTasksMutex.Lock()
-	runningTask := runningTasks[name]
-	runningTask.Status = StatusIdle
+	runningTask.Status = status
 	runningTasksMutex.Unlock()
 	noteTaskListToClients()
 }
 
 func eventSourceBackup(ctx context.Context, name, description, srcPath, serverAddr, driverName, dstPath, encoder string, concurrent int) error {
-	setTaskRunning(name)
-	defer func() {
-		setTaskIdle(name)
-	}()
 	if !filepath.IsAbs(srcPath) {
 		return errors.New("请输入绝对路径")
 	}
@@ -244,7 +242,12 @@ func eventSourceBackup(ctx context.Context, name, description, srcPath, serverAd
 		return errors.New("源目录不存在")
 	}
 	fmt.Println("backup start")
-	time.Sleep(time.Second * 10)
+	select {
+	case <-ctx.Done():
+		fmt.Println("backup canceled")
+		return context.DeadlineExceeded
+	case <-time.After(time.Second * 10):
+	}
 	fmt.Println("backup finish")
 	return nil
 	//fs := &client.RpcFs{

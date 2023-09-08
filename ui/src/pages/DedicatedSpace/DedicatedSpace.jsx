@@ -4,13 +4,13 @@ import { getDiskUsage } from 'api/web/disk';
 import humanize from 'humanize';
 import { useEffect, useState } from 'react';
 
-export default ({ show }) => {
+export default () => {
     const [diskUsage, setDiskUsage] = useState();
     useEffect(() => {
         getDiskUsage().then(setDiskUsage);
     }, []);
     return (
-        <Stack style={{ padding: "1em", display: show ? undefined : "none", overflowY: 'auto' }}>
+        <Stack style={{ padding: "1em", overflowY: 'auto' }}>
             {!diskUsage ? <Typography>正在获取...</Typography> :
                 <Box>
                     <Box sx={{ width: "100%", height: "1em", paddingBottom: "1em" }}>
