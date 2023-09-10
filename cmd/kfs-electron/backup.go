@@ -33,7 +33,7 @@ var clients sync.Map // map[*http.Request]*Client
 
 func apiEventBackupTask(c echo.Context) error {
 	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	c.Response().Header().Set("Content-Type", "text/event-stream")
+	c.Response().Header().Set("Content-Type", "text/event-stream;charset=UTF-8")
 	c.Response().Header().Set("Cache-Control", "no-cache")
 	c.Response().Header().Set("Connection", "keep-alive")
 
@@ -149,8 +149,9 @@ func apiDeleteBackupTask(c echo.Context) error {
 }
 
 type RunningBackupTask struct {
-	cancel context.CancelFunc
-	Status int `json:"status"`
+	cancel       context.CancelFunc
+	Status       int   `json:"status"`
+	LastDoneTime int64 `json:"lastDoneTime"`
 }
 
 var (
@@ -226,6 +227,10 @@ func setTaskStatus(name string, status int) {
 	runningTasksMutex.Lock()
 	runningTask := runningTasks[name]
 	runningTask.Status = status
+	if status == StatusFinished || status == StatusCanceled || status == StatusError {
+		// TODO: save it to db.
+		runningTask.LastDoneTime = time.Now().UnixNano()
+	}
 	runningTasksMutex.Unlock()
 	noteTaskListToClients()
 }

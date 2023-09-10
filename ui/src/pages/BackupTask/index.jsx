@@ -1,12 +1,13 @@
-import { Box, Button, IconButton, Paper, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs } from "@mui/material";
+import { Box, Button, IconButton, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useEffect, useState } from "react";
 import FastBackup from "./FastBackup";
 import { deleteBackupTask, listBackupTask, startBackupTask } from "api/web/backup";
 import NewTask from "./NewTask";
 import { noteError, noteInfo, noteSuccess } from "components/Notification/Notification";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
-import { Close, HourglassTop, Info, PlayArrow, RestartAlt, SettingsApplications, Start, Stop } from "@mui/icons-material";
+import { Close, HourglassTop, PlayArrow, RestartAlt, SettingsApplications, Start, Stop } from "@mui/icons-material";
 import { getSysConfig } from "hox/sysConfig";
+import moment from "moment";
 
 function createData(name, calories, fat, carbs, protein) {
     return { name, calories, fat, carbs, protein };
@@ -28,11 +29,11 @@ const StatusCanceled = 4;
 const StatusError = 5;
 const StatusMsgs = {
     undefined: "空闲",
-    0: "空闲", 
-    1: "等待运行", 
-    2: "正在运行", 
-    3: "已完成", 
-    4: "已取消", 
+    0: "空闲",
+    1: "等待运行",
+    2: "正在运行",
+    3: "已完成",
+    4: "已取消",
     5: "错误",
 };
 
@@ -43,7 +44,7 @@ export default function ({ show }) {
     useEffect(() => {
         fetchEventSource('http://127.0.0.1:11235/api/v1/event/backupTask', {
             async onopen(response) {
-                if (response.ok && response.headers.get('content-type') === EventStreamContentType) {
+                if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
                     return; // everything's good
                 }
                 console.error(response);
@@ -94,7 +95,7 @@ export default function ({ show }) {
                             <TableCell align="left">备份方式</TableCell>
                             <TableCell align="left">云盘名称</TableCell>
                             <TableCell align="left">目标目录</TableCell>
-                            <TableCell align="left">最后执行时间</TableCell>
+                            <TableCell align="left">上次执行结束时间</TableCell>
                             <TableCell align="left">操作</TableCell>
                         </TableRow>
                     </TableHead>
@@ -109,10 +110,10 @@ export default function ({ show }) {
                                 </TableCell>
                                 <TableCell align="left">{StatusMsgs[taskInfos.runningTasks[task.name]?.status]}</TableCell>
                                 <TableCell align="left">{task.srcPath}</TableCell>
-                                <TableCell align="left">未知方式</TableCell>
+                                <TableCell align="left"><span title="单向上传：源目录的所有内容将会被上传更新到云盘，删除操作将不会造成云盘内容的对应删除。">单向上传</span></TableCell>
                                 <TableCell align="left">{task.driverName}</TableCell>
                                 <TableCell align="left">{task.dstPath}</TableCell>
-                                <TableCell align="left">未知时间</TableCell>
+                                <TableCell align="left">{taskInfos.runningTasks[task.name]?.lastDoneTime ? moment(taskInfos.runningTasks[task.name]?.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss") : "无记录"}</TableCell>
                                 <TableCell align="left">
                                     <IconButton disabled>
                                         <RestartAlt />
@@ -146,10 +147,12 @@ export default function ({ show }) {
                                     <IconButton disabled>
                                         <SettingsApplications />
                                     </IconButton>
-                                    <IconButton onClick={e => deleteBackupTask(task.name)
-                                        .then(() => noteSuccess("删除备份任务：" + task.name))
-                                        .catch(e => noteError(e.message))
-                                    }>
+                                    <IconButton disabled={taskInfos.runningTasks[task.name]?.status === StatusRunning}
+                                        onClick={e => deleteBackupTask(task.name)
+                                            .then(() => noteSuccess("删除备份任务：" + task.name))
+                                            .catch(e => noteError(e.message))
+                                        }
+                                    >
                                         <Close />
                                     </IconButton>
                                 </TableCell>
