@@ -1,27 +1,25 @@
-import { getSysConfig } from "hox/sysConfig";
+import { Close } from "@mui/icons-material";
 import {
-    Modal,
-    Box,
     Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     FormControl,
+    IconButton,
     InputLabel,
     MenuItem,
     Select,
     Stack,
-    TextField,
-    DialogContent,
-    Dialog,
-    DialogTitle,
-    IconButton,
-    DialogActions
+    TextField
 } from "@mui/material";
-import { useEffect, useState } from "react";
 import { getDriverApi } from "api/driver";
-import AsyncSelect from "components/AsyncSelect";
-import './index.scss';
 import { newBackupTask } from "api/web/backup";
-import { Close } from "@mui/icons-material";
+import AsyncSelect from "components/AsyncSelect";
 import { noteError } from "components/Notification/Notification";
+import { getSysConfig } from "hox/sysConfig";
+import { useState } from "react";
+import './index.scss';
 
 export default function ({ open, setOpen }) {
     const sysConfig = getSysConfig().sysConfig;
