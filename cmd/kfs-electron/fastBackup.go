@@ -10,8 +10,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lazyxu/kfs/rpc/client"
-
 	"github.com/lazyxu/kfs/core"
 )
 
@@ -156,81 +154,6 @@ func (p *WsProcessor) upsertBackup(ctx context.Context, db *DB, req WsReq, name,
 		return p.err(req, err)
 	}
 	return nil
-}
-
-func (p *WsProcessor) fastBackup(ctx context.Context, db *DB, req WsReq, name, description, srcPath, serverAddr, driverName, dstPath, encoder string, concurrent int) error {
-	err := upsertBackup(ctx, db, name, description, srcPath, driverName, dstPath, encoder, concurrent)
-	if err != nil {
-		return p.err(req, err)
-	}
-	if !filepath.IsAbs(srcPath) {
-		return p.err(req, errors.New("请输入绝对路径"))
-	}
-	info, err := os.Lstat(srcPath)
-	if err != nil {
-		return p.err(req, err)
-	}
-	if !info.IsDir() {
-		return p.err(req, errors.New("请输入一个目录"))
-	}
-
-	fs := &client.RpcFs{
-		SocketServerAddr: serverAddr,
-	}
-
-	w := NewWebUploadProcess(ctx, req, concurrent, func(finished bool, data interface{}) error {
-		return p.ok(req, finished, data)
-	})
-
-	err = fs.UploadV2(ctx, driverName, dstPath, srcPath, core.UploadConfig{
-		UploadProcess: w,
-		Encoder:       encoder,
-		Concurrent:    concurrent,
-		Verbose:       false,
-	})
-	if err != nil {
-		return p.err(req, err)
-	}
-	for i := 0; i < concurrent; i++ {
-		w.Done <- struct{}{}
-	}
-	for i := 0; i < concurrent; i++ {
-		w.RespIfUpdated(i)
-	}
-	fmt.Printf("w=%+v\n", w)
-	return p.ok(req, true, WebBackupResp{
-		Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
-		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
-		Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack, Cost: time.Now().Sub(w.StartTime).Milliseconds(),
-	})
-}
-
-func NewWebUploadProcess(ctx context.Context, req WsReq, concurrent int, onResp func(finished bool, data interface{}) error) *WebUploadProcess {
-	w := &WebUploadProcess{
-		ctx:       ctx,
-		req:       req,
-		onResp:    onResp,
-		Processes: make([]Process, concurrent),
-		Done:      make(chan struct{}),
-		StartTime: time.Now(),
-	}
-	for i := 0; i < concurrent; i++ {
-		go func(i int) {
-			for {
-				select {
-				case <-w.Done:
-					return
-				case <-ctx.Done():
-					<-w.Done
-					return
-				default:
-					w.Resp(i)
-				}
-				time.Sleep(time.Millisecond * 500)
-			}
-		}(i)
-	}
-	return w
 }
 
 func (w *WebUploadProcess) RespIfUpdated(i int) {

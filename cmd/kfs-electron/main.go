@@ -234,25 +234,6 @@ func (p *WsProcessor) process(ctx context.Context, db *DB) {
 				}
 				p.cancelFunctions.Delete(req.Id)
 			}()
-		case "fastBackup":
-			newCtx, cancelFunc := context.WithCancel(ctx)
-			p.cancelFunctions.Store(req.Id, cancelFunc)
-			data := req.Data.(map[string]interface{})
-			name := data["name"].(string)
-			description := data["description"].(string)
-			srcPath := data["srcPath"].(string)
-			serverAddr := data["serverAddr"].(string)
-			driverName := data["driverName"].(string)
-			dstPath := data["dstPath"].(string)
-			concurrent := int(data["concurrent"].(float64))
-			encoder := data["encoder"].(string)
-			go func() {
-				err := p.fastBackup(newCtx, db, req, name, description, srcPath, serverAddr, driverName, dstPath, encoder, concurrent)
-				if err != nil {
-					fmt.Printf("%+v %+v\n", req, err)
-				}
-				p.cancelFunctions.Delete(req.Id)
-			}()
 		}
 	}
 }

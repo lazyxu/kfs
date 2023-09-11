@@ -8,8 +8,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -29,7 +27,7 @@ type Client struct {
 	sseJsonChannel chan interface{}
 }
 
-var clients sync.Map // map[*http.Request]*Client
+var taskListClients sync.Map // map[*http.Request]*Client
 
 func apiEventBackupTask(c echo.Context) error {
 	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
@@ -40,16 +38,15 @@ func apiEventBackupTask(c echo.Context) error {
 	fmt.Println("New connection established")
 	sseChannel := make(chan string)
 	sseJsonChannel := make(chan interface{})
-	client := &Client{
+	taskListClients.Store(c, &Client{
 		sseChannel:     sseChannel,
 		sseJsonChannel: sseJsonChannel,
-	}
-	clients.Store(c, client)
+	})
 
 	defer func() {
 		close(sseChannel)
 		close(sseJsonChannel)
-		clients.Delete(c)
+		taskListClients.Delete(c)
 		fmt.Println("Closing connection")
 	}()
 
@@ -105,7 +102,7 @@ func getTaskInfos(ctc context.Context) (info TaskInfos, err error) {
 }
 
 func noteTaskListToClients() {
-	clients.Range(func(key, value any) bool {
+	taskListClients.Range(func(key, value any) bool {
 		c := key.(echo.Context)
 		client := value.(*Client)
 		obj, err := getTaskInfos(c.Request().Context())
@@ -233,55 +230,4 @@ func setTaskStatus(name string, status int) {
 	}
 	runningTasksMutex.Unlock()
 	noteTaskListToClients()
-}
-
-func eventSourceBackup(ctx context.Context, name, description, srcPath, serverAddr, driverName, dstPath, encoder string, concurrent int) error {
-	if !filepath.IsAbs(srcPath) {
-		return errors.New("请输入绝对路径")
-	}
-	info, err := os.Lstat(srcPath)
-	if err != nil {
-		return err
-	}
-	if !info.IsDir() {
-		return errors.New("源目录不存在")
-	}
-	fmt.Println("backup start")
-	select {
-	case <-ctx.Done():
-		fmt.Println("backup canceled")
-		return context.DeadlineExceeded
-	case <-time.After(time.Second * 10):
-	}
-	fmt.Println("backup finish")
-	return nil
-	//fs := &client.RpcFs{
-	//	SocketServerAddr: serverAddr,
-	//}
-
-	//w := NewWebUploadProcess(ctx, req, concurrent, func(finished bool, data interface{}) error {
-	//	return fmt.Printf(req, finished, data)
-	//})
-	//
-	//err = fs.UploadV2(ctx, driverName, dstPath, srcPath, core.UploadConfig{
-	//	UploadProcess: w,
-	//	Encoder:       encoder,
-	//	Concurrent:    concurrent,
-	//	Verbose:       false,
-	//})
-	//if err != nil {
-	//	return p.err(req, err)
-	//}
-	//for i := 0; i < concurrent; i++ {
-	//	w.Done <- struct{}{}
-	//}
-	//for i := 0; i < concurrent; i++ {
-	//	w.RespIfUpdated(i)
-	//}
-	//fmt.Printf("w=%+v\n", w)
-	//return p.ok(req, true, WebBackupResp{
-	//	Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
-	//	TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
-	//	Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack, Cost: time.Now().Sub(w.StartTime).Milliseconds(),
-	//})
 }
