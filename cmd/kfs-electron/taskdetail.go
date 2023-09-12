@@ -107,6 +107,35 @@ func errTaskDetailToClients(name string, err error) error {
 	return nil
 }
 
+const (
+	LevelInfo  = 0
+	LevelWarn  = 1
+	LevelError = 2
+)
+
+type BackupRecord struct {
+	Time    int64  `json:"time"`
+	Level   int    `json:"level"`
+	Content string `json:"content"`
+}
+
+type BackupLogs struct {
+	Finished bool           `json:"finished"`
+	Records  []BackupRecord `json:"records"`
+
+	Size      uint64 `json:"size"`
+	FileCount uint64 `json:"fileCount"`
+	DirCount  uint64 `json:"dirCount"`
+
+	TotalSize      uint64 `json:"totalSize"`
+	TotalFileCount uint64 `json:"totalFileCount"`
+	TotalDirCount  uint64 `json:"totalDirCount"`
+
+	Cost int64 `json:"cost"`
+
+	ErrMsg string `json:"errMsg,omitempty"`
+}
+
 func eventSourceBackup(ctx context.Context, name, description, srcPath, serverAddr, driverName, dstPath, encoder string, concurrent int) error {
 	if !filepath.IsAbs(srcPath) {
 		return errors.New("请输入绝对路径")
