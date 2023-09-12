@@ -39,28 +39,18 @@ func rootCmd() *cobra.Command {
 var db *DB
 
 func runRoot(cmd *cobra.Command, args []string) {
-	serverAddr := args[0]
-
 	var err error
 	db, err = NewDb("electron.db")
 	if err != nil {
 		panic(err)
 	}
 
-	go func() {
-		webServer("11235")
-	}()
-
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		wsHandler(w, r, serverAddr, db)
-	})
-
 	portStr := cmd.Flag(PortStr).Value.String()
 	lis, err := net.Listen("tcp", "0.0.0.0:"+portStr)
 	if err != nil {
 		panic(err)
 	}
-	_, err = fmt.Fprintln(os.Stdout, "Websocket server listening at:", lis.Addr().String())
+	_, err = fmt.Fprintln(os.Stdout, "KFS electron web server listening at:", lis.Addr().String())
 	if err != nil {
 		panic(err)
 	}
@@ -88,10 +78,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			panic(err)
 		}
 	}
-	err = http.Serve(lis, nil)
-	if err != nil {
-		panic(err)
-	}
+	webServer(lis)
 }
 
 var upgrader = websocket.Upgrader{

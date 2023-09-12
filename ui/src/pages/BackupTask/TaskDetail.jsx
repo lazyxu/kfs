@@ -11,9 +11,10 @@ import LinearProgressWithLabel from "./LinearProgressWithLabel";
 export default function ({ taskDetail, setTaskDetail }) {
     const sysConfig = getSysConfig().sysConfig;
     const [taskInfo, setTaskInfo] = useState();
-    const controller = new AbortController()
+    const controller = new AbortController();
     useEffect(() => {
-        fetchEventSource('http://127.0.0.1:11235/api/v1/event/backupTask/' + taskDetail, {
+        setTaskInfo();
+        fetchEventSource(`http://127.0.0.1:${getSysConfig().sysConfig.port}/api/v1/event/backupTask/${taskDetail}`, {
             signal: controller.signal,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
@@ -58,7 +59,7 @@ export default function ({ taskDetail, setTaskDetail }) {
         return () => {
             controller.abort();
         }
-    }, []);
+    }, [taskDetail]);
     return (
         <Box sx={{
             width: "100%", flex: "1",

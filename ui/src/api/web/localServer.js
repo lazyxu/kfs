@@ -2,7 +2,7 @@ import axios from "axios";
 import { getSysConfig } from "hox/sysConfig";
 
 export async function httpGet(path, params) {
-    let resp = await axios.get(`http://127.0.0.1:11235${path}`, {params});
+    let resp = await axios.get(`http://127.0.0.1:${getSysConfig().sysConfig.port}${path}`, {params});
     let json = resp.data;
     if (!json) {
         return;
@@ -14,7 +14,7 @@ export async function httpGet(path, params) {
 }
 
 export async function httpPost(path, params) {
-    let resp = await axios.post(`http://127.0.0.1:11235${path}`, null, {params});
+    let resp = await axios.post(`http://127.0.0.1:${getSysConfig().sysConfig.port}${path}`, null, {params});
     let json = resp.data;
     if (!json) {
         return;
@@ -26,7 +26,7 @@ export async function httpPost(path, params) {
 }
 
 export async function httpDelete(path, params) {
-    let resp = await axios.delete(`http://127.0.0.1:11235${path}`, {params});
+    let resp = await axios.delete(`http://127.0.0.1:${getSysConfig().sysConfig.port}${path}`, {params});
     let json = resp.data;
     if (!json) {
         return;

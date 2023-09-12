@@ -3,10 +3,11 @@ package main
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"net"
 	"net/http"
 )
 
-func webServer(webPortString string) {
+func webServer(lis net.Listener) {
 	// Echo instance
 	e := echo.New()
 
@@ -27,9 +28,9 @@ func webServer(webPortString string) {
 	e.POST("/api/v1/startBackupTask", apiStartBackupTask)
 	e.GET("/api/v1/event/backupTask/:name", apiEventBackupTaskDetail)
 
-	println("KFS electron web server listening at:", webPortString)
 	// Start server
-	e.Logger.Fatal(e.Start(":" + webPortString))
+	e.Listener = lis
+	e.Logger.Fatal(e.Start(""))
 }
 
 type Response struct {

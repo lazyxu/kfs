@@ -1,18 +1,18 @@
-import SystemConfig from 'pages/Setting/SystemConfig';
+import { Inbox, Mail } from '@mui/icons-material';
+import MenuIcon from '@mui/icons-material/Menu';
+import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, styled, useColorScheme } from "@mui/material";
+import SvgIcon from 'components/Icon/SvgIcon';
+import { SnackbarAction } from 'components/Notification/Notification';
 import Version from 'components/Version';
-import Files from "./pages/Files";
-import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Stack, Toolbar, Typography, styled, useColorScheme } from "@mui/material";
+import { SnackbarProvider } from 'notistack';
+import Dcim from 'pages/Dcim';
+import DedicatedSpace from 'pages/DedicatedSpace/DedicatedSpace';
+import SystemConfig from 'pages/Setting/SystemConfig';
 import React, { useEffect } from "react";
 import useMenu from "./hox/menu";
 import useSysConfig from "./hox/sysConfig";
 import BackupTask from "./pages/BackupTask";
-import Dcim from 'pages/Dcim';
-import SvgIcon from 'components/Icon/SvgIcon';
-import MenuIcon from '@mui/icons-material/Menu';
-import { Close, Inbox, Mail } from '@mui/icons-material';
-import DedicatedSpace from 'pages/DedicatedSpace/DedicatedSpace';
-import { SnackbarProvider, closeSnackbar } from 'notistack';
-import { SnackbarAction } from 'components/Notification/Notification';
+import Files from "./pages/Files";
 
 function App() {
     const { sysConfig } = useSysConfig();
@@ -140,10 +140,10 @@ function App() {
                     <Version />
                 </Drawer>
                 <DrawerHeader />
-                <Files show={menu === '我的云盘'} />
+                {menu === '我的云盘' && <Files />}
                 {menu === '我的相册' && <Dcim />}
                 {menu === '备份任务' && <BackupTask />}
-                <SystemConfig show={menu === '设置'} />
+                {menu === '设置' && <SystemConfig />}
                 {menu === '存储空间' && <DedicatedSpace />}
             </Box>
         </SnackbarProvider>

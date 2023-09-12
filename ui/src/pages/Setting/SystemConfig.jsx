@@ -1,10 +1,10 @@
 import { Box, Button, FormControlLabel, InputLabel, Radio, RadioGroup, Stack, TextField } from '@mui/material';
 import useSysConfig from 'hox/sysConfig';
 
-export default ({ show }) => {
+export default () => {
     const { sysConfig, setSysConfig, resetSysConfig } = useSysConfig();
     return (
-        <Stack style={{ padding: "1em", display: show ? undefined : "none", overflowY: 'auto' }}>
+        <Stack style={{ padding: "1em", overflowY: 'auto' }}>
             {!sysConfig ? <span>加载中...</span>
                 : (
                     <>
@@ -54,7 +54,7 @@ export default ({ show }) => {
                                     />
                                 </Box>
                                 <Box>
-                                    <InputLabel sx={{ display: "inline" }}>客户端WebSocket端口：</InputLabel>
+                                    <InputLabel sx={{ display: "inline" }}>客户端Web服务器端口：</InputLabel>
                                     <TextField variant="standard" size="small"
                                         value={sysConfig.port}
                                         onChange={e => setSysConfig(c => ({ ...c, port: e.target.value }))}
