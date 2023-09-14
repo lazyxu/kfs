@@ -1,4 +1,4 @@
-import { Close } from "@mui/icons-material";
+import { Close, FolderOpen } from "@mui/icons-material";
 import {
     Button,
     Dialog,
@@ -20,6 +20,7 @@ import { noteError } from "components/Notification/Notification";
 import { getSysConfig } from "hox/sysConfig";
 import { useState } from "react";
 import './index.scss';
+const { dialog } = window.require('@electron/remote');
 
 export default function ({ open, setOpen }) {
     const sysConfig = getSysConfig().sysConfig;
@@ -55,15 +56,28 @@ export default function ({ open, setOpen }) {
                 color: theme => theme.context.primary
             }}>
                 <Stack spacing={2}>
-                    <TextField variant="standard" label="备份名" type="search" sx={{ minWidth: "50%" }}
+                    <TextField variant="standard" label="备份名" type="search" size="small"
                         value={name}
                         onChange={e => setName(e.target.value)} />
-                    <TextField variant="standard" label="描述" type="search" sx={{ minWidth: "50%" }}
+                    <TextField variant="standard" label="描述" type="search" size="small"
                         value={description}
                         onChange={e => setDescription(e.target.value)} />
-                    <TextField variant="standard" label="本地文件夹路径" type="search" sx={{ minWidth: "50%" }}
-                        value={srcPath}
-                        onChange={e => setSrcPath(e.target.value)} />
+                    <Stack spacing={2} direction="row" sx={{}}>
+                        <TextField variant="standard" label="本地文件夹路径" type="search" size="small" sx={{ flex: 1 }}
+                            value={srcPath}
+                            onChange={e => setSrcPath(e.target.value)} />
+                        <IconButton component="label" variant="contained" onClick={async () => {
+                            const result = await dialog.showOpenDialog({
+                                properties: ['openDirectory'],
+                                defaultPath: srcPath,
+                            });
+                            if (!result.canceled) {
+                                setSrcPath(result.filePaths[0]);
+                            }
+                        }}>
+                            <FolderOpen/>
+                        </IconButton>
+                    </Stack>
                     <Stack spacing={2} direction="row">
                         <FormControl sx={{ minWidth: "10em" }}>
                             <AsyncSelect
@@ -116,7 +130,7 @@ export default function ({ open, setOpen }) {
                             disabled={srcPath === "" || driverName === "" || name === ""}
                             onClick={e => {
                                 newBackupTask(name, description, srcPath, driverName, dstPath, encoder, concurrent)
-                                    .then(() => setOpen(false)).catch(e=>noteError(e.message))
+                                    .then(() => setOpen(false)).catch(e => noteError(e.message))
                             }}
                         >
                             确定

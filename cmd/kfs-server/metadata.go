@@ -163,7 +163,8 @@ func apiStartMetadataAnalysisTask(c echo.Context) error {
 func tryStartMetadataAnalysisTask() {
 	if metadataAnalysisTask.Status == StatusWaitRunning ||
 		metadataAnalysisTask.Status == StatusRunningCollect ||
-		metadataAnalysisTask.Status == StatusRunningAnalyze {
+		metadataAnalysisTask.Status == StatusRunningAnalyze ||
+		metadataAnalysisTask.Status == StatusWaitCanceled {
 		return
 	}
 	metadataAnalysisTask.Status = StatusWaitRunning

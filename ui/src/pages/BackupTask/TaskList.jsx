@@ -6,6 +6,7 @@ import { noteError, noteSuccess } from "components/Notification/Notification";
 import { getSysConfig } from "hox/sysConfig";
 import moment from "moment";
 import { useEffect, useState } from "react";
+const { shell } = window.require('@electron/remote');
 
 const StatusIdle = 0;
 const StatusWaitRunning = 1;
@@ -104,10 +105,12 @@ export default function ({ setTaskDetail }) {
                                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                             >
                                 <TableCell component="th" scope="row">
-                                    <Button onClick={() => setTaskDetail(task.name)}>{task.name}</Button>
+                                    <Button sx={{ textTransform: "none" }} onClick={() => setTaskDetail(task.name)}>{task.name}</Button>
                                 </TableCell>
                                 <TableCell align="left">{StatusMsgs[taskInfos.runningTasks[task.name]?.status]}</TableCell>
-                                <TableCell align="left">{task.srcPath}</TableCell>
+                                <TableCell align="left"><Button sx={{ textTransform: "none" }} onClick={() => {
+                                    shell.openPath(task.srcPath);
+                                }} >{task.srcPath}</Button></TableCell>
                                 <TableCell align="left"><span title="单向上传：源目录的所有内容将会被上传更新到云盘，删除操作将不会造成云盘内容的对应删除。">单向上传</span></TableCell>
                                 <TableCell align="left">{task.driverName}</TableCell>
                                 <TableCell align="left">{task.dstPath}</TableCell>
