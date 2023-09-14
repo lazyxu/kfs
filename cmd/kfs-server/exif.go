@@ -1,9 +1,7 @@
 package main
 
 import (
-	"context"
 	"github.com/labstack/echo/v4"
-	"github.com/lazyxu/kfs/rpc/server"
 	"net/http"
 	"strconv"
 	"sync/atomic"
@@ -58,66 +56,4 @@ func apiGetMetadata(c echo.Context) error {
 	}
 	c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 	return ok(c, data)
-}
-
-func AnalysisExifProcess() {
-	var ctx context.Context
-	var cancel context.CancelFunc
-	go func() {
-		for {
-			select {
-			case start := <-exifChan:
-				if start {
-					if exifAnalyzing.CompareAndSwap(false, true) {
-						ctx, cancel = context.WithCancel(context.TODO())
-						go AnalysisExif(ctx)
-					}
-				} else {
-					if cancel != nil {
-						cancel()
-					}
-				}
-			}
-		}
-	}()
-}
-
-func AnalysisExif(ctx context.Context) (err error) {
-	println("AnalysisExif")
-	exifFinished.Store(false)
-	exifCnt.Store(0)
-	exifTotal.Store(0)
-	defer func() {
-		exifAnalyzing.Store(false)
-		exifFinished.Store(true)
-	}()
-	hashList, err := kfsCore.Db.ListExpectExif(ctx)
-	if err != nil {
-		return err
-	}
-	exifTotal.Store(uint64(len(hashList)))
-	for _, hash := range hashList {
-		select {
-		case <-ctx.Done():
-			return context.DeadlineExceeded
-		default:
-		}
-		ft, err := server.InsertFileType(ctx, kfsCore, hash)
-		if err != nil {
-			println("InsertFileType", err.Error())
-			exifCnt.Add(1)
-			continue
-		}
-		err = server.InsertExif(ctx, kfsCore, hash, ft)
-		if err != nil {
-			println("InsertExif", err.Error())
-			exifCnt.Add(1)
-			continue
-		}
-		exifCnt.Add(1)
-	}
-	if err != nil {
-		return err
-	}
-	return nil
 }

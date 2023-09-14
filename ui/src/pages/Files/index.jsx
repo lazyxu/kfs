@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import { listDriver } from "api/driver";
+import { analyzeMetadata } from "api/web/exif";
 import AbsolutePath from 'components/AbsolutePath';
 import useResourceManager from 'hox/resourceManager';
 import { useEffect } from "react";
@@ -11,6 +12,7 @@ export default function () {
     const [resourceManager, setResourceManager] = useResourceManager();
     useEffect(() => {
         listDriver(setResourceManager);
+        analyzeMetadata(true);
     }, []);
     return (
         <Box sx={{ display: 'flex', flex: "1", flexDirection: 'column', minHeight: '0' }}>

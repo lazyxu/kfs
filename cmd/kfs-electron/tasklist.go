@@ -152,12 +152,13 @@ type RunningBackupTask struct {
 }
 
 var (
-	StatusIdle        = 0
-	StatusWaitRunning = 1
-	StatusRunning     = 2
-	StatusFinished    = 3
-	StatusCanceled    = 4
-	StatusError       = 5
+	StatusIdle         = 0
+	StatusWaitRunning  = 1
+	StatusRunning      = 2
+	StatusFinished     = 3
+	StatusCanceled     = 4
+	StatusError        = 5
+	StatusWaitCanceled = 6
 )
 
 var runningTasks = make(map[string]*RunningBackupTask)
@@ -190,6 +191,7 @@ func apiStartBackupTask(c echo.Context) error {
 		tryStartBackup(task, runningTask, serverAddr)
 	} else {
 		if !start {
+			setTaskStatus(task.Name, StatusWaitCanceled)
 			runningTask.cancel()
 			return c.String(http.StatusOK, "")
 		}
@@ -227,6 +229,7 @@ func setTaskStatus(name string, status int) {
 	if status == StatusFinished || status == StatusCanceled || status == StatusError {
 		// TODO: save it to db.
 		runningTask.LastDoneTime = time.Now().UnixNano()
+		runningTask.cancel = nil
 	}
 	runningTasksMutex.Unlock()
 	noteTaskListToClients()

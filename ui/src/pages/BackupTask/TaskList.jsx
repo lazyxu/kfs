@@ -1,5 +1,5 @@
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
-import { Close, HourglassTop, PlayArrow, RestartAlt, SettingsApplications, Stop } from "@mui/icons-material";
+import { Close, HourglassDisabled, HourglassTop, PlayArrow, RestartAlt, SettingsApplications, Stop } from "@mui/icons-material";
 import { Box, Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import { deleteBackupTask, startBackupTask } from "api/web/backup";
 import { noteError, noteSuccess } from "components/Notification/Notification";
@@ -13,6 +13,7 @@ const StatusRunning = 2;
 const StatusFinished = 3;
 const StatusCanceled = 4;
 const StatusError = 5;
+const StatusWaitCanceled = 6;
 const StatusMsgs = {
     undefined: "空闲",
     0: "空闲",
@@ -21,6 +22,7 @@ const StatusMsgs = {
     3: "已完成",
     4: "已取消",
     5: "错误",
+    6: "正在取消",
 };
 
 export default function ({ setTaskDetail }) {
@@ -131,6 +133,11 @@ export default function ({ setTaskDetail }) {
                                             <HourglassTop />
                                         </IconButton>
                                     }
+                                    {taskInfos.runningTasks[task.name]?.status === StatusWaitCanceled &&
+                                        <IconButton>
+                                            <HourglassDisabled />
+                                        </IconButton>
+                                    }
                                     {taskInfos.runningTasks[task.name]?.status === StatusRunning &&
                                         <IconButton onClick={e => startBackupTask(task.name, sysConfig.socketServer, false)
                                             .then(() => noteSuccess("停止备份任务：" + task.name))
@@ -143,7 +150,10 @@ export default function ({ setTaskDetail }) {
                                     <IconButton disabled>
                                         <SettingsApplications />
                                     </IconButton>
-                                    <IconButton disabled={taskInfos.runningTasks[task.name]?.status === StatusRunning}
+                                    <IconButton disabled={taskInfos.runningTasks[task.name]?.status === StatusRunning ||
+                                        taskInfos.runningTasks[task.name]?.status === StatusWaitRunning ||
+                                        taskInfos.runningTasks[task.name]?.status === StatusWaitCanceled
+                                    }
                                         onClick={e => deleteBackupTask(task.name)
                                             .then(() => noteSuccess("删除备份任务：" + task.name))
                                             .catch(e => noteError(e.message))

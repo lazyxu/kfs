@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func upsertLivePhoto(kfsCore *core.KFS, movHash string, driverName string, dirPath []string, movName string) error {
+func UpsertLivePhoto(kfsCore *core.KFS, movHash string, driverName string, dirPath []string, movName string) error {
 	ext := filepath.Ext(movName)
 	if ext == ".MOV" {
 		name := strings.TrimSuffix(movName, ext)

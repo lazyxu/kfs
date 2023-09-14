@@ -7,31 +7,16 @@ import (
 	"github.com/h2non/filetype/types"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
+	"io"
 )
 
-func AnalysisFileType(ctx context.Context, kfsCore *core.KFS) error {
-	println("AnalysisFileType")
-	// TODO: now remain is 0
-	hashList, err := kfsCore.Db.ListFile(ctx)
-	if err != nil {
-		return err
-	}
-	for _, hash := range hashList {
-		select {
-		case <-ctx.Done():
-			return context.DeadlineExceeded
-		default:
-		}
-		_, err = InsertFileType(ctx, kfsCore, hash)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func InsertFileType(ctx context.Context, kfsCore *core.KFS, hash string) (ft dao.FileType, err error) {
+func AnalyzeFileType(kfsCore *core.KFS, hash string) (ft dao.FileType, err error) {
 	header, err := getHeader(kfsCore, hash)
+	if err == io.EOF {
+		ft = NewFileType(filetype.Unknown)
+		err = nil
+		return
+	}
 	if err != nil {
 		return
 	}
@@ -41,6 +26,10 @@ func InsertFileType(ctx context.Context, kfsCore *core.KFS, hash string) (ft dao
 	}
 	fmt.Printf("%s %+v\n", hash, fileType)
 	ft = NewFileType(fileType)
+	return
+}
+
+func InsertFileType(ctx context.Context, kfsCore *core.KFS, hash string, ft dao.FileType) (err error) {
 	_, err = kfsCore.Db.InsertFileType(ctx, hash, ft)
 	if err != nil {
 		return
@@ -54,18 +43,6 @@ func NewFileType(fileType types.Type) dao.FileType {
 		SubType:   fileType.MIME.Subtype,
 		Extension: fileType.Extension,
 	}
-}
-func GetFileType(kfsCore *core.KFS, hash string) (t types.Type, err error) {
-	header, err := getHeader(kfsCore, hash)
-	if err != nil {
-		return
-	}
-	t, err = filetype.Get(header)
-	if err != nil {
-		return
-	}
-	fmt.Printf("%s %+v\n", hash, t)
-	return
 }
 
 func getHeader(kfsCore *core.KFS, hash string) (header []byte, err error) {

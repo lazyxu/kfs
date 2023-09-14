@@ -51,6 +51,9 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/metadata", apiGetMetadata)
 	e.GET("/api/v1/diskUsage", apiDiskUsage)
 
+	e.POST("/api/v1/startMetadataAnalysisTask", apiStartMetadataAnalysisTask)
+	e.GET("/api/v1/event/metadataAnalysisTask", apiEventMetadataAnalysisTask)
+
 	println("KFS web server listening at:", webPortString)
 	// Start server
 	e.Logger.Fatal(e.Start(":" + webPortString))

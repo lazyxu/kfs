@@ -1,4 +1,11 @@
-import {httpGet, httpPost} from "./webServer";
+import { httpGet, httpPost } from "./webServer";
+
+export async function analyzeMetadata(start) {
+    console.log('web.analyzeMetadata', start);
+    return await httpPost("/api/v1/startMetadataAnalysisTask", {
+        start,
+    });
+}
 
 export async function analysisExif(start) {
     console.log('web.analysisExif', start);
