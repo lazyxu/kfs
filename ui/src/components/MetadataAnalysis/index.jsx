@@ -1,0 +1,115 @@
+import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
+import { MarkUnreadChatAlt } from "@mui/icons-material";
+import { Box, IconButton, Menu } from "@mui/material";
+import { analyzeMetadata } from "api/web/exif";
+import { noteError, noteWarning } from "components/Notification/Notification";
+import { getSysConfig } from "hox/sysConfig";
+import moment from "moment";
+import { useEffect, useState } from "react";
+
+const StatusIdle = 0
+const StatusFinished = 1
+const StatusCanceled = 2
+const StatusError = 3
+const StatusWaitRunning = 4
+const StatusWaitCanceled = 5
+const StatusRunningCollect = 6
+const StatusRunningAnalyze = 7
+const StatusMsgs = {
+    [undefined]: "加载中",
+    [StatusIdle]: "空闲",
+    [StatusFinished]: "已完成",
+    [StatusCanceled]: "已取消",
+    [StatusError]: "错误",
+    [StatusWaitRunning]: "等待运行",
+    [StatusWaitCanceled]: "正在取消",
+    [StatusRunningCollect]: "正在收集",
+    [StatusRunningAnalyze]: "正在解析",
+};
+
+export default function () {
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
+    const handleClick = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
+    const [taskInfo, setTaskInfo] = useState();
+    const controller = new AbortController();
+    useEffect(() => {
+        setTaskInfo();
+        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/metadataAnalysisTask`, {
+            signal: controller.signal,
+            async onopen(response) {
+                if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
+                    return; // everything's good
+                }
+                console.error(response);
+                noteError("event/metadataAnalysisTask.onopen: " + response.status);
+            },
+            onmessage(msg) {
+                // if the server emits an error message, throw an exception
+                // so it gets handled by the onerror callback below:
+                if (msg.event === 'FatalError') {
+                    console.error(msg);
+                    noteError("event/metadataAnalysisTask.onmessage: " + msg);
+                    return;
+                }
+                let info = JSON.parse(msg.data);
+                console.log(info);
+                if (info?.errMsg) {
+                    noteError(info?.errMsg);
+                }
+                if (info?.data?.errMsg) {
+                    noteWarning(info?.data?.errMsg);
+                }
+                setTaskInfo(info);
+            },
+            onclose() {
+                // if the server closes the connection unexpectedly, retry:
+                noteError("event/metadataAnalysisTask.onclose");
+            },
+            onerror(err) {
+                console.error(err);
+                // noteError("event/backupTask.onerror: " + err.message);
+                // if (err instanceof FatalError) {
+                //     throw err; // rethrow to stop the operation
+                // } else {
+                //     // do nothing to automatically retry. You can also
+                //     // return a specific retry interval here.
+                // }
+            }
+        });
+        analyzeMetadata(true);
+        return () => {
+            controller.abort();
+        }
+    }, []);
+    return (
+        <>
+            <IconButton onClick={handleClick}>
+                <MarkUnreadChatAlt />
+            </IconButton>
+            <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleClose}
+            >
+                <Box sx={{ padding: "0.5em 1em" }}>
+                    任务：解析图片、视频的元数据
+                </Box>
+                <Box sx={{ padding: "0.5em 1em" }}>
+                    状态：{StatusMsgs[taskInfo?.status]}
+                </Box>
+                <Box sx={{ padding: "0.5em 1em" }}>
+                    上次执行结束时间：{taskInfo?.lastDoneTime ? moment(taskInfo?.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss") : "无记录"}
+                </Box>
+                <Box sx={{ padding: "0.5em 1em" }}>
+                    进度：{taskInfo?.cnt}/{taskInfo?.total}
+                </Box>
+            </Menu>
+        </>
+    )
+}

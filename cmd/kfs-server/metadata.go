@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type Client struct {
@@ -81,11 +82,12 @@ var (
 )
 
 type MetadataAnalysisTask struct {
-	cancel context.CancelFunc
-	Status int      `json:"status"`
-	Cnt    int      `json:"cnt"`
-	Total  int      `json:"total"`
-	Errors []string `json:"errors"`
+	cancel       context.CancelFunc
+	Status       int      `json:"status"`
+	LastDoneTime int64    `json:"lastDoneTime"`
+	Cnt          int      `json:"cnt"`
+	Total        int      `json:"total"`
+	Errors       []string `json:"errors"`
 }
 
 var metadataAnalysisTask = MetadataAnalysisTask{
@@ -111,8 +113,9 @@ func setTaskStatus(status int) {
 	metadataAnalysisTask.Status = status
 	if status == StatusFinished || status == StatusCanceled || status == StatusError {
 		metadataAnalysisTask.cancel = nil
+		metadataAnalysisTask.LastDoneTime = time.Now().UnixNano()
 	}
-	if status == StatusWaitRunning {
+	if status == StatusWaitRunning || status == StatusRunningCollect {
 		metadataAnalysisTask.Errors = make([]string, 0)
 		metadataAnalysisTask.Cnt = 0
 		metadataAnalysisTask.Total = 0
@@ -124,6 +127,8 @@ func setTaskStatus(status int) {
 func setTaskTotal(total int) {
 	metadataAnalysisTaskMutex.Lock()
 	metadataAnalysisTask.Status = StatusRunningAnalyze
+	metadataAnalysisTask.Errors = make([]string, 0)
+	metadataAnalysisTask.Cnt = 0
 	metadataAnalysisTask.Total = total
 	metadataAnalysisTaskMutex.Unlock()
 	noteTaskListToClients()

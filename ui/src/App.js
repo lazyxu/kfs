@@ -2,6 +2,7 @@ import { Inbox, Mail } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, styled, useColorScheme } from "@mui/material";
 import SvgIcon from 'components/Icon/SvgIcon';
+import MetadataAnalysis from 'components/MetadataAnalysis';
 import { SnackbarAction } from 'components/Notification/Notification';
 import Version from 'components/Version';
 import { SnackbarProvider } from 'notistack';
@@ -64,6 +65,9 @@ function App() {
                         <Typography variant="h6" noWrap component="div">
                             {menu}
                         </Typography>
+                        <Box>
+                            <MetadataAnalysis />
+                        </Box>
                     </Toolbar>
                 </AppBar>
                 <Drawer
