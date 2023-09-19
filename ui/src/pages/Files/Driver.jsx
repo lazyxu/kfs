@@ -1,18 +1,17 @@
-import {list} from "api/fs";
-import useResourceManager from 'hox/resourceManager';
-import SvgIcon from "components/Icon/SvgIcon";
-import {Box, Button, Card, CardActions, CardContent, Link, Stack, Typography} from "@mui/material";
-import useContextMenu from "hox/contextMenu";
-import humanize from 'humanize';
-import {deleteDriver} from "../../api/driver";
 import DeleteIcon from '@mui/icons-material/Delete';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
+import { Box, Button, Card, CardActions, CardContent, Link, Stack } from "@mui/material";
+import { list } from "api/fs";
+import SvgIcon from "components/Icon/SvgIcon";
+import useContextMenu from "hox/contextMenu";
+import useResourceManager from 'hox/resourceManager';
+import { deleteDriver } from "../../api/driver";
 
-export default ({driversElm, driver}) => {
+export default ({ driver, setDriverAttribute }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
     return (
-        <Card sx={{width: 275}} variant="outlined">
+        <Card sx={{ minWidth: 275 }} variant="outlined">
             <CardContent>
                 <Link underline="hover" onClick={() => list(setResourceManager, driver.name, [])}>
                     <Stack
@@ -21,8 +20,8 @@ export default ({driversElm, driver}) => {
                         alignItems="center"
                         spacing={2}
                     >
-                        <SvgIcon icon="wangpan" fontSize="inherit"/>
-                        <Box sx={{flex: 1}}>{driver.name}</Box>
+                        <SvgIcon icon="wangpan" fontSize="inherit" />
+                        <Box sx={{ flex: 1 }}>{driver.name}</Box>
                     </Stack>
                 </Link>
                 <Box variant="body">
@@ -36,10 +35,12 @@ export default ({driversElm, driver}) => {
                 </Box>
             </CardContent>
             <CardActions>
-                <Button size="small" color="error" startIcon={<DeleteIcon/>} variant="outlined"
-                        onClick={() => deleteDriver(setResourceManager, driver.name)}>删除</Button>
-                <Button size="small" startIcon={<DriveFileRenameOutlineIcon/>} variant="outlined" disabled>重命名</Button>
+                <Button size="small" color="error" startIcon={<DeleteIcon />} variant="outlined"
+                    onClick={() => deleteDriver(setResourceManager, driver.name)}>删除</Button>
+                <Button size="small" startIcon={<DriveFileRenameOutlineIcon />} variant="outlined" disabled>重命名</Button>
                 <Button size="small" variant="outlined" disabled>重置</Button>
+                <Button size="small" variant="outlined"
+                    onClick={() => setDriverAttribute(driver)} >属性</Button>
             </CardActions>
         </Card>
     )
