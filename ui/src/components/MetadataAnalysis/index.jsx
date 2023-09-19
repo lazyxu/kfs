@@ -1,5 +1,5 @@
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
-import { MarkUnreadChatAlt } from "@mui/icons-material";
+import { HourglassDisabled, HourglassTop, MarkUnreadChatAlt, Message, PlayArrow, Stop } from "@mui/icons-material";
 import { Box, IconButton, Menu } from "@mui/material";
 import { analyzeMetadata } from "api/web/exif";
 import { noteError, noteWarning } from "components/Notification/Notification";
@@ -29,14 +29,8 @@ const StatusMsgs = {
 
 export default function () {
     const [anchorEl, setAnchorEl] = useState(null);
-    const open = Boolean(anchorEl);
-    const handleClick = (event) => {
-        setAnchorEl(event.currentTarget);
-    };
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
     const [taskInfo, setTaskInfo] = useState();
+    const [unreadMessage, setUnreadMessage] = useState(false);
     const controller = new AbortController();
     useEffect(() => {
         setTaskInfo();
@@ -66,6 +60,7 @@ export default function () {
                     noteWarning(info?.data?.errMsg);
                 }
                 setTaskInfo(info);
+                setUnreadMessage(true);
             },
             onclose() {
                 // if the server closes the connection unexpectedly, retry:
@@ -82,23 +77,50 @@ export default function () {
                 // }
             }
         });
-        analyzeMetadata(true);
         return () => {
             controller.abort();
         }
     }, []);
     return (
         <>
-            <IconButton onClick={handleClick}>
-                <MarkUnreadChatAlt />
+            <IconButton onClick={e => {
+                setAnchorEl(e.currentTarget);
+                setUnreadMessage(false);
+            }}>
+                {unreadMessage ? <MarkUnreadChatAlt /> : <Message />}
             </IconButton>
             <Menu
                 anchorEl={anchorEl}
-                open={open}
-                onClose={handleClose}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
             >
                 <Box sx={{ padding: "0.5em 1em" }}>
-                    任务：解析图片、视频的元数据
+                    {(taskInfo?.status === undefined ||
+                        taskInfo?.status === StatusIdle ||
+                        taskInfo?.status === StatusFinished ||
+                        taskInfo?.status === StatusCanceled ||
+                        taskInfo?.status === StatusError) &&
+                        <IconButton onClick={e => analyzeMetadata(true).catch(e => noteError(e.message))}>
+                            <PlayArrow />
+                        </IconButton>
+                    }
+                    {taskInfo?.status === StatusWaitRunning &&
+                        <IconButton>
+                            <HourglassTop />
+                        </IconButton>
+                    }
+                    {taskInfo?.status === StatusWaitCanceled &&
+                        <IconButton>
+                            <HourglassDisabled />
+                        </IconButton>
+                    }
+                    {(taskInfo?.status === StatusRunningCollect ||
+                        taskInfo?.status === StatusRunningAnalyze) &&
+                        <IconButton onClick={e => analyzeMetadata(false).catch(e => noteError(e.message))}>
+                            <Stop />
+                        </IconButton>
+                    }
+                    任务：解析图片与视频的元数据
                 </Box>
                 <Box sx={{ padding: "0.5em 1em" }}>
                     状态：{StatusMsgs[taskInfo?.status]}
@@ -106,9 +128,18 @@ export default function () {
                 <Box sx={{ padding: "0.5em 1em" }}>
                     上次执行结束时间：{taskInfo?.lastDoneTime ? moment(taskInfo?.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss") : "无记录"}
                 </Box>
-                <Box sx={{ padding: "0.5em 1em" }}>
-                    进度：{taskInfo?.cnt}/{taskInfo?.total}
-                </Box>
+                {(taskInfo?.status === StatusRunningAnalyze) &&
+                    <Box sx={{ padding: "0.5em 1em" }}>
+                        当前进度：{taskInfo?.cnt}/{taskInfo?.total}
+                    </Box>
+                }
+                {(taskInfo?.status === StatusFinished ||
+                    taskInfo?.status === StatusCanceled ||
+                    taskInfo?.status === StatusError) &&
+                    <Box sx={{ padding: "0.5em 1em" }}>
+                        上次执行结果：{taskInfo?.cnt}/{taskInfo?.total}
+                    </Box>
+                }
             </Menu>
         </>
     )

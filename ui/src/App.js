@@ -56,13 +56,13 @@ function App() {
                             onClick={() => setOpen(true)}
                             edge="start"
                             sx={{
-                                marginRight: 5,
+                                marginRight: 2,
                                 ...(open && { display: 'none' }),
                             }}
                         >
                             <MenuIcon />
                         </IconButton>
-                        <Typography variant="h6" noWrap component="div">
+                        <Typography variant="h6" noWrap component="div" sx={{ flex: 1 }}>
                             {menu}
                         </Typography>
                         <Box>
