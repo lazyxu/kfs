@@ -4,6 +4,7 @@ use (
 	./cmd/kfs-cli
 	./cmd/kfs-electron
 	./cmd/kfs-server
+	./cmd/kfs-test
 	./core
 	./pb
 	./rpc/rpcutil
