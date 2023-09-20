@@ -17,7 +17,6 @@ require (
 	github.com/Xhofe/wopan-sdk-go v0.1.1 // indirect
 	github.com/abbot/go-http-auth v0.4.0 // indirect
 	github.com/aead/ecdh v0.2.0 // indirect
-	github.com/alist-org/alist/v3 v3.27.0 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.7+incompatible // indirect
 	github.com/andreburgaud/crypt2go v1.2.0 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect

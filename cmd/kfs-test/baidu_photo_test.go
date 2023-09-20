@@ -8,8 +8,8 @@ import (
 )
 
 func TestBaiduPhoto(t *testing.T) {
-	// GOPROXY=https://proxy.golang.com.cn,direct;
-	// export GOSUMDB=off
+	// GOPROXY=https://goproxy.cn,direct
+	// GOSUMDB=off
 	cmd.Init()
 
 	var baiduPhoto baidu_photo.BaiduPhoto
@@ -17,4 +17,5 @@ func TestBaiduPhoto(t *testing.T) {
 	baiduPhoto.ClientSecret = "jXiFMOPVPCWlO2M5CwWQzffpNPaGTRBG"
 	baiduPhoto.RefreshToken = "122.238075bc689e8f77bc5388db7991737c.YGu622hbpSoEQh1l4eZx_h87G1BCbqZp60BPXHQ.1tG0sg"
 	baiduPhoto.Init(context.TODO())
+	// baiduPhoto.List(context.TODO(), nil, model.ListArgs{})
 }
