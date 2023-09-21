@@ -2,8 +2,6 @@ module github.com/lazyxu/kfs/cmd/kfs-test
 
 go 1.20
 
-require github.com/alist-org/alist/v3 v3.27.0
-
 require (
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.9+incompatible // indirect

@@ -5,9 +5,9 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/alist-org/alist/v3/pkg/utils"
 	"github.com/dustin/go-humanize"
 	"github.com/go-resty/resty/v2"
+	json "github.com/json-iterator/go"
 	"net/http"
 	"testing"
 	"time"
@@ -152,7 +152,7 @@ func (d *BaiduPhoto) Request(furl string, method string, callback func(req *rest
 		return nil, err
 	}
 
-	erron := utils.Json.Get(res.Body(), "errno").ToInt()
+	erron := json.ConfigCompatibleWithStandardLibrary.Get(res.Body(), "errno").ToInt()
 	switch erron {
 	case 0:
 		break
@@ -211,8 +211,8 @@ func TestBaiduPhoto(t *testing.T) {
 	//cmd.Init()
 
 	InitClient()
-	// https://alist.nn.ci/zh/guide/api/auth.html
-	s := NewBaiduPhoto("122.21462f591bc7e6f1e4ef37f54c62597e.YDS1n8Ne04f9wgldnVozev2cIxyatTKGwg3oVUS.HQOSkw")
+	// https://alist.nn.ci/zh/guide/drivers/baidu.photo.html
+	s := NewBaiduPhoto("122.e2c3359e6741dd988e2989889b4aa30e.Y_aks9WnQqVfUDHEGoFvmXtbz4bISsDxCa731nS.kQHRbA")
 	err := s.Init(context.TODO())
 	if err != nil {
 		t.Error(err)
@@ -222,10 +222,13 @@ func TestBaiduPhoto(t *testing.T) {
 		t.Error(err)
 	}
 	var size int64
+	var cnt int64
 	for _, file := range files {
+		cnt++
 		size += file.Size
 	}
-	fmt.Printf("Total size: %s\n", humanize.IBytes(uint64(size)))
+	fmt.Printf("size: %s\n", humanize.IBytes(uint64(size)))
+	fmt.Printf("cize: %d\n", cnt)
 
 	//var baiduPhoto baidu_photo.BaiduPhoto
 	//baiduPhoto.ClientID = "iYCeC9g08h5vuP9UqvPHKKSVrKFXGa1v"
