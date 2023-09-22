@@ -20,7 +20,6 @@ import { noteError } from "components/Notification/Notification";
 import { getSysConfig } from "hox/sysConfig";
 import { useState } from "react";
 import './index.scss';
-const { dialog } = window.require('@electron/remote');
 
 export default function ({ open, setOpen }) {
     const sysConfig = getSysConfig().sysConfig;
@@ -67,6 +66,7 @@ export default function ({ open, setOpen }) {
                             value={srcPath}
                             onChange={e => setSrcPath(e.target.value)} />
                         <IconButton component="label" variant="contained" onClick={async () => {
+                            const { dialog } = window.require('@electron/remote');
                             const result = await dialog.showOpenDialog({
                                 properties: ['openDirectory'],
                                 defaultPath: srcPath,
@@ -75,7 +75,7 @@ export default function ({ open, setOpen }) {
                                 setSrcPath(result.filePaths[0]);
                             }
                         }}>
-                            <FolderOpen/>
+                            <FolderOpen />
                         </IconButton>
                     </Stack>
                     <Stack spacing={2} direction="row">

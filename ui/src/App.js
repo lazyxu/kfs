@@ -40,6 +40,7 @@ function App() {
         ...theme.mixins.toolbar,
         justifyContent: 'flex-end',
     }));
+    console.log(process.env);
     return (
         <SnackbarProvider action={SnackbarAction} >
             <Box sx={{

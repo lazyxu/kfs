@@ -28,7 +28,7 @@ const PortStr = "port"
 func rootCmd() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:  "kfs-electron",
-		Args: cobra.RangeArgs(1, 1),
+		Args: cobra.RangeArgs(0, 0),
 		Run:  runRoot,
 	}
 	cmd.PersistentFlags().BoolP("verbose", "v", false, "verbose")
