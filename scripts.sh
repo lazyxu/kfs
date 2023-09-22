@@ -54,6 +54,10 @@ cliTest () {
 }
 
 # https://nodejs.org/en/download/current
+# yarn add node-sass --sass_binary_site=https://npm.taobao.org/mirrors/node-sass/
+# kfs-electron: -p 11234
+# T3: CGO_ENABLED=1
+# T3: --storage-dir "F://test-0807" --data-source-name "F://test-0807/kfs.db" --thumbnail-dir "F://test-0807/thumbnail" --transcode-dir "F://test-0807/transcode"
 
 case $1 in
   start)
@@ -96,9 +100,9 @@ case $1 in
         cd $root/cmd/kfs-server
         echo "GOOS=$GOOS GOARCH=$GOARCH"
         if [[ $GOOS != '' && $GOARCH != '' ]]; then
-          GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
+          CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
         else
-          go build -o kfs-server
+          CGO_ENABLED=1 go build -o kfs-server
         fi
         ;;
 

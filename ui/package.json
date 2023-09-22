@@ -79,8 +79,7 @@
     "eslint": "^8.22.0",
     "eslint-config-alloy": "^4.6.2",
     "eslint-plugin-react": "^7.30.1",
-    "node-sass": "^7.0.1",
-    "protoc-gen-grpc-web": "^1.4.1",
+    "node-sass": "^9.0.0",
     "protoc-gen-js": "^3.21.2",
     "protoc-gen-ts": "^0.8.5",
     "react-scripts": "^5.0.1"
