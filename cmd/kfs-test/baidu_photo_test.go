@@ -6,11 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dustin/go-humanize"
-	"github.com/go-resty/resty/v2"
-	json "github.com/json-iterator/go"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	json "github.com/json-iterator/go"
 )
 
 type BaiduPhoto struct {
@@ -20,11 +21,26 @@ type BaiduPhoto struct {
 	ClientSecret string `json:"client_secret"`
 }
 
-func NewBaiduPhoto(refreshToken string) *BaiduPhoto {
+func NewBaiduPhotoByRefreshToken(refreshToken string) *BaiduPhoto {
 	return &BaiduPhoto{
 		RefreshToken: refreshToken,
 		ClientID:     "iYCeC9g08h5vuP9UqvPHKKSVrKFXGa1v",
 		ClientSecret: "jXiFMOPVPCWlO2M5CwWQzffpNPaGTRBG",
+	}
+}
+
+func NewBaiduPhotoByAccessToken(accessToken string) *BaiduPhoto {
+	return &BaiduPhoto{
+		AccessToken:  accessToken,
+		ClientID:     "iYCeC9g08h5vuP9UqvPHKKSVrKFXGa1v",
+		ClientSecret: "jXiFMOPVPCWlO2M5CwWQzffpNPaGTRBG",
+	}
+}
+
+func NewBaiduPhoto() *BaiduPhoto {
+	return &BaiduPhoto{
+		ClientID:     "huREKC2eNTctaBWfh3LdiAYjZ9ARBh5g",
+		ClientSecret: "eMmhaLDpxzTKX3upCguM0q9yOsmVDP6g",
 	}
 }
 
@@ -100,10 +116,28 @@ func (d *BaiduPhoto) refreshToken() error {
 	return nil
 }
 
-func (d *BaiduPhoto) Init(ctx context.Context) error {
-	if err := d.refreshToken(); err != nil {
+func (d *BaiduPhoto) accessToken(code string) error {
+	u := "https://openapi.baidu.com/oauth/2.0/token"
+	var resp TokenResp
+	var e TokenErrResp
+	_, err := RestyClient.R().SetResult(&resp).SetError(&e).SetQueryParams(map[string]string{
+		"grant_type":    "authorization_code",
+		"code":          code,
+		"client_id":     d.ClientID,
+		"client_secret": d.ClientSecret,
+		"redirect_uri":  "oob",
+	}).Get(u)
+	if err != nil {
 		return err
 	}
+	if e.ErrorMsg != "" {
+		return &e
+	}
+	if resp.RefreshToken == "" {
+		return EmptyToken
+	}
+	d.AccessToken, d.RefreshToken = resp.AccessToken, resp.RefreshToken
+	//op.MustSaveDriverStorage(d)
 	return nil
 }
 
@@ -205,21 +239,64 @@ func (d *BaiduPhoto) GetAllFile(ctx context.Context) (files []File, err error) {
 	}
 }
 
+func (d *BaiduPhoto) Download(ctx context.Context, fsid int64) error {
+	headers := map[string]string{
+		"User-Agent": UserAgent,
+	}
+
+	var downloadUrl struct {
+		Dlink string `json:"dlink"`
+	}
+	_, err := d.Get(FILE_API_URL_V2+"/download", func(r *resty.Request) {
+		r.SetContext(ctx)
+		r.SetHeaders(headers)
+		r.SetQueryParams(map[string]string{
+			"fsid": fmt.Sprint(fsid),
+		})
+	}, &downloadUrl)
+	if err != nil {
+		return err
+	}
+	println("downloadUrl", downloadUrl.Dlink)
+	return nil
+}
+
+// https://alist.nn.ci/zh/guide/drivers/baidu.photo.html
 func TestBaiduPhoto(t *testing.T) {
 	// GOPROXY=https://goproxy.cn,direct
 	// GOSUMDB=off
 	//cmd.Init()
 
+	ctx := context.TODO()
 	InitClient()
-	// https://alist.nn.ci/zh/guide/drivers/baidu.photo.html
-	s := NewBaiduPhoto("122.e2c3359e6741dd988e2989889b4aa30e.Y_aks9WnQqVfUDHEGoFvmXtbz4bISsDxCa731nS.kQHRbA")
-	err := s.Init(context.TODO())
+
+	//refreshToekn := "122.0feb35b533e32ca5acad9214abf4abe5.YaF3AgeDMs4oQ04TkdBVtqkJNqkDs7PsUPMjgbY.9gi30w"
+	//s := NewBaiduPhotoByRefreshToken(refreshToekn)
+	//err := s.refreshToken()
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//accessToken := "121.5b973226a4e2ed19bc8a879bbd3d184a.YD3NbJYUExbAEDHvVYTIWV0_HMUDxUCbEgkI8CA.sGsCgA"
+	//s := NewBaiduPhotoByAccessToken(accessToken)
+
+	code := "d4e74fbcc86fa01e4444ebe51dc16cf3"
+	fmt.Printf("code: %s\n", code)
+	s := NewBaiduPhoto()
+	err := s.accessToken(code)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	files, err := s.GetAllFile(context.TODO())
+
+	fmt.Printf("%+v\n", s)
+	files, err := s.GetAllFile(ctx)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
+	}
+
+	err = s.Download(ctx, files[0].Fsid)
+	if err != nil {
+		t.Fatal(err)
 	}
 	var size int64
 	var cnt int64
@@ -235,5 +312,5 @@ func TestBaiduPhoto(t *testing.T) {
 	//baiduPhoto.ClientSecret = "jXiFMOPVPCWlO2M5CwWQzffpNPaGTRBG"
 	//baiduPhoto.RefreshToken = "122.238075bc689e8f77bc5388db7991737c.YGu622hbpSoEQh1l4eZx_h87G1BCbqZp60BPXHQ.1tG0sg"
 	//baiduPhoto.Init(context.TODO())
-	// baiduPhoto.List(context.TODO(), nil, model.ListArgs{})
+	//baiduPhoto.List(context.TODO(), nil, model.ListArgs{})
 }
