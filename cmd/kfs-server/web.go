@@ -81,7 +81,15 @@ func apiDrivers(c echo.Context) error {
 }
 
 func apiNewDriver(c echo.Context) error {
-	exist, err := kfsCore.InsertDriver(c.Request().Context(), c.QueryParam("name"), c.QueryParam("description"))
+	name := c.QueryParam("name")
+	typ := c.QueryParam("type")
+	description := c.QueryParam("description")
+	if typ == "" {
+
+	} else if typ == "baiduPhoto" {
+		code := c.QueryParam("code")
+	}
+	exist, err := kfsCore.InsertDriver(c.Request().Context(), name, description)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
