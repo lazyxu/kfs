@@ -6,12 +6,15 @@ import (
 	"github.com/lazyxu/kfs/dao"
 )
 
-func InsertDriver(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string) (exist bool, err error) {
+func InsertDriver(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error) {
 	_, err = conn.ExecContext(ctx, `
 	INSERT INTO _driver (
 		name,
-		description
-	) VALUES (?, ?)`, driverName, description)
+		description,
+	    Type,
+		accessToken,
+		refreshToken
+	) VALUES (?, ?, ?, ?, ?)`, driverName, description, typ, accessToken, refreshToken)
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
@@ -28,7 +31,7 @@ func DeleteDriver(ctx context.Context, conn *sql.DB, driverName string) error {
 	return err
 }
 
-func ListDriver(ctx context.Context, txOrDb TxOrDb) (branches []dao.IDriver, err error) {
+func ListDriver(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
 	SELECT * FROM _driver;
 	`)
@@ -36,14 +39,14 @@ func ListDriver(ctx context.Context, txOrDb TxOrDb) (branches []dao.IDriver, err
 		return
 	}
 	defer rows.Close()
-	branches = []dao.IDriver{}
+	drivers = []dao.Driver{}
 	for rows.Next() {
-		var branch dao.Branch
-		err = rows.Scan(&branch.Name, &branch.Description)
+		var driver dao.Driver
+		err = rows.Scan(&driver.Name, &driver.Description, &driver.Typ, &driver.AccessToken, &driver.RefreshToken)
 		if err != nil {
 			return
 		}
-		branches = append(branches, branch)
+		drivers = append(drivers, driver)
 	}
 	return
 }

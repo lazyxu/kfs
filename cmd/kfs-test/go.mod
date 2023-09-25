@@ -1,6 +1,15 @@
 module github.com/lazyxu/kfs/cmd/kfs-test
 
-go 1.20
+go 1.21
+
+toolchain go1.21.1
+
+require (
+	github.com/alist-org/alist/v3 v3.28.0
+	github.com/dustin/go-humanize v1.0.0
+	github.com/go-resty/resty/v2 v2.8.0
+	github.com/json-iterator/go v1.1.12
+)
 
 require (
 	github.com/Xhofe/go-cache v0.0.0-20220723083548-714439c8af9a // indirect
@@ -13,7 +22,6 @@ require (
 	github.com/fxamacker/cbor/v2 v2.5.0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-playground/validator/v10 v10.15.4 // indirect
-	github.com/go-resty/resty/v2 v2.8.0 // indirect
 	github.com/go-webauthn/webauthn v0.8.6 // indirect
 	github.com/go-webauthn/x v0.1.4 // indirect
 	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
@@ -22,7 +30,6 @@ require (
 	github.com/ipfs/go-ipfs-api v0.7.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/libp2p/go-libp2p v0.31.0 // indirect
 	github.com/maruel/natural v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -32,7 +39,6 @@ require (
 	github.com/multiformats/go-multistream v0.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pkg/sftp v1.13.6 // indirect
 	github.com/rclone/rclone v1.64.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.8 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect

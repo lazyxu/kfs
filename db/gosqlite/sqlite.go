@@ -144,8 +144,11 @@ func (db *DB) Create() error {
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver (
-		name        VARCHAR(256) NOT NULL PRIMARY KEY,
-		description VARCHAR(256) NOT NULL DEFAULT ""
+		name         VARCHAR(256) NOT NULL PRIMARY KEY,
+		description  VARCHAR(256) NOT NULL DEFAULT "",
+		Type         VARCHAR(256) NOT NULL DEFAULT "",
+		accessToken  VARCHAR(256) NOT NULL DEFAULT "",
+		refreshToken VARCHAR(256) NOT NULL DEFAULT ""
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver_file (

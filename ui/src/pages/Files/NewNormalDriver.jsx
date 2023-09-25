@@ -6,6 +6,7 @@ import { newDriver } from "../../api/driver";
 
 export default function ({ setOpen }) {
     let [name, setName] = useState("");
+    let [description, setDescription] = useState("");
     const [resourceManager, setResourceManager] = useResourceManager();
     return (
         <>
@@ -24,6 +25,17 @@ export default function ({ setOpen }) {
                         setName(e.target.value)
                     }}
                 />
+                <TextField
+                    autoFocus
+                    margin="dense"
+                    id="name"
+                    placeholder="请输入云盘的描述"
+                    fullWidth
+                    variant="outlined"
+                    onChange={e => {
+                        setDescription(e.target.value)
+                    }}
+                />
             </DialogContent>
             <DialogActions sx={{
                 backgroundColor: theme => theme.background.primary,
@@ -31,7 +43,7 @@ export default function ({ setOpen }) {
             }}>
                 <Button onClick={() => setOpen(false)}>取消</Button>
                 <Button onClick={() => {
-                    newDriver(setResourceManager, name)
+                    newDriver(setResourceManager, name, description)
                         .then(() => setOpen(false))
                         .catch(e => noteError("创建云盘失败：" + e.message));
                 }}>确定</Button>

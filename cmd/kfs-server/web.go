@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"image"
 	"net/http"
 	"os"
@@ -72,7 +73,7 @@ func ok(c echo.Context, data interface{}) error {
 // Handler
 
 func apiDrivers(c echo.Context) error {
-	drivers, err := kfsCore.ListDriver(c.Request().Context())
+	drivers, err := kfsCore.Db.ListDriver(c.Request().Context())
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -81,7 +82,25 @@ func apiDrivers(c echo.Context) error {
 }
 
 func apiNewDriver(c echo.Context) error {
-	exist, err := kfsCore.InsertDriver(c.Request().Context(), c.QueryParam("name"), c.QueryParam("description"))
+	name := c.QueryParam("name")
+	typ := c.QueryParam("type")
+	description := c.QueryParam("description")
+	accessToken := ""
+	refreshToken := ""
+	if typ == "" {
+
+	} else if typ == "baiduPhoto" {
+		code := c.QueryParam("code")
+		var err error
+		accessToken, refreshToken, err = AuthByCode(code)
+		if err != nil {
+			c.Logger().Error(err)
+			return err
+		}
+	} else {
+		return fmt.Errorf("invalid driver type: %s", typ)
+	}
+	exist, err := kfsCore.Db.InsertDriver(c.Request().Context(), name, description, typ, accessToken, refreshToken)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -90,7 +109,7 @@ func apiNewDriver(c echo.Context) error {
 }
 
 func apiDeleteDriver(c echo.Context) error {
-	err := kfsCore.DeleteDriver(c.Request().Context(), c.QueryParam("name"))
+	err := kfsCore.Db.DeleteDriver(c.Request().Context(), c.QueryParam("name"))
 	if err != nil {
 		c.Logger().Error(err)
 		return err

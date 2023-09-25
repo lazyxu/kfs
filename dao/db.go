@@ -40,9 +40,9 @@ type Database interface {
 	DirItemCount(ctx context.Context) (int, error)
 	BranchCount(ctx context.Context) (int, error)
 
-	InsertDriver(ctx context.Context, driverName string, description string) (exist bool, err error)
+	InsertDriver(ctx context.Context, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error)
 	DeleteDriver(ctx context.Context, driverName string) error
-	ListDriver(ctx context.Context) (drivers []IDriver, err error)
+	ListDriver(ctx context.Context) (drivers []Driver, err error)
 
 	InsertFile(ctx context.Context, hash string, size uint64) error
 	SumFileSize(ctx context.Context) (size uint64, err error)

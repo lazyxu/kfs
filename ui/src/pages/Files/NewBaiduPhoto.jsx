@@ -8,6 +8,7 @@ import { newDriver } from "../../api/driver";
 // https://pan.baidu.com/union/doc/ol0rsap9s
 export default function ({ setOpen }) {
     let [name, setName] = useState("");
+    let [description, setDescription] = useState("");
     let [code, setCode] = useState("");
     const [resourceManager, setResourceManager] = useResourceManager();
     const appKey = "huREKC2eNTctaBWfh3LdiAYjZ9ARBh5g";
@@ -30,6 +31,17 @@ export default function ({ setOpen }) {
                     variant="outlined"
                     onChange={e => {
                         setName(e.target.value)
+                    }}
+                />
+                <TextField
+                    autoFocus
+                    margin="dense"
+                    id="name"
+                    placeholder="请输入云盘的描述"
+                    fullWidth
+                    variant="outlined"
+                    onChange={e => {
+                        setDescription(e.target.value)
                     }}
                 />
                 <TextField
@@ -59,7 +71,7 @@ export default function ({ setOpen }) {
             }}>
                 <Button onClick={() => setOpen(false)}>取消</Button>
                 <Button onClick={() => {
-                    newDriver(setResourceManager, name)
+                    newDriver(setResourceManager, name, description, "baiduPhoto", code)
                         .then(() => setOpen(false))
                         .catch(e => noteError("创建云盘失败：" + e.message));
                 }}>确定</Button>
