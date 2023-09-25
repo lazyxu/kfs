@@ -85,27 +85,23 @@ func apiNewDriver(c echo.Context) error {
 	name := c.QueryParam("name")
 	typ := c.QueryParam("type")
 	description := c.QueryParam("description")
-	accessToken := ""
-	refreshToken := ""
 	if typ == "" {
-
-	} else if typ == "baiduPhoto" {
-		code := c.QueryParam("code")
-		var err error
-		accessToken, refreshToken, err = AuthByCode(code)
+		exist, err := kfsCore.Db.InsertDriver(c.Request().Context(), name, description, "", "", "")
 		if err != nil {
 			c.Logger().Error(err)
 			return err
 		}
-	} else {
-		return fmt.Errorf("invalid driver type: %s", typ)
+		return ok(c, exist)
+	} else if typ == "baiduPhoto" {
+		code := c.QueryParam("code")
+		exist, err := InsertDriverBaiduPhoto(c.Request().Context(), name, description, typ, code)
+		if err != nil {
+			c.Logger().Error(err)
+			return err
+		}
+		return ok(c, exist)
 	}
-	exist, err := kfsCore.Db.InsertDriver(c.Request().Context(), name, description, typ, accessToken, refreshToken)
-	if err != nil {
-		c.Logger().Error(err)
-		return err
-	}
-	return ok(c, exist)
+	return fmt.Errorf("invalid driver type: %s", typ)
 }
 
 func apiDeleteDriver(c echo.Context) error {
