@@ -251,9 +251,11 @@ type (
 
 func (d *DriverBaiduPhoto) test(ctx context.Context, driverName string) {
 	d.GetAllFile(ctx, func(list []File) bool {
-		f := list[0]
-		d.Download(ctx, f, driverName)
-		return false
+		for i, f := range list {
+			fmt.Printf("[%d/%d] downloading %s\n", i, len(list), f.Path)
+			d.Download(ctx, f, driverName)
+		}
+		return true
 	})
 }
 
