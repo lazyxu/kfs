@@ -17,24 +17,17 @@ export default function ({ setOpen }) {
                 <TextField
                     autoFocus
                     margin="dense"
-                    id="name"
                     placeholder="请输入云盘的名字"
                     fullWidth
                     variant="outlined"
-                    onChange={e => {
-                        setName(e.target.value)
-                    }}
+                    onChange={e => setName(e.target.value)}
                 />
                 <TextField
-                    autoFocus
-                    margin="dense"
-                    id="name"
                     placeholder="请输入云盘的描述"
+                    margin="dense"
                     fullWidth
                     variant="outlined"
-                    onChange={e => {
-                        setDescription(e.target.value)
-                    }}
+                    onChange={e =>setDescription(e.target.value)}
                 />
             </DialogContent>
             <DialogActions sx={{

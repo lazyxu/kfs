@@ -23,31 +23,25 @@ export default function ({ setOpen }) {
                 color: theme => theme.context.primary
             }}>
                 <TextField
+                    autoFocus
                     placeholder="请输入云盘的名字"
+                    margin="dense"
                     fullWidth
                     variant="outlined"
-                    onChange={e => {
-                        setName(e.target.value)
-                    }}
+                    onChange={e => setName(e.target.value)}
                 />
                 <TextField
-                    autoFocus
-                    margin="dense"
-                    id="name"
                     placeholder="请输入云盘的描述"
+                    margin="dense"
                     fullWidth
                     variant="outlined"
-                    onChange={e => {
-                        setDescription(e.target.value)
-                    }}
+                    onChange={e => setDescription(e.target.value)}
                 />
                 <Stack spacing={2} direction="row" sx={{ alignItems: "center" }}>
                     <TextField
                         placeholder="授权码"
                         variant="outlined"
-                        onChange={e => {
-                            setCode(e.target.value)
-                        }}
+                        onChange={e => setCode(e.target.value)}
                         sx={{ flex: 1 }}
                     />
                     {process.env.REACT_APP_PLATFORM === 'web' ?

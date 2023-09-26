@@ -178,8 +178,43 @@ func jsonToArray(data []byte) (arr []string) {
 	return arr
 }
 
-func UpsertDriverFile(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) error {
-	_, err := txOrDb.ExecContext(ctx, `
+func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error {
+	tx, err := conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = CommitAndRollback(tx, err)
+	}()
+	if len(f.DirPath) != 0 {
+		for i := 0; i < len(f.DirPath); i++ {
+			dirPath := f.DirPath[:i]
+			name := f.DirPath[i]
+			hash := ""
+			size := 0
+			mode := uint64(os.ModeDir)
+			time := f.CreateTime
+			_, err = tx.ExecContext(ctx, `
+	INSERT OR IGNORE INTO _driver_file (
+		driverName,
+		dirPath,
+		name,
+	    version,
+		hash,
+		mode,
+		size,
+		createTime,
+		modifyTime,
+		changeTime,
+		accessTime
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+	`, f.DriverName, arrayToJson(dirPath), name, f.Version, hash, mode, size, time, time, time, time)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	_, err = tx.ExecContext(ctx, `
 	INSERT INTO _driver_file (
 		driverName,
 		dirPath,
