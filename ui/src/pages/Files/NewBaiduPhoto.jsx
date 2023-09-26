@@ -1,4 +1,4 @@
-import { Button, DialogActions, DialogContent, Link, TextField } from "@mui/material";
+import { Button, DialogActions, DialogContent, Link, Stack, TextField } from "@mui/material";
 import { noteError } from 'components/Notification/Notification';
 import useResourceManager from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
@@ -23,9 +23,6 @@ export default function ({ setOpen }) {
                 color: theme => theme.context.primary
             }}>
                 <TextField
-                    autoFocus
-                    margin="dense"
-                    id="name"
                     placeholder="请输入云盘的名字"
                     fullWidth
                     variant="outlined"
@@ -44,26 +41,25 @@ export default function ({ setOpen }) {
                         setDescription(e.target.value)
                     }}
                 />
-                <TextField
-                    autoFocus
-                    margin="dense"
-                    id="name"
-                    placeholder="授权码"
-                    fullWidth
-                    variant="outlined"
-                    onChange={e => {
-                        setCode(e.target.value)
-                    }}
-                />
-                {process.env.REACT_APP_PLATFORM === 'web' ?
-                    <Link target="_blank" href={url}>
-                        点击获取授权码
-                    </Link> :
-                    <Link onClick={() => {
-                        const { shell } = window.require('@electron/remote');
-                        shell.openPath(url);
-                    }}>点击获取授权码</Link>
-                }
+                <Stack spacing={2} direction="row" sx={{ alignItems: "center" }}>
+                    <TextField
+                        placeholder="授权码"
+                        variant="outlined"
+                        onChange={e => {
+                            setCode(e.target.value)
+                        }}
+                        sx={{ flex: 1 }}
+                    />
+                    {process.env.REACT_APP_PLATFORM === 'web' ?
+                        <Link target="_blank" href={url}>
+                            点击获取授权码
+                        </Link> :
+                        <Link onClick={() => {
+                            const { shell } = window.require('@electron/remote');
+                            shell.openPath(url);
+                        }}>点击获取授权码</Link>
+                    }
+                </Stack>
             </DialogContent>
             <DialogActions sx={{
                 backgroundColor: theme => theme.background.primary,
