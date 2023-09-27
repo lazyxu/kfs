@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/metadata"
 	"image"
 	"net/http"
 	"os"
@@ -53,7 +54,7 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/diskUsage", apiDiskUsage)
 
 	e.POST("/api/v1/startMetadataAnalysisTask", apiStartMetadataAnalysisTask)
-	e.GET("/api/v1/event/metadataAnalysisTask", apiEventMetadataAnalysisTask)
+	e.GET("/api/v1/event/metadataAnalysisTask", metadata.ApiEventMetadataAnalysisTask)
 
 	println("KFS web server listening at:", webPortString)
 	// Start server
@@ -396,4 +397,13 @@ func apiThumbnail(c echo.Context) error {
 	c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 	defer f.Close()
 	return c.Stream(http.StatusOK, "", f)
+}
+
+func apiStartMetadataAnalysisTask(c echo.Context) error {
+	startStr := c.QueryParam("start")
+	start, err := strconv.ParseBool(startStr)
+	if err != nil {
+		return err
+	}
+	return metadata.StartMetadataAnalysisTask(c, kfsCore, start)
 }
