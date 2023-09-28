@@ -54,7 +54,7 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/diskUsage", apiDiskUsage)
 
 	e.POST("/api/v1/startMetadataAnalysisTask", apiStartMetadataAnalysisTask)
-	e.GET("/api/v1/event/metadataAnalysisTask", metadata.ApiEventMetadataAnalysisTask)
+	e.GET("/api/v1/event/metadataAnalysisTask", metadata.ApiEvent)
 
 	println("KFS web server listening at:", webPortString)
 	// Start server
@@ -405,5 +405,6 @@ func apiStartMetadataAnalysisTask(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return metadata.StartMetadataAnalysisTask(c, kfsCore, start)
+	metadata.StartOrStop(kfsCore, start)
+	return c.String(http.StatusOK, "")
 }

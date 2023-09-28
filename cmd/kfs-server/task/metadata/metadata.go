@@ -7,7 +7,6 @@ import (
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/common"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/server"
-	"net/http"
 	"sync"
 	"time"
 )
@@ -18,7 +17,7 @@ var s = common.EventServer[TaskInfo]{
 	},
 }
 
-func ApiEventMetadataAnalysisTask(c echo.Context) error {
+func ApiEvent(c echo.Context) error {
 	return s.Handle(c)
 }
 
@@ -50,10 +49,10 @@ var taskInfo = TaskInfo{
 	Errors: make([]string, 0),
 }
 
-var metadataAnalysisTaskMutex = &sync.RWMutex{}
+var mutex = &sync.RWMutex{}
 
 func setTaskStatus(status int) {
-	metadataAnalysisTaskMutex.Lock()
+	mutex.Lock()
 	taskInfo.Status = status
 	if status == StatusFinished || status == StatusCanceled || status == StatusError {
 		taskInfo.cancel = nil
@@ -64,47 +63,42 @@ func setTaskStatus(status int) {
 		taskInfo.Cnt = 0
 		taskInfo.Total = 0
 	}
-	metadataAnalysisTaskMutex.Unlock()
+	mutex.Unlock()
 	s.SendAll()
 }
 
 func setTaskTotal(total int) {
-	metadataAnalysisTaskMutex.Lock()
+	mutex.Lock()
 	taskInfo.Status = StatusRunningAnalyze
 	taskInfo.Errors = make([]string, 0)
 	taskInfo.Cnt = 0
 	taskInfo.Total = total
-	metadataAnalysisTaskMutex.Unlock()
+	mutex.Unlock()
 	s.SendAll()
 }
 
 func addTaskCnt() {
-	metadataAnalysisTaskMutex.Lock()
+	mutex.Lock()
 	taskInfo.Cnt++
-	metadataAnalysisTaskMutex.Unlock()
+	mutex.Unlock()
 	s.SendAll()
 }
 
 func addTaskError(err error) {
-	metadataAnalysisTaskMutex.Lock()
+	mutex.Lock()
 	taskInfo.Errors = append(taskInfo.Errors, err.Error())
-	metadataAnalysisTaskMutex.Unlock()
+	mutex.Unlock()
 	s.SendAll()
 }
 
-func StartMetadataAnalysisTask(c echo.Context, kfsCore *core.KFS, start bool) error {
-	metadataAnalysisTaskMutex.Lock()
-	defer metadataAnalysisTaskMutex.Unlock()
+func StartOrStop(kfsCore *core.KFS, start bool) {
+	mutex.Lock()
+	defer mutex.Unlock()
 	if !start {
 		setTaskStatus(StatusWaitCanceled)
 		taskInfo.cancel()
-		return c.String(http.StatusOK, "")
+		return
 	}
-	tryStartMetadataAnalysisTask(kfsCore)
-	return c.String(http.StatusOK, "")
-}
-
-func tryStartMetadataAnalysisTask(kfsCore *core.KFS) {
 	if taskInfo.Status == StatusWaitRunning ||
 		taskInfo.Status == StatusRunningCollect ||
 		taskInfo.Status == StatusRunningAnalyze ||
@@ -115,7 +109,7 @@ func tryStartMetadataAnalysisTask(kfsCore *core.KFS) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	taskInfo.cancel = cancel
 	go func() {
-		err := analyzeMetadata(ctx, kfsCore)
+		err := analyze(ctx, kfsCore)
 		if err == nil {
 			setTaskStatus(StatusFinished)
 			return
@@ -128,7 +122,7 @@ func tryStartMetadataAnalysisTask(kfsCore *core.KFS) {
 	}()
 }
 
-func analyzeMetadata(ctx context.Context, kfsCore *core.KFS) error {
+func analyze(ctx context.Context, kfsCore *core.KFS) error {
 	setTaskStatus(StatusRunningCollect)
 	hashList, err := kfsCore.Db.ListExpectFileType(ctx)
 	if err != nil {
