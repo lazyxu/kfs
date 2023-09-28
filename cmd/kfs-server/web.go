@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/baidu_photo"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/metadata"
 	"image"
 	"net/http"
@@ -55,6 +56,8 @@ func webServer(webPortString string) {
 
 	e.POST("/api/v1/startMetadataAnalysisTask", apiStartMetadataAnalysisTask)
 	e.GET("/api/v1/event/metadataAnalysisTask", metadata.ApiEvent)
+	e.POST("/api/v1/startBaiduPhotoTask", apiStartBaiduPhotoTask)
+	e.GET("/api/v1/event/baiduPhotoTask", baidu_photo.ApiEvent)
 
 	println("KFS web server listening at:", webPortString)
 	// Start server
@@ -95,7 +98,7 @@ func apiNewDriver(c echo.Context) error {
 		return ok(c, exist)
 	} else if typ == "baiduPhoto" {
 		code := c.QueryParam("code")
-		exist, err := InsertDriverBaiduPhoto(c.Request().Context(), name, description, typ, code)
+		exist, err := baidu_photo.InsertDriverBaiduPhoto(c.Request().Context(), kfsCore, name, description, typ, code)
 		if err != nil {
 			c.Logger().Error(err)
 			return err
@@ -406,5 +409,23 @@ func apiStartMetadataAnalysisTask(c echo.Context) error {
 		return err
 	}
 	metadata.StartOrStop(kfsCore, start)
+	return c.String(http.StatusOK, "")
+}
+
+func apiStartBaiduPhotoTask(c echo.Context) error {
+	startStr := c.QueryParam("start")
+	start, err := strconv.ParseBool(startStr)
+	if err != nil {
+		return err
+	}
+	driverName := c.QueryParam("driverName")
+	ctx := c.Request().Context()
+	baidu_photo.StartOrStop(ctx, start, func() error {
+		d, err := baidu_photo.LoadDriverFromDb(ctx, kfsCore, driverName)
+		if err != nil {
+			return err
+		}
+		return d.Analyze(ctx)
+	})
 	return c.String(http.StatusOK, "")
 }

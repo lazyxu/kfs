@@ -50,3 +50,20 @@ func ListDriver(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driver, err e
 	}
 	return
 }
+
+func GetDriver(ctx context.Context, txOrDb TxOrDb, driverName string) (driver dao.Driver, err error) {
+	rows, err := txOrDb.QueryContext(ctx, `
+	SELECT * FROM _driver WHERE name = ?;
+	`, driverName)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err = rows.Scan(&driver.Name, &driver.Description, &driver.Typ, &driver.AccessToken, &driver.RefreshToken)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
