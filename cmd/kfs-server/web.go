@@ -57,7 +57,7 @@ func webServer(webPortString string) {
 	e.POST("/api/v1/startMetadataAnalysisTask", apiStartMetadataAnalysisTask)
 	e.GET("/api/v1/event/metadataAnalysisTask", metadata.ApiEvent)
 	e.POST("/api/v1/startBaiduPhotoTask", apiStartBaiduPhotoTask)
-	e.GET("/api/v1/event/baiduPhotoTask", baidu_photo.ApiEvent)
+	e.GET("/api/v1/event/baiduPhotoTask/:name", baidu_photo.ApiEvent) // TODO: handle name
 
 	println("KFS web server listening at:", webPortString)
 	// Start server

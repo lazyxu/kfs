@@ -15,6 +15,7 @@ type EventServer[T any] struct {
 
 func (s *EventServer[T]) Add(c echo.Context) Client[T] {
 	client := &DefaultClient[T]{
+		s:  s,
 		ch: make(chan T),
 	}
 	s.Clients.Store(c, client)
