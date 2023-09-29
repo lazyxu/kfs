@@ -23,3 +23,9 @@ func (db *DB) ListDriver(ctx context.Context) (drivers []dao.Driver, err error) 
 	defer db.putConn(conn)
 	return dbBase.ListDriver(ctx, conn)
 }
+
+func (db *DB) GetDriver(ctx context.Context, driverName string) (driver dao.Driver, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.GetDriver(ctx, conn, driverName)
+}

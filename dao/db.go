@@ -43,6 +43,7 @@ type Database interface {
 	InsertDriver(ctx context.Context, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error)
 	DeleteDriver(ctx context.Context, driverName string) error
 	ListDriver(ctx context.Context) (drivers []Driver, err error)
+	GetDriver(ctx context.Context, driverName string) (driver Driver, err error)
 
 	InsertFile(ctx context.Context, hash string, size uint64) error
 	SumFileSize(ctx context.Context) (size uint64, err error)

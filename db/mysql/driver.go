@@ -17,3 +17,7 @@ func (db *DB) DeleteDriver(ctx context.Context, driverName string) error {
 func (db *DB) ListDriver(ctx context.Context) (drivers []dao.Driver, err error) {
 	return dbBase.ListDriver(ctx, db.db)
 }
+
+func (db *DB) GetDriver(ctx context.Context, driverName string) (driver dao.Driver, err error) {
+	return dbBase.GetDriver(ctx, db.db, driverName)
+}

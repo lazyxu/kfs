@@ -1,4 +1,4 @@
-package main
+package baidu_photo
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"fmt"
+	"github.com/lazyxu/kfs/core"
 	"io"
 	"net/http"
 	"os"
@@ -19,18 +20,28 @@ import (
 	"github.com/lazyxu/kfs/rpc/server"
 )
 
+type TokenErrResp struct {
+	ErrorDescription string `json:"error_description"`
+	ErrorMsg         string `json:"error"`
+}
+
+func (e *TokenErrResp) Error() string {
+	return fmt.Sprint(e.ErrorMsg, " : ", e.ErrorDescription)
+}
+
+type TokenResp struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
 type DriverBaiduPhoto struct {
+	kfsCore      *core.KFS
+	driverName   string
 	AccessToken  string
 	RefreshToken string
 	AppKey       string
 	SecretKey    string
 }
-
-const UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36"
-const DefaultTimeout = time.Second * 30
-
-const AppKey = "huREKC2eNTctaBWfh3LdiAYjZ9ARBh5g"
-const SecretKey = "eMmhaLDpxzTKX3upCguM0q9yOsmVDP6g"
 
 var client = resty.New().
 	SetHeader("user-agent", UserAgent).
@@ -38,7 +49,7 @@ var client = resty.New().
 	SetTimeout(DefaultTimeout).
 	SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
-func InsertDriverBaiduPhoto(ctx context.Context, name, description, typ, code string) (bool, error) {
+func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, name, description, typ, code string) (bool, error) {
 	accessToken, refreshToken, err := authByCode(ctx, client, AppKey, SecretKey, code)
 	if err != nil {
 		return false, err
@@ -48,6 +59,7 @@ func InsertDriverBaiduPhoto(ctx context.Context, name, description, typ, code st
 		return false, err
 	}
 	d := &DriverBaiduPhoto{
+		kfsCore:      kfsCore,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		AppKey:       AppKey,
@@ -104,14 +116,6 @@ execute:
 	return res, nil
 }
 
-const (
-	API_URL         = "https://photo.baidu.com/youai"
-	USER_API_URL    = API_URL + "/user/v1"
-	ALBUM_API_URL   = API_URL + "/album/v1"
-	FILE_API_URL_V1 = API_URL + "/file/v1"
-	FILE_API_URL_V2 = API_URL + "/file/v2"
-)
-
 func getHash(f *os.File) (string, error) {
 	hash := sha256.New()
 	_, err := io.Copy(hash, f)
@@ -135,7 +139,7 @@ func formatPath(filePath string) ([]string, string, error) {
 	return newPathList[0 : len(newPathList)-1], newPathList[len(newPathList)-1], nil
 }
 
-func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, driverName string) error {
+func (d *DriverBaiduPhoto) Download(ctx context.Context, file File) error {
 	downloadPath, err := d.GetDownloadPath(ctx, file.Fsid)
 	if err != nil {
 		return err
@@ -168,7 +172,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, driverName s
 	if err != nil {
 		return err
 	}
-	_, err = kfsCore.S.Write(hash, func(w io.Writer, hasher io.Writer) (e error) {
+	_, err = d.kfsCore.S.Write(hash, func(w io.Writer, hasher io.Writer) (e error) {
 		_, err := f.Seek(0, io.SeekStart)
 		if err != nil {
 			return err
@@ -180,12 +184,12 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, driverName s
 	if err != nil {
 		return err
 	}
-	err = kfsCore.Db.InsertFile(ctx, hash, size)
+	err = d.kfsCore.Db.InsertFile(ctx, hash, size)
 	if err != nil {
 		return err
 	}
-	err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
-		DriverName: driverName,
+	err = d.kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
+		DriverName: d.driverName,
 		DirPath:    dirPath,
 		Name:       name,
 		Version:    0,
@@ -200,7 +204,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, driverName s
 	if err != nil {
 		return err
 	}
-	err = server.UpsertLivePhoto(kfsCore, hash, driverName, dirPath, name)
+	err = server.UpsertLivePhoto(d.kfsCore, hash, d.driverName, dirPath, name)
 	if err != nil {
 		return err
 	}
@@ -253,7 +257,7 @@ func (d *DriverBaiduPhoto) test(ctx context.Context, driverName string) {
 	d.GetAllFile(ctx, func(list []File) bool {
 		for i, f := range list {
 			fmt.Printf("[%d/%d] downloading %s\n", i, len(list), f.Path)
-			d.Download(ctx, f, driverName)
+			d.Download(ctx, f)
 		}
 		return true
 	})
