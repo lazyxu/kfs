@@ -7,6 +7,13 @@ export async function analyzeMetadata(start) {
     });
 }
 
+export async function startBaiduPhotoTask(start, driverName) {
+    console.log('web.startBaiduPhotoTask', start, driverName);
+    return await httpPost("/api/v1/startBaiduPhotoTask", {
+        start, driverName,
+    });
+}
+
 export async function analysisExif(start) {
     console.log('web.analysisExif', start);
     return await httpPost("/api/v1/analysisExif", {

@@ -1,8 +1,10 @@
 import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
+import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from '@mui/icons-material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
-import { Box, Button, Card, CardActions, CardContent, Link, Stack } from "@mui/material";
+import { Box, Button, Card, CardActions, CardContent, IconButton, Link, Stack } from "@mui/material";
 import { list } from "api/fs";
+import { startBaiduPhotoTask } from 'api/web/exif';
 import SvgIcon from "components/Icon/SvgIcon";
 import { noteError } from 'components/Notification/Notification';
 import useContextMenu from "hox/contextMenu";
@@ -10,6 +12,14 @@ import useResourceManager from 'hox/resourceManager';
 import { getSysConfig } from 'hox/sysConfig';
 import { useEffect, useState } from 'react';
 import { deleteDriver } from "../../api/driver";
+
+const StatusIdle = 0
+const StatusFinished = 1
+const StatusCanceled = 2
+const StatusError = 3
+const StatusWaitRunning = 4
+const StatusWaitCanceled = 5
+const StatusRunning = 6
 
 export default ({ driver, setDriverAttribute }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -82,9 +92,30 @@ export default ({ driver, setDriverAttribute }) => {
                     {driver.description}
                 </Box>
                 <Box color="text.secondary">
-                    <IconButton onClick={e => analyzeMetadata(true).catch(e => noteError(e.message))}>
-                        <PlayArrow />
-                    </IconButton>
+                    {(taskInfo?.status === undefined ||
+                        taskInfo?.status === StatusIdle ||
+                        taskInfo?.status === StatusFinished ||
+                        taskInfo?.status === StatusCanceled ||
+                        taskInfo?.status === StatusError) &&
+                        <IconButton onClick={e => startBaiduPhotoTask(true, driver.name).catch(e => noteError(e.message))}>
+                            <PlayArrow />
+                        </IconButton>
+                    }
+                    {taskInfo?.status === StatusWaitRunning &&
+                        <IconButton>
+                            <HourglassTop />
+                        </IconButton>
+                    }
+                    {taskInfo?.status === StatusWaitCanceled &&
+                        <IconButton>
+                            <HourglassDisabled />
+                        </IconButton>
+                    }
+                    {taskInfo?.status === StatusRunning &&
+                        <IconButton onClick={e => startBaiduPhotoTask(false, driver.name)}>
+                            <Stop />
+                        </IconButton>
+                    }
                     [一刻相册] {taskInfo ? String(taskInfo.cnt) + "/" + taskInfo.total : "loading..."}
                 </Box>
             </CardContent>

@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -41,6 +42,8 @@ type DriverBaiduPhoto struct {
 	RefreshToken string
 	AppKey       string
 	SecretKey    string
+	mutex        sync.Locker
+	taskInfo     TaskInfo
 }
 
 var client = resty.New().
@@ -58,14 +61,14 @@ func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, name, descri
 	if err != nil {
 		return false, err
 	}
-	d := &DriverBaiduPhoto{
-		kfsCore:      kfsCore,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		AppKey:       AppKey,
-		SecretKey:    SecretKey,
-	}
-	d.test(ctx, name)
+	//d := &DriverBaiduPhoto{
+	//	kfsCore:      kfsCore,
+	//	AccessToken:  accessToken,
+	//	RefreshToken: refreshToken,
+	//	AppKey:       AppKey,
+	//	SecretKey:    SecretKey,
+	//}
+	//d.test(ctx, name)
 	return exist, nil
 }
 
@@ -82,8 +85,6 @@ func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method stri
 	if resp != nil {
 		req.SetResult(resp)
 	}
-	var refreshed bool
-execute:
 	res, err := req.Execute(method, furl)
 	if err != nil {
 		return nil, err
@@ -100,16 +101,12 @@ execute:
 	case 50100:
 		return nil, fmt.Errorf("illegal title, only supports 50 characters")
 	case -6:
-		if refreshed {
-			return nil, fmt.Errorf("invalid token after refeshed")
-		}
 		d.AccessToken, d.RefreshToken, err = refreshToken(ctx, client, d.AppKey, d.SecretKey, d.RefreshToken)
 		if err != nil {
 			return nil, err
 		}
-		refreshed = true
 		// TODO: save accessToken and refreshToken to db.
-		goto execute
+		// Do not need to goto execute since we have set SetRetryCount to 3.
 	default:
 		return nil, fmt.Errorf("errno: %d, refer to https://photo.baidu.com/union/doc", erron)
 	}

@@ -55,9 +55,13 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/diskUsage", apiDiskUsage)
 
 	e.POST("/api/v1/startMetadataAnalysisTask", apiStartMetadataAnalysisTask)
-	e.GET("/api/v1/event/metadataAnalysisTask", metadata.ApiEvent)
+	e.GET("/api/v1/event/metadataAnalysisTask", func(c echo.Context) error {
+		return metadata.ApiEvent(c, kfsCore)
+	})
 	e.POST("/api/v1/startBaiduPhotoTask", apiStartBaiduPhotoTask)
-	e.GET("/api/v1/event/baiduPhotoTask/:name", baidu_photo.ApiEvent) // TODO: handle name
+	e.GET("/api/v1/event/baiduPhotoTask/:name", func(c echo.Context) error {
+		return baidu_photo.ApiEvent(c, kfsCore)
+	}) // TODO: handle name
 
 	println("KFS web server listening at:", webPortString)
 	// Start server
@@ -420,12 +424,10 @@ func apiStartBaiduPhotoTask(c echo.Context) error {
 	}
 	driverName := c.QueryParam("driverName")
 	ctx := c.Request().Context()
-	baidu_photo.StartOrStop(ctx, start, func() error {
-		d, err := baidu_photo.LoadDriverFromDb(ctx, kfsCore, driverName)
-		if err != nil {
-			return err
-		}
-		return d.Analyze(ctx)
-	})
+	d, err := baidu_photo.GetOrLoadDriver(ctx, kfsCore, driverName)
+	if err != nil {
+		return err
+	}
+	d.StartOrStop(ctx, start)
 	return c.String(http.StatusOK, "")
 }

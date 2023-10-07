@@ -11,14 +11,35 @@ import (
 	"time"
 )
 
-var s = common.EventServer[TaskInfo]{
-	Message: func() TaskInfo {
-		return taskInfo
+type Client struct {
+	ch chan TaskInfo
+	d  *DriverBaiduPhoto
+}
+
+func (c *Client) Chan() chan TaskInfo {
+	return c.ch
+}
+
+func (c *Client) Message() TaskInfo {
+	return c.d.taskInfo
+}
+
+var s = &common.EventServer[TaskInfo]{
+	NewClient: func(c echo.Context, kfsCore *core.KFS) (common.Client[TaskInfo], error) {
+		driverName := c.Param("name")
+		d, err := GetOrLoadDriver(c.Request().Context(), kfsCore, driverName)
+		if err != nil {
+			return nil, err
+		}
+		return &Client{
+			ch: make(chan TaskInfo),
+			d:  d,
+		}, nil
 	},
 }
 
-func ApiEvent(c echo.Context) error {
-	return s.Handle(c)
+func ApiEvent(c echo.Context, kfsCore *core.KFS) error {
+	return s.Handle(c, kfsCore)
 }
 
 var (
@@ -39,42 +60,61 @@ type TaskInfo struct {
 	Total        int   `json:"total"`
 }
 
-var taskInfo = TaskInfo{
-	cancel: nil,
-	Status: StatusIdle,
-	Cnt:    0,
-	Total:  0,
-}
-
-var mutex = &sync.RWMutex{}
-
-func setTaskStatus(status int) {
-	mutex.Lock()
-	taskInfo.Status = status
+func (d *DriverBaiduPhoto) setTaskStatus(status int) {
+	d.mutex.Lock()
+	d.taskInfo.Status = status
 	if status == StatusFinished || status == StatusCanceled || status == StatusError {
-		taskInfo.cancel = nil
-		taskInfo.LastDoneTime = time.Now().UnixNano()
+		d.taskInfo.cancel = nil
+		d.taskInfo.LastDoneTime = time.Now().UnixNano()
 	}
 	if status == StatusWaitRunning || status == StatusRunning {
-		taskInfo.Cnt = 0
-		taskInfo.Total = 0
+		d.taskInfo.Cnt = 0
+		d.taskInfo.Total = 0
 	}
-	mutex.Unlock()
+	d.mutex.Unlock()
 	s.SendAll()
 }
 
-func addTaskTotal(total int) {
-	mutex.Lock()
-	taskInfo.Total += total
-	mutex.Unlock()
+func (d *DriverBaiduPhoto) setTaskStatusWithLock(status int) {
+	d.taskInfo.Status = status
+	if status == StatusFinished || status == StatusCanceled || status == StatusError {
+		d.taskInfo.cancel = nil
+		d.taskInfo.LastDoneTime = time.Now().UnixNano()
+	}
+	if status == StatusWaitRunning || status == StatusRunning {
+		d.taskInfo.Cnt = 0
+		d.taskInfo.Total = 0
+	}
 	s.SendAll()
 }
 
-func addTaskCnt() {
-	mutex.Lock()
-	taskInfo.Cnt++
-	mutex.Unlock()
+func (d *DriverBaiduPhoto) addTaskTotal(total int) {
+	d.mutex.Lock()
+	d.taskInfo.Total += total
+	d.mutex.Unlock()
 	s.SendAll()
+}
+
+func (d *DriverBaiduPhoto) addTaskCnt() {
+	d.mutex.Lock()
+	d.taskInfo.Cnt++
+	d.mutex.Unlock()
+	s.SendAll()
+}
+
+var drivers sync.Map
+
+func GetOrLoadDriver(ctx context.Context, kfsCore *core.KFS, driverName string) (*DriverBaiduPhoto, error) {
+	d, ok := drivers.Load(driverName)
+	if ok {
+		return d.(*DriverBaiduPhoto), nil
+	}
+	driver, err := LoadDriverFromDb(ctx, kfsCore, driverName)
+	if err != nil {
+		return nil, err
+	}
+	drivers.Store(driverName, driver)
+	return driver, nil
 }
 
 func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverName string) (*DriverBaiduPhoto, error) {
@@ -89,44 +129,52 @@ func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverName string)
 		RefreshToken: driver.RefreshToken,
 		AppKey:       AppKey,
 		SecretKey:    SecretKey,
+		taskInfo: TaskInfo{
+			cancel:       nil,
+			Status:       StatusIdle,
+			LastDoneTime: 0,
+			Cnt:          0,
+			Total:        0,
+		},
+		mutex: &sync.Mutex{},
 	}, nil
 }
 
-func StartOrStop(ctx context.Context, start bool, doTask func() error) {
-	mutex.Lock()
-	defer mutex.Unlock()
+func (d *DriverBaiduPhoto) StartOrStop(ctx context.Context, start bool) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
 	if !start {
-		setTaskStatus(StatusWaitCanceled)
-		taskInfo.cancel()
+		d.setTaskStatusWithLock(StatusWaitCanceled)
+		d.taskInfo.cancel()
 		return
 	}
-	if taskInfo.Status == StatusWaitRunning ||
-		taskInfo.Status == StatusRunning ||
-		taskInfo.Status == StatusWaitCanceled {
+	if d.taskInfo.Status == StatusWaitRunning ||
+		d.taskInfo.Status == StatusRunning ||
+		d.taskInfo.Status == StatusWaitCanceled {
 		return
 	}
-	taskInfo.Status = StatusWaitRunning
+	d.taskInfo.Status = StatusWaitRunning
 	ctx, cancel := context.WithCancel(context.TODO())
-	taskInfo.cancel = cancel
+	d.taskInfo.cancel = cancel
 	go func() {
-		err := doTask()
+		err := d.Analyze(ctx)
 		if err != nil {
 			if errors.Is(err, context.DeadlineExceeded) {
-				setTaskStatus(StatusCanceled)
+				d.setTaskStatus(StatusCanceled)
 				return
 			}
-			setTaskStatus(StatusError)
+			d.setTaskStatus(StatusError)
 			return
 		}
-		setTaskStatus(StatusFinished)
+		d.setTaskStatus(StatusFinished)
 	}()
 }
 
 func (d *DriverBaiduPhoto) Analyze(ctx context.Context) error {
-	setTaskStatus(StatusRunning)
+	d.setTaskStatus(StatusRunning)
 	var err1 error
 	err := d.GetAllFile(ctx, func(list []File) bool {
-		addTaskTotal(len(list))
+		d.addTaskTotal(len(list))
 		for i, f := range list {
 			fmt.Printf("[%d/%d] downloading %s\n", i, len(list), f.Path)
 			select {
@@ -139,7 +187,7 @@ func (d *DriverBaiduPhoto) Analyze(ctx context.Context) error {
 			if err1 != nil {
 				return false
 			}
-			addTaskCnt()
+			d.addTaskCnt()
 		}
 		return true
 	})

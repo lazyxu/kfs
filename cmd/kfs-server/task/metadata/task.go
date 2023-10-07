@@ -11,14 +11,28 @@ import (
 	"time"
 )
 
-var s = common.EventServer[TaskInfo]{
-	Message: func() TaskInfo {
-		return taskInfo
+type Client struct {
+	ch chan TaskInfo
+}
+
+func (c *Client) Chan() chan TaskInfo {
+	return c.ch
+}
+
+func (c *Client) Message() TaskInfo {
+	return taskInfo
+}
+
+var s = &common.EventServer[TaskInfo]{
+	NewClient: func(c echo.Context, kfsCore *core.KFS) (common.Client[TaskInfo], error) {
+		return &Client{
+			ch: make(chan TaskInfo),
+		}, nil
 	},
 }
 
-func ApiEvent(c echo.Context) error {
-	return s.Handle(c)
+func ApiEvent(c echo.Context, kfsCore *core.KFS) error {
+	return s.Handle(c, kfsCore)
 }
 
 var (
@@ -67,6 +81,20 @@ func setTaskStatus(status int) {
 	s.SendAll()
 }
 
+func setTaskStatusWithLock(status int) {
+	taskInfo.Status = status
+	if status == StatusFinished || status == StatusCanceled || status == StatusError {
+		taskInfo.cancel = nil
+		taskInfo.LastDoneTime = time.Now().UnixNano()
+	}
+	if status == StatusWaitRunning || status == StatusRunningCollect {
+		taskInfo.Errors = make([]string, 0)
+		taskInfo.Cnt = 0
+		taskInfo.Total = 0
+	}
+	s.SendAll()
+}
+
 func setTaskTotal(total int) {
 	mutex.Lock()
 	taskInfo.Status = StatusRunningAnalyze
@@ -95,7 +123,7 @@ func StartOrStop(kfsCore *core.KFS, start bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	if !start {
-		setTaskStatus(StatusWaitCanceled)
+		setTaskStatusWithLock(StatusWaitCanceled)
 		taskInfo.cancel()
 		return
 	}
