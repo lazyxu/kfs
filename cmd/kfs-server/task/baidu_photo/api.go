@@ -6,19 +6,17 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"fmt"
+	"github.com/go-resty/resty/v2"
+	json "github.com/json-iterator/go"
 	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/rpc/server"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
-
-	"github.com/go-resty/resty/v2"
-	json "github.com/json-iterator/go"
-	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/rpc/server"
 )
 
 type TokenErrResp struct {
@@ -193,10 +191,10 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File) error {
 		Hash:       hash,
 		Mode:       0o777,
 		Size:       size,
-		CreateTime: uint64(file.Ctime),
-		ModifyTime: uint64(file.Mtime),
-		ChangeTime: uint64(file.Mtime),
-		AccessTime: uint64(file.Mtime),
+		CreateTime: uint64(file.ShootTime),
+		ModifyTime: uint64(file.ShootTime),
+		ChangeTime: uint64(file.ShootTime),
+		AccessTime: uint64(file.ShootTime),
 	})
 	if err != nil {
 		return err
@@ -239,14 +237,16 @@ type (
 	}
 
 	File struct {
-		Fsid     int64    `json:"fsid"` // 文件ID
-		Path     string   `json:"path"` // 文件路径
-		Size     int64    `json:"size"`
-		Ctime    int64    `json:"ctime"` // 创建时间 s
-		Mtime    int64    `json:"mtime"` // 修改时间 s
-		Thumburl []string `json:"thumburl"`
+		Fsid      int64  `json:"fsid"` // 文件ID
+		Path      string `json:"path"` // 文件路径
+		Size      int64  `json:"size"`
+		Ctime     int64  `json:"ctime"` // 创建时间 s
+		Mtime     int64  `json:"mtime"` // 修改时间 s
+		Md5       string `json:"md5"`
+		ShootTime int64  `json:"shoot_time"`
 
-		parseTime *time.Time
+		//Thumburl []string `json:"thumburl"`
+		//parseTime *time.Time
 	}
 )
 
@@ -266,9 +266,10 @@ func (d *DriverBaiduPhoto) GetAllFile(ctx context.Context, cb func([]File) bool)
 		var resp FileListResp
 		_, err := d.Get(ctx, FILE_API_URL_V1+"/list", func(r *resty.Request) {
 			r.SetQueryParams(map[string]string{
-				"need_thumbnail":     "1",
+				//"need_thumbnail":     "0",
 				"need_filter_hidden": "0",
-				"cursor":             cursor,
+				//"limit":              "200",
+				"cursor": cursor,
 			})
 		}, &resp)
 		if err != nil {
