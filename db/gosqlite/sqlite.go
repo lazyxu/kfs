@@ -78,6 +78,7 @@ func (db *DB) Remove() error {
 func (db *DB) Create() error {
 	conn := db.getConn()
 	defer db.putConn(conn)
+	// TODO: id as PRIMARY KEY
 	_, err := conn.Exec(`
 	CREATE TABLE IF NOT EXISTS _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,

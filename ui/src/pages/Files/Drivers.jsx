@@ -6,7 +6,6 @@ import { useState } from 'react';
 import Dialog from "../../components/Dialog";
 import Driver from "./Driver";
 import DriverAttribute from "./DriverAttribute";
-import DriverBaiduPhoto from "./DriverBaiduPhoto";
 import NewDriver from "./NewDriver";
 
 export default function () {
@@ -24,8 +23,7 @@ export default function () {
                 style={{ flex: "1", overflowY: 'auto', alignContent: "flex-start" }}>
                 {resourceManager.drivers.map((driver, i) => (
                     <Grid item key={driver.name}>
-                        {driver.type === 'baiduPhoto' ? <DriverBaiduPhoto driver={driver} setDriverAttribute={setDriverAttribute}>{driver.name}</DriverBaiduPhoto>
-                            : <Driver driver={driver} setDriverAttribute={setDriverAttribute}>{driver.name}</Driver>}
+                        <Driver driver={driver} setDriverAttribute={setDriverAttribute}>{driver.name}</Driver>
                     </Grid>
                 ))}
             </Grid>
