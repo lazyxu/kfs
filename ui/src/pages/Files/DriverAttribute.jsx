@@ -1,7 +1,11 @@
 import { Close } from '@mui/icons-material';
 import { Box, Dialog, DialogContent, DialogTitle, Grid } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
+import { getDriversDirCount, getDriversFileCount, getDriversFileSize } from 'api/web/driver';
+import { noteError } from 'components/Notification/Notification';
+import humanize from 'humanize';
 import moment from "moment/moment";
+import { useEffect, useState } from 'react';
 import DriverBaiduPhoto from './DriverBaiduPhoto';
 
 function formatTime(t) {
@@ -28,6 +32,12 @@ function getDriverType(driver) {
 
 export default ({ setOpen, driver }) => {
     // TODO: get more calculated attributes from server.
+    const [attributes, setAttributes] = useState({});
+    useEffect(() => {
+        getDriversFileSize(driver.name).then(n => setAttributes(prev => { return { ...prev, fileSize: n }; })).catch(e => noteError(e.message));
+        getDriversFileCount(driver.name).then(n => setAttributes(prev => { return { ...prev, fileCount: n }; })).catch(e => noteError(e.message));
+        getDriversDirCount(driver.name).then(n => setAttributes(prev => { return { ...prev, dirCount: n }; })).catch(e => noteError(e.message));
+    }, []);
     return (
         <Dialog open={true} fullWidth={true} onClose={() => setOpen(false)}>
             <DialogTitle sx={{
@@ -56,6 +66,9 @@ export default ({ setOpen, driver }) => {
                     <Attr k="云盘名称">{driver.name}</Attr>
                     <Attr k="描述">{driver.description}</Attr>
                     <Attr k="云盘类型">{getDriverType(driver)}</Attr>
+                    <Attr k="总大小">{humanize.filesize(attributes.fileSize)}</Attr>
+                    <Attr k="文件数量">{attributes.fileCount}</Attr>
+                    <Attr k="目录数量">{attributes.dirCount}</Attr>
                     {/* <Box variant="body"> */}
                     {/* <Box>文件总数：{driver.count}</Box> */}
                     {/* <Box>总大小：{humanize.filesize(driver.size)}</Box> */}

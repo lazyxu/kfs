@@ -29,3 +29,21 @@ func (db *DB) GetDriver(ctx context.Context, driverName string) (driver dao.Driv
 	defer db.putConn(conn)
 	return dbBase.GetDriver(ctx, conn, driverName)
 }
+
+func (db *DB) GetDriverFileSize(ctx context.Context, driverName string) (n uint64, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.GetDriverFileSize(ctx, conn, driverName)
+}
+
+func (db *DB) GetDriverFileCount(ctx context.Context, driverName string) (n uint64, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.GetDriverFileCount(ctx, conn, driverName)
+}
+
+func (db *DB) GetDriverDirCount(ctx context.Context, driverName string) (n uint64, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.GetDriverDirCount(ctx, conn, driverName)
+}

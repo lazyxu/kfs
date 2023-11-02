@@ -5,7 +5,7 @@ export function modeIsDir(mode) {
 }
 
 export function getPerm(mode) {
-    return mode >= 2147483648 ? mode - 2147483648 : 0;
+    return mode >= 2147483648 ? mode - 2147483648 : mode;
 }
 
 export function isDCIM(name) {

@@ -47,6 +47,10 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/download", apiDownload)
 	e.GET("/api/v1/image", apiImage)
 
+	e.GET("/api/v1/drivers/fileSize", apiDriversFileSize)
+	e.GET("/api/v1/drivers/fileCount", apiDriversFileCount)
+	e.GET("/api/v1/drivers/dirCount", apiDriversDirCount)
+
 	e.GET("/thumbnail", apiThumbnail)
 	e.GET("/api/v1/analysisExif", apiExifStatus)
 	e.POST("/api/v1/analysisExif", apiAnalysisExif)
@@ -66,6 +70,36 @@ func webServer(webPortString string) {
 	println("KFS web server listening at:", webPortString)
 	// Start server
 	e.Logger.Fatal(e.Start(":" + webPortString))
+}
+
+func apiDriversFileSize(c echo.Context) error {
+	name := c.QueryParam("name")
+	n, err := kfsCore.Db.GetDriverFileSize(c.Request().Context(), name)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, n)
+}
+
+func apiDriversFileCount(c echo.Context) error {
+	name := c.QueryParam("name")
+	n, err := kfsCore.Db.GetDriverFileCount(c.Request().Context(), name)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, n)
+}
+
+func apiDriversDirCount(c echo.Context) error {
+	name := c.QueryParam("name")
+	n, err := kfsCore.Db.GetDriverDirCount(c.Request().Context(), name)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, n)
 }
 
 type Response struct {

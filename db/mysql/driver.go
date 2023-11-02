@@ -21,3 +21,15 @@ func (db *DB) ListDriver(ctx context.Context) (drivers []dao.Driver, err error) 
 func (db *DB) GetDriver(ctx context.Context, driverName string) (driver dao.Driver, err error) {
 	return dbBase.GetDriver(ctx, db.db, driverName)
 }
+
+func (db *DB) GetDriverFileSize(ctx context.Context, driverName string) (n uint64, err error) {
+	return dbBase.GetDriverFileSize(ctx, db.db, driverName)
+}
+
+func (db *DB) GetDriverFileCount(ctx context.Context, driverName string) (n uint64, err error) {
+	return dbBase.GetDriverFileCount(ctx, db.db, driverName)
+}
+
+func (db *DB) GetDriverDirCount(ctx context.Context, driverName string) (n uint64, err error) {
+	return dbBase.GetDriverDirCount(ctx, db.db, driverName)
+}

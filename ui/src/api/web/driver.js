@@ -14,3 +14,20 @@ export async function deleteDriver(name) {
     console.log('web.deleteDriver', name);
     return await httpDelete("/api/v1/drivers", {name});
 }
+
+export async function getDriversFileSize(name) {
+    console.log('web.getDriversFileSize', name);
+    return await httpGet("/api/v1/drivers/fileSize", {name});
+}
+
+
+export async function getDriversFileCount(name) {
+    console.log('web.getDriversFileCount', name);
+    return await httpGet("/api/v1/drivers/fileCount", {name});
+}
+
+
+export async function getDriversDirCount(name) {
+    console.log('web.getDriversDirCount', name);
+    return await httpGet("/api/v1/drivers/dirCount", {name});
+}

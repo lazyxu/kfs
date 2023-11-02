@@ -45,6 +45,10 @@ type Database interface {
 	ListDriver(ctx context.Context) (drivers []Driver, err error)
 	GetDriver(ctx context.Context, driverName string) (driver Driver, err error)
 
+	GetDriverFileSize(ctx context.Context, driverName string) (n uint64, err error)
+	GetDriverFileCount(ctx context.Context, driverName string) (n uint64, err error)
+	GetDriverDirCount(ctx context.Context, driverName string) (n uint64, err error)
+
 	InsertFile(ctx context.Context, hash string, size uint64) error
 	InsertFileMd5(ctx context.Context, hash string, hashMd5 string) error
 	ListFileMd5(ctx context.Context, md5List []string) (m map[string]string, err error)
