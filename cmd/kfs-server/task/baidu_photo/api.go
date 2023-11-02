@@ -6,19 +6,17 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"fmt"
+	"github.com/go-resty/resty/v2"
+	json "github.com/json-iterator/go"
 	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/rpc/server"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
-
-	"github.com/go-resty/resty/v2"
-	json "github.com/json-iterator/go"
-	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/rpc/server"
 )
 
 type TokenErrResp struct {
@@ -136,52 +134,57 @@ func formatPath(filePath string) ([]string, string, error) {
 	return newPathList[0 : len(newPathList)-1], newPathList[len(newPathList)-1], nil
 }
 
-func (d *DriverBaiduPhoto) Download(ctx context.Context, file File) error {
-	downloadPath, err := d.GetDownloadPath(ctx, file.Fsid)
-	if err != nil {
-		return err
-	}
-	req := client.R()
-	tempDirPath, err := os.MkdirTemp("", "fsid")
-	if err != nil {
-		return err
-	}
+func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, hash string) error {
 	dirPath, name, err := formatPath(file.Path)
 	if err != nil {
 		return err
 	}
-	tempFilePath := filepath.Join(tempDirPath, name)
-	_, err = req.SetContext(ctx).SetOutput(tempFilePath).Get(downloadPath)
-	if err != nil {
-		return err
-	}
-	f, err := os.Open(tempFilePath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	info, err := f.Stat()
-	if err != nil {
-		return err
-	}
-	size := uint64(info.Size())
-	hash, err := getHash(f)
-	if err != nil {
-		return err
-	}
-	_, err = d.kfsCore.S.Write(hash, func(w io.Writer, hasher io.Writer) (e error) {
-		_, err := f.Seek(0, io.SeekStart)
+	size := uint64(file.Size)
+	if hash == "" {
+		fmt.Printf("download %s\n", file.Path)
+		downloadPath, err := d.GetDownloadPath(ctx, file.Fsid)
 		if err != nil {
 			return err
 		}
-		rr := io.TeeReader(f, hasher)
-		_, err = io.Copy(w, rr)
-		return err
-	})
+		req := client.R()
+		tempDirPath, err := os.MkdirTemp("", "fsid")
+		if err != nil {
+			return err
+		}
+		tempFilePath := filepath.Join(tempDirPath, name)
+		_, err = req.SetContext(ctx).SetOutput(tempFilePath).Get(downloadPath)
+		if err != nil {
+			return err
+		}
+		f, err := os.Open(tempFilePath)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		hash, err = getHash(f)
+		if err != nil {
+			return err
+		}
+		_, err = d.kfsCore.S.Write(hash, func(w io.Writer, hasher io.Writer) (e error) {
+			_, err := f.Seek(0, io.SeekStart)
+			if err != nil {
+				return err
+			}
+			rr := io.TeeReader(f, hasher)
+			_, err = io.Copy(w, rr)
+			return err
+		})
+		if err != nil {
+			return err
+		}
+	} else {
+		fmt.Printf("exist %s with sha256 %s\n", file.Path, hash)
+	}
+	err = d.kfsCore.Db.InsertFile(ctx, hash, size)
 	if err != nil {
 		return err
 	}
-	err = d.kfsCore.Db.InsertFile(ctx, hash, size)
+	err = d.kfsCore.Db.InsertFileMd5(ctx, hash, file.Md5)
 	if err != nil {
 		return err
 	}
@@ -193,10 +196,10 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File) error {
 		Hash:       hash,
 		Mode:       0o777,
 		Size:       size,
-		CreateTime: uint64(file.Ctime),
-		ModifyTime: uint64(file.Mtime),
-		ChangeTime: uint64(file.Mtime),
-		AccessTime: uint64(file.Mtime),
+		CreateTime: uint64(file.ShootTime),
+		ModifyTime: uint64(file.ShootTime),
+		ChangeTime: uint64(file.ShootTime),
+		AccessTime: uint64(file.ShootTime),
 	})
 	if err != nil {
 		return err
@@ -239,26 +242,18 @@ type (
 	}
 
 	File struct {
-		Fsid     int64    `json:"fsid"` // 文件ID
-		Path     string   `json:"path"` // 文件路径
-		Size     int64    `json:"size"`
-		Ctime    int64    `json:"ctime"` // 创建时间 s
-		Mtime    int64    `json:"mtime"` // 修改时间 s
-		Thumburl []string `json:"thumburl"`
+		Fsid      int64  `json:"fsid"` // 文件ID
+		Path      string `json:"path"` // 文件路径
+		Size      int64  `json:"size"`
+		Ctime     int64  `json:"ctime"` // 创建时间 s
+		Mtime     int64  `json:"mtime"` // 修改时间 s
+		Md5       string `json:"md5"`
+		ShootTime int64  `json:"shoot_time"`
 
-		parseTime *time.Time
+		//Thumburl []string `json:"thumburl"`
+		//parseTime *time.Time
 	}
 )
-
-func (d *DriverBaiduPhoto) test(ctx context.Context, driverName string) {
-	d.GetAllFile(ctx, func(list []File) bool {
-		for i, f := range list {
-			fmt.Printf("[%d/%d] downloading %s\n", i, len(list), f.Path)
-			d.Download(ctx, f)
-		}
-		return true
-	})
-}
 
 func (d *DriverBaiduPhoto) GetAllFile(ctx context.Context, cb func([]File) bool) error {
 	var cursor string
@@ -266,9 +261,10 @@ func (d *DriverBaiduPhoto) GetAllFile(ctx context.Context, cb func([]File) bool)
 		var resp FileListResp
 		_, err := d.Get(ctx, FILE_API_URL_V1+"/list", func(r *resty.Request) {
 			r.SetQueryParams(map[string]string{
-				"need_thumbnail":     "1",
+				"need_thumbnail":     "0",
 				"need_filter_hidden": "0",
-				"cursor":             cursor,
+				//"limit":              "200",
+				"cursor": cursor,
 			})
 		}, &resp)
 		if err != nil {

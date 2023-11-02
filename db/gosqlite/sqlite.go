@@ -67,10 +67,14 @@ func (db *DB) Remove() error {
 	defer db.putConn(conn)
 	_, err := conn.Exec(`
 	DROP TABLE IF EXISTS _file;
-	DROP TABLE IF EXISTS _dir;
-	DROP TABLE IF EXISTS _dirItem;
-	DROP TABLE IF EXISTS _commit;
-	DROP TABLE IF EXISTS _branch;
+	DROP TABLE IF EXISTS _file_md5;
+	DROP TABLE IF EXISTS _exif;
+	DROP TABLE IF EXISTS _height_width;
+	DROP TABLE IF EXISTS _video_metadata;
+	DROP TABLE IF EXISTS _file_type;
+	DROP TABLE IF EXISTS _live_photo;
+	DROP TABLE IF EXISTS _driver;
+	DROP TABLE IF EXISTS _driver_file;
 	`)
 	return err
 }
@@ -79,11 +83,18 @@ func (db *DB) Create() error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	// TODO: id as PRIMARY KEY
+	// id   INT64    NOT NULL PRIMARY KEY AUTOINCREMENT,
+	// hash CHAR(64) NOT NULL UNIQUE,
 	_, err := conn.Exec(`
 	CREATE TABLE IF NOT EXISTS _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
 		size INT64    NOT NULL
 	);
+	CREATE TABLE IF NOT EXISTS _file_md5 (
+		hash CHAR(64) NOT NULL PRIMARY KEY,
+		md5  CHAR(32) NOT NULL
+	);
+	CREATE INDEX IF NOT EXISTS index_md5 ON _file_md5 (md5);
 
 	CREATE TABLE IF NOT EXISTS _exif (
 		hash                CHAR(64)     NOT NULL PRIMARY KEY,

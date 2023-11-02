@@ -37,6 +37,9 @@ export default ({ driver }) => {
                 }
                 let info = JSON.parse(msg.data);
                 console.log(info);
+                if (info.errMsg) {
+                    noteError(info.errMsg);
+                }
                 setTaskInfo(info);
             },
             onclose() {

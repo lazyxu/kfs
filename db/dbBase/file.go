@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/lazyxu/kfs/dao"
 	"os"
+	"strings"
 )
 
 func WriteFileWithTxOrDb(ctx context.Context, txOrDb TxOrDb, db DbImpl, file dao.File) error {
@@ -285,6 +286,75 @@ func InsertFile(ctx context.Context, conn *sql.DB, db DbImpl, hash string, size 
 		return err
 	}
 	return err
+}
+
+func InsertFileMd5(ctx context.Context, conn *sql.DB, db DbImpl, hash string, hashMd5 string) error {
+	// TODO: on duplicated key check size.
+	_, err := conn.ExecContext(ctx, `
+	INSERT INTO _file_md5 (
+		hash,
+		md5
+	) VALUES (?, ?);
+	`, hash, hashMd5)
+	if err != nil {
+		if db.IsUniqueConstraintError(err) {
+			return nil
+		}
+		return err
+	}
+	return err
+}
+
+func getListFileMd5Query(row int) (string, error) {
+	var qs strings.Builder
+	_, err := qs.WriteString(`
+	SELECT
+		hash,
+		md5
+	FROM _file_md5 WHERE md5 IN (`)
+	if err != nil {
+		return "", err
+	}
+	for i := 0; i < row; i++ {
+		if i != 0 {
+			qs.WriteString(", ")
+		}
+		qs.WriteString("?")
+	}
+	qs.WriteString(");")
+	return qs.String(), err
+}
+
+func toAny(s []string) []any {
+	c := make([]any, len(s))
+	for i, v := range s {
+		c[i] = v
+	}
+	return c
+}
+
+func ListFileMd5(ctx context.Context, conn *sql.DB, md5List []string) (m map[string]string, err error) {
+	query, err := getListFileMd5Query(len(md5List))
+	if err != nil {
+		return
+	}
+	rows, err := conn.QueryContext(ctx, query, toAny(md5List)...)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	m = make(map[string]string)
+	for rows.Next() {
+		var hash, hashMd5 string
+		err = rows.Scan(
+			&hash,
+			&hashMd5)
+		if err != nil {
+			return
+		}
+		m[hashMd5] = hash
+	}
+	return
 }
 
 func SumFileSize(ctx context.Context, conn *sql.DB) (size uint64, err error) {

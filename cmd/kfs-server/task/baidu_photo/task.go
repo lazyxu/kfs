@@ -54,10 +54,11 @@ var (
 
 type TaskInfo struct {
 	cancel       context.CancelFunc
-	Status       int   `json:"status"`
-	LastDoneTime int64 `json:"lastDoneTime"`
-	Cnt          int   `json:"cnt"`
-	Total        int   `json:"total"`
+	Status       int    `json:"status"`
+	LastDoneTime int64  `json:"lastDoneTime"`
+	Cnt          int    `json:"cnt"`
+	Total        int    `json:"total"`
+	ErrMsg       string `json:"errMsg"`
 }
 
 func (d *DriverBaiduPhoto) setTaskStatus(status int) {
@@ -70,7 +71,18 @@ func (d *DriverBaiduPhoto) setTaskStatus(status int) {
 	if status == StatusWaitRunning || status == StatusRunning {
 		d.taskInfo.Cnt = 0
 		d.taskInfo.Total = 0
+		d.taskInfo.ErrMsg = ""
 	}
+	d.mutex.Unlock()
+	s.SendAll()
+}
+
+func (d *DriverBaiduPhoto) setTaskError(errMsg string) {
+	d.mutex.Lock()
+	d.taskInfo.Status = StatusError
+	d.taskInfo.cancel = nil
+	d.taskInfo.LastDoneTime = time.Now().UnixNano()
+	d.taskInfo.ErrMsg = errMsg
 	d.mutex.Unlock()
 	s.SendAll()
 }
@@ -163,11 +175,19 @@ func (d *DriverBaiduPhoto) StartOrStop(ctx context.Context, start bool) {
 				d.setTaskStatus(StatusCanceled)
 				return
 			}
-			d.setTaskStatus(StatusError)
+			d.setTaskError(err.Error())
 			return
 		}
 		d.setTaskStatus(StatusFinished)
 	}()
+}
+
+func toStringSlice(s []File) []string {
+	c := make([]string, len(s))
+	for i, v := range s {
+		c[i] = v.Md5
+	}
+	return c
 }
 
 func (d *DriverBaiduPhoto) Analyze(ctx context.Context) error {
@@ -175,15 +195,20 @@ func (d *DriverBaiduPhoto) Analyze(ctx context.Context) error {
 	var err1 error
 	err := d.GetAllFile(ctx, func(list []File) bool {
 		d.addTaskTotal(len(list))
+		var m map[string]string
+		m, err1 = d.kfsCore.Db.ListFileMd5(ctx, toStringSlice(list))
+		if err1 != nil {
+			return false
+		}
 		for i, f := range list {
-			fmt.Printf("[%d/%d] downloading %s\n", i, len(list), f.Path)
+			fmt.Printf("[%d/%d] handle %s\n", i, len(list), f.Path)
 			select {
 			case <-ctx.Done():
 				err1 = context.DeadlineExceeded
 				return false
 			default:
 			}
-			err1 = d.Download(ctx, f)
+			err1 = d.Download(ctx, f, m[f.Md5])
 			if err1 != nil {
 				return false
 			}
