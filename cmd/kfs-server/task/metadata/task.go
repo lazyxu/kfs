@@ -3,12 +3,13 @@ package metadata
 import (
 	"context"
 	"errors"
+	"sync"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/common"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/server"
-	"sync"
-	"time"
 )
 
 type Client struct {
@@ -142,7 +143,7 @@ func StartOrStop(kfsCore *core.KFS, start bool) {
 			setTaskStatus(StatusFinished)
 			return
 		}
-		if errors.Is(err, context.DeadlineExceeded) {
+		if errors.Is(err, context.Canceled) {
 			setTaskStatus(StatusCanceled)
 			return
 		}
@@ -160,7 +161,7 @@ func analyze(ctx context.Context, kfsCore *core.KFS) error {
 	for _, hash := range hashList {
 		select {
 		case <-ctx.Done():
-			return context.DeadlineExceeded
+			return context.Canceled
 		default:
 		}
 		ft, err := server.AnalyzeFileType(kfsCore, hash)

@@ -96,7 +96,7 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 			for {
 				select {
 				case <-ctx.Done():
-					err1 = context.DeadlineExceeded
+					err1 = context.Canceled
 					break
 				default:
 				}
@@ -111,7 +111,7 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 					select {
 					case children[i] = <-f.children:
 					case <-ctx.Done():
-						err1 = context.DeadlineExceeded
+						err1 = context.Canceled
 						goto EndWorker
 					}
 				}
@@ -120,7 +120,7 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 					select {
 					case f.parent <- parent:
 					case <-ctx.Done():
-						err1 = context.DeadlineExceeded
+						err1 = context.Canceled
 						goto EndWorker
 					}
 
@@ -136,7 +136,7 @@ func Walk[T any](ctx context.Context, filePath string, concurrent int, handlers 
 	for !stack.Empty() {
 		select {
 		case <-ctx.Done():
-			return t, context.DeadlineExceeded
+			return t, context.Canceled
 		default:
 		}
 		v, _ := stack.Pop()

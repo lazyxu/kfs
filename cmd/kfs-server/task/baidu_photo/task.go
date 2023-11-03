@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/common"
 	"github.com/lazyxu/kfs/core"
-	"sync"
-	"time"
 )
 
 type Client struct {
@@ -171,7 +172,7 @@ func (d *DriverBaiduPhoto) StartOrStop(ctx context.Context, start bool) {
 	go func() {
 		err := d.Analyze(ctx)
 		if err != nil {
-			if errors.Is(err, context.DeadlineExceeded) {
+			if errors.Is(err, context.Canceled) {
 				d.setTaskStatus(StatusCanceled)
 				return
 			}
@@ -204,7 +205,7 @@ func (d *DriverBaiduPhoto) Analyze(ctx context.Context) error {
 			fmt.Printf("[%d/%d] handle %s\n", i, len(list), f.Path)
 			select {
 			case <-ctx.Done():
-				err1 = context.DeadlineExceeded
+				err1 = context.Canceled
 				return false
 			default:
 			}

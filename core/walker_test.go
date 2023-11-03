@@ -62,11 +62,11 @@ func TestWalkerWithTimeout(t *testing.T) {
 	handlers := &TestWalkerWithTimeoutHandlers{}
 	_, err := Walk[int64](ctx, ".", 1, handlers)
 	if err == nil {
-		t.Error(fmt.Errorf("expected (%s), actual (nil)", context.DeadlineExceeded.Error()))
+		t.Error(fmt.Errorf("expected (%s), actual (nil)", context.Canceled.Error()))
 		return
 	}
-	if err != context.DeadlineExceeded {
-		t.Error(fmt.Errorf("expected (%s), actual (%s)", context.DeadlineExceeded.Error(), err.Error()))
+	if err != context.Canceled {
+		t.Error(fmt.Errorf("expected (%s), actual (%s)", context.Canceled.Error(), err.Error()))
 		return
 	}
 	if atomic.LoadInt64(&handlers.cnt) != 1 {

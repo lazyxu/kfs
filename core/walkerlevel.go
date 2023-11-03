@@ -3,10 +3,11 @@ package core
 import (
 	"context"
 	"fmt"
-	"github.com/emirpasic/gods/queues/arrayqueue"
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/emirpasic/gods/queues/arrayqueue"
 )
 
 type file struct {
@@ -88,7 +89,7 @@ func WalkByLevel(ctx context.Context, filePath string, concurrent int, handlers 
 			for {
 				select {
 				case <-ctx.Done():
-					err1 = context.DeadlineExceeded
+					err1 = context.Canceled
 					break
 				default:
 				}
@@ -102,7 +103,7 @@ func WalkByLevel(ctx context.Context, filePath string, concurrent int, handlers 
 						continue
 					}
 				case <-ctx.Done():
-					err1 = context.DeadlineExceeded
+					err1 = context.Canceled
 					goto EndWorker
 				}
 				err := handlers.FileHandler(ctx, index, f.Path, f.Info)
@@ -113,7 +114,7 @@ func WalkByLevel(ctx context.Context, filePath string, concurrent int, handlers 
 					select {
 					case child.parent <- err:
 					case <-ctx.Done():
-						err1 = context.DeadlineExceeded
+						err1 = context.Canceled
 						goto EndWorker
 					}
 				}
@@ -126,7 +127,7 @@ func WalkByLevel(ctx context.Context, filePath string, concurrent int, handlers 
 	for !queue.Empty() {
 		select {
 		case <-ctx.Done():
-			return context.DeadlineExceeded
+			return context.Canceled
 		default:
 		}
 		v, _ := queue.Dequeue()

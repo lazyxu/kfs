@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/labstack/echo/v4"
 )
 
 func apiBackupTask(c echo.Context) error {
@@ -214,7 +215,7 @@ func tryStartBackup(task BackupTask, runningTask *RunningBackupTask, serverAddr 
 			setTaskStatus(task.Name, StatusFinished)
 			return
 		}
-		if errors.Is(err, context.DeadlineExceeded) {
+		if errors.Is(err, context.Canceled) {
 			setTaskStatus(task.Name, StatusCanceled)
 			return
 		}
