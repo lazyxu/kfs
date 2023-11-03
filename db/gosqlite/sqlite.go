@@ -159,6 +159,10 @@ func (db *DB) Create() error {
 		name         VARCHAR(256) NOT NULL PRIMARY KEY,
 		description  VARCHAR(256) NOT NULL DEFAULT "",
 		Type         VARCHAR(256) NOT NULL DEFAULT "",
+		sync         INT1         NOT NULL DEFAULT 1,
+		h            INT8         NOT NULL DEFAULT 4,
+		m            INT8         NOT NULL DEFAULT 0,
+		s            INT8         NOT NULL DEFAULT 0,
 		accessToken  VARCHAR(256) NOT NULL DEFAULT "",
 		refreshToken VARCHAR(256) NOT NULL DEFAULT ""
 	);

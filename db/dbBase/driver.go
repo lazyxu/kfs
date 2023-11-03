@@ -22,6 +22,17 @@ func InsertDriver(ctx context.Context, conn *sql.DB, db DbImpl, driverName strin
 	return
 }
 
+func UpdateDriverSync(ctx context.Context, conn *sql.DB, driverName string, sync bool, h int, m int, s int) error {
+	_, err := conn.ExecContext(ctx, `
+	UPDATE _driver
+	SET sync = ?, h = ?, m = ?, s = ?
+	WHERE name = ?;`, sync, h, m, s, driverName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func DeleteDriver(ctx context.Context, conn *sql.DB, driverName string) error {
 	_, err := conn.ExecContext(ctx, `
 	DELETE FROM _driver WHERE name = ?`, driverName)
@@ -42,7 +53,7 @@ func ListDriver(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driver, err e
 	drivers = []dao.Driver{}
 	for rows.Next() {
 		var driver dao.Driver
-		err = rows.Scan(&driver.Name, &driver.Description, &driver.Typ, &driver.AccessToken, &driver.RefreshToken)
+		err = rows.Scan(&driver.Name, &driver.Description, &driver.Typ, &driver.Sync, &driver.H, &driver.M, &driver.S, &driver.AccessToken, &driver.RefreshToken)
 		if err != nil {
 			return
 		}
@@ -53,14 +64,14 @@ func ListDriver(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driver, err e
 
 func GetDriver(ctx context.Context, txOrDb TxOrDb, driverName string) (driver dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT * FROM _driver WHERE name = ?;
+	SELECT accessToken, refreshToken FROM _driver WHERE name = ?;
 	`, driverName)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	if rows.Next() {
-		err = rows.Scan(&driver.Name, &driver.Description, &driver.Typ, &driver.AccessToken, &driver.RefreshToken)
+		err = rows.Scan(&driver.AccessToken, &driver.RefreshToken)
 		if err != nil {
 			return
 		}
@@ -70,7 +81,7 @@ func GetDriver(ctx context.Context, txOrDb TxOrDb, driverName string) (driver da
 
 func GetDriverFileSize(ctx context.Context, txOrDb TxOrDb, driverName string) (n uint64, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT SUM(size) FROM _driver_file WHERE driverName = ? AND mode < 2147483648;;
+	SELECT IFNULL(SUM(size), 0) FROM _driver_file WHERE driverName = ? AND mode < 2147483648;;
 	`, driverName)
 	if err != nil {
 		return

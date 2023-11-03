@@ -1,5 +1,5 @@
 import { Close } from '@mui/icons-material';
-import { Box, Dialog, DialogContent, DialogTitle, Grid } from "@mui/material";
+import { Box, Dialog, DialogContent, DialogTitle, Divider, Grid, MenuItem, Select, Switch } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import { getDriversDirCount, getDriversFileCount, getDriversFileSize } from 'api/web/driver';
 import { noteError } from 'components/Notification/Notification';
@@ -76,7 +76,26 @@ export default ({ setOpen, driver }) => {
                     {/* <Typography>可读取该云盘的设备：any</Typography> */}
                     {/* </Box> */}
                     {driver.type === "baiduPhoto" && <>
+                        <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>
                         <Attr k="同步"><DriverBaiduPhoto driver={driver} /></Attr>
+                        <Attr k="定时同步">
+                            <Switch checked={driver.sync} />
+                            <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={driver.h}>
+                                {[...Array(24).keys()].map(value =>
+                                    <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
+                                )}
+                            </Select>时
+                            <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={driver.m}>
+                                {[...Array(60).keys()].map(value =>
+                                    <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
+                                )}
+                            </Select>分
+                            <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={driver.s}>
+                                {[...Array(60).keys()].map(value =>
+                                    <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
+                                )}
+                            </Select>秒
+                        </Attr>
                         <Attr k="accessToken">{driver.accessToken}</Attr>
                         <Attr k="refreshToken">{driver.refreshToken}</Attr>
                     </>}

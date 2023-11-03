@@ -41,6 +41,7 @@ type Database interface {
 	BranchCount(ctx context.Context) (int, error)
 
 	InsertDriver(ctx context.Context, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error)
+	UpdateDriverSync(ctx context.Context, driverName string, sync bool, h int, m int, s int) error
 	DeleteDriver(ctx context.Context, driverName string) error
 	ListDriver(ctx context.Context) (drivers []Driver, err error)
 	GetDriver(ctx context.Context, driverName string) (driver Driver, err error)

@@ -25,8 +25,9 @@ func (s *EventServer[T]) Add(c echo.Context, kfsCore *core.KFS) (Client[T], erro
 
 func (s *EventServer[T]) Delete(c echo.Context) {
 	client, _ := s.Clients.Load(c)
-	close(client.(Client[T]).Chan())
+	// Should be deleted before closing.
 	s.Clients.Delete(c)
+	close(client.(Client[T]).Chan())
 }
 
 func (s *EventServer[T]) Handle(c echo.Context, kfsCore *core.KFS) error {
@@ -38,6 +39,7 @@ func (s *EventServer[T]) Handle(c echo.Context, kfsCore *core.KFS) error {
 	fmt.Println("New connection established")
 	client, err := s.Add(c, kfsCore)
 	if err != nil {
+		c.Logger().Error(err)
 		return err
 	}
 

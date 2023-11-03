@@ -10,6 +10,10 @@ func (db *DB) InsertDriver(ctx context.Context, driverName string, description s
 	return dbBase.InsertDriver(ctx, db.db, db, driverName, description, typ, accessToken, refreshToken)
 }
 
+func (db *DB) UpdateDriverSync(ctx context.Context, driverName string, sync bool, h int, m int, s int) error {
+	return dbBase.UpdateDriverSync(ctx, db.db, driverName, sync, h, m, s)
+}
+
 func (db *DB) DeleteDriver(ctx context.Context, driverName string) error {
 	return dbBase.DeleteDriver(ctx, db.db, driverName)
 }

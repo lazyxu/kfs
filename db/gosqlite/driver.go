@@ -12,6 +12,12 @@ func (db *DB) InsertDriver(ctx context.Context, driverName string, description s
 	return dbBase.InsertDriver(ctx, conn, db, driverName, description, typ, accessToken, refreshToken)
 }
 
+func (db *DB) UpdateDriverSync(ctx context.Context, driverName string, sync bool, h int, m int, s int) error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.UpdateDriverSync(ctx, conn, driverName, sync, h, m, s)
+}
+
 func (db *DB) DeleteDriver(ctx context.Context, driverName string) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
