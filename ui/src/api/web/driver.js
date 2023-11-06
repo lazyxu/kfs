@@ -10,6 +10,16 @@ export async function newDriver(name, description, type, code) {
     return await httpPost("/api/v1/drivers", {name, description, type, code});
 }
 
+export async function getDriverSync(name) {
+    console.log('web.getDriverSync', name);
+    return await httpGet("/api/v1/getDriverSync", {name});
+}
+
+export async function updateDriverSync(name, sync, h, m, s) {
+    console.log('web.updateDriverSync', name, sync, h, m, s);
+    return await httpGet("/api/v1/updateDriverSync", {name, sync, h, m, s});
+}
+
 export async function deleteDriver(name) {
     console.log('web.deleteDriver', name);
     return await httpDelete("/api/v1/drivers", {name});

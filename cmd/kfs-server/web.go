@@ -38,6 +38,8 @@ func webServer(webPortString string) {
 
 	// Routes
 	e.GET("/api/v1/drivers", apiDrivers)
+	e.GET("/api/v1/getDriverSync", apiGetDriverSync)
+	e.GET("/api/v1/updateDriverSync", apiUpdateDriverSync)
 	e.POST("/api/v1/drivers", apiNewDriver)
 	e.DELETE("/api/v1/drivers", apiDeleteDriver)
 	e.GET("/api/v1/list", apiList)
@@ -144,6 +146,46 @@ func apiNewDriver(c echo.Context) error {
 		return ok(c, exist)
 	}
 	return fmt.Errorf("invalid driver type: %s", typ)
+}
+
+func apiGetDriverSync(c echo.Context) error {
+	name := c.QueryParam("name")
+	d, err := kfsCore.Db.GetDriverSync(c.Request().Context(), name)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, d)
+}
+
+func apiUpdateDriverSync(c echo.Context) error {
+	name := c.QueryParam("name")
+	syncStr := c.QueryParam("sync")
+	sync, err := strconv.ParseBool(syncStr)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "sync should be a boolean")
+	}
+	hStr := c.QueryParam("h")
+	h, err := strconv.ParseInt(hStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "h should be a number")
+	}
+	mStr := c.QueryParam("m")
+	m, err := strconv.ParseInt(mStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "m should be a number")
+	}
+	sStr := c.QueryParam("s")
+	s, err := strconv.ParseInt(sStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "s should be a number")
+	}
+	err = kfsCore.Db.UpdateDriverSync(c.Request().Context(), name, sync, h, m, s)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return c.String(http.StatusOK, "")
 }
 
 func apiDeleteDriver(c echo.Context) error {

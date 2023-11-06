@@ -12,7 +12,7 @@ func (db *DB) InsertDriver(ctx context.Context, driverName string, description s
 	return dbBase.InsertDriver(ctx, conn, db, driverName, description, typ, accessToken, refreshToken)
 }
 
-func (db *DB) UpdateDriverSync(ctx context.Context, driverName string, sync bool, h int, m int, s int) error {
+func (db *DB) UpdateDriverSync(ctx context.Context, driverName string, sync bool, h int64, m int64, s int64) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.UpdateDriverSync(ctx, conn, driverName, sync, h, m, s)
@@ -30,10 +30,16 @@ func (db *DB) ListDriver(ctx context.Context) (drivers []dao.Driver, err error) 
 	return dbBase.ListDriver(ctx, conn)
 }
 
-func (db *DB) GetDriver(ctx context.Context, driverName string) (driver dao.Driver, err error) {
+func (db *DB) GetDriverToken(ctx context.Context, driverName string) (driver dao.Driver, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.GetDriver(ctx, conn, driverName)
+	return dbBase.GetDriverToken(ctx, conn, driverName)
+}
+
+func (db *DB) GetDriverSync(ctx context.Context, driverName string) (driver dao.Driver, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.GetDriverSync(ctx, conn, driverName)
 }
 
 func (db *DB) GetDriverFileSize(ctx context.Context, driverName string) (n uint64, err error) {

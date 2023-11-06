@@ -131,7 +131,7 @@ func GetOrLoadDriver(ctx context.Context, kfsCore *core.KFS, driverName string) 
 }
 
 func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverName string) (*DriverBaiduPhoto, error) {
-	driver, err := kfsCore.Db.GetDriver(ctx, driverName)
+	driver, err := kfsCore.Db.GetDriverToken(ctx, driverName)
 	if err != nil {
 		return nil, err
 	}

@@ -41,10 +41,11 @@ type Database interface {
 	BranchCount(ctx context.Context) (int, error)
 
 	InsertDriver(ctx context.Context, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error)
-	UpdateDriverSync(ctx context.Context, driverName string, sync bool, h int, m int, s int) error
+	UpdateDriverSync(ctx context.Context, driverName string, sync bool, h int64, m int64, s int64) error
 	DeleteDriver(ctx context.Context, driverName string) error
 	ListDriver(ctx context.Context) (drivers []Driver, err error)
-	GetDriver(ctx context.Context, driverName string) (driver Driver, err error)
+	GetDriverToken(ctx context.Context, driverName string) (driver Driver, err error)
+	GetDriverSync(ctx context.Context, driverName string) (driver Driver, err error)
 
 	GetDriverFileSize(ctx context.Context, driverName string) (n uint64, err error)
 	GetDriverFileCount(ctx context.Context, driverName string) (n uint64, err error)

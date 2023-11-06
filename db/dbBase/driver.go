@@ -22,7 +22,7 @@ func InsertDriver(ctx context.Context, conn *sql.DB, db DbImpl, driverName strin
 	return
 }
 
-func UpdateDriverSync(ctx context.Context, conn *sql.DB, driverName string, sync bool, h int, m int, s int) error {
+func UpdateDriverSync(ctx context.Context, conn *sql.DB, driverName string, sync bool, h int64, m int64, s int64) error {
 	_, err := conn.ExecContext(ctx, `
 	UPDATE _driver
 	SET sync = ?, h = ?, m = ?, s = ?
@@ -62,7 +62,7 @@ func ListDriver(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driver, err e
 	return
 }
 
-func GetDriver(ctx context.Context, txOrDb TxOrDb, driverName string) (driver dao.Driver, err error) {
+func GetDriverToken(ctx context.Context, txOrDb TxOrDb, driverName string) (driver dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
 	SELECT accessToken, refreshToken FROM _driver WHERE name = ?;
 	`, driverName)
@@ -72,6 +72,23 @@ func GetDriver(ctx context.Context, txOrDb TxOrDb, driverName string) (driver da
 	defer rows.Close()
 	if rows.Next() {
 		err = rows.Scan(&driver.AccessToken, &driver.RefreshToken)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func GetDriverSync(ctx context.Context, txOrDb TxOrDb, driverName string) (driver dao.Driver, err error) {
+	rows, err := txOrDb.QueryContext(ctx, `
+	SELECT sync, h, m, s FROM _driver WHERE name = ?;
+	`, driverName)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err = rows.Scan(&driver.Sync, &driver.H, &driver.M, &driver.S)
 		if err != nil {
 			return
 		}
