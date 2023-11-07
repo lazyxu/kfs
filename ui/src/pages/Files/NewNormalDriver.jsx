@@ -17,25 +17,24 @@ export default function ({ setOpen }) {
                 <TextField
                     autoFocus
                     margin="dense"
-                    placeholder="请输入云盘的名字"
+                    placeholder="云盘名字"
                     fullWidth
                     variant="outlined"
                     onChange={e => setName(e.target.value)}
                 />
                 <TextField
-                    placeholder="请输入云盘的描述"
+                    placeholder="云盘描述"
                     margin="dense"
                     fullWidth
                     variant="outlined"
-                    onChange={e =>setDescription(e.target.value)}
+                    onChange={e => setDescription(e.target.value)}
                 />
             </DialogContent>
             <DialogActions sx={{
                 backgroundColor: theme => theme.background.primary,
                 color: theme => theme.context.primary
             }}>
-                <Button onClick={() => setOpen(false)}>取消</Button>
-                <Button onClick={() => {
+                <Button variant="outlined" sx={{ width: "10em" }} disabled={name === ""} onClick={() => {
                     newDriver(setResourceManager, name, description)
                         .then(() => setOpen(false))
                         .catch(e => noteError("创建云盘失败：" + e.message));

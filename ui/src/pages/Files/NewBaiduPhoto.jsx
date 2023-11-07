@@ -24,14 +24,14 @@ export default function ({ setOpen }) {
             }}>
                 <TextField
                     autoFocus
-                    placeholder="请输入云盘的名字"
+                    placeholder="云盘名字"
                     margin="dense"
                     fullWidth
                     variant="outlined"
                     onChange={e => setName(e.target.value)}
                 />
                 <TextField
-                    placeholder="请输入云盘的描述"
+                    placeholder="云盘描述"
                     margin="dense"
                     fullWidth
                     variant="outlined"
@@ -59,8 +59,7 @@ export default function ({ setOpen }) {
                 backgroundColor: theme => theme.background.primary,
                 color: theme => theme.context.primary
             }}>
-                <Button onClick={() => setOpen(false)}>取消</Button>
-                <Button onClick={() => {
+                <Button variant="outlined" sx={{ width: "10em" }} disabled={name === "" || code === ""} onClick={() => {
                     newDriver(setResourceManager, name, description, "baiduPhoto", code)
                         .then(() => setOpen(false))
                         .catch(e => noteError("创建云盘失败：" + e.message));
