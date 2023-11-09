@@ -1,11 +1,11 @@
-import { httpGet } from "./webServer";
 import axios from "axios";
 import { getSysConfig } from "hox/sysConfig";
+import { httpGet } from "./webServer";
 
-export async function list(driverName, filePath) {
-    console.log('web.list', driverName, filePath);
+export async function list(id, filePath) {
+    console.log('web.list', id, filePath);
     return await httpGet("/api/v1/list", {
-        driverName,
+        id,
         filePath,
     });
 }
@@ -17,11 +17,11 @@ export async function listDriverFileByHash(hash) {
     });
 }
 
-export async function openFile(driverName, filePath) {
-    console.log('web.openFile', driverName, filePath);
+export async function openFile(id, filePath) {
+    console.log('web.openFile', id, filePath);
     let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/openFile`, {
         params: {
-            driverName,
+            id,
             filePath,
             maxContentSize: getSysConfig().sysConfig.maxContentSize,
         },
@@ -31,11 +31,11 @@ export async function openFile(driverName, filePath) {
     return { tooLarge, content: resp.data }
 }
 
-export async function download(driverName, filePath) {
-    console.log('web.download', driverName, filePath);
+export async function download(id, filePath) {
+    console.log('web.download', id, filePath);
     let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/downloadFile`, {
         params: {
-            driverName,
+            id,
             filePath,
         },
         responseType: "arraybuffer",

@@ -20,10 +20,10 @@ func handleUploadV2Dir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	if err != nil {
 		return err
 	}
-	println(conn.RemoteAddr().String(), "UploadDir", req.DriverName, "/"+strings.Join(req.DirPath, "/"), req.Name)
+	println(conn.RemoteAddr().String(), "UploadDir", req.DriverId, "/"+strings.Join(req.DirPath, "/"), req.Name)
 	// TODO: if dir not exist
 	err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
-		DriverName: req.DriverName,
+		DriverId:   req.DriverId,
 		DirPath:    req.DirPath,
 		Name:       req.Name,
 		Version:    0,
@@ -50,7 +50,7 @@ func handleUploadV2File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	if err != nil {
 		return err
 	}
-	println(conn.RemoteAddr().String(), "UploadFile", req.DriverName, "/"+strings.Join(req.DirPath, "/"), req.Name, req.Hash)
+	println(conn.RemoteAddr().String(), "UploadFile", req.DriverId, "/"+strings.Join(req.DirPath, "/"), req.Name, req.Hash)
 
 	// 1. What if the hash is the same but the size is different?
 	// 2. What if the hash and size are the same, but the file content is different?
@@ -85,7 +85,7 @@ func handleUploadV2File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		return err
 	}
 	err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
-		DriverName: req.DriverName,
+		DriverId:   req.DriverId,
 		DirPath:    req.DirPath,
 		Name:       req.Name,
 		Version:    0,
@@ -101,7 +101,7 @@ func handleUploadV2File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
 		return err
 	}
-	err = UpsertLivePhoto(kfsCore, req.Hash, req.DriverName, req.DirPath, req.Name)
+	err = UpsertLivePhoto(kfsCore, req.Hash, req.DriverId, req.DirPath, req.Name)
 	if err != nil {
 		return err
 	}

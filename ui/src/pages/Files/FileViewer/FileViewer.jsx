@@ -1,15 +1,15 @@
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import ModeEditIcon from '@mui/icons-material/ModeEdit';
+import { Box, Stack, Tooltip } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import humanize from 'humanize';
+import moment from 'moment';
+import { download } from "../../../api/fs";
+import useResourceManager from "../../../hox/resourceManager";
 import TextFileViewer from "./TextFileViewer";
 import styles from './index.module.scss';
-import moment from 'moment';
-import humanize from 'humanize';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import IconButton from "@mui/material/IconButton";
-import {Box, Grid, Stack, Tooltip, useColorScheme} from "@mui/material";
-import ModeEditIcon from '@mui/icons-material/ModeEdit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import {download} from "../../../api/fs";
-import useResourceManager from "../../../hox/resourceManager";
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
 
 export default ({file}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -45,7 +45,7 @@ export default ({file}) => {
                     </Tooltip>
                     <Tooltip title="下载">
                     <span><IconButton onClick={() => {
-                        download(resourceManager.driverName, resourceManager.filePath)
+                        download(resourceManager.driverId, resourceManager.filePath)
                     }}>
                     <FileDownloadIcon fontSize="small"/>
                     </IconButton></span>

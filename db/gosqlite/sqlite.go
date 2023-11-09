@@ -156,19 +156,45 @@ func (db *DB) Create() error {
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver (
-		name         VARCHAR(256) NOT NULL PRIMARY KEY,
-		description  VARCHAR(256) NOT NULL DEFAULT "",
-		Type         VARCHAR(256) NOT NULL DEFAULT "",
-		sync         INT1         NOT NULL DEFAULT 1,
-		h            INT8         NOT NULL DEFAULT 4,
-		m            INT8         NOT NULL DEFAULT 0,
-		s            INT8         NOT NULL DEFAULT 0,
-		accessToken  VARCHAR(256) NOT NULL DEFAULT "",
-		refreshToken VARCHAR(256) NOT NULL DEFAULT ""
+		id           INTEGER          NOT NULL PRIMARY KEY AUTOINCREMENT,
+		name         VARCHAR(256)   NOT NULL UNIQUE,
+		description  VARCHAR(256)   NOT NULL DEFAULT "",
+		Type         VARCHAR(256)   NOT NULL DEFAULT ""
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver_baidu_photo (
+		id           INT64          NOT NULL PRIMARY KEY,
+		sync         INT1           NOT NULL DEFAULT 1,
+		h            INT8           NOT NULL DEFAULT 4,
+		m            INT8           NOT NULL DEFAULT 0,
+		s            INT8           NOT NULL DEFAULT 0,
+		accessToken  VARCHAR(256)   NOT NULL DEFAULT "",
+		refreshToken VARCHAR(256)   NOT NULL DEFAULT "",
+	    FOREIGN KEY (id)  REFERENCES   _driver(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver_local_file (
+		id           INT64          NOT NULL PRIMARY KEY,
+		sync         INT1           NOT NULL DEFAULT 1,
+		h            INT8           NOT NULL DEFAULT 4,
+		m            INT8           NOT NULL DEFAULT 0,
+		s            INT8           NOT NULL DEFAULT 0,
+	    deviceId     INT64          NOT NULL DEFAULT 0,
+		srcPath      VARCHAR(32767) NOT NULL DEFAULT "",
+		encoder      VARCHAR(64)    NOT NULL DEFAULT "",
+	    concurrent   INT8           NOT NULL DEFAULT 0,
+	    FOREIGN KEY (id)  REFERENCES   _driver(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS _device (
+		id          INTEGER      NOT NULL PRIMARY KEY AUTOINCREMENT,
+		name        VARCHAR(256) NOT NULL UNIQUE,
+		os          VARCHAR(256) NOT NULL,
+	    LastOnline  INT64        NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver_file (
-		driverName  VARCHAR(256)   NOT NULL,
+		driverId    INTEGER        NOT NULL,
 		dirPath     VARCHAR(32767) NOT NULL,
 		name        VARCHAR(255)   NOT NULL,
 	    version     INT64          NOT NULL,
@@ -179,8 +205,8 @@ func (db *DB) Create() error {
 		modifyTime  INT64          NOT NULL,
 		changeTime  INT64          NOT NULL,
 		accessTime  INT64          NOT NULL,
-		PRIMARY KEY (driverName, dirPath, name, version),
-		FOREIGN KEY (driverName)  REFERENCES _driver(name)
+		PRIMARY KEY (driverId, dirPath, name, version),
+		FOREIGN KEY (driverId)  REFERENCES _driver(id)
 	);
 	`) // https://blog.csdn.net/jimmyleeee/article/details/124682486
 	return err

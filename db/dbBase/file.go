@@ -25,12 +25,12 @@ func WriteFileWithTxOrDb(ctx context.Context, txOrDb TxOrDb, db DbImpl, file dao
 
 var ErrNoSuchFileOrDir = errors.New("no such file or dir")
 
-func GetDriverFile(ctx context.Context, conn *sql.DB, driverName string, splitPath []string) (file dao.DriverFile, err error) {
+func GetDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, splitPath []string) (file dao.DriverFile, err error) {
 	if len(splitPath) == 0 {
 		err = errors.New("/: Is a directory")
 		return
 	}
-	file.DriverName = driverName
+	file.DriverId = driverId
 	file.DirPath = splitPath[:len(splitPath)-1]
 	file.Name = splitPath[len(splitPath)-1]
 	file.Version = 0
@@ -43,8 +43,8 @@ func GetDriverFile(ctx context.Context, conn *sql.DB, driverName string, splitPa
 		modifyTime,
 		changeTime,
 		accessTime
-		FROM _driver_file WHERE driverName=? and dirPath=? and name=? and version=0
-	`, file.DriverName, arrayToJson(file.DirPath), file.Name)
+		FROM _driver_file WHERE driverId=? and dirPath=? and name=? and version=0
+	`, file.DriverId, arrayToJson(file.DirPath), file.Name)
 	if err != nil {
 		return
 	}
@@ -197,7 +197,7 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 			time := f.CreateTime
 			_, err = tx.ExecContext(ctx, `
 	INSERT OR IGNORE INTO _driver_file (
-		driverName,
+		driverId,
 		dirPath,
 		name,
 	    version,
@@ -209,7 +209,7 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 		changeTime,
 		accessTime
 	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-	`, f.DriverName, arrayToJson(dirPath), name, f.Version, hash, mode, size, time, time, time, time)
+	`, f.DriverId, arrayToJson(dirPath), name, f.Version, hash, mode, size, time, time, time, time)
 			if err != nil {
 				return err
 			}
@@ -217,7 +217,7 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 	}
 	_, err = tx.ExecContext(ctx, `
 	INSERT INTO _driver_file (
-		driverName,
+		driverId,
 		dirPath,
 		name,
 	    version,
@@ -236,7 +236,7 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 		modifyTime=?,
 		changeTime=?,
 		accessTime=?;
-	`, f.DriverName, arrayToJson(f.DirPath), f.Name, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
+	`, f.DriverId, arrayToJson(f.DirPath), f.Name, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
 		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime)
 	if err != nil {
 		return err
@@ -247,7 +247,7 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _driver_file (
-		driverName,
+		driverId,
 		dirPath,
 		name,
 	    version,
@@ -266,7 +266,7 @@ func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile)
 		modifyTime=?,
 		changeTime=?,
 		accessTime=?;
-	`, f.DriverName, f.DirPath, f.Name, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
+	`, f.DriverId, f.DirPath, f.Name, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
 		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime)
 	if err != nil {
 		return err

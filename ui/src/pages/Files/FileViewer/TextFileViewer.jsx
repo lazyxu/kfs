@@ -1,9 +1,8 @@
-import { download } from "../../../api/fs";
-import humanize from 'humanize';
-import useResourceManager from "../../../hox/resourceManager";
 import { Link, Typography } from "@mui/material";
+import humanize from 'humanize';
+import { download } from "../../../api/fs";
+import useResourceManager from "../../../hox/resourceManager";
 import { getSysConfig } from "../../../hox/sysConfig";
-import Editor from "@monaco-editor/react";
 
 export default ({ file }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -13,7 +12,7 @@ export default ({ file }) => {
             <>
                 文件大于{humanize.filesize(getSysConfig().sysConfig.maxContentSize)}，不支持在线查看，你可以选择
                 <Link underline="hover" onClick={() => {
-                    download(resourceManager.driverName, resourceManager.filePath)
+                    download(resourceManager.driverId, resourceManager.filePath)
                 }}>下载该文件</Link>。
             </> :
             <Typography sx={{ wordBreak: "break-all" }}>

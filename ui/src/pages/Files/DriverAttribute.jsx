@@ -36,11 +36,11 @@ export default ({ setOpen, driver }) => {
     const [syncAttributes, setSyncAttributes] = useState();
     useEffect(() => {
         if (driver.type === "baiduPhoto") {
-            getDriverSync(driver.name).then(n => setSyncAttributes(n)).catch(e => noteError(e.message));
+            getDriverSync(driver.id).then(n => setSyncAttributes(n)).catch(e => noteError(e.message));
         }
-        getDriversFileSize(driver.name).then(n => setAttributes(prev => { return { ...prev, fileSize: n }; })).catch(e => noteError(e.message));
-        getDriversFileCount(driver.name).then(n => setAttributes(prev => { return { ...prev, fileCount: n }; })).catch(e => noteError(e.message));
-        getDriversDirCount(driver.name).then(n => setAttributes(prev => { return { ...prev, dirCount: n }; })).catch(e => noteError(e.message));
+        getDriversFileSize(driver.id).then(n => setAttributes(prev => { return { ...prev, fileSize: n }; })).catch(e => noteError(e.message));
+        getDriversFileCount(driver.id).then(n => setAttributes(prev => { return { ...prev, fileCount: n }; })).catch(e => noteError(e.message));
+        getDriversDirCount(driver.id).then(n => setAttributes(prev => { return { ...prev, dirCount: n }; })).catch(e => noteError(e.message));
     }, []);
     return (
         <Dialog open={true} fullWidth={true} onClose={() => setOpen(false)}>
@@ -67,9 +67,10 @@ export default ({ setOpen, driver }) => {
                 color: theme => theme.context.primary
             }}>
                 <Grid container spacing={1.5} sx={{ alignItems: "center" }}>
-                    <Attr k="云盘名称">{driver.name}</Attr>
+                    <Attr k="id">{driver.id}</Attr>
+                    <Attr k="名称">{driver.name}</Attr>
                     <Attr k="描述">{driver.description}</Attr>
-                    <Attr k="云盘类型">{getDriverType(driver)}</Attr>
+                    <Attr k="类型">{getDriverType(driver)}</Attr>
                     <Attr k="总大小">{humanize.filesize(attributes.fileSize)}</Attr>
                     <Attr k="文件数量">{attributes.fileCount}</Attr>
                     <Attr k="目录数量">{attributes.dirCount}</Attr>
@@ -84,18 +85,18 @@ export default ({ setOpen, driver }) => {
                         <Attr k="同步"><DriverBaiduPhoto driver={driver} /></Attr>
                         <Attr k="定时同步">
                             {syncAttributes ? <>
-                                <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(driver.name, e.target.checked, syncAttributes.h, syncAttributes.m, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, sync: e.target.checked }; })).catch(e => noteError(e.message)) } />
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => updateDriverSync(driver.name, syncAttributes.sync, e.target.value, syncAttributes.m, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, h: e.target.value }; })).catch(e => noteError(e.message)) }>
+                                <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(driver.id, e.target.checked, syncAttributes.h, syncAttributes.m, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, sync: e.target.checked }; })).catch(e => noteError(e.message)) } />
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, e.target.value, syncAttributes.m, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, h: e.target.value }; })).catch(e => noteError(e.message)) }>
                                     {[...Array(24).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}
                                 </Select>时
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => updateDriverSync(driver.name, syncAttributes.sync, syncAttributes.h, e.target.value, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, m: e.target.value }; })).catch(e => noteError(e.message)) }>
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, e.target.value, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, m: e.target.value }; })).catch(e => noteError(e.message)) }>
                                     {[...Array(60).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}
                                 </Select>分
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.s} onChange={e => updateDriverSync(driver.name, syncAttributes.sync, syncAttributes.h, syncAttributes.m, e.target.value).then(setSyncAttributes(prev => { return { ...prev, s: e.target.value }; })).catch(e => noteError(e.message)) }>
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.s} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, syncAttributes.m, e.target.value).then(setSyncAttributes(prev => { return { ...prev, s: e.target.value }; })).catch(e => noteError(e.message)) }>
                                     {[...Array(60).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}

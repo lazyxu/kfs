@@ -49,7 +49,7 @@ message UploadReq {
 }
 
 message UploadReqV2 {
-  string DriverName = 1;
+  uint64 DriverId = 1;
   repeated string DirPath = 2;
   string Name = 3;
   string Hash = 4;

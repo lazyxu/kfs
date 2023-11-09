@@ -1,16 +1,13 @@
-import './index.scss';
-import { useClick } from "use";
-import { list, openFile } from "api/fs";
-import { modeIsDir } from "api/utils/api";
+import { Box, Stack } from "@mui/material";
 import useResourceManager from 'hox/resourceManager';
 import useContextMenu from "../../hox/contextMenu";
-import { Box, Stack } from "@mui/material";
 import FileIcon from './FileIcon';
+import './index.scss';
 
 export default function ({ dirItem, filesElm }) {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
-    let { filePath, driverName } = resourceManager;
+    let { filePath, driverId } = resourceManager;
     const { name, mode } = dirItem;
     filePath = filePath.concat(name);
     return (
@@ -32,7 +29,7 @@ export default function ({ dirItem, filesElm }) {
                 })
             }}>
             <Box>
-                <FileIcon dirItem={dirItem} filePath={filePath}/>
+                <FileIcon dirItem={dirItem} filePath={filePath} />
             </Box>
             <Box kfs-attr="file" style={{ width: "100%", overflowWrap: "break-word", textAlign: "center" }}>{name}</Box>
         </Stack>

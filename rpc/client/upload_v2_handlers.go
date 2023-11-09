@@ -25,7 +25,7 @@ type uploadHandlersV2 struct {
 	socketServerAddr string
 	conns            []net.Conn
 	files            []*os.File
-	driverName       string
+	driverId         uint64
 	srcPath          string
 	dstPath          string
 }
@@ -98,7 +98,7 @@ func (h *uploadHandlersV2) FileHandler(ctx context.Context, index int, filePath 
 		}
 		modifyTime := uint64(info.ModTime().UnixNano())
 		_, err = ReqRespWithConn(conn, rpcutil.CommandUploadV2Dir, &pb.UploadReqV2{
-			DriverName: h.driverName,
+			DriverId:   h.driverId,
 			DirPath:    dirPath,
 			Name:       name,
 			Hash:       "",
@@ -197,7 +197,7 @@ func (h *uploadHandlersV2) uploadFile(ctx context.Context, conn net.Conn, index 
 
 	modifyTime := uint64(info.ModTime().UnixNano())
 	status, err := ReqRespWithConn(conn, rpcutil.CommandUploadV2File, &pb.UploadReqV2{
-		DriverName: h.driverName,
+		DriverId:   h.driverId,
 		DirPath:    dirPath,
 		Name:       name,
 		Hash:       hash,

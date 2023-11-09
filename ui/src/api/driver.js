@@ -10,15 +10,15 @@ export async function listDriver(setResourceManager) {
     console.log('api.listDriver');
     let drivers = await getDriverApi().listDriver();
     setResourceManager(prev => {
-        return {...prev, drivers, driverName: null, filePath: [], dirItems: null, file: null};
+        return {...prev, drivers, driverId: null, filePath: [], dirItems: null, file: null};
     });
 }
 
 export async function newDriver(setResourceManager, name, description, type, code) {
     console.log('api.newDriver', name, description, type, code);
-    // TODO: exist
-    await getDriverApi().newDriver(name, description, type, code);
+    let exist = await getDriverApi().newDriver(name, description, type, code);
     await listDriver(setResourceManager);
+    return exist;
 }
 
 export async function deleteDriver(setResourceManager, name) {

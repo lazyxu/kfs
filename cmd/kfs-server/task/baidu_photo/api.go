@@ -35,7 +35,7 @@ type TokenResp struct {
 
 type DriverBaiduPhoto struct {
 	kfsCore      *core.KFS
-	driverName   string
+	id           uint64
 	AccessToken  string
 	RefreshToken string
 	AppKey       string
@@ -55,7 +55,7 @@ func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, name, descri
 	if err != nil {
 		return false, err
 	}
-	exist, err := kfsCore.Db.InsertDriver(ctx, name, description, typ, accessToken, refreshToken)
+	exist, err := kfsCore.Db.InsertDriverBaiduPhoto(ctx, name, description, typ, accessToken, refreshToken)
 	if err != nil {
 		return false, err
 	}
@@ -189,7 +189,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, hash string)
 		return err
 	}
 	err = d.kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
-		DriverName: d.driverName,
+		DriverId:   d.id,
 		DirPath:    dirPath,
 		Name:       name,
 		Version:    0,
@@ -204,7 +204,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, hash string)
 	if err != nil {
 		return err
 	}
-	err = server.UpsertLivePhoto(d.kfsCore, hash, d.driverName, dirPath, name)
+	err = server.UpsertLivePhoto(d.kfsCore, hash, d.id, dirPath, name)
 	if err != nil {
 		return err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -27,8 +28,12 @@ func (c *Client) Message() TaskInfo {
 
 var s = &common.EventServer[TaskInfo]{
 	NewClient: func(c echo.Context, kfsCore *core.KFS) (common.Client[TaskInfo], error) {
-		driverName := c.Param("name")
-		d, err := GetOrLoadDriver(c.Request().Context(), kfsCore, driverName)
+		idStr := c.Param("id")
+		id, err := strconv.ParseUint(idStr, 10, 0)
+		if err != nil {
+			return nil, err
+		}
+		d, err := GetOrLoadDriver(c.Request().Context(), kfsCore, id)
 		if err != nil {
 			return nil, err
 		}
@@ -117,27 +122,27 @@ func (d *DriverBaiduPhoto) addTaskCnt() {
 
 var drivers sync.Map
 
-func GetOrLoadDriver(ctx context.Context, kfsCore *core.KFS, driverName string) (*DriverBaiduPhoto, error) {
-	d, ok := drivers.Load(driverName)
+func GetOrLoadDriver(ctx context.Context, kfsCore *core.KFS, id uint64) (*DriverBaiduPhoto, error) {
+	d, ok := drivers.Load(id)
 	if ok {
 		return d.(*DriverBaiduPhoto), nil
 	}
-	driver, err := LoadDriverFromDb(ctx, kfsCore, driverName)
+	driver, err := LoadDriverFromDb(ctx, kfsCore, id)
 	if err != nil {
 		return nil, err
 	}
-	drivers.Store(driverName, driver)
+	drivers.Store(id, driver)
 	return driver, nil
 }
 
-func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverName string) (*DriverBaiduPhoto, error) {
-	driver, err := kfsCore.Db.GetDriverToken(ctx, driverName)
+func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, id uint64) (*DriverBaiduPhoto, error) {
+	driver, err := kfsCore.Db.GetDriverToken(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	return &DriverBaiduPhoto{
 		kfsCore:      kfsCore,
-		driverName:   driverName,
+		id:           id,
 		AccessToken:  driver.AccessToken,
 		RefreshToken: driver.RefreshToken,
 		AppKey:       AppKey,

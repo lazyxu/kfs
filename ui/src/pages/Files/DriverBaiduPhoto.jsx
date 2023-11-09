@@ -18,7 +18,7 @@ export default ({ driver }) => {
     const [taskInfo, setTaskInfo] = useState();
     const controller = new AbortController();
     useEffect(() => {
-        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/baiduPhotoTask/${driver.name}`, {
+        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/baiduPhotoTask/${driver.id}`, {
             signal: controller.signal,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
@@ -68,7 +68,7 @@ export default ({ driver }) => {
                 taskInfo?.status === StatusFinished ||
                 taskInfo?.status === StatusCanceled ||
                 taskInfo?.status === StatusError) &&
-                <IconButton onClick={e => startBaiduPhotoTask(true, driver.name).catch(e => noteError(e.message))}>
+                <IconButton onClick={e => startBaiduPhotoTask(true, driver.id).catch(e => noteError(e.message))}>
                     <PlayArrow />
                 </IconButton>
             }
@@ -83,7 +83,7 @@ export default ({ driver }) => {
                 </IconButton>
             }
             {taskInfo?.status === StatusRunning &&
-                <IconButton onClick={e => startBaiduPhotoTask(false, driver.name)}>
+                <IconButton onClick={e => startBaiduPhotoTask(false, driver.id)}>
                     <Stop />
                 </IconButton>
             }

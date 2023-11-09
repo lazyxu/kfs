@@ -1,26 +1,26 @@
-import SvgIcon from "../Icon/SvgIcon";
-import { modeIsDir, isDCIM, isViewable } from "api/utils/api";
-import { Box, Stack } from "@mui/material";
+import { Box } from "@mui/material";
+import { list, openFile } from "api/fs";
+import { isDCIM, isViewable, modeIsDir } from "api/utils/api";
 import { getMetadata } from "api/web/exif";
 import ImageViewer from "components/FileViewer/ImageViewer";
-import { useState } from "react";
 import VideoViewer from "components/FileViewer/VideoViewer";
-import { getSysConfig } from "hox/sysConfig";
-import { list, openFile } from "api/fs";
 import useResourceManager from "hox/resourceManager";
+import { getSysConfig } from "hox/sysConfig";
+import { useState } from "react";
+import SvgIcon from "../Icon/SvgIcon";
 
 export default function ({ dirItem }) {
     const sysConfig = getSysConfig().sysConfig;
     const [open, setOpen] = useState(false);
     const [metadata, setMetadata] = useState();
     const [resourceManager, setResourceManager] = useResourceManager();
-    let { filePath, driverName } = resourceManager;
+    let { filePath, driverId } = resourceManager;
     filePath = filePath.concat(dirItem.name);
     return (
         <Box className="file-icon-box">
             {modeIsDir(dirItem.mode) ?
                 <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit" onClick={() => {
-                    list(setResourceManager, driverName, filePath);
+                    list(setResourceManager, driverId, filePath);
                 }} /> :
                 isDCIM(dirItem.name) ?
                     <img src={`${sysConfig.webServer}/thumbnail?size=64&hash=${dirItem.hash}`} loading="lazy" onClick={() => getMetadata(dirItem.hash).then(m => {
@@ -29,11 +29,11 @@ export default function ({ dirItem }) {
                     })} />
                     : dirItem.name.toLowerCase().endsWith(".txt") ?
                         <SvgIcon icon="txt3" className='file-icon file-icon-file file-icon-file-viewable' fontSize="inherit" onClick={() => {
-                            openFile(setResourceManager, driverName, filePath, dirItem);
+                            openFile(setResourceManager, driverId, filePath, dirItem);
                         }} />
                         : isViewable(dirItem.name) ?
                             <SvgIcon icon="file12" className='file-icon file-icon-file file-icon-file-viewable' fontSize="inherit" onClick={() => {
-                                openFile(setResourceManager, driverName, filePath, dirItem);
+                                openFile(setResourceManager, driverId, filePath, dirItem);
                             }} />
                             : <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit" />
             }

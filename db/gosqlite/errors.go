@@ -9,7 +9,7 @@ func (db *DB) IsUniqueConstraintError(err error) bool {
 		return false
 	}
 	if e, ok := err.(*sqlite.Error); ok {
-		return e.Code() == 1555
+		return e.Code() == 1555 || e.Code() == 2067
 	}
 	return false
 }

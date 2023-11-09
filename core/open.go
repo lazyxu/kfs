@@ -47,8 +47,8 @@ func (fs *KFS) Open2(ctx context.Context, branchName string, filePath string, ma
 	return
 }
 
-func (fs *KFS) OpenFile(ctx context.Context, driverName string, filePath []string, maxContentSize int64) (rc dao.SizedReadCloser, tooLarge bool, err error) {
-	f, err := fs.Db.GetDriverFile(ctx, driverName, filePath)
+func (fs *KFS) OpenFile(ctx context.Context, driverId uint64, filePath []string, maxContentSize int64) (rc dao.SizedReadCloser, tooLarge bool, err error) {
+	f, err := fs.Db.GetDriverFile(ctx, driverId, filePath)
 	if err != nil {
 		return
 	}

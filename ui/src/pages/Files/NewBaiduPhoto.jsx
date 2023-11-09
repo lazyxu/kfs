@@ -61,7 +61,7 @@ export default function ({ setOpen }) {
             }}>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={name === "" || code === ""} onClick={() => {
                     newDriver(setResourceManager, name, description, "baiduPhoto", code)
-                        .then(() => setOpen(false))
+                        .then(exist => exist ? noteError("云盘名称重复") : setOpen(false))
                         .catch(e => noteError("创建云盘失败：" + e.message));
                 }}>确定</Button>
             </DialogActions>

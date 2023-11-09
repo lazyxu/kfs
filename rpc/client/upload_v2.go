@@ -21,7 +21,7 @@ func (fs *RpcFs) UploadV2(ctx context.Context, driverName string, dstPath string
 		socketServerAddr: fs.SocketServerAddr,
 		conns:            make([]net.Conn, config.Concurrent),
 		files:            make([]*os.File, config.Concurrent),
-		driverName:       driverName,
+		driverId:         driverName,
 		srcPath:          srcPath,
 		dstPath:          dstPath,
 	}

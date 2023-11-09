@@ -1,8 +1,8 @@
+import { Link, Stack } from "@mui/material";
+import { listDriver } from "api/driver";
+import { list, openFile } from "api/fs";
 import useResourceManager from 'hox/resourceManager';
-import {list, openFile} from "api/fs";
-import {Link, Stack} from "@mui/material";
 import SvgIcon from "../../Icon/SvgIcon";
-import {listDriver} from "api/driver";
 
 export default ({type, name, icon, filePath}) => {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -10,9 +10,9 @@ export default ({type, name, icon, filePath}) => {
         <Link color="inherit" underline="hover" onClick={(() => {
             if (filePath) {
                 if (type === "file") {
-                    openFile(setResourceManager, resourceManager.driverName, filePath, resourceManager.file);
+                    openFile(setResourceManager, resourceManager.driverId, filePath, resourceManager.file);
                 } else {
-                    list(setResourceManager, resourceManager.driverName, filePath);
+                    list(setResourceManager, resourceManager.driverId, filePath);
                 }
             } else {
                 listDriver(setResourceManager);

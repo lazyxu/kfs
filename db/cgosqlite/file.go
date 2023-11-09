@@ -14,10 +14,10 @@ func (db *DB) WriteFile(ctx context.Context, file dao.File) error {
 	return dbBase.WriteFileWithTxOrDb(ctx, conn, db, file)
 }
 
-func (db *DB) GetDriverFile(ctx context.Context, driverName string, splitPath []string) (file dao.DriverFile, err error) {
+func (db *DB) GetDriverFile(ctx context.Context, driverId uint64, splitPath []string) (file dao.DriverFile, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.GetDriverFile(ctx, conn, driverName, splitPath)
+	return dbBase.GetDriverFile(ctx, conn, driverId, splitPath)
 }
 
 func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []string, item dao.DirItem) (commit dao.Commit, branch dao.Branch, err error) {
@@ -44,10 +44,10 @@ func (db *DB) UpsertDriverFile(ctx context.Context, f dao.DriverFile) error {
 	return dbBase.UpsertDriverFile(ctx, conn, f)
 }
 
-func (db *DB) ListDriverFile(ctx context.Context, driverName string, filePath []string) (files []dao.DriverFile, err error) {
+func (db *DB) ListDriverFile(ctx context.Context, driverId uint64, filePath []string) (files []dao.DriverFile, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.ListDriverFile(ctx, conn, driverName, filePath)
+	return dbBase.ListDriverFile(ctx, conn, driverId, filePath)
 }
 
 func (db *DB) InsertFile(ctx context.Context, hash string, size uint64) error {

@@ -46,7 +46,7 @@ func ListByHash(ctx context.Context, conn *sql.DB, hash string) (dirItems []dao.
 	return
 }
 
-func ListDriverFile(ctx context.Context, conn *sql.DB, driverName string, filePath []string) (files []dao.DriverFile, err error) {
+func ListDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, filePath []string) (files []dao.DriverFile, err error) {
 	rows, err := conn.QueryContext(ctx, `
 		SELECT name,
 			hash,
@@ -56,8 +56,8 @@ func ListDriverFile(ctx context.Context, conn *sql.DB, driverName string, filePa
 			modifyTime,
 			changeTime,
 			accessTime
-		FROM _driver_file WHERE driverName=? and dirPath=? and version=0
-	`, driverName, arrayToJson(filePath))
+		FROM _driver_file WHERE driverId=? and dirPath=? and version=0
+	`, driverId, arrayToJson(filePath))
 	if err != nil {
 		return
 	}
@@ -65,7 +65,7 @@ func ListDriverFile(ctx context.Context, conn *sql.DB, driverName string, filePa
 	files = make([]dao.DriverFile, 0)
 	for rows.Next() {
 		var file dao.DriverFile
-		file.DriverName = driverName
+		file.DriverId = driverId
 		file.DirPath = filePath
 		err = rows.Scan(
 			&file.Name,
@@ -86,7 +86,7 @@ func ListDriverFile(ctx context.Context, conn *sql.DB, driverName string, filePa
 
 func ListDriverFileByHash(ctx context.Context, conn *sql.DB, hash string) (files []dao.DriverFile, err error) {
 	rows, err := conn.QueryContext(ctx, `
-		SELECT driverName,
+		SELECT driverId,
 			dirPath,
 			name,
 			version
@@ -101,7 +101,7 @@ func ListDriverFileByHash(ctx context.Context, conn *sql.DB, hash string) (files
 		var file dao.DriverFile
 		var dirPathJson []byte
 		err = rows.Scan(
-			&file.DriverName,
+			&file.DriverId,
 			&dirPathJson,
 			&file.Name,
 			&file.Version)

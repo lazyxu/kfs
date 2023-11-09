@@ -9,12 +9,12 @@ import (
 	"strings"
 )
 
-func UpsertLivePhoto(kfsCore *core.KFS, movHash string, driverName string, dirPath []string, movName string) error {
+func UpsertLivePhoto(kfsCore *core.KFS, movHash string, driverId uint64, dirPath []string, movName string) error {
 	ext := filepath.Ext(movName)
 	if ext == ".MOV" {
 		name := strings.TrimSuffix(movName, ext)
 		heicPath := append(dirPath, name+".HEIC")
-		heicFile, err := kfsCore.Db.GetDriverFile(context.TODO(), driverName, heicPath)
+		heicFile, err := kfsCore.Db.GetDriverFile(context.TODO(), driverId, heicPath)
 		if err != nil {
 			if !errors.Is(err, dbBase.ErrNoSuchFileOrDir) {
 				return err
@@ -22,7 +22,7 @@ func UpsertLivePhoto(kfsCore *core.KFS, movHash string, driverName string, dirPa
 		} else {
 		}
 		jpgPath := append(dirPath, name+".JPG")
-		jpgFile, err := kfsCore.Db.GetDriverFile(context.TODO(), driverName, jpgPath)
+		jpgFile, err := kfsCore.Db.GetDriverFile(context.TODO(), driverId, jpgPath)
 		if err != nil {
 			if !errors.Is(err, dbBase.ErrNoSuchFileOrDir) {
 				return err

@@ -40,16 +40,17 @@ type Database interface {
 	DirItemCount(ctx context.Context) (int, error)
 	BranchCount(ctx context.Context) (int, error)
 
-	InsertDriver(ctx context.Context, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error)
-	UpdateDriverSync(ctx context.Context, driverName string, sync bool, h int64, m int64, s int64) error
-	DeleteDriver(ctx context.Context, driverName string) error
+	InsertDriver(ctx context.Context, driverName string, description string, typ string) (exist bool, err error)
+	InsertDriverBaiduPhoto(ctx context.Context, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error)
+	UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, h int64, m int64, s int64) error
+	DeleteDriver(ctx context.Context, driverId uint64) error
 	ListDriver(ctx context.Context) (drivers []Driver, err error)
-	GetDriverToken(ctx context.Context, driverName string) (driver Driver, err error)
-	GetDriverSync(ctx context.Context, driverName string) (driver Driver, err error)
+	GetDriverToken(ctx context.Context, driverId uint64) (driver Driver, err error)
+	GetDriverSync(ctx context.Context, driverId uint64) (driver Driver, err error)
 
-	GetDriverFileSize(ctx context.Context, driverName string) (n uint64, err error)
-	GetDriverFileCount(ctx context.Context, driverName string) (n uint64, err error)
-	GetDriverDirCount(ctx context.Context, driverName string) (n uint64, err error)
+	GetDriverFileSize(ctx context.Context, driverId uint64) (n uint64, err error)
+	GetDriverFileCount(ctx context.Context, driverId uint64) (n uint64, err error)
+	GetDriverDirCount(ctx context.Context, driverId uint64) (n uint64, err error)
 
 	InsertFile(ctx context.Context, hash string, size uint64) error
 	InsertFileMd5(ctx context.Context, hash string, hashMd5 string) error
@@ -57,8 +58,8 @@ type Database interface {
 	SumFileSize(ctx context.Context) (size uint64, err error)
 
 	UpsertDriverFile(ctx context.Context, f DriverFile) error
-	ListDriverFile(ctx context.Context, driverName string, filePath []string) (files []DriverFile, err error)
-	GetDriverFile(ctx context.Context, driverName string, splitPath []string) (file DriverFile, err error)
+	ListDriverFile(ctx context.Context, driverId uint64, filePath []string) (files []DriverFile, err error)
+	GetDriverFile(ctx context.Context, driverId uint64, splitPath []string) (file DriverFile, err error)
 	ListDriverFileByHash(ctx context.Context, hash string) (files []DriverFile, err error)
 
 	InsertHeightWidth(ctx context.Context, hash string, hw HeightWidth) (exist bool, err error)

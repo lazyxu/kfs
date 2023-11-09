@@ -65,7 +65,7 @@ func webServer(webPortString string) {
 		return metadata.ApiEvent(c, kfsCore)
 	})
 	e.POST("/api/v1/startBaiduPhotoTask", apiStartBaiduPhotoTask)
-	e.GET("/api/v1/event/baiduPhotoTask/:name", func(c echo.Context) error {
+	e.GET("/api/v1/event/baiduPhotoTask/:id", func(c echo.Context) error {
 		return baidu_photo.ApiEvent(c, kfsCore)
 	}) // TODO: handle name
 
@@ -75,8 +75,12 @@ func webServer(webPortString string) {
 }
 
 func apiDriversFileSize(c echo.Context) error {
-	name := c.QueryParam("name")
-	n, err := kfsCore.Db.GetDriverFileSize(c.Request().Context(), name)
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseUint(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
+	n, err := kfsCore.Db.GetDriverFileSize(c.Request().Context(), id)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -85,8 +89,12 @@ func apiDriversFileSize(c echo.Context) error {
 }
 
 func apiDriversFileCount(c echo.Context) error {
-	name := c.QueryParam("name")
-	n, err := kfsCore.Db.GetDriverFileCount(c.Request().Context(), name)
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseUint(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
+	n, err := kfsCore.Db.GetDriverFileCount(c.Request().Context(), id)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -95,8 +103,12 @@ func apiDriversFileCount(c echo.Context) error {
 }
 
 func apiDriversDirCount(c echo.Context) error {
-	name := c.QueryParam("name")
-	n, err := kfsCore.Db.GetDriverDirCount(c.Request().Context(), name)
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseUint(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
+	n, err := kfsCore.Db.GetDriverDirCount(c.Request().Context(), id)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -130,7 +142,7 @@ func apiNewDriver(c echo.Context) error {
 	typ := c.QueryParam("type")
 	description := c.QueryParam("description")
 	if typ == "" {
-		exist, err := kfsCore.Db.InsertDriver(c.Request().Context(), name, description, "", "", "")
+		exist, err := kfsCore.Db.InsertDriver(c.Request().Context(), name, description, "")
 		if err != nil {
 			c.Logger().Error(err)
 			return err
@@ -149,8 +161,12 @@ func apiNewDriver(c echo.Context) error {
 }
 
 func apiGetDriverSync(c echo.Context) error {
-	name := c.QueryParam("name")
-	d, err := kfsCore.Db.GetDriverSync(c.Request().Context(), name)
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseUint(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
+	d, err := kfsCore.Db.GetDriverSync(c.Request().Context(), id)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -159,7 +175,11 @@ func apiGetDriverSync(c echo.Context) error {
 }
 
 func apiUpdateDriverSync(c echo.Context) error {
-	name := c.QueryParam("name")
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseUint(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
 	syncStr := c.QueryParam("sync")
 	sync, err := strconv.ParseBool(syncStr)
 	if err != nil {
@@ -180,7 +200,7 @@ func apiUpdateDriverSync(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, "s should be a number")
 	}
-	err = kfsCore.Db.UpdateDriverSync(c.Request().Context(), name, sync, h, m, s)
+	err = kfsCore.Db.UpdateDriverSync(c.Request().Context(), id, sync, h, m, s)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -189,7 +209,12 @@ func apiUpdateDriverSync(c echo.Context) error {
 }
 
 func apiDeleteDriver(c echo.Context) error {
-	err := kfsCore.Db.DeleteDriver(c.Request().Context(), c.QueryParam("name"))
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseUint(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
+	err = kfsCore.Db.DeleteDriver(c.Request().Context(), id)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -198,12 +223,16 @@ func apiDeleteDriver(c echo.Context) error {
 }
 
 func apiList(c echo.Context) error {
-	driverName := c.QueryParam("driverName")
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseUint(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
 	filePath := c.QueryParams()["filePath[]"]
 	if filePath == nil {
 		filePath = []string{}
 	}
-	files, err := kfsCore.ListDriverFile(c.Request().Context(), driverName, filePath)
+	files, err := kfsCore.ListDriverFile(c.Request().Context(), id, filePath)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -213,14 +242,18 @@ func apiList(c echo.Context) error {
 }
 
 func apiOpenFile(c echo.Context) error {
-	driverName := c.QueryParam("driverName")
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseUint(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
 	filePath := c.QueryParams()["filePath[]"]
 	maxContentSizeStr := c.QueryParam("maxContentSize")
 	maxContentSize, err := strconv.ParseInt(maxContentSizeStr, 10, 0)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "maxContentSize should be a number")
 	}
-	rc, tooLarge, err := kfsCore.OpenFile(c.Request().Context(), driverName, filePath, maxContentSize)
+	rc, tooLarge, err := kfsCore.OpenFile(c.Request().Context(), id, filePath, maxContentSize)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -235,9 +268,13 @@ func apiOpenFile(c echo.Context) error {
 }
 
 func apiDownloadFile(c echo.Context) error {
-	driverName := c.QueryParam("driverName")
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseUint(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
 	filePath := c.QueryParams()["filePath[]"]
-	rc, _, err := kfsCore.OpenFile(c.Request().Context(), driverName, filePath, -1)
+	rc, _, err := kfsCore.OpenFile(c.Request().Context(), id, filePath, -1)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -498,9 +535,13 @@ func apiStartBaiduPhotoTask(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	driverName := c.QueryParam("driverName")
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseUint(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
 	ctx := c.Request().Context()
-	d, err := baidu_photo.GetOrLoadDriver(ctx, kfsCore, driverName)
+	d, err := baidu_photo.GetOrLoadDriver(ctx, kfsCore, id)
 	if err != nil {
 		return err
 	}

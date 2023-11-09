@@ -1,7 +1,7 @@
 package dao
 
 type IDriverFile interface {
-	GetDriverName() string
+	GetDriverId() uint64
 	GetDirPath() []string
 	GetName() string
 	GetVersion() uint64
@@ -16,7 +16,7 @@ type IDriverFile interface {
 
 // https://zhuanlan.zhihu.com/p/343682839
 type DriverFile struct {
-	DriverName string   `json:"driverName"`
+	DriverId   uint64   `json:"driverId"`
 	DirPath    []string `json:"dirPath"`
 	Name       string   `json:"name"`
 	Version    uint64   `json:"version"`
@@ -29,8 +29,8 @@ type DriverFile struct {
 	AccessTime uint64   `json:"accessTime"`
 }
 
-func (d DriverFile) GetDriverName() string {
-	return d.DriverName
+func (d DriverFile) GetDriverId() uint64 {
+	return d.DriverId
 }
 
 func (d DriverFile) GetDirPath() []string {
