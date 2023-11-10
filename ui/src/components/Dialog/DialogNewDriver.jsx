@@ -1,11 +1,8 @@
-import React, { useCallback, useRef, useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
 import useDialog from "hox/dialog";
-import { newDir } from "api/fs";
 import useResourceManager from "hox/resourceManager";
+import { useCallback, useRef, useState } from 'react';
 import { newDriver } from "../../api/driver";
-import { enqueueSnackbar } from 'notistack';
-import { noteError, noteInfo, noteSuccess } from 'components/Notification/Notification';
 
 export default function () {
     const [dialog, setDialog] = useDialog();
@@ -58,13 +55,7 @@ export default function () {
                     setDialog(null);
                 }}>取消</Button>
                 <Button onClick={() => {
-                    setDialog(null);
-                    newDriver(setResourceManager, name)
-                        .then(() => noteSuccess("创建云盘成功: " + name))
-                        // .then(exist => console.log("exist", exist))
-                        // .then(exist => exist ? noteInfo("云盘已存在: " + name) : noteSuccess("创建云盘成功: " + name))
-                        // .then(() => enqueueSnackbar({ success: "创建云盘 " + name + " 成功" }))
-                        .catch(e => noteError("创建云盘失败：" + e.message));
+                    newDriver(setResourceManager, name) .then(() => setDialog(null));
                 }}>确定</Button>
             </DialogActions>
         </Dialog>

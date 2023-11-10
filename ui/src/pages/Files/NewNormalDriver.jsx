@@ -1,5 +1,4 @@
 import { Button, DialogActions, DialogContent, TextField } from "@mui/material";
-import { noteError } from 'components/Notification/Notification';
 import useResourceManager from "hox/resourceManager";
 import { useState } from 'react';
 import { newDriver } from "../../api/driver";
@@ -35,9 +34,7 @@ export default function ({ setOpen }) {
                 color: theme => theme.context.primary
             }}>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={name === ""} onClick={() => {
-                    newDriver(setResourceManager, name, description)
-                        .then(exist => exist ? noteError("云盘名称重复") : setOpen(false))
-                        .catch(e => noteError("创建云盘失败：" + e.message));
+                    newDriver(setResourceManager, name, description).then(() => setOpen(false));
                 }}>确定</Button>
             </DialogActions>
         </>

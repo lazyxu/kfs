@@ -3,7 +3,6 @@ import { Box, Card, CardContent, IconButton, Link, ListItemText, Menu, MenuItem,
 import { deleteDriver } from 'api/driver';
 import { list } from "api/fs";
 import SvgIcon from "components/Icon/SvgIcon";
-import { noteError } from 'components/Notification/Notification';
 import useContextMenu from "hox/contextMenu";
 import useResourceManager from 'hox/resourceManager';
 import { useState } from 'react';
@@ -61,7 +60,7 @@ export default ({ driver, setDriverAttribute }) => {
                     alignItems="center"
                     spacing={2}
                 >
-                    <Link onClick={() => list(setResourceManager, driver.id, [])}>
+                    <Link onClick={() => list(setResourceManager, driver.id, driver.name, [])}>
                         <Box sx={{ height: "64px", width: "64px" }} >
                             {driver.type === 'baiduPhoto' ?
                                 <img src='baiduPhoto.png' style={{ maxWidth: "100%", maxHeight: "100%" }} />
@@ -74,7 +73,7 @@ export default ({ driver, setDriverAttribute }) => {
                         direction="column"
                         sx={{ flex: 1 }}
                     >
-                        <Link underline="hover" onClick={() => list(setResourceManager, driver.id, [])} sx={{ flex: 1 }}>
+                        <Link underline="hover" onClick={() => list(setResourceManager, driver.id, driver.name, [])} sx={{ flex: 1 }}>
                             <Box>{driver.name}</Box>
                         </Link>
                         <Box color="text.secondary" sx={{ flex: 1 }}>
@@ -91,7 +90,7 @@ export default ({ driver, setDriverAttribute }) => {
                         open={Boolean(anchorEl)}
                         onClose={() => setAnchorEl(null)}
                     >
-                        <MenuItem onClick={() => list(setResourceManager, driver.id, [])}>
+                        <MenuItem onClick={() => list(setResourceManager, driver.id, driver.name, [])}>
                             <OpenInNew />
                             <ListItemText>打开</ListItemText>
                         </MenuItem>
@@ -111,7 +110,7 @@ export default ({ driver, setDriverAttribute }) => {
                             <ClearAll />
                             <ListItemText>重置</ListItemText>
                         </MenuItem>
-                        <MenuItem onClick={() => { setAnchorEl(null); deleteDriver(setResourceManager, driver.id).catch(e => noteError(e.message)) }} disableRipple>
+                        <MenuItem onClick={() => { setAnchorEl(null); deleteDriver(setResourceManager, driver.id); }} disableRipple>
                             <Delete />
                             <ListItemText>删除</ListItemText>
                         </MenuItem>

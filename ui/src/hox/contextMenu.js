@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { createGlobalStore } from 'hox';
+import { useState } from 'react';
 
 const initialState = {
     type: null,

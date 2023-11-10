@@ -1,14 +1,14 @@
-import React, {useState} from 'react';
-import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
+import { newFile } from "api/fs";
 import useDialog from "hox/dialog";
-import {newFile} from "api/fs";
 import useResourceManager from "hox/resourceManager";
+import { useState } from 'react';
 
 export default () => {
     const [dialog, setDialog] = useDialog();
     let [name, setName] = useState("");
     const [resourceManager, setResourceManager] = useResourceManager();
-    let {filePath, driverName} = resourceManager;
+    let {filePath, driverId, driverName} = resourceManager;
     return (
         <Dialog open={true} onClose={() => {
             setDialog(null)
@@ -41,7 +41,7 @@ export default () => {
                     setDialog(null);
                 }}>取消</Button>
                 <Button onClick={async () => {
-                    await newFile(setResourceManager, driverName, filePath, name);
+                    await newFile(setResourceManager, driverId, driverName, filePath, name);
                     setDialog(null);
                 }}>确定</Button>
             </DialogActions>

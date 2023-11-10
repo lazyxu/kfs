@@ -209,12 +209,12 @@ func apiUpdateDriverSync(c echo.Context) error {
 }
 
 func apiDeleteDriver(c echo.Context) error {
-	idStr := c.QueryParam("id")
-	id, err := strconv.ParseUint(idStr, 10, 0)
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "id should be a number")
 	}
-	err = kfsCore.Db.DeleteDriver(c.Request().Context(), id)
+	err = kfsCore.Db.DeleteDriver(c.Request().Context(), driverId)
 	if err != nil {
 		c.Logger().Error(err)
 		return err

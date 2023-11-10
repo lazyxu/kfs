@@ -1,21 +1,20 @@
-import React from 'react';
-import ContextMenu from './index';
+import { download, list, openFile } from "api/fs";
+import { modeIsDir } from "api/utils/api";
 import useContextMenu from "hox/contextMenu";
 import useResourceManager from "hox/resourceManager";
-import {download, list, openFile} from "api/fs";
-import {modeIsDir} from "api/utils/api";
 import useDialog2 from "../../hox/dialog";
+import ContextMenu from './index';
 
 export default () => {
     const [contextMenu, setContextMenu] = useContextMenu();
     const [resourceManager, setResourceManager] = useResourceManager();
     const [dialog, setDialog] = useDialog2();
     if (contextMenu === null || contextMenu.type !== "file") {
-        return <div/>
+        return <div />
     }
-    let {filePath, driverName} = resourceManager;
-    let {dirItem} = contextMenu;
-    let {name, mode} = dirItem;
+    let { driverId, driverName, filePath } = resourceManager;
+    let { dirItem } = contextMenu;
+    let { name, mode } = dirItem;
     filePath = filePath.concat(name);
     return <ContextMenu
         left={contextMenu.clientX}
@@ -27,14 +26,14 @@ export default () => {
         options={{
             打开: async () => {
                 if (modeIsDir(mode)) {
-                    await list(setResourceManager, driverName, filePath);
+                    await list(setResourceManager, driverId, driverName, filePath);
                 } else {
-                    await openFile(setResourceManager, driverName, filePath, dirItem);
+                    await openFile(setResourceManager, driverId, filePath, dirItem);
                 }
             },
             下载: {
                 enabled: !modeIsDir(mode), fn: async () => {
-                    await download(driverName, filePath);
+                    await download(driverId, filePath);
                 }
             },
             分享: null,
