@@ -48,6 +48,36 @@ func InsertDriverBaiduPhoto(ctx context.Context, conn *sql.DB, db DbImpl, driver
 	return
 }
 
+func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, typ string, deviceId uint64, srcPath string, encoder string, concurrent int) (exist bool, err error) {
+	res, err := conn.ExecContext(ctx, `
+	INSERT INTO _driver (
+		name,
+		description,
+	    Type
+	) VALUES (?, ?, ?)`, driverName, description, typ)
+	if db.IsUniqueConstraintError(err) {
+		exist = true
+		err = nil
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return
+	}
+	_, err = conn.ExecContext(ctx, `
+	INSERT INTO _driver_baidu_photo (
+		id,
+		deviceId,
+	    srcPath,
+	    encoder,
+	    concurrent
+	) VALUES (?, ?, ?, ?, ?)`, id, deviceId, srcPath, encoder, concurrent)
+	if db.IsUniqueConstraintError(err) {
+		exist = true
+		err = nil
+	}
+	return
+}
+
 func UpdateDriverSync(ctx context.Context, conn *sql.DB, driverId uint64, sync bool, h int64, m int64, s int64) error {
 	_, err := conn.ExecContext(ctx, `
 	UPDATE _driver
