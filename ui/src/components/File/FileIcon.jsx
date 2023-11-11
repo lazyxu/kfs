@@ -14,13 +14,13 @@ export default function ({ dirItem }) {
     const [open, setOpen] = useState(false);
     const [metadata, setMetadata] = useState();
     const [resourceManager, setResourceManager] = useResourceManager();
-    let { filePath, driverId } = resourceManager;
+    let { driverId, driverName, filePath } = resourceManager;
     filePath = filePath.concat(dirItem.name);
     return (
         <Box className="file-icon-box">
             {modeIsDir(dirItem.mode) ?
                 <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit" onClick={() => {
-                    list(setResourceManager, driverId, filePath);
+                    list(setResourceManager, driverId, driverName, filePath);
                 }} /> :
                 isDCIM(dirItem.name) ?
                     <img src={`${sysConfig.webServer}/thumbnail?size=64&hash=${dirItem.hash}`} loading="lazy" onClick={() => getMetadata(dirItem.hash).then(m => {

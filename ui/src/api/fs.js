@@ -7,12 +7,12 @@ function getFsApi() {
     return getSysConfig().sysConfig.api === "web" ? webApi : mockApi;
 }
 
-export async function list(setResourceManager, driverId, filePath) {
+export async function list(setResourceManager, driverId, driverName, filePath) {
     try {
         console.log('api.list', driverId, filePath);
         let dirItems = await getFsApi().list(driverId, filePath);
         setResourceManager(prev => {
-            return { ...prev, driverId, filePath, dirItems, file: null, drivers: null };
+            return { ...prev, driverId, driverName, filePath, dirItems, file: null, drivers: null };
         });
     } catch (e) {
         noteError(e.response.data ? e.response.data : e.message);
@@ -33,16 +33,16 @@ export async function openFile(setResourceManager, driverId, filePath, dirItem) 
     });
 }
 
-export async function newFile(setResourceManager, driverId, dirPath, fileName) {
+export async function newFile(setResourceManager, driverId, driverName, dirPath, fileName) {
     console.log('api.newFile', driverId, dirPath, fileName);
     await getFsApi().newFile(driverId, dirPath, fileName);
-    await list(setResourceManager, driverId, dirPath)
+    await list(setResourceManager, driverId, dirPath);
 }
 
 export async function newDir(setResourceManager, driverId, dirPath, fileName) {
     console.log('api.newDir', driverId, dirPath, fileName);
     await getFsApi().newDir(driverId, dirPath, fileName);
-    await list(setResourceManager, driverId, dirPath)
+    await list(setResourceManager, driverId, dirPath);
 }
 
 function downloadURI(uri, name) {

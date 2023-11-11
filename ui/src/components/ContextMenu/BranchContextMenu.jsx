@@ -13,7 +13,6 @@ export default function () {
         return <div />
     }
     let { driver } = contextMenu;
-    let { id } = driver;
     return <ContextMenu
         left={contextMenu.clientX}
         top={contextMenu.clientY}
@@ -23,10 +22,10 @@ export default function () {
         maxHeight={10 * 50}
         options={{
             打开: async () => {
-                await list(setResourceManager, name, []);
+                await list(setResourceManager, driver.id, driver.name, []);
             },
             删除: async () => {
-                await deleteDriver(setResourceManager, id);
+                await deleteDriver(setResourceManager, driver.id);
             },
             重命名: null,
             属性: () => {

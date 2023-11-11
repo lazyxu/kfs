@@ -1,5 +1,4 @@
 import { Button, DialogActions, DialogContent, Link, Stack, TextField } from "@mui/material";
-import { noteError } from 'components/Notification/Notification';
 import useResourceManager from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
 import { useState } from 'react';
@@ -60,9 +59,7 @@ export default function ({ setOpen }) {
                 color: theme => theme.context.primary
             }}>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={name === "" || code === ""} onClick={() => {
-                    newDriver(setResourceManager, name, description, "baiduPhoto", code)
-                        .then(exist => exist ? noteError("云盘名称重复") : setOpen(false))
-                        .catch(e => noteError("创建云盘失败：" + e.message));
+                    newDriver(setResourceManager, name, description, "baiduPhoto", code).then(() => setOpen(false));
                 }}>确定</Button>
             </DialogActions>
         </>

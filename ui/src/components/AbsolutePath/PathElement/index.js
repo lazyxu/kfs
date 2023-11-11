@@ -12,7 +12,7 @@ export default ({type, name, icon, filePath}) => {
                 if (type === "file") {
                     openFile(setResourceManager, resourceManager.driverId, filePath, resourceManager.file);
                 } else {
-                    list(setResourceManager, resourceManager.driverId, filePath);
+                    list(setResourceManager, resourceManager.driverId, resourceManager.driverName, filePath);
                 }
             } else {
                 listDriver(setResourceManager);

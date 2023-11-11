@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { createGlobalStore } from 'hox';
+import { useState } from 'react';
 
 const initialState = {
   drivers: [],
@@ -9,6 +9,6 @@ const initialState = {
   content: null,
 };
 
-const [useResourceManager] = createGlobalStore(() => useState(initialState));
+export const [useResourceManager, getResourceManager] = createGlobalStore(() => useState(initialState));
 
 export default useResourceManager;
