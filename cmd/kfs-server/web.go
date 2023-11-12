@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/baidu_photo"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/metadata"
 	"image"
@@ -37,11 +36,17 @@ func webServer(webPortString string) {
 	e.StaticFS("/", echo.MustSubFS(build, "build"))
 
 	// Routes
+	e.GET("/api/v1/devices", apiDevices)
+	e.POST("/api/v1/devices", apiNewDevice)
+	e.DELETE("/api/v1/devices", apiDeleteDevice)
+
 	e.GET("/api/v1/drivers", apiDrivers)
 	e.GET("/api/v1/getDriverSync", apiGetDriverSync)
 	e.GET("/api/v1/updateDriverSync", apiUpdateDriverSync)
 	e.POST("/api/v1/drivers", apiNewDriver)
+	e.POST("/api/v1/driverBaiduPhotos", apiNewDriverBaiduPhoto)
 	e.DELETE("/api/v1/drivers", apiDeleteDriver)
+
 	e.GET("/api/v1/list", apiList)
 	e.GET("/api/v1/listDriverFileByHash", apiListDriverFileByHash)
 	e.GET("/api/v1/openFile", apiOpenFile)
@@ -139,25 +144,25 @@ func apiDrivers(c echo.Context) error {
 
 func apiNewDriver(c echo.Context) error {
 	name := c.QueryParam("name")
-	typ := c.QueryParam("type")
 	description := c.QueryParam("description")
-	if typ == "" {
-		exist, err := kfsCore.Db.InsertDriver(c.Request().Context(), name, description, "")
-		if err != nil {
-			c.Logger().Error(err)
-			return err
-		}
-		return ok(c, exist)
-	} else if typ == "baiduPhoto" {
-		code := c.QueryParam("code")
-		exist, err := baidu_photo.InsertDriverBaiduPhoto(c.Request().Context(), kfsCore, name, description, typ, code)
-		if err != nil {
-			c.Logger().Error(err)
-			return err
-		}
-		return ok(c, exist)
+	exist, err := kfsCore.Db.InsertDriver(c.Request().Context(), name, description, "")
+	if err != nil {
+		c.Logger().Error(err)
+		return err
 	}
-	return fmt.Errorf("invalid driver type: %s", typ)
+	return ok(c, exist)
+}
+
+func apiNewDriverBaiduPhoto(c echo.Context) error {
+	name := c.QueryParam("name")
+	description := c.QueryParam("description")
+	code := c.QueryParam("code")
+	exist, err := baidu_photo.InsertDriverBaiduPhoto(c.Request().Context(), kfsCore, name, description, "baiduPhoto", code)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, exist)
 }
 
 func apiGetDriverSync(c echo.Context) error {

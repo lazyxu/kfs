@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
 import { createGlobalStore } from 'hox';
+import { useEffect, useState } from 'react';
 
-import kfsConfig from 'kfsConfig/localStorage';
 import defaultConfig from 'kfsConfig/default';
+import kfsConfig from 'kfsConfig/localStorage';
 
 function useFunc() {
   const [sysConfig, setSysConfig] = useState(kfsConfig.get() || defaultConfig);

@@ -156,7 +156,7 @@ func (db *DB) Create() error {
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver (
-		id           INTEGER          NOT NULL PRIMARY KEY AUTOINCREMENT,
+		id           INTEGER        NOT NULL PRIMARY KEY AUTOINCREMENT,
 		name         VARCHAR(256)   NOT NULL UNIQUE,
 		description  VARCHAR(256)   NOT NULL DEFAULT "",
 		Type         VARCHAR(256)   NOT NULL DEFAULT ""
@@ -179,7 +179,7 @@ func (db *DB) Create() error {
 		h            INT8           NOT NULL DEFAULT 4,
 		m            INT8           NOT NULL DEFAULT 0,
 		s            INT8           NOT NULL DEFAULT 0,
-	    deviceId     INT64          NOT NULL DEFAULT 0,
+	    deviceId     INTEGER        NOT NULL DEFAULT 0,
 		srcPath      VARCHAR(32767) NOT NULL DEFAULT "",
 		encoder      VARCHAR(64)    NOT NULL DEFAULT "",
 	    concurrent   INT8           NOT NULL DEFAULT 0,
@@ -188,9 +188,8 @@ func (db *DB) Create() error {
 
 	CREATE TABLE IF NOT EXISTS _device (
 		id          INTEGER      NOT NULL PRIMARY KEY AUTOINCREMENT,
-		name        VARCHAR(256) NOT NULL UNIQUE,
-		os          VARCHAR(256) NOT NULL,
-	    LastOnline  INT64        NOT NULL
+		name        VARCHAR(256) NOT NULL,
+		os          VARCHAR(256) NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver_file (

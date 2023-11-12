@@ -40,6 +40,10 @@ type Database interface {
 	DirItemCount(ctx context.Context) (int, error)
 	BranchCount(ctx context.Context) (int, error)
 
+	InsertDevice(ctx context.Context, name string, os string) (int64, error)
+	DeleteDevice(ctx context.Context, deviceId uint64) error
+	ListDevice(ctx context.Context) (devices []Device, err error)
+
 	InsertDriver(ctx context.Context, driverName string, description string, typ string) (exist bool, err error)
 	InsertDriverBaiduPhoto(ctx context.Context, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error)
 	UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, h int64, m int64, s int64) error

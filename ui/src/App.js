@@ -1,6 +1,7 @@
 import { Inbox, Mail } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, styled, useColorScheme } from "@mui/material";
+import { newDevice } from 'api/device';
 import SvgIcon from 'components/Icon/SvgIcon';
 import MetadataAnalysis from 'components/MetadataAnalysis';
 import { SnackbarAction } from 'components/Notification/Notification';
@@ -10,13 +11,28 @@ import Dcim from 'pages/Dcim';
 import DedicatedSpace from 'pages/DedicatedSpace/DedicatedSpace';
 import SystemConfig from 'pages/Setting/SystemConfig';
 import React, { useEffect } from "react";
+import UAParser from "ua-parser-js";
 import useMenu from "./hox/menu";
 import useSysConfig from "./hox/sysConfig";
 import BackupTask from "./pages/BackupTask";
+import Devices from "./pages/Devices";
 import Files from "./pages/Files";
 
+async function newDeviceIfNeeded(sysConfig, setSysConfig) {
+    console.log("newDeviceIfNeeded", sysConfig);
+    if (!sysConfig.hasOwnProperty("deviceId")) {
+        let parser = new UAParser(navigator.userAgent);
+        let parserOS = parser.getOS();
+        console.log(parserOS);
+        let os = parserOS.name + " " + parserOS.version;
+        let name = os;
+        let deviceId = await newDevice(name, os);
+        setSysConfig(prev => { return { ...prev, deviceId } });
+    }
+}
+
 function App() {
-    const { sysConfig } = useSysConfig();
+    const { sysConfig, setSysConfig } = useSysConfig();
     const { menu, setMenu } = useMenu();
     const { mode, setMode } = useColorScheme();
     const [open, setOpen] = React.useState(false);
@@ -27,6 +43,9 @@ function App() {
 
         setOpen(open);
     };
+    useEffect(() => {
+        newDeviceIfNeeded(sysConfig, setSysConfig);
+    });
     useEffect(() => {
         // document.body.setAttribute('data-theme', sysConfig.theme);
         console.log("mode:", mode, "=>", sysConfig.theme);
@@ -86,12 +105,14 @@ function App() {
                             {(process.env.REACT_APP_PLATFORM === 'web' ? [
                                 { icon: 'wangpan', name: '我的云盘' },
                                 { icon: 'DCIM', name: '我的相册' },
+                                { icon: 'devices', name: '设备列表' },
                                 { icon: 'peizhi', name: '设置' },
                                 { icon: 'equipment_data-02_fn', name: '存储空间' },
                             ] : [
                                 { icon: 'wangpan', name: '我的云盘' },
                                 { icon: 'DCIM', name: '我的相册' },
                                 { icon: 'yuntongbu', name: '备份任务' },
+                                { icon: 'devices', name: '设备列表' },
                                 { icon: 'peizhi', name: '设置' },
                                 { icon: 'equipment_data-02_fn', name: '存储空间' },
                             ]).map((item, index) => (
@@ -108,7 +129,6 @@ function App() {
                         <Divider />
                         <List>
                             {[
-                                { icon: 'devices', name: '设备列表' },
                                 { icon: '', name: '文件类型' },
                                 { icon: '', name: '文件大小' },
                                 { icon: 'swapVertical', name: '传输列表' },
@@ -148,6 +168,7 @@ function App() {
                 {menu === '我的云盘' && <Files />}
                 {menu === '我的相册' && <Dcim />}
                 {menu === '备份任务' && <BackupTask />}
+                {menu === '设备列表' && <Devices />}
                 {menu === '设置' && <SystemConfig />}
                 {menu === '存储空间' && <DedicatedSpace />}
             </Box>
