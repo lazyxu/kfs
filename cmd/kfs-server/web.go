@@ -228,16 +228,16 @@ func apiDeleteDriver(c echo.Context) error {
 }
 
 func apiList(c echo.Context) error {
-	idStr := c.QueryParam("id")
-	id, err := strconv.ParseUint(idStr, 10, 0)
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "id should be a number")
+		return c.String(http.StatusBadRequest, "driverId should be a number")
 	}
 	filePath := c.QueryParams()["filePath[]"]
 	if filePath == nil {
 		filePath = []string{}
 	}
-	files, err := kfsCore.ListDriverFile(c.Request().Context(), id, filePath)
+	files, err := kfsCore.ListDriverFile(c.Request().Context(), driverId, filePath)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -247,8 +247,8 @@ func apiList(c echo.Context) error {
 }
 
 func apiOpenFile(c echo.Context) error {
-	idStr := c.QueryParam("id")
-	id, err := strconv.ParseUint(idStr, 10, 0)
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "id should be a number")
 	}
@@ -258,7 +258,7 @@ func apiOpenFile(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, "maxContentSize should be a number")
 	}
-	rc, tooLarge, err := kfsCore.OpenFile(c.Request().Context(), id, filePath, maxContentSize)
+	rc, tooLarge, err := kfsCore.OpenFile(c.Request().Context(), driverId, filePath, maxContentSize)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -273,13 +273,13 @@ func apiOpenFile(c echo.Context) error {
 }
 
 func apiDownloadFile(c echo.Context) error {
-	idStr := c.QueryParam("id")
-	id, err := strconv.ParseUint(idStr, 10, 0)
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "id should be a number")
 	}
 	filePath := c.QueryParams()["filePath[]"]
-	rc, _, err := kfsCore.OpenFile(c.Request().Context(), id, filePath, -1)
+	rc, _, err := kfsCore.OpenFile(c.Request().Context(), driverId, filePath, -1)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
