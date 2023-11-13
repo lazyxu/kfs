@@ -3,8 +3,10 @@ package main
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/lazyxu/kfs/cmd/kfs-electron/task/local_file"
 	"net"
 	"net/http"
+	"strconv"
 )
 
 func webServer(lis net.Listener) {
@@ -27,7 +29,8 @@ func webServer(lis net.Listener) {
 	e.DELETE("/api/v1/backupTask", apiDeleteBackupTask)
 	e.POST("/api/v1/startBackupTask", apiStartBackupTask)
 	e.GET("/api/v1/event/backupTask/:name", apiEventBackupTaskDetail)
-	//e.GET("/api/v1/event/DriverLocalFile/:driverId", local_file.ApiEvent)
+	e.POST("/api/v1/startDriverLocalFile", apiStarDriverLocalFile)
+	e.GET("/api/v1/event/driverLocalFile/:driverId", local_file.ApiEvent)
 
 	// Start server
 	e.Listener = lis
@@ -45,3 +48,26 @@ func ok(c echo.Context, data interface{}) error {
 }
 
 // Handler
+
+func apiStarDriverLocalFile(c echo.Context) error {
+	startStr := c.QueryParam("start")
+	start, err := strconv.ParseBool(startStr)
+	if err != nil {
+		return err
+	}
+	serverAddr := c.QueryParam("serverAddr")
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "driverId should be a number")
+	}
+	srcPath := c.QueryParam("srcPath")
+	encoder := c.QueryParam("encoder")
+	ctx := c.Request().Context()
+	d, err := local_file.GetOrLoadDriver(driverId)
+	if err != nil {
+		return err
+	}
+	d.StartOrStop(ctx, start, serverAddr, srcPath, encoder)
+	return c.String(http.StatusOK, "")
+}

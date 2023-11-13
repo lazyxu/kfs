@@ -10,7 +10,7 @@ export default function ({ setOpen }) {
     const [description, setDescription] = useState("");
     const [srcPath, setSrcPath] = useState('');
     const [encoder, setEncoder] = useState("none");
-    const [concurrent, setConcurrent] = useState(2);
+    const [concurrent, setConcurrent] = useState(1);
     const [resourceManager, setResourceManager] = useResourceManager();
     const { sysConfig, setSysConfig } = useSysConfig();
     return (
@@ -72,6 +72,7 @@ export default function ({ setOpen }) {
                             value={concurrent}
                             onChange={e => setConcurrent(e.target.value)}
                             sx={{ width: "10em" }}
+                            disabled
                         >
                             {[1, 2, 3, 4, 5].map(value =>
                                 <MenuItem key={value} value={value}>{value}</MenuItem>

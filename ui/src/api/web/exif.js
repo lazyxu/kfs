@@ -1,3 +1,6 @@
+import { noteError } from "components/Notification/Notification";
+import { getSysConfig } from "hox/sysConfig";
+import { httpPost as localHttpPost } from "./localServer";
 import { httpGet, httpPost } from "./webServer";
 
 export async function analyzeMetadata(start) {
@@ -7,11 +10,29 @@ export async function analyzeMetadata(start) {
     });
 }
 
-export async function startBaiduPhotoTask(start, id) {
-    console.log('web.startBaiduPhotoTask', start, id);
-    return await httpPost("/api/v1/startBaiduPhotoTask", {
-        start, id,
-    });
+export async function startBaiduPhotoTask(start, driverId) {
+    try {
+        console.log('web.startBaiduPhotoTask', start, driverId);
+        return await httpPost("/api/v1/startBaiduPhotoTask", {
+            start, driverId,
+        });
+    } catch (e) {
+        noteError("备份一刻相册失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
+export async function startDriverLocalFile(start, driverId, srcPath, encoder) {
+    try {
+        let serverAddr = getSysConfig().sysConfig.socketServer;
+        console.log('web.startDriverLocalFile', start, driverId, serverAddr, srcPath, encoder);
+        return await localHttpPost("/api/v1/startDriverLocalFile", {
+            start, driverId, serverAddr, srcPath, encoder
+        });
+    } catch (e) {
+        noteError("备份本地文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
 }
 
 export async function analysisExif(start) {

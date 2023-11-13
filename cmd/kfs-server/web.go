@@ -42,6 +42,7 @@ func webServer(webPortString string) {
 
 	e.GET("/api/v1/drivers", apiDrivers)
 	e.GET("/api/v1/getDriverSync", apiGetDriverSync)
+	e.GET("/api/v1/getDriverLocalFile", apiGetDriverLocalFile)
 	e.GET("/api/v1/updateDriverSync", apiUpdateDriverSync)
 	e.POST("/api/v1/drivers", apiNewDriver)
 	e.POST("/api/v1/driverBaiduPhotos", apiNewDriverBaiduPhoto)

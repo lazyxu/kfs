@@ -3,6 +3,7 @@ package local_file
 import (
 	"context"
 	"errors"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -31,7 +32,9 @@ var s = &core.EventServer[TaskInfo]{
 		if err != nil {
 			return nil, err
 		}
-		d, err := GetOrLoadDriver(c.Request().Context(), kfsCore, driverId)
+		//startStr := c.QueryParam("start")
+		//serverAddr := c.QueryParam("serverAddr")
+		d, err := GetOrLoadDriver(driverId)
 		if err != nil {
 			return nil, err
 		}
@@ -58,11 +61,21 @@ var (
 
 type TaskInfo struct {
 	cancel       context.CancelFunc
-	Status       int    `json:"status"`
-	LastDoneTime int64  `json:"lastDoneTime"`
-	Cnt          int    `json:"cnt"`
-	Total        int    `json:"total"`
-	ErrMsg       string `json:"errMsg"`
+	Status       int   `json:"status"`
+	LastDoneTime int64 `json:"lastDoneTime"`
+
+	Size      uint64 `json:"size"`
+	FileCount uint64 `json:"fileCount"`
+	DirCount  uint64 `json:"dirCount"`
+
+	TotalSize      uint64 `json:"totalSize"`
+	TotalFileCount uint64 `json:"totalFileCount"`
+	TotalDirCount  uint64 `json:"totalDirCount"`
+
+	Cost int64 `json:"cost"`
+
+	ErrMsg   string   `json:"errMsg"`
+	Warnings []string `json:"warnings"`
 }
 
 func (d *DriverLocalFile) setTaskStatus(status int) {
@@ -73,8 +86,12 @@ func (d *DriverLocalFile) setTaskStatus(status int) {
 		d.taskInfo.LastDoneTime = time.Now().UnixNano()
 	}
 	if status == StatusWaitRunning || status == StatusRunning {
-		d.taskInfo.Cnt = 0
-		d.taskInfo.Total = 0
+		d.taskInfo.Size = 0
+		d.taskInfo.FileCount = 0
+		d.taskInfo.DirCount = 0
+		d.taskInfo.TotalSize = 0
+		d.taskInfo.TotalFileCount = 0
+		d.taskInfo.TotalDirCount = 0
 		d.taskInfo.ErrMsg = ""
 	}
 	d.mutex.Unlock()
@@ -91,6 +108,20 @@ func (d *DriverLocalFile) setTaskError(errMsg string) {
 	s.SendAll()
 }
 
+func (d *DriverLocalFile) addTaskWarning(errMsg string) {
+	d.mutex.Lock()
+	d.taskInfo.Warnings = append(d.taskInfo.Warnings, errMsg)
+	d.mutex.Unlock()
+	s.SendAll()
+}
+
+func (d *DriverLocalFile) setTaskCost(cost int64) {
+	d.mutex.Lock()
+	d.taskInfo.Cost = cost
+	d.mutex.Unlock()
+	s.SendAll()
+}
+
 func (d *DriverLocalFile) setTaskStatusWithLock(status int) {
 	d.taskInfo.Status = status
 	if status == StatusFinished || status == StatusCanceled || status == StatusError {
@@ -98,65 +129,62 @@ func (d *DriverLocalFile) setTaskStatusWithLock(status int) {
 		d.taskInfo.LastDoneTime = time.Now().UnixNano()
 	}
 	if status == StatusWaitRunning || status == StatusRunning {
-		d.taskInfo.Cnt = 0
-		d.taskInfo.Total = 0
+		d.taskInfo.Size = 0
+		d.taskInfo.FileCount = 0
+		d.taskInfo.DirCount = 0
+		d.taskInfo.TotalSize = 0
+		d.taskInfo.TotalFileCount = 0
+		d.taskInfo.TotalDirCount = 0
+		d.taskInfo.Warnings = make([]string, 0)
 	}
 	s.SendAll()
 }
 
-func (d *DriverLocalFile) addTaskTotal(total int) {
+func (d *DriverLocalFile) addTaskTotal(info os.FileInfo) {
 	d.mutex.Lock()
-	d.taskInfo.Total += total
+	if info.IsDir() {
+		d.taskInfo.TotalDirCount++
+	} else {
+		d.taskInfo.TotalFileCount++
+		d.taskInfo.TotalSize += uint64(info.Size())
+	}
 	d.mutex.Unlock()
 	s.SendAll()
 }
 
-func (d *DriverLocalFile) addTaskCnt() {
+func (d *DriverLocalFile) addTaskCnt(info os.FileInfo) {
 	d.mutex.Lock()
-	d.taskInfo.Cnt++
+	if info.IsDir() {
+		d.taskInfo.DirCount++
+	} else {
+		d.taskInfo.FileCount++
+		d.taskInfo.Size += uint64(info.Size())
+	}
 	d.mutex.Unlock()
 	s.SendAll()
 }
 
 var drivers sync.Map
 
-func GetOrLoadDriver(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*DriverLocalFile, error) {
+func GetOrLoadDriver(driverId uint64) (*DriverLocalFile, error) {
 	d, ok := drivers.Load(driverId)
 	if ok {
 		return d.(*DriverLocalFile), nil
 	}
-	driver, err := LoadDriverFromDb(ctx, kfsCore, driverId)
-	if err != nil {
-		return nil, err
+	driver := &DriverLocalFile{
+		driverId: driverId,
+		taskInfo: TaskInfo{
+			cancel:   nil,
+			Status:   StatusIdle,
+			Warnings: make([]string, 0),
+		},
+		mutex: &sync.Mutex{},
 	}
 	drivers.Store(driverId, driver)
 	return driver, nil
 }
 
-func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*DriverLocalFile, error) {
-	driver, err := kfsCore.Db.GetDriverToken(ctx, driverId)
-	if err != nil {
-		return nil, err
-	}
-	return &DriverLocalFile{
-		kfsCore:      kfsCore,
-		driverId:     driverId,
-		AccessToken:  driver.AccessToken,
-		RefreshToken: driver.RefreshToken,
-		AppKey:       AppKey,
-		SecretKey:    SecretKey,
-		taskInfo: TaskInfo{
-			cancel:       nil,
-			Status:       StatusIdle,
-			LastDoneTime: 0,
-			Cnt:          0,
-			Total:        0,
-		},
-		mutex: &sync.Mutex{},
-	}, nil
-}
-
-func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool) {
+func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool, serverAddr string, srcPath, encoder string) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 	if !start {
@@ -173,7 +201,7 @@ func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	d.taskInfo.cancel = cancel
 	go func() {
-		err := d.Analyze(ctx)
+		err := d.Analyze(ctx, serverAddr, srcPath, encoder)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				d.setTaskStatus(StatusCanceled)
@@ -186,15 +214,11 @@ func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool) {
 	}()
 }
 
-func (d *DriverLocalFile) Analyze(ctx context.Context) error {
+func (d *DriverLocalFile) Analyze(ctx context.Context, serverAddr string, srcPath, encoder string) error {
 	d.setTaskStatus(StatusRunning)
-	var err1 error
-	err := d.eventSourceBackup(ctx, task.Name, task.Description, task.SrcPath, serverAddr, task.DriverId, task.DstPath, task.Encoder, task.Concurrent)
+	err := d.eventSourceBackup(ctx, d.driverId, srcPath, serverAddr, encoder)
 	if err != nil {
 		return err
-	}
-	if err1 != nil {
-		return err1
 	}
 	return nil
 }

@@ -52,6 +52,7 @@ type Database interface {
 	ListDriver(ctx context.Context) (drivers []Driver, err error)
 	GetDriverToken(ctx context.Context, driverId uint64) (driver Driver, err error)
 	GetDriverSync(ctx context.Context, driverId uint64) (driver Driver, err error)
+	GetDriverLocalFile(ctx context.Context, driverId uint64) (driver Driver, err error)
 
 	GetDriverFileSize(ctx context.Context, driverId uint64) (n uint64, err error)
 	GetDriverFileCount(ctx context.Context, driverId uint64) (n uint64, err error)

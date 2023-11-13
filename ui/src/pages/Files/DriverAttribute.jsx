@@ -1,12 +1,13 @@
 import { Close } from '@mui/icons-material';
 import { Box, Dialog, DialogContent, DialogTitle, Divider, Grid, MenuItem, Select, Switch } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
-import { getDriverSync, getDriversDirCount, getDriversFileCount, getDriversFileSize, updateDriverSync } from 'api/web/driver';
+import { getDriverLocalFile, getDriverSync, getDriversDirCount, getDriversFileCount, getDriversFileSize, updateDriverSync } from 'api/web/driver';
 import { noteError } from 'components/Notification/Notification';
 import humanize from 'humanize';
 import moment from "moment/moment";
 import { useEffect, useState } from 'react';
 import DriverBaiduPhoto from './DriverBaiduPhoto';
+import DriverLocalFile from './DriverLocalFile';
 
 function formatTime(t) {
     return moment(t / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
@@ -36,9 +37,13 @@ export default ({ setOpen, driver }) => {
     // TODO: get more calculated attributes from server.
     const [attributes, setAttributes] = useState({});
     const [syncAttributes, setSyncAttributes] = useState();
+    const [localFileAttributes, setLocalFileAttributes] = useState();
     useEffect(() => {
         if (driver.type === "baiduPhoto" || driver.type === "localFile") {
             getDriverSync(driver.id).then(n => setSyncAttributes(n)).catch(e => noteError(e.message));
+        }
+        if (driver.type === "localFile") {
+            getDriverLocalFile(driver.id).then(n => setLocalFileAttributes(n));
         }
         getDriversFileSize(driver.id).then(n => setAttributes(prev => { return { ...prev, fileSize: n }; })).catch(e => noteError(e.message));
         getDriversFileCount(driver.id).then(n => setAttributes(prev => { return { ...prev, fileCount: n }; })).catch(e => noteError(e.message));
@@ -108,7 +113,11 @@ export default ({ setOpen, driver }) => {
                     </>}
                     {driver.type === "localFile" && <>
                         <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>
-                        {/* <Attr k="同步"><DriverBaiduPhoto driver={driver} /></Attr> */}
+                        <Attr k="设备ID">{driver.id}</Attr>
+                        <Attr k="本地文件夹路径">{localFileAttributes ? localFileAttributes.srcPath : "加载中..."}</Attr>
+                        <Attr k="上传时压缩">{localFileAttributes ? localFileAttributes.encoder : "加载中..."}</Attr>
+                        <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>
+                        <DriverLocalFile driver={driver} attributes={localFileAttributes} />
                         <Attr k="定时同步">
                             {syncAttributes ? <>
                                 <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(driver.id, e.target.checked, syncAttributes.h, syncAttributes.m, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, sync: e.target.checked }; })).catch(e => noteError(e.message))} />

@@ -54,6 +54,12 @@ func (db *DB) GetDriverSync(ctx context.Context, driverId uint64) (driver dao.Dr
 	return dbBase.GetDriverSync(ctx, conn, driverId)
 }
 
+func (db *DB) GetDriverLocalFile(ctx context.Context, driverId uint64) (driver dao.Driver, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.GetDriverLocalFile(ctx, conn, driverId)
+}
+
 func (db *DB) GetDriverFileSize(ctx context.Context, driverId uint64) (n uint64, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)

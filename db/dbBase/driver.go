@@ -158,6 +158,23 @@ func GetDriverSync(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver 
 	return
 }
 
+func GetDriverLocalFile(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver dao.Driver, err error) {
+	rows, err := txOrDb.QueryContext(ctx, `
+	SELECT deviceId, srcPath, encoder FROM _driver_local_file WHERE id = ?;
+	`, driverId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err = rows.Scan(&driver.DeviceId, &driver.SrcPath, &driver.Encoder)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
 func GetDriverFileSize(ctx context.Context, txOrDb TxOrDb, driverId uint64) (n uint64, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
 	SELECT IFNULL(SUM(size), 0) FROM _driver_file WHERE driverId = ? AND mode < 2147483648;;
