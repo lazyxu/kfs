@@ -49,6 +49,23 @@ const StyledMenu = styled((props) => (
 export default ({ device, setDevices }) => {
     const { sysConfig, setSysConfig } = useSysConfig();
     const [anchorEl, setAnchorEl] = useState(null);
+    let deviceIcon="weizhishebei";
+    let os = device.os.toLowerCase();
+    if (os.includes("windows")) {
+        deviceIcon = "windows";
+    }
+    if (os.includes("linux")) {
+        deviceIcon = "linux";
+    }
+    if (os.includes("mac")) {
+        deviceIcon = "MAC";
+    }
+    if (os.includes("android")) {
+        deviceIcon = "Android";
+    }
+    if (os.includes("iphone")) {
+        deviceIcon = "mobileios";
+    }
     return (
         <Card sx={{ minWidth: 275 }} variant="outlined">
             <CardContent>
@@ -58,7 +75,7 @@ export default ({ device, setDevices }) => {
                     spacing={2}
                 >
                     <Box sx={{ height: "64px", width: "64px" }} >
-                        <SvgIcon icon="wangpan" fontSize="inherit" style={{ height: "64px", width: "64px" }} />
+                        <SvgIcon icon={deviceIcon} fontSize="inherit" style={{ height: "64px", width: "64px" }} />
                     </Box>
                     <Stack
                         direction="column"
