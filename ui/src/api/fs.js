@@ -17,7 +17,7 @@ export async function list(setResourceManager, driverId, driverName, filePath) {
             return { ...prev, driverId, driverName, filePath, dirItems, file: null, drivers: null };
         });
     } catch (e) {
-        noteError("获取文件列表失败：" + (e.response?.data ? e.response?.data : e.message));
+        noteError("获取文件列表失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
 }
@@ -45,7 +45,7 @@ export async function openFile(setResourceManager, driverId, filePath, dirItem) 
             };
         });
     } catch (e) {
-        noteError("打开文件失败：" + (e.response?.data ? e.response?.data : e.message));
+        noteError("打开文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
 }
@@ -88,7 +88,7 @@ export async function download(driverId, filePath) {
         });
         downloader(resp.data, filePath[filePath.length - 1]);
     } catch (e) {
-        noteError("打开文件失败：" + (e.response?.data ? e.response?.data : e.message));
+        noteError("打开文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
 }
