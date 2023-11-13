@@ -2,7 +2,7 @@ import { Close } from "@mui/icons-material";
 import { Dialog, DialogTitle, IconButton, Tab, Tabs, Typography } from "@mui/material";
 import { useState } from 'react';
 import NewBaiduPhoto from "./NewBaiduPhoto";
-import NewLocalFile from "./NewLocalFile";
+import NewLocalFileDriver from "./NewLocalFileDriver";
 import NewNormalDriver from "./NewNormalDriver";
 
 export default function ({ setOpen }) {
@@ -39,7 +39,7 @@ export default function ({ setOpen }) {
             </Tabs>
             {driverType === 0 && <NewNormalDriver setOpen={setOpen} />}
             {driverType === 1 && <NewBaiduPhoto setOpen={setOpen} />}
-            {driverType === 2 && <NewLocalFile setOpen={setOpen} />}
+            {driverType === 2 && <NewLocalFileDriver setOpen={setOpen} />}
         </Dialog>
     );
 };

@@ -30,8 +30,22 @@ export async function newDriver(setResourceManager, name, description) {
 
 export async function newDriverBaiduPhoto(setResourceManager, name, description, code) {
     try {
-        console.log('api.newDriver', name, description, code);
+        console.log('api.newDriverBaiduPhoto', name, description, code);
         let exist = await httpPost("/api/v1/driverBaiduPhotos", { name, description, code });
+        await listDriver(setResourceManager);
+        if (exist) {
+            throw new Error("云盘名称重复: " + name);
+        }
+    } catch (e) {
+        noteError("创建云盘失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
+export async function newLocalFileDriver(setResourceManager, name, description, deviceId, srcPath, encoder, concurrent) {
+    try {
+        console.log('api.newLocalFileDriver', name, description, srcPath, encoder, concurrent);
+        let exist = await httpPost("/api/v1/driverLocalFiles", { name, description, deviceId, srcPath, encoder, concurrent });
         await listDriver(setResourceManager);
         if (exist) {
             throw new Error("云盘名称重复: " + name);

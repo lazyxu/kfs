@@ -6,16 +6,22 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
-func (db *DB) InsertDriver(ctx context.Context, driverName string, description string, typ string) (exist bool, err error) {
+func (db *DB) InsertDriver(ctx context.Context, driverName string, description string) (exist bool, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.InsertDriver(ctx, conn, db, driverName, description, typ)
+	return dbBase.InsertDriver(ctx, conn, db, driverName, description)
 }
 
-func (db *DB) InsertDriverBaiduPhoto(ctx context.Context, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error) {
+func (db *DB) InsertDriverBaiduPhoto(ctx context.Context, driverName string, description string, accessToken string, refreshToken string) (exist bool, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.InsertDriverBaiduPhoto(ctx, conn, db, driverName, description, typ, accessToken, refreshToken)
+	return dbBase.InsertDriverBaiduPhoto(ctx, conn, db, driverName, description, accessToken, refreshToken)
+}
+
+func (db *DB) InsertDriverLocalFile(ctx context.Context, driverName string, description string, deviceId uint64, srcPath string, encoder string, concurrent int) (exist bool, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.InsertDriverLocalFile(ctx, conn, db, driverName, description, deviceId, srcPath, encoder, concurrent)
 }
 
 func (db *DB) UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, h int64, m int64, s int64) error {

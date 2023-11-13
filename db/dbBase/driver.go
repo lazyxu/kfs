@@ -6,13 +6,13 @@ import (
 	"github.com/lazyxu/kfs/dao"
 )
 
-func InsertDriver(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, typ string) (exist bool, err error) {
+func InsertDriver(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string) (exist bool, err error) {
 	_, err = conn.ExecContext(ctx, `
 	INSERT INTO _driver (
 		name,
 		description,
 	    Type
-	) VALUES (?, ?, ?)`, driverName, description, typ)
+	) VALUES (?, ?, ?)`, driverName, description, "")
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
@@ -20,18 +20,25 @@ func InsertDriver(ctx context.Context, conn *sql.DB, db DbImpl, driverName strin
 	return
 }
 
-func InsertDriverBaiduPhoto(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error) {
+func InsertDriverBaiduPhoto(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, accessToken string, refreshToken string) (exist bool, err error) {
 	res, err := conn.ExecContext(ctx, `
 	INSERT INTO _driver (
 		name,
 		description,
 	    Type
-	) VALUES (?, ?, ?)`, driverName, description, typ)
+	) VALUES (?, ?, ?)`, driverName, description, "baiduPhoto")
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
 	}
 	id, err := res.LastInsertId()
+	if err != nil {
+		return
+	}
+	_, err = conn.ExecContext(ctx, `
+	INSERT INTO _driver_sync (
+		id
+	) VALUES (?)`, id)
 	if err != nil {
 		return
 	}
@@ -41,20 +48,16 @@ func InsertDriverBaiduPhoto(ctx context.Context, conn *sql.DB, db DbImpl, driver
 		accessToken,
 	    refreshToken
 	) VALUES (?, ?, ?)`, id, accessToken, refreshToken)
-	if db.IsUniqueConstraintError(err) {
-		exist = true
-		err = nil
-	}
 	return
 }
 
-func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, typ string, deviceId uint64, srcPath string, encoder string, concurrent int) (exist bool, err error) {
+func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, deviceId uint64, srcPath string, encoder string, concurrent int) (exist bool, err error) {
 	res, err := conn.ExecContext(ctx, `
 	INSERT INTO _driver (
 		name,
 		description,
 	    Type
-	) VALUES (?, ?, ?)`, driverName, description, typ)
+	) VALUES (?, ?, ?)`, driverName, description, "localFile")
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
@@ -64,23 +67,26 @@ func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverN
 		return
 	}
 	_, err = conn.ExecContext(ctx, `
-	INSERT INTO _driver_baidu_photo (
+	INSERT INTO _driver_sync (
+		id
+	) VALUES (?)`, id)
+	if err != nil {
+		return
+	}
+	_, err = conn.ExecContext(ctx, `
+	INSERT INTO _driver_local_file (
 		id,
 		deviceId,
 	    srcPath,
 	    encoder,
 	    concurrent
 	) VALUES (?, ?, ?, ?, ?)`, id, deviceId, srcPath, encoder, concurrent)
-	if db.IsUniqueConstraintError(err) {
-		exist = true
-		err = nil
-	}
 	return
 }
 
 func UpdateDriverSync(ctx context.Context, conn *sql.DB, driverId uint64, sync bool, h int64, m int64, s int64) error {
 	_, err := conn.ExecContext(ctx, `
-	UPDATE _driver
+	UPDATE _driver_sync
 	SET sync = ?, h = ?, m = ?, s = ?
 	WHERE id = ?;`, sync, h, m, s, driverId)
 	if err != nil {
@@ -137,7 +143,7 @@ func GetDriverToken(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver
 
 func GetDriverSync(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT sync, h, m, s FROM _driver_baidu_photo WHERE id = ?;
+	SELECT sync, h, m, s FROM _driver_sync WHERE id = ?;
 	`, driverId)
 	if err != nil {
 		return

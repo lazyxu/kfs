@@ -50,12 +50,12 @@ var client = resty.New().
 	SetTimeout(DefaultTimeout).
 	SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
-func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, name, description, typ, code string) (bool, error) {
+func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, name, description, code string) (bool, error) {
 	accessToken, refreshToken, err := authByCode(ctx, client, AppKey, SecretKey, code)
 	if err != nil {
 		return false, err
 	}
-	exist, err := kfsCore.Db.InsertDriverBaiduPhoto(ctx, name, description, typ, accessToken, refreshToken)
+	exist, err := kfsCore.Db.InsertDriverBaiduPhoto(ctx, name, description, accessToken, refreshToken)
 	if err != nil {
 		return false, err
 	}

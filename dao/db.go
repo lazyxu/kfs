@@ -44,8 +44,9 @@ type Database interface {
 	DeleteDevice(ctx context.Context, deviceId uint64) error
 	ListDevice(ctx context.Context) (devices []Device, err error)
 
-	InsertDriver(ctx context.Context, driverName string, description string, typ string) (exist bool, err error)
-	InsertDriverBaiduPhoto(ctx context.Context, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error)
+	InsertDriver(ctx context.Context, driverName string, description string) (exist bool, err error)
+	InsertDriverBaiduPhoto(ctx context.Context, driverName string, description string, accessToken string, refreshToken string) (exist bool, err error)
+	InsertDriverLocalFile(ctx context.Context, driverName string, description string, deviceId uint64, srcPath string, encoder string, concurrent int) (exist bool, err error)
 	UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, h int64, m int64, s int64) error
 	DeleteDriver(ctx context.Context, driverId uint64) error
 	ListDriver(ctx context.Context) (drivers []Driver, err error)

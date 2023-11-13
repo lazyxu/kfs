@@ -2,16 +2,21 @@ package mysql
 
 import (
 	"context"
+
 	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
-func (db *DB) InsertDriver(ctx context.Context, driverName string, description string, typ string) (exist bool, err error) {
-	return dbBase.InsertDriver(ctx, db.db, db, driverName, description, typ)
+func (db *DB) InsertDriver(ctx context.Context, driverName string, description string) (exist bool, err error) {
+	return dbBase.InsertDriver(ctx, db.db, db, driverName, description)
 }
 
-func (db *DB) InsertDriverBaiduPhoto(ctx context.Context, driverName string, description string, typ string, accessToken string, refreshToken string) (exist bool, err error) {
-	return dbBase.InsertDriverBaiduPhoto(ctx, db.db, db, driverName, description, typ, accessToken, refreshToken)
+func (db *DB) InsertDriverBaiduPhoto(ctx context.Context, driverName string, description string, accessToken string, refreshToken string) (exist bool, err error) {
+	return dbBase.InsertDriverBaiduPhoto(ctx, db.db, db, driverName, description, accessToken, refreshToken)
+}
+
+func (db *DB) InsertDriverLocalFile(ctx context.Context, driverName string, description string, deviceId uint64, srcPath string, encoder string, concurrent int) (exist bool, err error) {
+	return dbBase.InsertDriverLocalFile(ctx, db.db, db, driverName, description, deviceId, srcPath, encoder, concurrent)
 }
 
 func (db *DB) UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, h int64, m int64, s int64) error {

@@ -162,12 +162,17 @@ func (db *DB) Create() error {
 		Type         VARCHAR(256)   NOT NULL DEFAULT ""
 	);
 
-	CREATE TABLE IF NOT EXISTS _driver_baidu_photo (
+	CREATE TABLE IF NOT EXISTS _driver_sync (
 		id           INT64          NOT NULL PRIMARY KEY,
 		sync         INT1           NOT NULL DEFAULT 1,
 		h            INT8           NOT NULL DEFAULT 4,
 		m            INT8           NOT NULL DEFAULT 0,
 		s            INT8           NOT NULL DEFAULT 0,
+	    FOREIGN KEY (id)  REFERENCES   _driver(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver_baidu_photo (
+		id           INT64          NOT NULL PRIMARY KEY,
 		accessToken  VARCHAR(256)   NOT NULL DEFAULT "",
 		refreshToken VARCHAR(256)   NOT NULL DEFAULT "",
 	    FOREIGN KEY (id)  REFERENCES   _driver(id)
@@ -175,10 +180,6 @@ func (db *DB) Create() error {
 
 	CREATE TABLE IF NOT EXISTS _driver_local_file (
 		id           INT64          NOT NULL PRIMARY KEY,
-		sync         INT1           NOT NULL DEFAULT 1,
-		h            INT8           NOT NULL DEFAULT 4,
-		m            INT8           NOT NULL DEFAULT 0,
-		s            INT8           NOT NULL DEFAULT 0,
 	    deviceId     INTEGER        NOT NULL DEFAULT 0,
 		srcPath      VARCHAR(32767) NOT NULL DEFAULT "",
 		encoder      VARCHAR(64)    NOT NULL DEFAULT "",

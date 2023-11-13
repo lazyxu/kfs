@@ -1,15 +1,18 @@
 import { FolderOpen } from "@mui/icons-material";
 import { Button, DialogActions, DialogContent, FormControl, IconButton, InputLabel, MenuItem, Select, Stack, TextField } from "@mui/material";
+import { newLocalFileDriver } from "api/driver";
 import useResourceManager from "hox/resourceManager";
+import useSysConfig from "hox/sysConfig";
 import { useState } from 'react';
 
 export default function ({ setOpen }) {
-    let [name, setName] = useState("");
-    let [description, setDescription] = useState("");
-    const [concurrent, setConcurrent] = useState(2);
-    const [encoder, setEncoder] = useState("none");
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
     const [srcPath, setSrcPath] = useState('');
+    const [encoder, setEncoder] = useState("none");
+    const [concurrent, setConcurrent] = useState(2);
     const [resourceManager, setResourceManager] = useResourceManager();
+    const { sysConfig, setSysConfig } = useSysConfig();
     return (
         <>
             <DialogContent sx={{
@@ -82,9 +85,7 @@ export default function ({ setOpen }) {
                 color: theme => theme.context.primary
             }}>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={srcPath === "" || name === ""} onClick={() => {
-                    // newDriver(setResourceManager, name, description)
-                        // .then(exist => exist ? noteError("云盘名称重复") : setOpen(false))
-                    //     .catch(e => noteError("创建云盘失败：" + e.message));
+                    newLocalFileDriver(setResourceManager, name, description, sysConfig.deviceId, srcPath, encoder, concurrent).then(() => setOpen(false));
                 }}>确定</Button>
             </DialogActions>
         </>
