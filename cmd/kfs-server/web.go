@@ -71,7 +71,7 @@ func webServer(webPortString string) {
 		return metadata.ApiEvent(c, kfsCore)
 	})
 	e.POST("/api/v1/startBaiduPhotoTask", apiStartBaiduPhotoTask)
-	e.GET("/api/v1/event/baiduPhotoTask/:id", func(c echo.Context) error {
+	e.GET("/api/v1/event/baiduPhotoTask/:driverId", func(c echo.Context) error {
 		return baidu_photo.ApiEvent(c, kfsCore)
 	}) // TODO: handle name
 

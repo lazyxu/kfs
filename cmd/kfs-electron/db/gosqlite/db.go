@@ -1,4 +1,4 @@
-package main
+package gosqlite
 
 import (
 	"context"
@@ -38,17 +38,17 @@ func open(dataSourceName string) (*DB, error) {
 	return db, err
 }
 
-func (db *DB) getConn() *sql.DB {
+func (db *DB) GetConn() *sql.DB {
 	return <-db.ch
 }
 
-func (db *DB) putConn(conn *sql.DB) {
+func (db *DB) PutConn(conn *sql.DB) {
 	db.ch <- conn
 }
 
 func (db *DB) Remove() error {
-	conn := db.getConn()
-	defer db.putConn(conn)
+	conn := db.GetConn()
+	defer db.PutConn(conn)
 	_, err := conn.Exec(`
 	DROP TABLE IF EXISTS _file;
 	DROP TABLE IF EXISTS _scan_history;
@@ -57,8 +57,8 @@ func (db *DB) Remove() error {
 }
 
 func (db *DB) Create() error {
-	conn := db.getConn()
-	defer db.putConn(conn)
+	conn := db.GetConn()
+	defer db.PutConn(conn)
 	_, err := conn.Exec(`
 	CREATE TABLE IF NOT EXISTS _file (
 	    taskName    INT64          NOT NULL,
@@ -94,8 +94,8 @@ func (db *DB) Close() error {
 }
 
 func (db *DB) UpsertFile(ctx context.Context, taskName string, path string, hash string, mode os.FileMode, size int64, modifyTime int64) error {
-	conn := db.getConn()
-	defer db.putConn(conn)
+	conn := db.GetConn()
+	defer db.PutConn(conn)
 	_, err := conn.ExecContext(ctx, `
 	INSERT INTO _file VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(taskName, dirname, name) DO UPDATE SET
 		hash=?,
@@ -107,8 +107,8 @@ func (db *DB) UpsertFile(ctx context.Context, taskName string, path string, hash
 }
 
 func (db *DB) UpsertBackupTask(ctx context.Context, name string, description string, srcPath string, driverName string, dstPath string, encoder string, concurrent int) error {
-	conn := db.getConn()
-	defer db.putConn(conn)
+	conn := db.GetConn()
+	defer db.PutConn(conn)
 	_, err := conn.ExecContext(ctx, `
 	INSERT INTO _backup_task VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(name) DO UPDATE SET
 		description=?,
@@ -122,8 +122,8 @@ func (db *DB) UpsertBackupTask(ctx context.Context, name string, description str
 }
 
 func (db *DB) DeleteBackupTask(ctx context.Context, name string) error {
-	conn := db.getConn()
-	defer db.putConn(conn)
+	conn := db.GetConn()
+	defer db.PutConn(conn)
 	_, err := conn.ExecContext(ctx, `
 	DELETE FROM _backup_task WHERE name = ?`, name)
 	if err != nil {
@@ -133,8 +133,8 @@ func (db *DB) DeleteBackupTask(ctx context.Context, name string) error {
 }
 
 func (db *DB) GetBackupTask(ctx context.Context, name string) (t BackupTask, err error) {
-	conn := db.getConn()
-	defer db.putConn(conn)
+	conn := db.GetConn()
+	defer db.PutConn(conn)
 	rows, err := conn.QueryContext(ctx, `
 	SELECT  description,
 			srcPath,
@@ -165,14 +165,15 @@ type BackupTask struct {
 	Description string `json:"description"`
 	SrcPath     string `json:"srcPath"`
 	DriverName  string `json:"driverName"`
+	DriverId    uint64 `json:"driverId"`
 	DstPath     string `json:"dstPath"`
 	Encoder     string `json:"encoder"`
 	Concurrent  int    `json:"concurrent"`
 }
 
 func (db *DB) ListBackupTask(ctx context.Context) (list []BackupTask, err error) {
-	conn := db.getConn()
-	defer db.putConn(conn)
+	conn := db.GetConn()
+	defer db.PutConn(conn)
 	rows, err := conn.QueryContext(ctx, `
 	SELECT * FROM _backup_task;
 	`)

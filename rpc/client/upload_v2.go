@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-func (fs *RpcFs) UploadV2(ctx context.Context, driverName string, dstPath string, srcPath string, config core.UploadConfig) (err error) {
+func (fs *RpcFs) UploadV2(ctx context.Context, driverId uint64, dstPath string, srcPath string, config core.UploadConfig) (err error) {
 	srcPath, err = filepath.Abs(srcPath)
 	if err != nil {
 		return
@@ -21,7 +21,7 @@ func (fs *RpcFs) UploadV2(ctx context.Context, driverName string, dstPath string
 		socketServerAddr: fs.SocketServerAddr,
 		conns:            make([]net.Conn, config.Concurrent),
 		files:            make([]*os.File, config.Concurrent),
-		driverId:         driverName,
+		driverId:         driverId,
 		srcPath:          srcPath,
 		dstPath:          dstPath,
 	}

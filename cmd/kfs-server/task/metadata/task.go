@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/lazyxu/kfs/cmd/kfs-server/task/common"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/server"
 )
@@ -24,8 +23,8 @@ func (c *Client) Message() TaskInfo {
 	return taskInfo
 }
 
-var s = &common.EventServer[TaskInfo]{
-	NewClient: func(c echo.Context, kfsCore *core.KFS) (common.Client[TaskInfo], error) {
+var s = &core.EventServer[TaskInfo]{
+	NewClient: func(c echo.Context, kfsCore *core.KFS) (core.EventClient[TaskInfo], error) {
 		return &Client{
 			ch: make(chan TaskInfo),
 		}, nil

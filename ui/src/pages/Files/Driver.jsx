@@ -64,8 +64,10 @@ export default ({ driver, setDriverAttribute }) => {
                         <Box sx={{ height: "64px", width: "64px" }} >
                             {driver.type === 'baiduPhoto' ?
                                 <img src='baiduPhoto.png' style={{ maxWidth: "100%", maxHeight: "100%" }} />
-                                :
-                                <SvgIcon icon="wangpan" fontSize="inherit" style={{ height: "64px", width: "64px" }} />
+                                : driver.type === 'localFile' ?
+                                    <SvgIcon icon="shangchuan" fontSize="inherit" style={{ height: "64px", width: "64px" }} />
+                                    :
+                                    <SvgIcon icon="wangpan" fontSize="inherit" style={{ height: "64px", width: "64px" }} />
                             }
                         </Box>
                     </Link>

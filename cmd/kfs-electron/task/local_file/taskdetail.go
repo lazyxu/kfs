@@ -1,15 +1,13 @@
-package main
+package local_file
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/cmd/kfs-electron/backup"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/client"
-	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -36,49 +34,6 @@ func deleteTaskDetailClient(name string, c echo.Context) {
 	defer taskDetailClientsMutex.Unlock()
 	if clients, ok := taskDetailClients[name]; ok {
 		delete(clients, c)
-	}
-}
-
-func apiEventBackupTaskDetail(c echo.Context) error {
-	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
-	c.Response().Header().Set("Content-Type", "text/event-stream;charset=UTF-8")
-	c.Response().Header().Set("Cache-Control", "no-cache")
-	c.Response().Header().Set("Connection", "keep-alive")
-
-	name := c.Param("name")
-	fmt.Println("New connection established", name)
-	sseChannel := make(chan string)
-	sseJsonChannel := make(chan interface{})
-	addTaskDetailClient(name, c, &Client{
-		sseChannel:     sseChannel,
-		sseJsonChannel: sseJsonChannel,
-	})
-
-	defer func() {
-		close(sseChannel)
-		close(sseJsonChannel)
-		deleteTaskDetailClient(name, c)
-		fmt.Println("Closing connection", name)
-	}()
-
-	for {
-		select {
-		case msg := <-sseChannel:
-			fmt.Fprintf(c.Response(), "data: %s\n\n", msg)
-			c.Response().Flush()
-
-		case obj := <-sseJsonChannel:
-			data, err := json.Marshal(obj)
-			if err != nil {
-				log.Panicf("invalid obj: %+v\n", obj)
-			}
-			fmt.Fprintf(c.Response(), "data: %s\n\n", string(data))
-			c.Response().Flush()
-
-		case <-c.Request().Context().Done():
-			fmt.Println("Connection closed")
-			return nil
-		}
 	}
 }
 
@@ -137,7 +92,7 @@ type BackupLogs struct {
 	ErrMsg string `json:"errMsg,omitempty"`
 }
 
-func eventSourceBackup(ctx context.Context, name, description, srcPath, serverAddr string, driverId uint64, dstPath, encoder string, concurrent int) error {
+func (d *DriverLocalFile) eventSourceBackup(ctx context.Context, name, description, srcPath, serverAddr string, driverId uint64, dstPath, encoder string, concurrent int) error {
 	if !filepath.IsAbs(srcPath) {
 		return errors.New("请输入绝对路径")
 	}
@@ -165,7 +120,7 @@ func eventSourceBackup(ctx context.Context, name, description, srcPath, serverAd
 		Verbose:       false,
 	})
 	if err != nil {
-		return errTaskDetailToClients(name, err)
+		return err
 	}
 	for i := 0; i < concurrent; i++ {
 		w.Done <- struct{}{}
@@ -175,7 +130,7 @@ func eventSourceBackup(ctx context.Context, name, description, srcPath, serverAd
 	}
 	fmt.Printf("w=%+v\n", w)
 	fmt.Println("backup finish")
-	return okTaskDetailToClients(name, true, backup.WebBackupResp{
+	return okTaskDetailToClients(name, true, WebBackupResp{
 		Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
 		Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack, Cost: time.Now().Sub(w.StartTime).Milliseconds(),
@@ -184,9 +139,9 @@ func eventSourceBackup(ctx context.Context, name, description, srcPath, serverAd
 
 func NewWebUploadProcess(ctx context.Context, concurrent int, onResp func(finished bool, data interface{}) error) *backup.WebUploadProcess {
 	w := &backup.WebUploadProcess{
-		Ctx:       ctx,
-		OnResp:    onResp,
-		Processes: make([]backup.Process, concurrent),
+		ctx:       ctx,
+		onResp:    onResp,
+		Processes: make([]Process, concurrent),
 		Done:      make(chan struct{}),
 		StartTime: time.Now(),
 	}

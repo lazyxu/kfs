@@ -1,20 +1,24 @@
-package common
+package core
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"github.com/lazyxu/kfs/core"
 	"log"
 	"sync"
 )
 
-type EventServer[T any] struct {
-	Clients   sync.Map // map[*http.Request]Client
-	NewClient func(c echo.Context, kfsCore *core.KFS) (Client[T], error)
+type EventClient[T any] interface {
+	Chan() chan T
+	Message() T
 }
 
-func (s *EventServer[T]) Add(c echo.Context, kfsCore *core.KFS) (Client[T], error) {
+type EventServer[T any] struct {
+	Clients   sync.Map // map[*http.Request]EventClient
+	NewClient func(c echo.Context, kfsCore *KFS) (EventClient[T], error)
+}
+
+func (s *EventServer[T]) Add(c echo.Context, kfsCore *KFS) (EventClient[T], error) {
 	client, err := s.NewClient(c, kfsCore)
 	if err != nil {
 		return nil, err
@@ -27,10 +31,10 @@ func (s *EventServer[T]) Delete(c echo.Context) {
 	client, _ := s.Clients.Load(c)
 	// Should be deleted before closing.
 	s.Clients.Delete(c)
-	close(client.(Client[T]).Chan())
+	close(client.(EventClient[T]).Chan())
 }
 
-func (s *EventServer[T]) Handle(c echo.Context, kfsCore *core.KFS) error {
+func (s *EventServer[T]) Handle(c echo.Context, kfsCore *KFS) error {
 	c.Response().Header().Set("Access-Control-Allow-Origin", "*")
 	c.Response().Header().Set("Content-Type", "text/event-stream;charset=UTF-8")
 	c.Response().Header().Set("Cache-Control", "no-cache")
@@ -75,7 +79,7 @@ func (s *EventServer[T]) Handle(c echo.Context, kfsCore *core.KFS) error {
 
 func (s *EventServer[T]) SendAll() {
 	s.Clients.Range(func(key, value any) bool {
-		client := value.(Client[T])
+		client := value.(EventClient[T])
 		client.Chan() <- client.Message()
 		return true
 	})

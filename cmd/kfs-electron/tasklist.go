@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lazyxu/kfs/cmd/kfs-electron/backup"
+	"github.com/lazyxu/kfs/cmd/kfs-electron/db/gosqlite"
 	"log"
 	"net/http"
 	"strconv"
@@ -84,7 +86,7 @@ func apiEventBackupTask(c echo.Context) error {
 }
 
 type TaskInfos struct {
-	List         []BackupTask                  `json:"list"`
+	List         []gosqlite.BackupTask         `json:"list"`
 	RunningTasks map[string]*RunningBackupTask `json:"runningTasks"`
 }
 
@@ -128,7 +130,7 @@ func apiNewBackupTask(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	err = upsertBackup(c.Request().Context(), db, name, description, srcPath, driverName, dstPath, encoder, concurrent)
+	err = backup.UpsertBackup(c.Request().Context(), db, name, description, srcPath, driverName, dstPath, encoder, concurrent)
 	if err != nil {
 		return err
 	}
@@ -201,7 +203,7 @@ func apiStartBackupTask(c echo.Context) error {
 	return c.String(http.StatusOK, "")
 }
 
-func tryStartBackup(task BackupTask, runningTask *RunningBackupTask, serverAddr string) {
+func tryStartBackup(task gosqlite.BackupTask, runningTask *RunningBackupTask, serverAddr string) {
 	if runningTask.Status == StatusWaitRunning || runningTask.Status == StatusRunning {
 		return
 	}
@@ -210,7 +212,7 @@ func tryStartBackup(task BackupTask, runningTask *RunningBackupTask, serverAddr 
 	runningTask.cancel = cancel
 	go func() {
 		setTaskStatus(task.Name, StatusRunning)
-		err := eventSourceBackup(ctx, task.Name, task.Description, task.SrcPath, serverAddr, task.DriverName, task.DstPath, task.Encoder, task.Concurrent)
+		err := eventSourceBackup(ctx, task.Name, task.Description, task.SrcPath, serverAddr, task.DriverId, task.DstPath, task.Encoder, task.Concurrent)
 		if err == nil {
 			setTaskStatus(task.Name, StatusFinished)
 			return

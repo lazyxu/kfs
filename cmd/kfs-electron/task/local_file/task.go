@@ -1,9 +1,8 @@
-package baidu_photo
+package local_file
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -14,7 +13,7 @@ import (
 
 type Client struct {
 	ch chan TaskInfo
-	d  *DriverBaiduPhoto
+	d  *DriverLocalFile
 }
 
 func (c *Client) Chan() chan TaskInfo {
@@ -43,8 +42,8 @@ var s = &core.EventServer[TaskInfo]{
 	},
 }
 
-func ApiEvent(c echo.Context, kfsCore *core.KFS) error {
-	return s.Handle(c, kfsCore)
+func ApiEvent(c echo.Context) error {
+	return s.Handle(c, nil)
 }
 
 var (
@@ -66,7 +65,7 @@ type TaskInfo struct {
 	ErrMsg       string `json:"errMsg"`
 }
 
-func (d *DriverBaiduPhoto) setTaskStatus(status int) {
+func (d *DriverLocalFile) setTaskStatus(status int) {
 	d.mutex.Lock()
 	d.taskInfo.Status = status
 	if status == StatusFinished || status == StatusCanceled || status == StatusError {
@@ -82,7 +81,7 @@ func (d *DriverBaiduPhoto) setTaskStatus(status int) {
 	s.SendAll()
 }
 
-func (d *DriverBaiduPhoto) setTaskError(errMsg string) {
+func (d *DriverLocalFile) setTaskError(errMsg string) {
 	d.mutex.Lock()
 	d.taskInfo.Status = StatusError
 	d.taskInfo.cancel = nil
@@ -92,7 +91,7 @@ func (d *DriverBaiduPhoto) setTaskError(errMsg string) {
 	s.SendAll()
 }
 
-func (d *DriverBaiduPhoto) setTaskStatusWithLock(status int) {
+func (d *DriverLocalFile) setTaskStatusWithLock(status int) {
 	d.taskInfo.Status = status
 	if status == StatusFinished || status == StatusCanceled || status == StatusError {
 		d.taskInfo.cancel = nil
@@ -105,14 +104,14 @@ func (d *DriverBaiduPhoto) setTaskStatusWithLock(status int) {
 	s.SendAll()
 }
 
-func (d *DriverBaiduPhoto) addTaskTotal(total int) {
+func (d *DriverLocalFile) addTaskTotal(total int) {
 	d.mutex.Lock()
 	d.taskInfo.Total += total
 	d.mutex.Unlock()
 	s.SendAll()
 }
 
-func (d *DriverBaiduPhoto) addTaskCnt() {
+func (d *DriverLocalFile) addTaskCnt() {
 	d.mutex.Lock()
 	d.taskInfo.Cnt++
 	d.mutex.Unlock()
@@ -121,10 +120,10 @@ func (d *DriverBaiduPhoto) addTaskCnt() {
 
 var drivers sync.Map
 
-func GetOrLoadDriver(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*DriverBaiduPhoto, error) {
+func GetOrLoadDriver(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*DriverLocalFile, error) {
 	d, ok := drivers.Load(driverId)
 	if ok {
-		return d.(*DriverBaiduPhoto), nil
+		return d.(*DriverLocalFile), nil
 	}
 	driver, err := LoadDriverFromDb(ctx, kfsCore, driverId)
 	if err != nil {
@@ -134,12 +133,12 @@ func GetOrLoadDriver(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*
 	return driver, nil
 }
 
-func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*DriverBaiduPhoto, error) {
+func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*DriverLocalFile, error) {
 	driver, err := kfsCore.Db.GetDriverToken(ctx, driverId)
 	if err != nil {
 		return nil, err
 	}
-	return &DriverBaiduPhoto{
+	return &DriverLocalFile{
 		kfsCore:      kfsCore,
 		driverId:     driverId,
 		AccessToken:  driver.AccessToken,
@@ -157,7 +156,7 @@ func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverId uint64) (
 	}, nil
 }
 
-func (d *DriverBaiduPhoto) StartOrStop(ctx context.Context, start bool) {
+func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 	if !start {
@@ -187,40 +186,10 @@ func (d *DriverBaiduPhoto) StartOrStop(ctx context.Context, start bool) {
 	}()
 }
 
-func toStringSlice(s []File) []string {
-	c := make([]string, len(s))
-	for i, v := range s {
-		c[i] = v.Md5
-	}
-	return c
-}
-
-func (d *DriverBaiduPhoto) Analyze(ctx context.Context) error {
+func (d *DriverLocalFile) Analyze(ctx context.Context) error {
 	d.setTaskStatus(StatusRunning)
 	var err1 error
-	err := d.GetAllFile(ctx, func(list []File) bool {
-		d.addTaskTotal(len(list))
-		var m map[string]string
-		m, err1 = d.kfsCore.Db.ListFileMd5(ctx, toStringSlice(list))
-		if err1 != nil {
-			return false
-		}
-		for i, f := range list {
-			fmt.Printf("[%d/%d] handle %s\n", i, len(list), f.Path)
-			select {
-			case <-ctx.Done():
-				err1 = context.Canceled
-				return false
-			default:
-			}
-			err1 = d.Download(ctx, f, m[f.Md5])
-			if err1 != nil {
-				return false
-			}
-			d.addTaskCnt()
-		}
-		return true
-	})
+	err := d.eventSourceBackup(ctx, task.Name, task.Description, task.SrcPath, serverAddr, task.DriverId, task.DstPath, task.Encoder, task.Concurrent)
 	if err != nil {
 		return err
 	}

@@ -27,6 +27,7 @@ func webServer(lis net.Listener) {
 	e.DELETE("/api/v1/backupTask", apiDeleteBackupTask)
 	e.POST("/api/v1/startBackupTask", apiStartBackupTask)
 	e.GET("/api/v1/event/backupTask/:name", apiEventBackupTaskDetail)
+	//e.GET("/api/v1/event/DriverLocalFile/:driverId", local_file.ApiEvent)
 
 	// Start server
 	e.Listener = lis

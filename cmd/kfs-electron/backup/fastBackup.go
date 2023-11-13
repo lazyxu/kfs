@@ -1,9 +1,10 @@
-package main
+package backup
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/lazyxu/kfs/cmd/kfs-electron/db/gosqlite"
 	"net"
 	"os"
 	"path/filepath"
@@ -24,10 +25,10 @@ type WebUploadProcess struct {
 	PushedAllToStack bool
 
 	StartTime time.Time
-	ctx       context.Context
+	Ctx       context.Context
 	Done      chan struct{}
-	req       WsReq
-	onResp    func(finished bool, data interface{}) error
+	req       interface{}
+	OnResp    func(finished bool, data interface{}) error
 }
 
 type Process struct {
@@ -84,7 +85,7 @@ func (w *WebUploadProcess) OnFileError(index int, filePath string, info os.FileI
 		w.Processes[index] = Process{}
 	}
 	println(filePath+":", err.Error())
-	e := w.onResp(false, WebBackupResp{
+	e := w.OnResp(false, WebBackupResp{
 		FilePath: filePath, ErrMsg: err.Error(),
 		Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
@@ -130,7 +131,7 @@ func (w *WebUploadProcess) Verbose() bool {
 	return true
 }
 
-func upsertBackup(ctx context.Context, db *DB, name, description, srcPath, driverName, dstPath, encoder string, concurrent int) error {
+func UpsertBackup(ctx context.Context, db *gosqlite.DB, name, description, srcPath, driverName, dstPath, encoder string, concurrent int) error {
 	if !filepath.IsAbs(srcPath) {
 		return errors.New("请输入绝对路径")
 	}
@@ -148,17 +149,9 @@ func upsertBackup(ctx context.Context, db *DB, name, description, srcPath, drive
 	return nil
 }
 
-func (p *WsProcessor) upsertBackup(ctx context.Context, db *DB, req WsReq, name, description, srcPath, driverName, dstPath, encoder string, concurrent int) error {
-	err := upsertBackup(ctx, db, name, description, srcPath, driverName, dstPath, encoder, concurrent)
-	if err != nil {
-		return p.err(req, err)
-	}
-	return nil
-}
-
 func (w *WebUploadProcess) RespIfUpdated(i int) {
 	if w.Processes[i].updated.CompareAndSwap(true, false) {
-		e := w.onResp(false, WebBackupResp{
+		e := w.OnResp(false, WebBackupResp{
 			Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 			TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
 			Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack, Cost: time.Now().Sub(w.StartTime).Milliseconds(),
@@ -171,7 +164,7 @@ func (w *WebUploadProcess) RespIfUpdated(i int) {
 
 func (w *WebUploadProcess) Resp(i int) {
 	w.Processes[i].updated.Store(false)
-	e := w.onResp(false, WebBackupResp{
+	e := w.OnResp(false, WebBackupResp{
 		Size: w.Size, FileCount: w.FileCount, DirCount: w.DirCount,
 		TotalSize: w.TotalSize, TotalFileCount: w.TotalFileCount, TotalDirCount: w.TotalDirCount,
 		Processes: w.Processes[:], PushedAllToStack: w.PushedAllToStack, Cost: time.Now().Sub(w.StartTime).Milliseconds(),

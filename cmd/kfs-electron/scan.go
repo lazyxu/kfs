@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/lazyxu/kfs/cmd/kfs-electron/db/gosqlite"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,7 +34,7 @@ type SizeWalkerHandlers struct {
 	req         WsReq
 	onResp      func(finished bool, data interface{}) error
 	tick        <-chan time.Time
-	db          *DB
+	db          *gosqlite.DB
 	lock        sync.Locker
 	dbFileInfos []DbFileInfo
 }
@@ -106,8 +107,8 @@ func (h *SizeWalkerHandlers) addFile(info os.FileInfo, filePath string, count in
 }
 
 func (h *SizeWalkerHandlers) insertFiles(ctx context.Context, id int64) error {
-	conn := h.db.getConn()
-	defer h.db.putConn(conn)
+	conn := h.db.GetConn()
+	defer h.db.PutConn(conn)
 	return dbBase.InsertBatch[DbFileInfo](ctx, conn, 32766, h.dbFileInfos, 7, getInsertItemQuery, func(args []interface{}, start int, item DbFileInfo) {
 		args[start] = id
 		args[start+1] = item.path
@@ -120,8 +121,8 @@ func (h *SizeWalkerHandlers) insertFiles(ctx context.Context, id int64) error {
 }
 
 func (h *SizeWalkerHandlers) insertScanHistory(ctx context.Context, startTime int64, dirname string, fileSize int64, fileCount int64, dirCount int64) (int64, error) {
-	conn := h.db.getConn()
-	defer h.db.putConn(conn)
+	conn := h.db.GetConn()
+	defer h.db.PutConn(conn)
 	res, err := conn.ExecContext(ctx, `
 	INSERT INTO _scan_history (
 	    time,
@@ -165,7 +166,7 @@ func getInsertItemQuery(row int) (string, error) {
 	return qs.String(), err
 }
 
-func (p *WsProcessor) scan(ctx context.Context, db *DB, req WsReq, srcPath string, concurrent int) error {
+func (p *WsProcessor) scan(ctx context.Context, db *gosqlite.DB, req WsReq, srcPath string, concurrent int) error {
 	if !filepath.IsAbs(srcPath) {
 		return p.err(req, errors.New("请输入绝对路径"))
 	}
