@@ -167,7 +167,6 @@ func (db *DB) Create() error {
 		sync         INT1           NOT NULL DEFAULT 1,
 		h            INT8           NOT NULL DEFAULT 4,
 		m            INT8           NOT NULL DEFAULT 0,
-		s            INT8           NOT NULL DEFAULT 0,
 	    FOREIGN KEY (id)  REFERENCES   _driver(id)
 	);
 

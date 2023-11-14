@@ -133,8 +133,8 @@ var rootCmd = &cobra.Command{
 			return
 		}
 		defer kfsCore.Close()
-		//GetExifData("375667db5da6ed4017815f864ffe0563182523167ce40448c175298fe6af56d1")
-		//server.AnalysisFileType(context.TODO(), kfsCore)
+
+		startAllCloudSync()
 
 		go func() {
 			// socket

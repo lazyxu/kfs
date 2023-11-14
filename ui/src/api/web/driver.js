@@ -26,10 +26,10 @@ export async function getDriverLocalFile(driverId) {
     }
 }
 
-export async function updateDriverSync(driverId, sync, h, m, s) {
+export async function updateDriverSync(driverId, sync, h, m) {
     try {
-        console.log('web.updateDriverSync', driverId, sync, h, m, s);
-        return await httpGet("/api/v1/updateDriverSync", { driverId, sync, h, m, s });
+        console.log('web.updateDriverSync', driverId, sync, h, m);
+        return await httpGet("/api/v1/updateDriverSync", { driverId, sync, h, m });
     } catch (e) {
         noteError("设置定时同步失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;

@@ -20,13 +20,16 @@ func InsertDriver(ctx context.Context, conn *sql.DB, db DbImpl, driverName strin
 	return
 }
 
+const DRIVER_TYPE_BAIDU_PHOTO = "baiduPhoto"
+const DRIVER_TYPE_LOCAL_FILE = "localFile"
+
 func InsertDriverBaiduPhoto(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, accessToken string, refreshToken string) (exist bool, err error) {
 	res, err := conn.ExecContext(ctx, `
 	INSERT INTO _driver (
 		name,
 		description,
 	    Type
-	) VALUES (?, ?, ?)`, driverName, description, "baiduPhoto")
+	) VALUES (?, ?, ?)`, driverName, description, DRIVER_TYPE_BAIDU_PHOTO)
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
@@ -57,7 +60,7 @@ func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverN
 		name,
 		description,
 	    Type
-	) VALUES (?, ?, ?)`, driverName, description, "localFile")
+	) VALUES (?, ?, ?)`, driverName, description, DRIVER_TYPE_LOCAL_FILE)
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
@@ -84,11 +87,11 @@ func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverN
 	return
 }
 
-func UpdateDriverSync(ctx context.Context, conn *sql.DB, driverId uint64, sync bool, h int64, m int64, s int64) error {
+func UpdateDriverSync(ctx context.Context, conn *sql.DB, driverId uint64, sync bool, h int64, m int64) error {
 	_, err := conn.ExecContext(ctx, `
 	UPDATE _driver_sync
-	SET sync = ?, h = ?, m = ?, s = ?
-	WHERE id = ?;`, sync, h, m, s, driverId)
+	SET sync = ?, h = ?, m = ?
+	WHERE id = ?;`, sync, h, m, driverId)
 	if err != nil {
 		return err
 	}
@@ -124,6 +127,23 @@ func ListDriver(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driver, err e
 	return
 }
 
+func GetDriver(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver dao.Driver, err error) {
+	rows, err := txOrDb.QueryContext(ctx, `
+	SELECT * FROM _driver WHERE id = ?;
+	`, driverId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err = rows.Scan(&driver.Id, &driver.Name, &driver.Description, &driver.Typ)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
 func GetDriverToken(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
 	SELECT accessToken, refreshToken FROM _driver_baidu_photo WHERE id = ?;
@@ -143,17 +163,37 @@ func GetDriverToken(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver
 
 func GetDriverSync(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT sync, h, m, s FROM _driver_sync WHERE id = ?;
+	SELECT sync, h, m FROM _driver_sync WHERE id = ?;
 	`, driverId)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	if rows.Next() {
-		err = rows.Scan(&driver.Sync, &driver.H, &driver.M, &driver.S)
+		err = rows.Scan(&driver.Sync, &driver.H, &driver.M)
 		if err != nil {
 			return
 		}
+	}
+	return
+}
+
+func ListCloudDriverSync(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driver, err error) {
+	rows, err := txOrDb.QueryContext(ctx, `
+	SELECT _driver.id, sync, h, m FROM _driver_sync LEFT JOIN _driver WHERE _driver_sync.id = _driver.id AND _driver.type = ?;
+	`, DRIVER_TYPE_BAIDU_PHOTO)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	drivers = []dao.Driver{}
+	for rows.Next() {
+		var driver dao.Driver
+		err = rows.Scan(&driver.Id, &driver.Sync, &driver.H, &driver.M)
+		if err != nil {
+			return
+		}
+		drivers = append(drivers, driver)
 	}
 	return
 }

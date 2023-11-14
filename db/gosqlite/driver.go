@@ -24,10 +24,10 @@ func (db *DB) InsertDriverLocalFile(ctx context.Context, driverName string, desc
 	return dbBase.InsertDriverLocalFile(ctx, conn, db, driverName, description, deviceId, srcPath, encoder, concurrent)
 }
 
-func (db *DB) UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, h int64, m int64, s int64) error {
+func (db *DB) UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, h int64, m int64) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.UpdateDriverSync(ctx, conn, driverId, sync, h, m, s)
+	return dbBase.UpdateDriverSync(ctx, conn, driverId, sync, h, m)
 }
 
 func (db *DB) DeleteDriver(ctx context.Context, driverId uint64) error {
@@ -42,6 +42,12 @@ func (db *DB) ListDriver(ctx context.Context) (drivers []dao.Driver, err error) 
 	return dbBase.ListDriver(ctx, conn)
 }
 
+func (db *DB) GetDriver(ctx context.Context, driverId uint64) (driver dao.Driver, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.GetDriver(ctx, conn, driverId)
+}
+
 func (db *DB) GetDriverToken(ctx context.Context, driverId uint64) (driver dao.Driver, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
@@ -52,6 +58,12 @@ func (db *DB) GetDriverSync(ctx context.Context, driverId uint64) (driver dao.Dr
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.GetDriverSync(ctx, conn, driverId)
+}
+
+func (db *DB) ListCloudDriverSync(ctx context.Context) (drivers []dao.Driver, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListCloudDriverSync(ctx, conn)
 }
 
 func (db *DB) GetDriverLocalFile(ctx context.Context, driverId uint64) (driver dao.Driver, err error) {

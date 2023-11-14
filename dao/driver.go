@@ -1,16 +1,15 @@
 package dao
 
 type Driver struct {
-	Id          int    `json:"id"`
+	Id          uint64 `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Typ         string `json:"type"`
 
 	// sync
-	Sync bool `json:"sync"`
-	H    int  `json:"h"`
-	M    int  `json:"m"`
-	S    int  `json:"s"`
+	Sync bool  `json:"sync"`
+	H    int64 `json:"h"`
+	M    int64 `json:"m"`
 
 	// baidu photo
 	AccessToken  string `json:"accessToken"`

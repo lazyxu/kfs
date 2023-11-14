@@ -92,22 +92,17 @@ export default ({ setOpen, driver }) => {
                         <Attr k="同步"><DriverBaiduPhoto driver={driver} /></Attr>
                         <Attr k="定时同步">
                             {syncAttributes ? <>
-                                <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(driver.id, e.target.checked, syncAttributes.h, syncAttributes.m, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, sync: e.target.checked }; })).catch(e => noteError(e.message))} />
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, e.target.value, syncAttributes.m, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, h: e.target.value }; })).catch(e => noteError(e.message))}>
+                                <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(driver.id, e.target.checked, syncAttributes.h, syncAttributes.m).then(setSyncAttributes(prev => { return { ...prev, sync: e.target.checked }; })).catch(e => noteError(e.message))} />
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, e.target.value, syncAttributes.m).then(setSyncAttributes(prev => { return { ...prev, h: e.target.value }; })).catch(e => noteError(e.message))}>
                                     {[...Array(24).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}
                                 </Select>时
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, e.target.value, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, m: e.target.value }; })).catch(e => noteError(e.message))}>
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, e.target.value).then(setSyncAttributes(prev => { return { ...prev, m: e.target.value }; })).catch(e => noteError(e.message))}>
                                     {[...Array(60).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}
                                 </Select>分
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.s} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, syncAttributes.m, e.target.value).then(setSyncAttributes(prev => { return { ...prev, s: e.target.value }; })).catch(e => noteError(e.message))}>
-                                    {[...Array(60).keys()].map(value =>
-                                        <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
-                                    )}
-                                </Select>秒
                             </> : <>配置加载中...</>}
                         </Attr>
                     </>}
@@ -120,22 +115,17 @@ export default ({ setOpen, driver }) => {
                         <DriverLocalFile driver={driver} attributes={localFileAttributes} />
                         <Attr k="定时同步">
                             {syncAttributes ? <>
-                                <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(driver.id, e.target.checked, syncAttributes.h, syncAttributes.m, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, sync: e.target.checked }; })).catch(e => noteError(e.message))} />
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, e.target.value, syncAttributes.m, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, h: e.target.value }; })).catch(e => noteError(e.message))}>
+                                <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(driver.id, e.target.checked, syncAttributes.h, syncAttributes.m).then(setSyncAttributes(prev => { return { ...prev, sync: e.target.checked }; })).catch(e => noteError(e.message))} />
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, e.target.value, syncAttributes.m).then(setSyncAttributes(prev => { return { ...prev, h: e.target.value }; })).catch(e => noteError(e.message))}>
                                     {[...Array(24).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}
                                 </Select>时
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, e.target.value, syncAttributes.s).then(setSyncAttributes(prev => { return { ...prev, m: e.target.value }; })).catch(e => noteError(e.message))}>
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, e.target.value).then(setSyncAttributes(prev => { return { ...prev, m: e.target.value }; })).catch(e => noteError(e.message))}>
                                     {[...Array(60).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}
                                 </Select>分
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.s} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, syncAttributes.m, e.target.value).then(setSyncAttributes(prev => { return { ...prev, s: e.target.value }; })).catch(e => noteError(e.message))}>
-                                    {[...Array(60).keys()].map(value =>
-                                        <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
-                                    )}
-                                </Select>秒
                             </> : <>配置加载中...</>}
                         </Attr>
                     </>}

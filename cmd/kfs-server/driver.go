@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/baidu_photo"
+	"github.com/lazyxu/kfs/db/dbBase"
 	"github.com/robfig/cron/v3"
 	"net/http"
 	"strconv"
@@ -115,31 +116,56 @@ func apiUpdateDriverSync(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, "m should be a number")
 	}
-	sStr := c.QueryParam("s")
-	s, err := strconv.ParseInt(sStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "s should be a number")
-	}
-	err = kfsCore.Db.UpdateDriverSync(c.Request().Context(), driverId, sync, h, m, s)
+	err = kfsCore.Db.UpdateDriverSync(c.Request().Context(), driverId, sync, h, m)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
 	}
-	startSync(driverId, h, m, s)
+	d, err := kfsCore.Db.GetDriver(c.Request().Context(), driverId)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	if d.Typ == dbBase.DRIVER_TYPE_BAIDU_PHOTO {
+		startCloudSync(driverId, h, m)
+	}
 	return c.String(http.StatusOK, "")
 }
 
 var cronTasks sync.Map
 
-func startSync(driverId uint64, h int64, m int64, s int64) {
-	actual, loaded := cronTasks.LoadOrStore(driverId, cron.New(cron.WithSeconds()))
-	c := actual.(*cron.Cron)
-	if loaded {
-		c.Stop()
+type CronTask struct {
+	c      *cron.Cron
+	cancel context.CancelFunc
+}
+
+func startAllCloudSync() {
+	drivers, err := kfsCore.Db.ListCloudDriverSync(context.TODO())
+	if err != nil {
+		panic(err)
 	}
-	spec := fmt.Sprintf("%d %d %d * * ?", s, m, h)
-	_, err := c.AddFunc(spec, func() {
-		ctx := context.TODO()
+	for _, d := range drivers {
+		startCloudSync(d.Id, d.H, d.M)
+	}
+}
+
+func startCloudSync(driverId uint64, h int64, m int64) {
+	actual, loaded := cronTasks.LoadOrStore(driverId, CronTask{
+		c:      cron.New(),
+		cancel: nil,
+	})
+	t := actual.(CronTask)
+	if loaded {
+		if t.cancel != nil {
+			t.cancel()
+			t.cancel = nil
+		}
+		t.c.Stop()
+	}
+	spec := fmt.Sprintf("%d %d * * ?", m, h)
+	_, err := t.c.AddFunc(spec, func() {
+		ctx, cancel := context.WithCancel(context.TODO())
+		t.cancel = cancel
 		d, err := baidu_photo.GetOrLoadDriver(ctx, kfsCore, driverId)
 		if err != nil {
 			cronTasks.LoadAndDelete(driverId)
@@ -150,7 +176,7 @@ func startSync(driverId uint64, h int64, m int64, s int64) {
 	if err != nil {
 		panic(err)
 	}
-	c.Start()
+	t.c.Start()
 }
 
 func apiDeleteDriver(c echo.Context) error {
