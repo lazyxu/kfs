@@ -448,13 +448,13 @@ func apiStartBaiduPhotoTask(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	idStr := c.QueryParam("id")
-	id, err := strconv.ParseUint(idStr, 10, 0)
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "id should be a number")
+		return c.String(http.StatusBadRequest, "driverId should be a number")
 	}
 	ctx := c.Request().Context()
-	d, err := baidu_photo.GetOrLoadDriver(ctx, kfsCore, id)
+	d, err := baidu_photo.GetOrLoadDriver(ctx, kfsCore, driverId)
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/baidu_photo"
+	"github.com/robfig/cron/v3"
 	"net/http"
 	"strconv"
+	"sync"
 )
 
 func apiDrivers(c echo.Context) error {
@@ -91,10 +95,10 @@ func apiGetDriverLocalFile(c echo.Context) error {
 }
 
 func apiUpdateDriverSync(c echo.Context) error {
-	idStr := c.QueryParam("id")
-	id, err := strconv.ParseUint(idStr, 10, 0)
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "id should be a number")
+		return c.String(http.StatusBadRequest, "driverId should be a number")
 	}
 	syncStr := c.QueryParam("sync")
 	sync, err := strconv.ParseBool(syncStr)
@@ -116,19 +120,44 @@ func apiUpdateDriverSync(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, "s should be a number")
 	}
-	err = kfsCore.Db.UpdateDriverSync(c.Request().Context(), id, sync, h, m, s)
+	err = kfsCore.Db.UpdateDriverSync(c.Request().Context(), driverId, sync, h, m, s)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
 	}
+	startSync(driverId, h, m, s)
 	return c.String(http.StatusOK, "")
+}
+
+var cronTasks sync.Map
+
+func startSync(driverId uint64, h int64, m int64, s int64) {
+	actual, loaded := cronTasks.LoadOrStore(driverId, cron.New(cron.WithSeconds()))
+	c := actual.(*cron.Cron)
+	if loaded {
+		c.Stop()
+	}
+	spec := fmt.Sprintf("%d %d %d * * ?", s, m, h)
+	_, err := c.AddFunc(spec, func() {
+		ctx := context.TODO()
+		d, err := baidu_photo.GetOrLoadDriver(ctx, kfsCore, driverId)
+		if err != nil {
+			cronTasks.LoadAndDelete(driverId)
+			return
+		}
+		d.StartOrStop(ctx, true)
+	})
+	if err != nil {
+		panic(err)
+	}
+	c.Start()
 }
 
 func apiDeleteDriver(c echo.Context) error {
 	driverIdStr := c.QueryParam("driverId")
 	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "id should be a number")
+		return c.String(http.StatusBadRequest, "driverId should be a number")
 	}
 	err = kfsCore.Db.DeleteDriver(c.Request().Context(), driverId)
 	if err != nil {
