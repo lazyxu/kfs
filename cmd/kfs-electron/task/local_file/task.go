@@ -167,11 +167,7 @@ func (d *DriverLocalFile) addTaskCnt(info os.FileInfo) {
 var drivers sync.Map
 
 func GetOrLoadDriver(driverId uint64) (*DriverLocalFile, error) {
-	d, ok := drivers.Load(driverId)
-	if ok {
-		return d.(*DriverLocalFile), nil
-	}
-	driver := &DriverLocalFile{
+	d, _ := drivers.LoadOrStore(driverId, &DriverLocalFile{
 		driverId: driverId,
 		taskInfo: TaskInfo{
 			cancel:   nil,
@@ -179,9 +175,8 @@ func GetOrLoadDriver(driverId uint64) (*DriverLocalFile, error) {
 			Warnings: make([]string, 0),
 		},
 		mutex: &sync.Mutex{},
-	}
-	drivers.Store(driverId, driver)
-	return driver, nil
+	})
+	return d.(*DriverLocalFile), nil
 }
 
 func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool, serverAddr string, srcPath, encoder string) {

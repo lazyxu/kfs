@@ -20,9 +20,8 @@ type CronTask struct {
 }
 
 type Param struct {
-	DeviceId   uint64
-	ServerAddr string
-	Drivers    []dao.Driver
+	ServerAddr string       `json:"serverAddr"`
+	Drivers    []dao.Driver `json:"drivers"`
 }
 
 func startAllLocalFileSync(c echo.Context) error {
@@ -32,7 +31,7 @@ func startAllLocalFileSync(c echo.Context) error {
 		return err
 	}
 	for _, d := range p.Drivers {
-		startLocalFileSync(p.DeviceId, p.ServerAddr, d.H, d.M, d.SrcPath, d.Encoder)
+		startLocalFileSync(d.Id, p.ServerAddr, d.H, d.M, d.SrcPath, d.Encoder)
 	}
 	return c.String(http.StatusOK, "")
 }

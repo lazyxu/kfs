@@ -79,11 +79,11 @@ export async function listLocalFileDriver(deviceId) {
     }
 }
 
-export async function startAllLocalFileSync(driverId, drivers) {
+export async function startAllLocalFileSync(drivers) {
     try {
         let serverAddr = getSysConfig().sysConfig.socketServer;
-        console.log('api.startAllLocalFileSync', driverId, serverAddr, drivers);
-        return await httpPostBodyLocal("/api/v1/startAllLocalFileSync", { driverId, serverAddr, drivers });
+        console.log('api.startAllLocalFileSync', serverAddr, drivers);
+        return await httpPostBodyLocal("/api/v1/startAllLocalFileSync", { serverAddr, drivers });
     } catch (e) {
         noteError("启动本地文件备份盘失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;

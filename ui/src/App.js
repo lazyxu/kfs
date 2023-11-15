@@ -31,7 +31,7 @@ async function newDeviceIfNeeded(sysConfig, setSysConfig) {
         deviceId = await newDevice(name, os);
         setSysConfig(prev => { return { ...prev, deviceId } });
     }
-    listLocalFileDriver(deviceId).then(drivers => startAllLocalFileSync(deviceId, drivers))
+    listLocalFileDriver(deviceId).then(drivers => startAllLocalFileSync(drivers))
 }
 
 function App() {
