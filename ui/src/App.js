@@ -2,6 +2,7 @@ import { Inbox, Mail } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, styled, useColorScheme } from "@mui/material";
 import { newDevice } from 'api/device';
+import { listLocalFileDriver, startAllLocalFileSync } from 'api/driver';
 import SvgIcon from 'components/Icon/SvgIcon';
 import MetadataAnalysis from 'components/MetadataAnalysis';
 import { SnackbarAction } from 'components/Notification/Notification';
@@ -20,15 +21,17 @@ import Files from "./pages/Files";
 
 async function newDeviceIfNeeded(sysConfig, setSysConfig) {
     console.log("newDeviceIfNeeded", sysConfig);
+    let deviceId = sysConfig.deviceId;
     if (!sysConfig.hasOwnProperty("deviceId")) {
         let parser = new UAParser(navigator.userAgent);
         let parserOS = parser.getOS();
         console.log(parserOS);
         let os = parserOS.name + " " + parserOS.version;
         let name = os;
-        let deviceId = await newDevice(name, os);
+        deviceId = await newDevice(name, os);
         setSysConfig(prev => { return { ...prev, deviceId } });
     }
+    listLocalFileDriver(deviceId).then(drivers => startAllLocalFileSync(deviceId, drivers))
 }
 
 function App() {
@@ -44,7 +47,7 @@ function App() {
         setOpen(open);
     };
     useEffect(() => {
-        newDeviceIfNeeded(sysConfig, setSysConfig);
+        newDeviceIfNeeded(sysConfig, setSysConfig)
     });
     useEffect(() => {
         // document.body.setAttribute('data-theme', sysConfig.theme);

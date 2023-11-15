@@ -180,7 +180,7 @@ func GetDriverSync(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver 
 
 func ListCloudDriverSync(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT _driver.id, sync, h, m FROM _driver_sync LEFT JOIN _driver WHERE _driver_sync.id = _driver.id AND _driver.type = ?;
+	SELECT _driver.id, h, m FROM _driver_sync LEFT JOIN _driver WHERE _driver_sync.sync = 1 AND _driver_sync.id = _driver.id AND _driver.type = ?;
 	`, DRIVER_TYPE_BAIDU_PHOTO)
 	if err != nil {
 		return
@@ -189,7 +189,29 @@ func ListCloudDriverSync(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driv
 	drivers = []dao.Driver{}
 	for rows.Next() {
 		var driver dao.Driver
-		err = rows.Scan(&driver.Id, &driver.Sync, &driver.H, &driver.M)
+		err = rows.Scan(&driver.Id, &driver.H, &driver.M)
+		if err != nil {
+			return
+		}
+		drivers = append(drivers, driver)
+	}
+	return
+}
+
+func ListLocalFileDriver(ctx context.Context, txOrDb TxOrDb, deviceId uint64) (drivers []dao.Driver, err error) {
+	rows, err := txOrDb.QueryContext(ctx, `
+	SELECT _driver.id, h, m, srcPath, encoder
+	FROM _driver_local_file LEFT JOIN _driver_sync LEFT JOIN _driver
+	WHERE _driver_local_file.deviceId = ? AND _driver_local_file.id = _driver_sync.id AND _driver_sync.sync = 1 AND _driver_sync.id = _driver.id AND _driver.type = ?;
+	`, deviceId, DRIVER_TYPE_LOCAL_FILE)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	drivers = []dao.Driver{}
+	for rows.Next() {
+		var driver dao.Driver
+		err = rows.Scan(&driver.Id, &driver.H, &driver.M, &driver.SrcPath, &driver.Encoder)
 		if err != nil {
 			return
 		}

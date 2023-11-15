@@ -13,7 +13,7 @@ import {
     Stack,
     TextField
 } from "@mui/material";
-import { getDriverApi } from "api/driver";
+import { listDriver } from "api/driver";
 import { newBackupTask } from "api/web/backup";
 import AsyncSelect from "components/AsyncSelect";
 import { noteError } from "components/Notification/Notification";
@@ -83,7 +83,7 @@ export default function ({ open, setOpen }) {
                             <AsyncSelect
                                 label="云盘"
                                 fetchOptions={async () => {
-                                    let drivers = await getDriverApi().listDriver();
+                                    let drivers = await listDriver();
                                     return drivers.map(driver => driver.name);
                                 }}
                                 value={driverName}

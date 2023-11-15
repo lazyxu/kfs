@@ -66,6 +66,12 @@ func (db *DB) ListCloudDriverSync(ctx context.Context) (drivers []dao.Driver, er
 	return dbBase.ListCloudDriverSync(ctx, conn)
 }
 
+func (db *DB) ListLocalFileDriver(ctx context.Context, deviceId uint64) (drivers []dao.Driver, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListLocalFileDriver(ctx, conn, deviceId)
+}
+
 func (db *DB) GetDriverLocalFile(ctx context.Context, driverId uint64) (driver dao.Driver, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)

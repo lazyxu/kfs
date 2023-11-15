@@ -108,7 +108,7 @@ export default ({ setOpen, driver }) => {
                     </>}
                     {driver.type === "localFile" && <>
                         <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>
-                        <Attr k="设备ID">{driver.id}</Attr>
+                        <Attr k="设备ID">{localFileAttributes ? localFileAttributes.deviceId : "加载中..."}</Attr>
                         <Attr k="本地文件夹路径">{localFileAttributes ? localFileAttributes.srcPath : "加载中..."}</Attr>
                         <Attr k="上传时压缩">{localFileAttributes ? localFileAttributes.encoder : "加载中..."}</Attr>
                         <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>

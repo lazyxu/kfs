@@ -1,4 +1,6 @@
 import { noteError } from "components/Notification/Notification";
+import { getSysConfig } from "hox/sysConfig";
+import { httpPostBody as httpPostBodyLocal } from "./web/localServer";
 import { httpDelete, httpGet, httpPost } from "./web/webServer";
 
 export async function listDriver(setResourceManager) {
@@ -63,6 +65,27 @@ export async function deleteDriver(setResourceManager, driverId) {
         await listDriver(setResourceManager);
     } catch (e) {
         noteError("删除云盘失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
+export async function listLocalFileDriver(deviceId) {
+    try {
+        console.log('api.listLocalFileDriver', deviceId);
+        return await httpGet("/api/v1/listLocalFileDriver", { deviceId });
+    } catch (e) {
+        noteError("获取本地文件备份盘失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
+export async function startAllLocalFileSync(driverId, drivers) {
+    try {
+        let serverAddr = getSysConfig().sysConfig.socketServer;
+        console.log('api.startAllLocalFileSync', driverId, serverAddr, drivers);
+        return await httpPostBodyLocal("/api/v1/startAllLocalFileSync", { driverId, serverAddr, drivers });
+    } catch (e) {
+        noteError("启动本地文件备份盘失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
 }

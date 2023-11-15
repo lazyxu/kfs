@@ -48,6 +48,7 @@ func webServer(webPortString string) {
 	e.POST("/api/v1/driverBaiduPhotos", apiNewDriverBaiduPhoto)
 	e.POST("/api/v1/driverLocalFiles", apiNewDriverLocalFile)
 	e.DELETE("/api/v1/drivers", apiDeleteDriver)
+	e.GET("/api/v1/listLocalFileDriver", apiListLocalFileDriver)
 
 	e.GET("/api/v1/list", apiList)
 	e.GET("/api/v1/listDriverFileByHash", apiListDriverFileByHash)

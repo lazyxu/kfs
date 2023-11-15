@@ -30,6 +30,7 @@ func webServer(lis net.Listener) {
 	e.POST("/api/v1/startBackupTask", apiStartBackupTask)
 	e.GET("/api/v1/event/backupTask/:name", apiEventBackupTaskDetail)
 	e.POST("/api/v1/startDriverLocalFile", apiStarDriverLocalFile)
+	e.POST("/api/v1/startAllLocalFileSync", startAllLocalFileSync)
 	e.GET("/api/v1/event/driverLocalFile/:driverId", local_file.ApiEvent)
 
 	// Start server
