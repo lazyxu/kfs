@@ -1,8 +1,8 @@
 import { Close } from '@mui/icons-material';
 import { Box, Dialog, DialogContent, DialogTitle, Divider, Grid, MenuItem, Select, Switch } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
+import { startAllLocalFileSync } from 'api/driver';
 import { getDriverLocalFile, getDriverSync, getDriversDirCount, getDriversFileCount, getDriversFileSize, updateDriverSync } from 'api/web/driver';
-import { noteError } from 'components/Notification/Notification';
 import humanize from 'humanize';
 import moment from "moment/moment";
 import { useEffect, useState } from 'react';
@@ -40,15 +40,29 @@ export default ({ setOpen, driver }) => {
     const [localFileAttributes, setLocalFileAttributes] = useState();
     useEffect(() => {
         if (driver.type === "baiduPhoto" || driver.type === "localFile") {
-            getDriverSync(driver.id).then(n => setSyncAttributes(n)).catch(e => noteError(e.message));
+            getDriverSync(driver.id).then(n => setSyncAttributes(n));
         }
         if (driver.type === "localFile") {
             getDriverLocalFile(driver.id).then(n => setLocalFileAttributes(n));
         }
-        getDriversFileSize(driver.id).then(n => setAttributes(prev => { return { ...prev, fileSize: n }; })).catch(e => noteError(e.message));
-        getDriversFileCount(driver.id).then(n => setAttributes(prev => { return { ...prev, fileCount: n }; })).catch(e => noteError(e.message));
-        getDriversDirCount(driver.id).then(n => setAttributes(prev => { return { ...prev, dirCount: n }; })).catch(e => noteError(e.message));
+        getDriversFileSize(driver.id).then(n => setAttributes(prev => { return { ...prev, fileSize: n }; }));
+        getDriversFileCount(driver.id).then(n => setAttributes(prev => { return { ...prev, fileCount: n }; }));
+        getDriversDirCount(driver.id).then(n => setAttributes(prev => { return { ...prev, dirCount: n }; }));
     }, []);
+    const myUpdateDriverSync = function (sync, h, m) {
+        updateDriverSync(driver.id, sync, h, m)
+            .then(() => {
+                setSyncAttributes(prev => { return { ...prev, sync, h, m }; });
+                if (sync) {
+                    startAllLocalFileSync([{
+                        id: driver.id,
+                        h, m,
+                        srcPath: localFileAttributes.srcPath,
+                        encoder: localFileAttributes.encoder,
+                    }]);
+                }
+            });
+    };
     return (
         <Dialog open={true} fullWidth={true} onClose={() => setOpen(false)}>
             <DialogTitle sx={{
@@ -92,13 +106,13 @@ export default ({ setOpen, driver }) => {
                         <Attr k="同步"><DriverBaiduPhoto driver={driver} /></Attr>
                         <Attr k="定时同步">
                             {syncAttributes ? <>
-                                <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(driver.id, e.target.checked, syncAttributes.h, syncAttributes.m).then(setSyncAttributes(prev => { return { ...prev, sync: e.target.checked }; })).catch(e => noteError(e.message))} />
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, e.target.value, syncAttributes.m).then(setSyncAttributes(prev => { return { ...prev, h: e.target.value }; })).catch(e => noteError(e.message))}>
+                                <Switch checked={syncAttributes.sync} onChange={e => myUpdateDriverSync(e.target.checked, syncAttributes.h, syncAttributes.m)} />
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => myUpdateDriverSync(syncAttributes.sync, e.target.value, syncAttributes.m)}>
                                     {[...Array(24).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}
                                 </Select>时
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, e.target.value).then(setSyncAttributes(prev => { return { ...prev, m: e.target.value }; })).catch(e => noteError(e.message))}>
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => myUpdateDriverSync(syncAttributes.sync, syncAttributes.h, e.target.value)}>
                                     {[...Array(60).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}
@@ -115,13 +129,13 @@ export default ({ setOpen, driver }) => {
                         <DriverLocalFile driver={driver} attributes={localFileAttributes} />
                         <Attr k="定时同步">
                             {syncAttributes ? <>
-                                <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(driver.id, e.target.checked, syncAttributes.h, syncAttributes.m).then(setSyncAttributes(prev => { return { ...prev, sync: e.target.checked }; })).catch(e => noteError(e.message))} />
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, e.target.value, syncAttributes.m).then(setSyncAttributes(prev => { return { ...prev, h: e.target.value }; })).catch(e => noteError(e.message))}>
+                                <Switch checked={syncAttributes.sync} onChange={e => myUpdateDriverSync(e.target.checked, syncAttributes.h, syncAttributes.m)} />
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => myUpdateDriverSync(syncAttributes.sync, e.target.value, syncAttributes.m)}>
                                     {[...Array(24).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}
                                 </Select>时
-                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, e.target.value).then(setSyncAttributes(prev => { return { ...prev, m: e.target.value }; })).catch(e => noteError(e.message))}>
+                                <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => myUpdateDriverSync(syncAttributes.sync, syncAttributes.h, e.target.value)}>
                                     {[...Array(60).keys()].map(value =>
                                         <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                                     )}

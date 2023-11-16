@@ -12,8 +12,13 @@ export async function newDriver(name, description, type, code) {
 }
 
 export async function getDriverSync(id) {
-    console.log('web.getDriverSync', id);
-    return await httpGet("/api/v1/getDriverSync", { id });
+    try {
+        console.log('web.getDriverSync', id);
+        return await httpGet("/api/v1/getDriverSync", { id });
+    } catch (e) {
+        noteError("获取同步配置失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
 }
 
 export async function getDriverLocalFile(driverId) {
@@ -42,18 +47,33 @@ export async function deleteDriver(id) {
 }
 
 export async function getDriversFileSize(id) {
-    console.log('web.getDriversFileSize', id);
-    return await httpGet("/api/v1/drivers/fileSize", { id });
+    try {
+        console.log('web.getDriversFileSize', id);
+        return await httpGet("/api/v1/drivers/fileSize", { id });
+    } catch (e) {
+        noteError("获取云盘文件总大小失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
 }
 
 
 export async function getDriversFileCount(id) {
-    console.log('web.getDriversFileCount', id);
-    return await httpGet("/api/v1/drivers/fileCount", { id });
+    try {
+        console.log('web.getDriversFileCount', id);
+        return await httpGet("/api/v1/drivers/fileCount", { id });
+    } catch (e) {
+        noteError("获取云盘文件数量失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
 }
 
 
 export async function getDriversDirCount(id) {
-    console.log('web.getDriversDirCount', id);
-    return await httpGet("/api/v1/drivers/dirCount", { id });
+    try {
+        console.log('web.getDriversDirCount', id);
+        return await httpGet("/api/v1/drivers/dirCount", { id });
+    } catch (e) {
+        noteError("获取云盘目录数量失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
 }
