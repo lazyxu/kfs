@@ -31,34 +31,6 @@ type uploadHandlersV3 struct {
 	conn             net.Conn
 }
 
-func (h *uploadHandlersV3) StartWorker(ctx context.Context, index int) error {
-	var d net.Dialer
-	conn, err := d.DialContext(ctx, "tcp", h.socketServerAddr)
-	if err != nil {
-		return err
-	}
-	h.conns[index] = conn
-	go func() {
-		// TODO: may block here
-		<-ctx.Done()
-		if h.files[index] != nil {
-			h.files[index].Close()
-		}
-	}()
-	return nil
-}
-
-func (h *uploadHandlersV3) reconnect(ctx context.Context, index int) error {
-	h.conns[index].Close()
-	var d net.Dialer
-	conn, err := d.DialContext(ctx, "tcp", h.socketServerAddr)
-	if err != nil {
-		return err
-	}
-	h.conns[index] = conn
-	return nil
-}
-
 func (h *uploadHandlersV3) OnFileError(filePath string, err error) {
 	h.uploadProcess.OnFileError(filePath, err)
 }
@@ -77,6 +49,38 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 	if err != nil {
 		return err
 	}
+	uploadReqDirItemCheckV3 := make([]*pb.UploadReqDirItemCheckV3, 0, cap(infos))
+	for _, info := range infos {
+		h.uploadProcess.PushFile(info)
+		modifyTime := uint64(info.ModTime().UnixNano())
+		uploadReqDirItemCheckV3 = append(uploadReqDirItemCheckV3, &pb.UploadReqDirItemCheckV3{
+			Name:       info.Name(),
+			Size:       uint64(info.Size()),
+			ModifyTime: modifyTime,
+		})
+	}
+	var respCheck pb.UploadRespV3
+	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3DirCheck, &pb.UploadReqCheckV3{
+		DriverId:                h.driverId,
+		DirPath:                 dirPath,
+		UploadReqDirItemCheckV3: uploadReqDirItemCheckV3,
+	}, &respCheck)
+	if err != nil {
+		return err
+	}
+
+	for i, exist := range respCheck.Exist {
+		info := infos[i]
+		p := filepath.Join(filePath, info.Name())
+		if !exist {
+			err = h.uploadFile(ctx, p, info, dirPath)
+			if err != nil {
+				return err
+			}
+		}
+		h.uploadProcess.EndFile(p, info, exist)
+	}
+
 	uploadReqDirItemV3 := make([]*pb.UploadReqDirItemV3, 0, cap(infos))
 	for _, info := range infos {
 		modifyTime := uint64(info.ModTime().UnixNano())
@@ -90,14 +94,16 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 			AccessTime: modifyTime,
 		})
 	}
-	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV2Dir, &pb.UploadReqV3{
+	var resp pb.UploadRespV3
+	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3Dir, &pb.UploadReqV3{
 		DriverId:           h.driverId,
 		DirPath:            dirPath,
 		UploadReqDirItemV3: uploadReqDirItemV3,
-	}, nil)
+	}, &resp)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -106,7 +112,7 @@ func (h *uploadHandlersV3) copyFile(conn net.Conn, f *os.File, size int64) error
 	if err != nil {
 		return err
 	}
-	println(conn.RemoteAddr().String(), "CopyStart", size)
+	println("CopyStart", size)
 	var n int64
 	if h.encoder == "lz4" {
 		w := lz4.NewWriter(conn)
@@ -121,7 +127,7 @@ func (h *uploadHandlersV3) copyFile(conn net.Conn, f *os.File, size int64) error
 			return err
 		}
 	}
-	println(conn.RemoteAddr().String(), "CopyEnd", n)
+	println("CopyEnd", n)
 	return nil
 }
 
@@ -134,59 +140,46 @@ func (h *uploadHandlersV3) getHash(f *os.File) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func (h *uploadHandlersV3) uploadFile(ctx context.Context, conn net.Conn, index int, filePath string, info os.FileInfo, dirPath []string, name string) (exist bool, err error) {
+func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info os.FileInfo, dirPath []string) error {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return
+		return err
 	}
-	h.files[index] = f
 	defer func() {
-		h.files[index] = nil
 		f.Close()
 	}()
 	size := uint64(info.Size())
 	hash, err := h.getHash(f)
 	if err != nil {
-		return
+		return err
 	}
 
-	println(conn.RemoteAddr().String(), "uploadFile", filePath, hash)
+	println("uploadFile", filePath, hash)
 
-	modifyTime := uint64(info.ModTime().UnixNano())
-	status, err := ReqRespWithConn(conn, rpcutil.CommandUploadV2File, &pb.UploadReqV2{
-		DriverId:   h.driverId,
-		DirPath:    dirPath,
-		Name:       name,
-		Hash:       hash,
-		Mode:       uint64(info.Mode()),
-		Size:       size,
-		CreateTime: modifyTime,
-		ModifyTime: modifyTime,
-		ChangeTime: modifyTime,
-		AccessTime: modifyTime,
+	status, err := ReqRespWithConn(h.conn, rpcutil.CommandUploadV3File, &pb.UploadFileV3{
+		Hash: hash,
+		Size: size,
 	}, nil)
 	if err != nil {
-		return
+		return err
 	}
 	if status == rpcutil.ENotExist {
-		println(conn.RemoteAddr().String(), "encoder", len(h.encoder), h.encoder)
-		err = rpcutil.WriteString(conn, h.encoder)
+		println("encoder", len(h.encoder), h.encoder)
+		err = rpcutil.WriteString(h.conn, h.encoder)
 		if err != nil {
-			return
+			return err
 		}
 
-		err = h.copyFile(conn, f, info.Size())
+		err = h.copyFile(h.conn, f, info.Size())
 		if err != nil {
-			return
+			return err
 		}
 
-		_, _, err = rpcutil.ReadStatus(conn)
+		_, _, err = rpcutil.ReadStatus(h.conn)
 		if err != nil {
-			return
+			return err
 		}
-		return
+		return err
 	}
-	exist = true
-
-	return
+	return nil
 }
