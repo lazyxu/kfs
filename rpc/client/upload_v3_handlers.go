@@ -40,8 +40,15 @@ func (h *uploadHandlersV3) formatPath(filePath string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	pathList := strings.Split(filepath.Join(h.dstPath, rel), string(os.PathSeparator))
-	return pathList, nil
+	actualPath := filepath.Join(h.dstPath, rel)
+	pathList := strings.Split(actualPath, string(os.PathSeparator))
+	newPathList := []string{}
+	for _, path := range pathList {
+		if path != "" {
+			newPathList = append(newPathList, path)
+		}
+	}
+	return newPathList, nil
 }
 
 func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, infos []os.FileInfo, continues []bool) error {
@@ -49,15 +56,15 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 	if err != nil {
 		return err
 	}
-	uploadReqDirItemCheckV3 := make([]*pb.UploadReqDirItemCheckV3, 0, cap(infos))
-	for _, info := range infos {
+	uploadReqDirItemCheckV3 := make([]*pb.UploadReqDirItemCheckV3, cap(infos))
+	for i, info := range infos {
 		h.uploadProcess.PushFile(info)
 		modifyTime := uint64(info.ModTime().UnixNano())
-		uploadReqDirItemCheckV3 = append(uploadReqDirItemCheckV3, &pb.UploadReqDirItemCheckV3{
+		uploadReqDirItemCheckV3[i] = &pb.UploadReqDirItemCheckV3{
 			Name:       info.Name(),
 			Size:       uint64(info.Size()),
 			ModifyTime: modifyTime,
-		})
+		}
 	}
 	var respCheck pb.UploadRespV3
 	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3DirCheck, &pb.UploadReqCheckV3{
@@ -72,7 +79,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 	for i, exist := range respCheck.Exist {
 		info := infos[i]
 		p := filepath.Join(filePath, info.Name())
-		if !exist {
+		if !exist && !info.IsDir() {
 			err = h.uploadFile(ctx, p, info, dirPath)
 			if err != nil {
 				return err
@@ -81,10 +88,10 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 		h.uploadProcess.EndFile(p, info, exist)
 	}
 
-	uploadReqDirItemV3 := make([]*pb.UploadReqDirItemV3, 0, cap(infos))
-	for _, info := range infos {
+	uploadReqDirItemV3 := make([]*pb.UploadReqDirItemV3, cap(infos))
+	for i, info := range infos {
 		modifyTime := uint64(info.ModTime().UnixNano())
-		uploadReqDirItemV3 = append(uploadReqDirItemV3, &pb.UploadReqDirItemV3{
+		uploadReqDirItemV3[i] = &pb.UploadReqDirItemV3{
 			Name:       info.Name(),
 			Mode:       uint64(info.Mode()),
 			Size:       uint64(info.Size()),
@@ -92,14 +99,13 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 			ModifyTime: modifyTime,
 			ChangeTime: modifyTime,
 			AccessTime: modifyTime,
-		})
+		}
 	}
-	var resp pb.UploadRespV3
 	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3Dir, &pb.UploadReqV3{
 		DriverId:           h.driverId,
 		DirPath:            dirPath,
 		UploadReqDirItemV3: uploadReqDirItemV3,
-	}, &resp)
+	}, nil)
 	if err != nil {
 		return err
 	}

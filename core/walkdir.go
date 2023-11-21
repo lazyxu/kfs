@@ -62,23 +62,23 @@ func handleDir(ctx context.Context, filePath string, handlers WalkDirHandlers) e
 		handlers.OnFileError(filePath, err)
 		return err
 	}
-	filteredInfos := make([]os.FileInfo, len(infos), len(infos))
-	for _, i := range infos {
-		fp := filepath.Join(filePath, i.Name())
+	filteredInfos := make([]os.FileInfo, len(infos))
+	for i, info := range infos {
+		fp := filepath.Join(filePath, info.Name())
 		if handlers.FilePathFilter(fp) {
 			continue
 		}
-		info, err1 := i.Info()
+		info2, err1 := info.Info()
 		if err1 != nil {
 			handlers.OnFileError(fp, err1)
 			continue
 		}
-		if handlers.FileInfoFilter(fp, info) {
+		if handlers.FileInfoFilter(fp, info2) {
 			continue
 		}
-		filteredInfos = append(filteredInfos, info)
+		filteredInfos[i] = info2
 	}
-	continues := make([]bool, len(filteredInfos), len(filteredInfos))
+	continues := make([]bool, len(filteredInfos))
 	err = handlers.DirHandler(ctx, filePath, filteredInfos, continues)
 	if err != nil {
 		handlers.OnFileError(filePath, err)

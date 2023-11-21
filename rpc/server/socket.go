@@ -77,6 +77,11 @@ func init() {
 	registerCommand(rpcutil.CommandTouch, handleTouch)
 	registerCommand(rpcutil.CommandUploadV2File, handleUploadV2File)
 	registerCommand(rpcutil.CommandUploadV2Dir, handleUploadV2Dir)
+
+	registerCommand(rpcutil.CommandUploadV3DirCheck, handleUploadV3DirCheck)
+	registerCommand(rpcutil.CommandUploadV3File, handleUploadV3File)
+	registerCommand(rpcutil.CommandUploadV3Dir, handleUploadV3Dir)
+
 	registerCommand(rpcutil.CommandDownload, handleDownload)
 	registerCommand(rpcutil.CommandCat, handleCat)
 	registerCommand(rpcutil.CommandBranchCheckout, handleBranchCheckout)

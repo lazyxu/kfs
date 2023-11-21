@@ -211,7 +211,7 @@ func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool, serverAdd
 
 func (d *DriverLocalFile) Analyze(ctx context.Context, serverAddr string, srcPath, encoder string) error {
 	d.setTaskStatus(StatusRunning)
-	err := d.eventSourceBackup(ctx, d.driverId, srcPath, serverAddr, encoder)
+	err := d.eventSourceBackup3(ctx, d.driverId, srcPath, serverAddr, encoder)
 	if err != nil {
 		return err
 	}

@@ -69,6 +69,7 @@ message UploadReqV3 {
 
 message UploadReqDirItemV3 {
   string Name = 3;
+  string Hash = 4;
   uint64 Mode = 5;
   uint64 Size = 6;
   uint64 CreateTime = 7;
