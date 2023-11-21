@@ -187,6 +187,7 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 	defer func() {
 		err = CommitAndRollback(tx, err)
 	}()
+	// TODO: check by option.
 	if len(f.DirPath) != 0 {
 		for i := 0; i < len(f.DirPath); i++ {
 			dirPath := f.DirPath[:i]

@@ -25,6 +25,7 @@ func handleUploadV3DirCheck(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 
 	l := len(req.UploadReqDirItemCheckV3)
 	exists := make([]bool, l)
+	// TODO: check exists.
 	// write
 	err = rpcutil.WriteOK(conn)
 	if err != nil {
@@ -67,6 +68,7 @@ func handleUploadV3Dir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 			fmt.Println("Upload error", err.Error())
 			return err
 		}
+		// TODO: analyze file type.
 		err = UpsertLivePhoto(kfsCore, item.Hash, req.DriverId, req.DirPath, item.Name)
 		if err != nil {
 			return err

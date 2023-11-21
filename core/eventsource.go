@@ -80,6 +80,7 @@ func (s *EventServer[T]) Handle(c echo.Context, kfsCore *KFS) error {
 func (s *EventServer[T]) SendAll() {
 	s.Clients.Range(func(key, value any) bool {
 		client := value.(EventClient[T])
+		// TODO: may panic here.
 		client.Chan() <- client.Message()
 		return true
 	})

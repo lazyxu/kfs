@@ -163,6 +163,7 @@ func analyze(ctx context.Context, kfsCore *core.KFS) error {
 			return context.Canceled
 		default:
 		}
+		// TODO: get file type from db.
 		ft, err := server.AnalyzeFileType(kfsCore, hash)
 		if err != nil {
 			addTaskError(err)

@@ -11,6 +11,7 @@ import (
 
 func UpsertLivePhoto(kfsCore *core.KFS, movHash string, driverId uint64, dirPath []string, movName string) error {
 	ext := filepath.Ext(movName)
+	// TODO: check .livp in baidu photo.
 	if ext == ".MOV" {
 		name := strings.TrimSuffix(movName, ext)
 		heicPath := append(dirPath, name+".HEIC")
