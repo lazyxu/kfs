@@ -5,6 +5,8 @@ import { startDriverLocalFile } from 'api/web/exif';
 import { noteError } from 'components/Notification/Notification';
 import { getSysConfig } from 'hox/sysConfig';
 import humanize from 'humanize';
+import humanizeDuration from "humanize-duration";
+import moment from 'moment';
 import { useEffect, useState } from 'react';
 
 const StatusIdle = 0
@@ -71,6 +73,7 @@ export default ({ driver, attributes }) => {
     }, []);
     return (
         <>
+            <Attr k="上次同步结束时间">{info?.lastDoneTime ? `${moment(info.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}` : "?"}</Attr>
             <Attr k="同步">{(info?.status === undefined ||
                 info?.status === StatusIdle ||
                 info?.status === StatusFinished ||
@@ -96,6 +99,7 @@ export default ({ driver, attributes }) => {
                     </IconButton>
                 }
             </Attr>
+            <Attr k="耗时">{info ? `${humanizeDuration(Math.floor(info.cost / 100) * 100)}` : "?"}</Attr>
             <Attr k="同步大小">{info ? `${humanize.filesize(info.size)}/${humanize.filesize(info.totalSize)}` : "?"}</Attr>
             <Attr k="同步文件数量">{info ? `${info.fileCount}/${info.totalFileCount}` : "?"}</Attr>
             <Attr k="同步目录数量">{info ? `${info.dirCount}/${info.totalDirCount}` : "?"}</Attr>

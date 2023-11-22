@@ -8,13 +8,10 @@ import (
 	"github.com/lazyxu/kfs/rpc/client"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 type WebUploadDirProcess struct {
 	d *DriverLocalFile
-
-	StartTime time.Time
 }
 
 func (w *WebUploadDirProcess) Show(p *core.Process) {
@@ -52,7 +49,7 @@ func (w *WebUploadDirProcess) Verbose() bool {
 	return true
 }
 
-func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint64, srcPath, serverAddr, encoder string) error {
+func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint64, serverAddr, srcPath, encoder string) error {
 	if !filepath.IsAbs(srcPath) {
 		return errors.New("请输入绝对路径")
 	}
@@ -68,10 +65,8 @@ func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint6
 	fs := &client.RpcFs{
 		SocketServerAddr: serverAddr,
 	}
-
 	w := &WebUploadDirProcess{
-		d:         d,
-		StartTime: time.Now(),
+		d: d,
 	}
 
 	err = fs.UploadDir(ctx, driverId, "/", srcPath, core.UploadDirConfig{
@@ -83,8 +78,6 @@ func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint6
 	if err != nil {
 		return err
 	}
-	fmt.Printf("w=%+v\n", w)
-	fmt.Println("backup finish")
-	d.setTaskCost(time.Now().Sub(w.StartTime).Milliseconds())
+	fmt.Printf("backup finish w=%+v\n", w)
 	return nil
 }

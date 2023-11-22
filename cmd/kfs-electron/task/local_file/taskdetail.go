@@ -44,6 +44,5 @@ func (d *DriverLocalFile) eventSourceBackup(ctx context.Context, driverId uint64
 	}
 	fmt.Printf("w=%+v\n", w)
 	fmt.Println("backup finish")
-	d.setTaskCost(time.Now().Sub(w.StartTime).Milliseconds())
 	return nil
 }
