@@ -54,7 +54,6 @@ var (
 	StatusFinished     = 1
 	StatusCanceled     = 2
 	StatusError        = 3
-	StatusWaitRunning  = 4
 	StatusWaitCanceled = 5
 	StatusRunning      = 6
 )
@@ -173,9 +172,7 @@ func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool, serverAdd
 		d.taskInfo.cancel()
 		return
 	}
-	if d.taskInfo.Status == StatusWaitRunning ||
-		d.taskInfo.Status == StatusRunning ||
-		d.taskInfo.Status == StatusWaitCanceled {
+	if d.taskInfo.Status == StatusRunning || d.taskInfo.Status == StatusWaitCanceled {
 		return
 	}
 	d.setTaskStatusWithLock(StatusRunning)

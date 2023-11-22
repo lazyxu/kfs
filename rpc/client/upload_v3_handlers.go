@@ -66,6 +66,13 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 			ModifyTime: modifyTime,
 		}
 	}
+
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
+
 	var respCheck pb.UploadRespV3
 	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3DirCheck, &pb.UploadReqCheckV3{
 		DriverId:                h.driverId,
@@ -77,6 +84,11 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 	}
 
 	for i, exist := range respCheck.Exist {
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		default:
+		}
 		info := infos[i]
 		p := filepath.Join(filePath, info.Name())
 		if !exist && !info.IsDir() {
@@ -88,6 +100,11 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 		h.uploadProcess.EndFile(p, info, exist)
 	}
 
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
 	uploadReqDirItemV3 := make([]*pb.UploadReqDirItemV3, cap(infos))
 	for i, info := range infos {
 		modifyTime := uint64(info.ModTime().UnixNano())

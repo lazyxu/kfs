@@ -18,6 +18,7 @@ func (fs *RpcFs) UploadDir(ctx context.Context, driverId uint64, dstPath string,
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 	handlers := &uploadHandlersV3{
 		uploadProcess:    config.UploadDirProcess,
 		encoder:          config.Encoder,

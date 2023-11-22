@@ -57,6 +57,11 @@ func WalkDir(ctx context.Context, filePath string, handlers WalkDirHandlers) err
 }
 
 func handleDir(ctx context.Context, filePath string, handlers WalkDirHandlers) error {
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
+	}
 	infos, err := os.ReadDir(filePath)
 	if err != nil {
 		handlers.OnFileError(filePath, err)
@@ -80,6 +85,9 @@ func handleDir(ctx context.Context, filePath string, handlers WalkDirHandlers) e
 	}
 	continues := make([]bool, len(filteredInfos))
 	err = handlers.DirHandler(ctx, filePath, filteredInfos, continues)
+	if errors.Is(err, context.Canceled) {
+		return err
+	}
 	if err != nil {
 		handlers.OnFileError(filePath, err)
 	}
@@ -89,6 +97,9 @@ func handleDir(ctx context.Context, filePath string, handlers WalkDirHandlers) e
 		}
 		fp := filepath.Join(filePath, fi.Name())
 		err = handleDir(ctx, fp, handlers)
+		if errors.Is(err, context.Canceled) {
+			return err
+		}
 		if err != nil {
 			handlers.OnFileError(filePath, err)
 		}
