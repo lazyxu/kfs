@@ -1,5 +1,11 @@
 package dao
 
+type DirItemCheck struct {
+	Name       string
+	Size       uint64
+	ModifyTime uint64
+}
+
 type IDriverFile interface {
 	GetDriverId() uint64
 	GetDirPath() []string

@@ -26,6 +26,18 @@ func handleUploadV3DirCheck(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	l := len(req.UploadReqDirItemCheckV3)
 	exists := make([]bool, l)
 	// TODO: check exists.
+	dirItemChecks := make([]dao.DirItemCheck, l)
+	for i, c := range req.UploadReqDirItemCheckV3 {
+		dirItemChecks[i] = dao.DirItemCheck{
+			Name:       c.Name,
+			Size:       c.Size,
+			ModifyTime: c.ModifyTime,
+		}
+	}
+	err = kfsCore.Db.CheckExists(context.TODO(), req.DriverId, req.DirPath, dirItemChecks, exists)
+	if err != nil {
+		return err
+	}
 	// write
 	err = rpcutil.WriteOK(conn)
 	if err != nil {
