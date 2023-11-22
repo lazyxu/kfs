@@ -24,6 +24,7 @@ func (c *Client) Message() TaskInfo {
 }
 
 var s = &core.EventServer[TaskInfo]{
+	Clients: make(map[echo.Context]core.EventClient[TaskInfo]),
 	NewClient: func(c echo.Context, kfsCore *core.KFS) (core.EventClient[TaskInfo], error) {
 		return &Client{
 			ch: make(chan TaskInfo),

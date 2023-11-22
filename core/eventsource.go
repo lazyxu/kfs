@@ -14,7 +14,8 @@ type EventClient[T any] interface {
 }
 
 type EventServer[T any] struct {
-	Clients   sync.Map // map[*http.Request]EventClient
+	mutex     sync.RWMutex
+	Clients   map[echo.Context]EventClient[T]
 	NewClient func(c echo.Context, kfsCore *KFS) (EventClient[T], error)
 }
 
@@ -23,15 +24,16 @@ func (s *EventServer[T]) Add(c echo.Context, kfsCore *KFS) (EventClient[T], erro
 	if err != nil {
 		return nil, err
 	}
-	s.Clients.Store(c, client)
+	s.mutex.Lock()
+	s.Clients[c] = client
+	s.mutex.Unlock()
 	return client, nil
 }
 
 func (s *EventServer[T]) Delete(c echo.Context) {
-	client, _ := s.Clients.Load(c)
-	// Should be deleted before closing.
-	s.Clients.Delete(c)
-	close(client.(EventClient[T]).Chan())
+	s.mutex.Lock()
+	delete(s.Clients, c)
+	s.mutex.Unlock()
 }
 
 func (s *EventServer[T]) Handle(c echo.Context, kfsCore *KFS) error {
@@ -78,10 +80,9 @@ func (s *EventServer[T]) Handle(c echo.Context, kfsCore *KFS) error {
 }
 
 func (s *EventServer[T]) SendAll() {
-	s.Clients.Range(func(key, value any) bool {
-		client := value.(EventClient[T])
-		// TODO: may panic here.
+	s.mutex.RLock()
+	for _, client := range s.Clients {
 		client.Chan() <- client.Message()
-		return true
-	})
+	}
+	s.mutex.RUnlock()
 }

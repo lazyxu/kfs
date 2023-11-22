@@ -26,6 +26,7 @@ func (c *Client) Message() TaskInfo {
 }
 
 var s = &core.EventServer[TaskInfo]{
+	Clients: make(map[echo.Context]core.EventClient[TaskInfo]),
 	NewClient: func(c echo.Context, kfsCore *core.KFS) (core.EventClient[TaskInfo], error) {
 		driverIdStr := c.Param("driverId")
 		driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
