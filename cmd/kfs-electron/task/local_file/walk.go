@@ -34,7 +34,7 @@ func (w *WebUploadDirProcess) OnFileError(filePath string, err error) {
 	println(filePath+":", err.Error())
 }
 
-func (w *WebUploadDirProcess) EndFile(filePath string, info os.FileInfo, exist bool) {
+func (w *WebUploadDirProcess) EndFile(filePath string, info os.FileInfo) {
 	w.d.addTaskCnt(info)
 }
 

@@ -86,8 +86,8 @@ func (db *DB) ListDriverFileByHash(ctx context.Context, hash string) (files []da
 	return dbBase.ListDriverFileByHash(ctx, conn, hash)
 }
 
-func (db *DB) CheckExists(ctx context.Context, driverId uint64, dirPath []string, checks []dao.DirItemCheck, exists []bool) error {
+func (db *DB) CheckExists(ctx context.Context, driverId uint64, dirPath []string, checks []dao.DirItemCheck, hashList []string) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.CheckExists(ctx, conn, driverId, dirPath, checks, exists)
+	return dbBase.CheckExists(ctx, conn, driverId, dirPath, checks, hashList)
 }

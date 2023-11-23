@@ -70,7 +70,7 @@ type Database interface {
 	ListDriverFile(ctx context.Context, driverId uint64, filePath []string) (files []DriverFile, err error)
 	GetDriverFile(ctx context.Context, driverId uint64, splitPath []string) (file DriverFile, err error)
 	ListDriverFileByHash(ctx context.Context, hash string) (files []DriverFile, err error)
-	CheckExists(ctx context.Context, driverId uint64, dirPath []string, checks []DirItemCheck, exists []bool) error
+	CheckExists(ctx context.Context, driverId uint64, dirPath []string, checks []DirItemCheck, hashList []string) error
 
 	InsertHeightWidth(ctx context.Context, hash string, hw HeightWidth) (exist bool, err error)
 	InsertNullVideoMetadata(ctx context.Context, hash string) (exist bool, err error)

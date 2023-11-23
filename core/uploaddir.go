@@ -18,7 +18,7 @@ type UploadDirProcess interface {
 	Verbose() bool
 	StartFile(filePath string, info os.FileInfo)
 	OnFileError(filePath string, err error)
-	EndFile(filePath string, info os.FileInfo, exist bool)
+	EndFile(filePath string, info os.FileInfo)
 	PushFile(info os.FileInfo)
 	HasPushedAllToStack()
 }

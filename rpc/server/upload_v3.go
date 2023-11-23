@@ -24,7 +24,7 @@ func handleUploadV3DirCheck(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	println(conn.RemoteAddr().String(), "UploadDirCheck", req.DriverId, "/"+strings.Join(req.DirPath, "/"))
 
 	l := len(req.UploadReqDirItemCheckV3)
-	exists := make([]bool, l)
+	hashList := make([]string, l)
 	// TODO: check exists.
 	dirItemChecks := make([]dao.DirItemCheck, l)
 	for i, c := range req.UploadReqDirItemCheckV3 {
@@ -34,7 +34,7 @@ func handleUploadV3DirCheck(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 			ModifyTime: c.ModifyTime,
 		}
 	}
-	err = kfsCore.Db.CheckExists(context.TODO(), req.DriverId, req.DirPath, dirItemChecks, exists)
+	err = kfsCore.Db.CheckExists(context.TODO(), req.DriverId, req.DirPath, dirItemChecks, hashList)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func handleUploadV3DirCheck(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		return err
 	}
 	err = rpcutil.WriteProto(conn, &pb.UploadRespV3{
-		Exist: exists,
+		Hash: hashList,
 	})
 	if err != nil {
 		return err

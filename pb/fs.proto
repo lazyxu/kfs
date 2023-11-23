@@ -104,7 +104,7 @@ message FileOrDir {
 }
 
 message UploadRespV3 {
-  repeated bool exist = 1;
+  repeated string hash = 1;
 }
 
 message UploadResp {

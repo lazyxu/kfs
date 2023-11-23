@@ -114,12 +114,13 @@ func ListDriverFileByHash(ctx context.Context, conn *sql.DB, hash string) (files
 	return
 }
 
-func CheckExists(ctx context.Context, conn *sql.DB, driverId uint64, dirPath []string, checks []dao.DirItemCheck, exists []bool) error {
+func CheckExists(ctx context.Context, conn *sql.DB, driverId uint64, dirPath []string, checks []dao.DirItemCheck, hashList []string) error {
 	rows, err := conn.QueryContext(ctx, `
 		SELECT name,
+		    hash,
 			size,
 			modifyTime
-		FROM _driver_file WHERE driverId=? AND dirPath=? AND version=0
+		FROM _driver_file WHERE driverId=? AND dirPath=? AND mode < 2147483648 AND version=0;
 	`, driverId, arrayToJson(dirPath))
 	if err != nil {
 		return err
@@ -127,10 +128,12 @@ func CheckExists(ctx context.Context, conn *sql.DB, driverId uint64, dirPath []s
 	defer rows.Close()
 	for rows.Next() {
 		var name string
+		var hash string
 		var size uint64
 		var modifiedTime uint64
 		err = rows.Scan(
 			&name,
+			&hash,
 			&size,
 			&modifiedTime)
 		if err != nil {
@@ -138,7 +141,7 @@ func CheckExists(ctx context.Context, conn *sql.DB, driverId uint64, dirPath []s
 		}
 		for i, e := range checks {
 			if e.Name == name && e.Size == size && e.ModifyTime == modifiedTime {
-				exists[i] = true
+				hashList[i] = hash
 			}
 		}
 	}

@@ -60,6 +60,6 @@ func (db *DB) ListDriverFileByHash(ctx context.Context, hash string) (files []da
 	return dbBase.ListDriverFileByHash(ctx, db.db, hash)
 }
 
-func (db *DB) CheckExists(ctx context.Context, driverId uint64, dirPath []string, checks []dao.DirItemCheck, exists []bool) error {
-	return dbBase.CheckExists(ctx, db.db, driverId, dirPath, checks, exists)
+func (db *DB) CheckExists(ctx context.Context, driverId uint64, dirPath []string, checks []dao.DirItemCheck, hashList []string) error {
+	return dbBase.CheckExists(ctx, db.db, driverId, dirPath, checks, hashList)
 }

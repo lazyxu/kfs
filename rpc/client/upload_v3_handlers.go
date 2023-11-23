@@ -4,14 +4,15 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/lazyxu/kfs/core"
-	"github.com/lazyxu/kfs/rpc/rpcutil"
-	"github.com/pierrec/lz4"
 	"io"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
+	"github.com/pierrec/lz4"
 
 	"github.com/lazyxu/kfs/pb"
 )
@@ -83,7 +84,8 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 		return err
 	}
 
-	for i, exist := range respCheck.Exist {
+	uploadReqDirItemV3 := make([]*pb.UploadReqDirItemV3, cap(infos))
+	for i, hash := range respCheck.Hash {
 		select {
 		case <-ctx.Done():
 			return context.Canceled
@@ -91,25 +93,16 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 		}
 		info := infos[i]
 		p := filepath.Join(filePath, info.Name())
-		if !exist && !info.IsDir() {
-			err = h.uploadFile(ctx, p, info, dirPath)
+		if !info.IsDir() && hash == "" {
+			hash, err = h.uploadFile(ctx, p, info)
 			if err != nil {
 				return err
 			}
 		}
-		h.uploadProcess.EndFile(p, info, exist)
-	}
-
-	select {
-	case <-ctx.Done():
-		return context.Canceled
-	default:
-	}
-	uploadReqDirItemV3 := make([]*pb.UploadReqDirItemV3, cap(infos))
-	for i, info := range infos {
 		modifyTime := uint64(info.ModTime().UnixNano())
 		uploadReqDirItemV3[i] = &pb.UploadReqDirItemV3{
 			Name:       info.Name(),
+			Hash:       hash,
 			Mode:       uint64(info.Mode()),
 			Size:       uint64(info.Size()),
 			CreateTime: modifyTime,
@@ -117,6 +110,13 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 			ChangeTime: modifyTime,
 			AccessTime: modifyTime,
 		}
+		h.uploadProcess.EndFile(p, info)
+	}
+
+	select {
+	case <-ctx.Done():
+		return context.Canceled
+	default:
 	}
 	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3Dir, &pb.UploadReqV3{
 		DriverId:           h.driverId,
@@ -163,20 +163,26 @@ func (h *uploadHandlersV3) getHash(f *os.File) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info os.FileInfo, dirPath []string) error {
+func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info os.FileInfo) (hash string, err error) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		return err
+		return
 	}
 	defer func() {
 		f.Close()
 	}()
 	size := uint64(info.Size())
-	hash, err := h.getHash(f)
+	hash, err = h.getHash(f)
 	if err != nil {
-		return err
+		return
 	}
 
+	select {
+	case <-ctx.Done():
+		err = context.Canceled
+		return
+	default:
+	}
 	println("uploadFile", filePath, hash)
 
 	status, err := ReqRespWithConn(h.conn, rpcutil.CommandUploadV3File, &pb.UploadFileV3{
@@ -184,25 +190,31 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 		Size: size,
 	}, nil)
 	if err != nil {
-		return err
+		return
 	}
 	if status == rpcutil.ENotExist {
+		select {
+		case <-ctx.Done():
+			err = context.Canceled
+			return
+		default:
+		}
 		println("encoder", len(h.encoder), h.encoder)
 		err = rpcutil.WriteString(h.conn, h.encoder)
 		if err != nil {
-			return err
+			return
 		}
 
 		err = h.copyFile(h.conn, f, info.Size())
 		if err != nil {
-			return err
+			return
 		}
 
 		_, _, err = rpcutil.ReadStatus(h.conn)
 		if err != nil {
-			return err
+			return
 		}
-		return err
+		return
 	}
-	return nil
+	return
 }

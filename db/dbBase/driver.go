@@ -239,7 +239,7 @@ func GetDriverLocalFile(ctx context.Context, txOrDb TxOrDb, driverId uint64) (dr
 
 func GetDriverFileSize(ctx context.Context, txOrDb TxOrDb, driverId uint64) (n uint64, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT IFNULL(SUM(size), 0) FROM _driver_file WHERE driverId = ? AND mode < 2147483648;;
+	SELECT IFNULL(SUM(size), 0) FROM _driver_file WHERE driverId = ? AND mode < 2147483648;
 	`, driverId)
 	if err != nil {
 		return
