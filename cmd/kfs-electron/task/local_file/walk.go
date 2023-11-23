@@ -14,17 +14,7 @@ type WebUploadDirProcess struct {
 	d *DriverLocalFile
 }
 
-func (w *WebUploadDirProcess) Show(p *core.Process) {
-}
-
-func (w *WebUploadDirProcess) StackSizeHandler(size int) {
-	w.Show(&core.Process{
-		StackSize: size,
-	})
-}
-
-func (w *WebUploadDirProcess) Close(resp core.FileResp, err error) {
-}
+var _ core.UploadDirProcess = &WebUploadDirProcess{}
 
 func (w *WebUploadDirProcess) StartFile(filePath string, info os.FileInfo) {
 	w.d.setTaskFile(filePath, info)
@@ -39,15 +29,16 @@ func (w *WebUploadDirProcess) EndFile(filePath string, info os.FileInfo) {
 	w.d.addTaskCnt(info)
 }
 
+func (w *WebUploadDirProcess) StartDir(filePath string, n uint64) {
+	w.d.setTaskDir(filePath, n)
+}
+
+func (w *WebUploadDirProcess) EndDir(filePath string, info os.FileInfo) {
+	w.d.addTaskCnt(info)
+}
+
 func (w *WebUploadDirProcess) PushFile(info os.FileInfo) {
 	w.d.addTaskTotal(info)
-}
-
-func (w *WebUploadDirProcess) HasPushedAllToStack() {
-}
-
-func (w *WebUploadDirProcess) Verbose() bool {
-	return true
 }
 
 func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint64, serverAddr, srcPath, encoder string) error {

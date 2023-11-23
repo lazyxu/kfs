@@ -119,7 +119,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 		return context.Canceled
 	default:
 	}
-	h.uploadProcess.StartFile(filePath, dirInfo)
+	h.uploadProcess.StartDir(filePath, uint64(len(uploadReqDirItemV3)))
 	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3Dir, &pb.UploadReqV3{
 		DriverId:           h.driverId,
 		DirPath:            dirPath,
@@ -128,6 +128,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	if err != nil {
 		return err
 	}
+	h.uploadProcess.EndDir(filePath, dirInfo)
 
 	return nil
 }
