@@ -93,6 +93,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 		}
 		info := infos[i]
 		p := filepath.Join(filePath, info.Name())
+		h.uploadProcess.StartFile(p, info)
 		if !info.IsDir() && hash == "" {
 			hash, err = h.uploadFile(ctx, p, info)
 			if err != nil {

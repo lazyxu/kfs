@@ -77,6 +77,8 @@ type TaskInfo struct {
 	ErrMsg    string   `json:"errMsg"`
 	Warnings  []string `json:"warnings"`
 	startTime time.Time
+	CurFile   string `json:"curFile"`
+	CurSize   uint64 `json:"curSize"`
 }
 
 func (d *DriverLocalFile) setTaskStatus(status int) {
@@ -114,6 +116,8 @@ func (d *DriverLocalFile) setTaskStatusWithLock(status int) {
 		d.taskInfo.TotalFileCount = 0
 		d.taskInfo.TotalDirCount = 0
 		d.taskInfo.ErrMsg = ""
+		d.taskInfo.CurFile = ""
+		d.taskInfo.CurSize = 0
 		d.taskInfo.Warnings = make([]string, 0)
 		d.taskInfo.startTime = time.Now()
 	} else if status == StatusFinished || status == StatusCanceled || status == StatusError {
@@ -122,6 +126,15 @@ func (d *DriverLocalFile) setTaskStatusWithLock(status int) {
 		d.taskInfo.Cost = time.Now().Sub(d.taskInfo.startTime).Milliseconds()
 	}
 	s.SendAll()
+}
+
+func (d *DriverLocalFile) setTaskFile(path string, info os.FileInfo) {
+	d.mutex.Lock()
+	d.taskInfo.CurFile = path
+	d.taskInfo.CurSize = uint64(info.Size())
+	d.taskInfo.Cost = time.Now().Sub(d.taskInfo.startTime).Milliseconds()
+	s.SendAll()
+	d.mutex.Unlock()
 }
 
 func (d *DriverLocalFile) addTaskTotal(info os.FileInfo) {

@@ -27,6 +27,7 @@ func (w *WebUploadDirProcess) Close(resp core.FileResp, err error) {
 }
 
 func (w *WebUploadDirProcess) StartFile(filePath string, info os.FileInfo) {
+	w.d.setTaskFile(filePath, info)
 }
 
 func (w *WebUploadDirProcess) OnFileError(filePath string, err error) {

@@ -100,6 +100,8 @@ export default ({ driver, attributes }) => {
                 }
             </Attr>
             <Attr k="耗时">{info ? `${humanizeDuration(Math.floor(info.cost / 100) * 100)}` : "?"}</Attr>
+            <Attr k="当前文件">{info ? `${info.curFile}` : "?"}</Attr>
+            <Attr k="当前文件大小">{info ? `${humanize.filesize(info.curSize)}` : "?"}</Attr>
             <Attr k="同步大小">{info ? `${humanize.filesize(info.size)}/${humanize.filesize(info.totalSize)}` : "?"}</Attr>
             <Attr k="同步文件数量">{info ? `${info.fileCount}/${info.totalFileCount}` : "?"}</Attr>
             <Attr k="同步目录数量">{info ? `${info.dirCount}/${info.totalDirCount}` : "?"}</Attr>
