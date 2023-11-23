@@ -11,7 +11,7 @@ type WalkDirHandlers interface {
 	FilePathFilter(filePath string) bool
 	FileInfoFilter(filePath string, info os.FileInfo) bool
 	OnFileError(filePath string, err error)
-	DirHandler(ctx context.Context, filePath string, infos []os.FileInfo, continues []bool) error
+	DirHandler(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo, continues []bool) error
 }
 
 type DefaultWalkDirHandlers struct{}
@@ -30,7 +30,7 @@ func (DefaultWalkDirHandlers) OnFileError(filePath string, err error) {
 	println(filePath, err.Error())
 }
 
-func (DefaultWalkDirHandlers) DirHandler(ctx context.Context, filePath string, infos []os.FileInfo, continues []bool) error {
+func (DefaultWalkDirHandlers) DirHandler(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo, continues []bool) error {
 	return nil
 }
 
@@ -53,38 +53,38 @@ func WalkDir(ctx context.Context, filePath string, handlers WalkDirHandlers) err
 	if !info.IsDir() {
 		return errors.New("expected dir path")
 	}
-	return handleDir(ctx, filePath, handlers)
+	return handleDir(ctx, filePath, info, handlers)
 }
 
-func handleDir(ctx context.Context, filePath string, handlers WalkDirHandlers) error {
+func handleDir(ctx context.Context, filePath string, dirInfo os.FileInfo, handlers WalkDirHandlers) error {
 	select {
 	case <-ctx.Done():
 		return context.Canceled
 	default:
 	}
-	infos, err := os.ReadDir(filePath)
+	dirEntries, err := os.ReadDir(filePath)
 	if err != nil {
 		handlers.OnFileError(filePath, err)
 		return err
 	}
-	filteredInfos := make([]os.FileInfo, len(infos))
-	for i, info := range infos {
-		fp := filepath.Join(filePath, info.Name())
+	filteredInfos := make([]os.FileInfo, len(dirEntries))
+	for i, dirEntry := range dirEntries {
+		fp := filepath.Join(filePath, dirEntry.Name())
 		if handlers.FilePathFilter(fp) {
 			continue
 		}
-		info2, err1 := info.Info()
+		info, err1 := dirEntry.Info()
 		if err1 != nil {
 			handlers.OnFileError(fp, err1)
 			continue
 		}
-		if handlers.FileInfoFilter(fp, info2) {
+		if handlers.FileInfoFilter(fp, info) {
 			continue
 		}
-		filteredInfos[i] = info2
+		filteredInfos[i] = info
 	}
 	continues := make([]bool, len(filteredInfos))
-	err = handlers.DirHandler(ctx, filePath, filteredInfos, continues)
+	err = handlers.DirHandler(ctx, filePath, dirInfo, filteredInfos, continues)
 	if errors.Is(err, context.Canceled) {
 		return err
 	}
@@ -96,7 +96,7 @@ func handleDir(ctx context.Context, filePath string, handlers WalkDirHandlers) e
 			continue
 		}
 		fp := filepath.Join(filePath, fi.Name())
-		err = handleDir(ctx, fp, handlers)
+		err = handleDir(ctx, fp, fi, handlers)
 		if errors.Is(err, context.Canceled) {
 			return err
 		}

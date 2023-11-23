@@ -52,7 +52,7 @@ func (h *uploadHandlersV3) formatPath(filePath string) ([]string, error) {
 	return newPathList, nil
 }
 
-func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, infos []os.FileInfo, continues []bool) error {
+func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo, continues []bool) error {
 	dirPath, err := h.formatPath(filePath)
 	if err != nil {
 		return err
@@ -119,6 +119,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, info
 		return context.Canceled
 	default:
 	}
+	h.uploadProcess.StartFile(filePath, dirInfo)
 	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3Dir, &pb.UploadReqV3{
 		DriverId:           h.driverId,
 		DirPath:            dirPath,
