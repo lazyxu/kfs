@@ -35,7 +35,7 @@ func ReadProto(r io.Reader, m proto.Message) error {
 		return UnexpectedIfError(err)
 	}
 	buf := make([]byte, length)
-	_, err = r.Read(buf)
+	_, err = io.ReadFull(r, buf)
 	if err != nil {
 		return UnexpectedIfError(err)
 	}
