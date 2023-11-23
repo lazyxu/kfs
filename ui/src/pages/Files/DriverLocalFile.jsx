@@ -71,6 +71,7 @@ export default ({ driver, attributes }) => {
             controller.abort();
         }
     }, []);
+    let curFile = info?.curFile ? info.curFile : info?.curDir ? info.curDir : "";
     return (
         <>
             <Attr k="上次同步结束时间">{info?.lastDoneTime ? `${moment(info.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}` : "?"}</Attr>
@@ -101,9 +102,14 @@ export default ({ driver, attributes }) => {
             </Attr>
             <Attr k="耗时">{info ? `${humanizeDuration(Math.floor(info.cost / 100) * 100)}` : "?"}</Attr>
             <Attr k="当前文件或目录">
-                <div style={{ whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", display: "block" }}>
-                    {info?.curFile ? info.curFile : info?.curDir ? info.curDir : ""}
-                </div>
+                <a variant="text" onClick={() => {
+                    const { shell } = window.require('@electron/remote');
+                    shell.openPath(curFile);
+                }} >
+                    <div style={{ whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", display: "block" }}>
+                        {curFile}
+                    </div>
+                </a>
             </Attr>
             <Attr k="当前文件大小">{info?.curFile ? humanize.filesize(info.curSize) : ""}</Attr>
             <Attr k="当前目录下文件数量">{info?.curDir ? info.curDirItemCnt : ""}</Attr>

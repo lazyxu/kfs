@@ -123,7 +123,11 @@ export default ({ setOpen, driver }) => {
                     {driver.type === "localFile" && <>
                         <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>
                         <Attr k="设备ID">{localFileAttributes ? localFileAttributes.deviceId : "加载中..."}</Attr>
-                        <Attr k="本地文件夹路径">{localFileAttributes ? localFileAttributes.srcPath : "加载中..."}</Attr>
+                        <Attr k="本地文件夹路径">{localFileAttributes ?
+                            <a variant="text" onClick={() => {
+                                const { shell } = window.require('@electron/remote');
+                                shell.openPath(localFileAttributes.srcPath);
+                            }} >{localFileAttributes.srcPath}</a> : "加载中..."}</Attr>
                         <Attr k="上传时压缩">{localFileAttributes ? localFileAttributes.encoder : "加载中..."}</Attr>
                         <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>
                         <DriverLocalFile driver={driver} attributes={localFileAttributes} />
