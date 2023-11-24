@@ -103,7 +103,6 @@ export default ({ setOpen, driver }) => {
                     {/* </Box> */}
                     {driver.type === "baiduPhoto" && <>
                         <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>
-                        <Attr k="同步"><DriverBaiduPhoto driver={driver} /></Attr>
                         <Attr k="定时同步">
                             {syncAttributes ? <>
                                 <Switch checked={syncAttributes.sync} onChange={e => myUpdateDriverSync(e.target.checked, syncAttributes.h, syncAttributes.m)} />
@@ -119,6 +118,7 @@ export default ({ setOpen, driver }) => {
                                 </Select>分
                             </> : <>配置加载中...</>}
                         </Attr>
+                        <Attr k="同步"><DriverBaiduPhoto driver={driver} /></Attr>
                     </>}
                     {driver.type === "localFile" && <>
                         <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>
@@ -130,7 +130,6 @@ export default ({ setOpen, driver }) => {
                             }} >{localFileAttributes.srcPath}</a> : "加载中..."}</Attr>
                         <Attr k="上传时压缩">{localFileAttributes ? localFileAttributes.encoder : "加载中..."}</Attr>
                         <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>
-                        <DriverLocalFile driver={driver} attributes={localFileAttributes} />
                         <Attr k="定时同步">
                             {syncAttributes ? <>
                                 <Switch checked={syncAttributes.sync} onChange={e => myUpdateDriverSync(e.target.checked, syncAttributes.h, syncAttributes.m)} />
@@ -146,6 +145,7 @@ export default ({ setOpen, driver }) => {
                                 </Select>分
                             </> : <>配置加载中...</>}
                         </Attr>
+                        <DriverLocalFile driver={driver} attributes={localFileAttributes} />
                     </>}
                 </Grid>
             </DialogContent>

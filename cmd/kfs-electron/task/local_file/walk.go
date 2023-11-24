@@ -52,7 +52,7 @@ func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint6
 	if !info.IsDir() {
 		return errors.New("源目录不存在")
 	}
-	fmt.Println("backup start")
+	fmt.Println("backup start", driverId, serverAddr, srcPath, encoder)
 
 	fs := &client.RpcFs{
 		SocketServerAddr: serverAddr,
@@ -70,6 +70,6 @@ func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint6
 	if err != nil {
 		return err
 	}
-	fmt.Printf("backup finish w=%+v\n", w)
+	fmt.Printf("backup finish %+v\n", w.d)
 	return nil
 }
