@@ -30,6 +30,12 @@ func (db *DB) UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, 
 	return dbBase.UpdateDriverSync(ctx, conn, driverId, sync, h, m)
 }
 
+func (db *DB) ResetDriver(ctx context.Context, driverId uint64) error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ResetDriver(ctx, conn, driverId)
+}
+
 func (db *DB) DeleteDriver(ctx context.Context, driverId uint64) error {
 	conn := db.getConn()
 	defer db.putConn(conn)

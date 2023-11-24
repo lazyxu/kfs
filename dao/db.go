@@ -48,6 +48,7 @@ type Database interface {
 	InsertDriverBaiduPhoto(ctx context.Context, driverName string, description string, accessToken string, refreshToken string) (exist bool, err error)
 	InsertDriverLocalFile(ctx context.Context, driverName string, description string, deviceId uint64, srcPath string, encoder string, concurrent int) (exist bool, err error)
 	UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, h int64, m int64) error
+	ResetDriver(ctx context.Context, driverId uint64) error
 	DeleteDriver(ctx context.Context, driverId uint64) error
 	ListDriver(ctx context.Context) (drivers []Driver, err error)
 	GetDriver(ctx context.Context, driverId uint64) (driver Driver, err error)

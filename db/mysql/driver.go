@@ -23,6 +23,10 @@ func (db *DB) UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, 
 	return dbBase.UpdateDriverSync(ctx, db.db, driverId, sync, h, m)
 }
 
+func (db *DB) ResetDriver(ctx context.Context, driverId uint64) error {
+	return dbBase.ResetDriver(ctx, db.db, driverId)
+}
+
 func (db *DB) DeleteDriver(ctx context.Context, driverId uint64) error {
 	return dbBase.DeleteDriver(ctx, db.db, driverId)
 }

@@ -193,6 +193,20 @@ func apiDeleteDriver(c echo.Context) error {
 	return c.String(http.StatusOK, "")
 }
 
+func apiResetDriver(c echo.Context) error {
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "driverId should be a number")
+	}
+	err = kfsCore.Db.ResetDriver(c.Request().Context(), driverId)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return c.String(http.StatusOK, "")
+}
+
 func apiListLocalFileDriver(c echo.Context) error {
 	deviceIdStr := c.QueryParam("deviceId")
 	deviceId, err := strconv.ParseUint(deviceIdStr, 10, 0)

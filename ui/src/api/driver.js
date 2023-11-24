@@ -58,6 +58,16 @@ export async function newLocalFileDriver(setResourceManager, name, description, 
     }
 }
 
+export async function resetDriver(driverId) {
+    try {
+        console.log('api.deleteDriver', driverId);
+        await httpGet("/api/v1/drivers/reset", { driverId });
+    } catch (e) {
+        noteError("重置云盘失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
 export async function deleteDriver(setResourceManager, driverId) {
     try {
         console.log('api.deleteDriver', driverId);

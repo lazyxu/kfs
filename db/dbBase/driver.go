@@ -98,6 +98,15 @@ func UpdateDriverSync(ctx context.Context, conn *sql.DB, driverId uint64, sync b
 	return nil
 }
 
+func ResetDriver(ctx context.Context, conn *sql.DB, driverId uint64) error {
+	_, err := conn.ExecContext(ctx, `
+	DELETE FROM _driver_file WHERE driverId = ?`, driverId)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 func DeleteDriver(ctx context.Context, conn *sql.DB, driverId uint64) error {
 	_, err := conn.ExecContext(ctx, `
 	DELETE FROM _driver WHERE id = ?`, driverId)
