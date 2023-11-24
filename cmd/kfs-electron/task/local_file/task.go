@@ -59,11 +59,7 @@ var (
 	StatusRunning      = 6
 )
 
-type TaskInfo struct {
-	cancel       context.CancelFunc
-	Status       int   `json:"status"`
-	LastDoneTime int64 `json:"lastDoneTime"`
-
+type TaskInfoClearable struct {
 	Size      uint64 `json:"size"`
 	FileCount uint64 `json:"fileCount"`
 	DirCount  uint64 `json:"dirCount"`
@@ -71,6 +67,14 @@ type TaskInfo struct {
 	TotalSize      uint64 `json:"totalSize"`
 	TotalFileCount uint64 `json:"totalFileCount"`
 	TotalDirCount  uint64 `json:"totalDirCount"`
+}
+
+type TaskInfo struct {
+	TaskInfoClearable
+
+	cancel       context.CancelFunc
+	Status       int   `json:"status"`
+	LastDoneTime int64 `json:"lastDoneTime"`
 
 	Cost int64 `json:"cost"`
 

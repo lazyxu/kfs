@@ -86,14 +86,16 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 
 	uploadReqDirItemV3 := make([]*pb.UploadReqDirItemV3, cap(infos))
 	for i, hash := range respCheck.Hash {
+		info := infos[i]
+		p := filepath.Join(filePath, info.Name())
+		if !info.IsDir() {
+			h.uploadProcess.StartFile(p, info)
+		}
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		default:
 		}
-		info := infos[i]
-		p := filepath.Join(filePath, info.Name())
-		h.uploadProcess.StartFile(p, info)
 		if !info.IsDir() && hash == "" {
 			hash, err = h.uploadFile(ctx, p, info)
 			if err != nil {
@@ -111,15 +113,19 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 			ChangeTime: modifyTime,
 			AccessTime: modifyTime,
 		}
-		h.uploadProcess.EndFile(p, info)
+		if !info.IsDir() {
+			h.uploadProcess.EndFile(p, info)
+		}
 	}
 
+	if filePath != h.srcPath {
+		h.uploadProcess.StartDir(filePath, uint64(len(uploadReqDirItemV3)))
+	}
 	select {
 	case <-ctx.Done():
 		return context.Canceled
 	default:
 	}
-	h.uploadProcess.StartDir(filePath, uint64(len(uploadReqDirItemV3)))
 	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3Dir, &pb.UploadReqV3{
 		DriverId:           h.driverId,
 		DirPath:            dirPath,
@@ -128,7 +134,9 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	if err != nil {
 		return err
 	}
-	h.uploadProcess.EndDir(filePath, dirInfo)
+	if filePath != h.srcPath {
+		h.uploadProcess.EndDir(filePath, dirInfo)
+	}
 
 	return nil
 }
