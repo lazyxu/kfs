@@ -35,6 +35,18 @@ export async function startDriverLocalFile(start, driverId, srcPath, encoder) {
     }
 }
 
+export async function startDriverLocalFileFilter(start, driverId, srcPath) {
+    try {
+        console.log('web.startDriverLocalFileFilter', start, driverId, srcPath);
+        return await localHttpPost("/api/v1/startDriverLocalFileFilter", {
+            start, driverId, srcPath,
+        });
+    } catch (e) {
+        noteError("测试过滤规则设置失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
 export async function analysisExif(start) {
     console.log('web.analysisExif', start);
     return await httpPost("/api/v1/analysisExif", {

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import DriverAttributeNormal from './DriverAttributeNormal';
 import DriverBaiduPhoto from './DriverBaiduPhoto';
 import DriverLocalFile from './DriverLocalFile';
+import DriverLocalFileFilter from './DriverLocalFileFilter';
 
 function formatTime(t) {
     return moment(t / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
@@ -60,7 +61,8 @@ export default ({ setOpen, driver }) => {
                 <Tabs value={attributeType} onChange={(e, v) => setAttributeType(v)} sx={{
                     backgroundColor: theme => theme.background.primary,
                     color: theme => theme.context.secondary,
-                    borderBottom: 1, borderColor: 'divider'
+                    borderBottom: 1, borderColor: 'divider',
+                    marginBottom: "1em"
                 }}
                 >
                     {driver.type === "" && <Tab key={0} value={0} label="常规" />}
@@ -76,6 +78,7 @@ export default ({ setOpen, driver }) => {
                 </Tabs>
                 {attributeType === 0 && <DriverAttributeNormal setOpen={setOpen} driver={driver} />}
                 {attributeType === 1 && (driver.type === "baiduPhoto" ? <DriverBaiduPhoto driver={driver} /> : <DriverLocalFile driver={driver} />)}
+                {attributeType === 2 && <DriverLocalFileFilter driver={driver} />}
             </DialogContent>
         </Dialog>
     );

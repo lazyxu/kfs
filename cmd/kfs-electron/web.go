@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/lazyxu/kfs/cmd/kfs-electron/task/local_file"
+	"github.com/lazyxu/kfs/cmd/kfs-electron/task/local_file_filter"
 	"net"
 	"net/http"
 	"strconv"
@@ -30,8 +31,10 @@ func webServer(lis net.Listener) {
 	e.POST("/api/v1/startBackupTask", apiStartBackupTask)
 	e.GET("/api/v1/event/backupTask/:name", apiEventBackupTaskDetail)
 	e.POST("/api/v1/startDriverLocalFile", apiStarDriverLocalFile)
+	e.POST("/api/v1/startDriverLocalFileFilter", apiStarDriverLocalFileFilter)
 	e.POST("/api/v1/startAllLocalFileSync", startAllLocalFileSync)
 	e.GET("/api/v1/event/driverLocalFile/:driverId", local_file.ApiEvent)
+	e.GET("/api/v1/event/driverLocalFileFilter/:driverId", local_file_filter.ApiEvent)
 
 	// Start server
 	e.Listener = lis
@@ -70,5 +73,26 @@ func apiStarDriverLocalFile(c echo.Context) error {
 		return err
 	}
 	d.StartOrStop(ctx, start, serverAddr, srcPath, encoder)
+	return c.String(http.StatusOK, "")
+}
+
+func apiStarDriverLocalFileFilter(c echo.Context) error {
+	startStr := c.QueryParam("start")
+	start, err := strconv.ParseBool(startStr)
+	if err != nil {
+		return err
+	}
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "driverId should be a number")
+	}
+	srcPath := c.QueryParam("srcPath")
+	ctx := c.Request().Context()
+	d, err := local_file_filter.GetOrLoadDriver(driverId)
+	if err != nil {
+		return err
+	}
+	d.StartOrStop(ctx, start, srcPath)
 	return c.String(http.StatusOK, "")
 }

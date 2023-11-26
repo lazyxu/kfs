@@ -1,9 +1,9 @@
 import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from '@mui/icons-material';
-import { Box, Grid, IconButton, MenuItem, Select, Switch } from "@mui/material";
+import { Box, Grid, IconButton } from "@mui/material";
 import { startAllLocalFileSync } from 'api/driver';
 import { getDriverLocalFile, getDriverSync, updateDriverSync } from 'api/web/driver';
-import { startDriverLocalFile } from 'api/web/exif';
+import { startDriverLocalFileFilter } from 'api/web/exif';
 import { noteError } from 'components/Notification/Notification';
 import { getSysConfig } from 'hox/sysConfig';
 import humanize from 'humanize';
@@ -36,7 +36,7 @@ export default ({ driver }) => {
     }, []);
     const controller = new AbortController();
     useEffect(() => {
-        fetchEventSource(`http://127.0.0.1:${getSysConfig().sysConfig.port}/api/v1/event/driverLocalFile/${driver.id}`, {
+        fetchEventSource(`http://127.0.0.1:${getSysConfig().sysConfig.port}/api/v1/event/driverLocalFileFilter/${driver.id}`, {
             signal: controller.signal,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
@@ -96,28 +96,13 @@ export default ({ driver }) => {
     let curFile = info?.curFile ? info.curFile : info?.curDir ? info.curDir : "";
     return (
         <Grid container spacing={1.5} sx={{ alignItems: "center" }}>
-            <Attr k="定时同步">
-                {syncAttributes ? <>
-                    <Switch checked={syncAttributes.sync} onChange={e => myUpdateDriverSync(e.target.checked, syncAttributes.h, syncAttributes.m)} />
-                    <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => myUpdateDriverSync(syncAttributes.sync, e.target.value, syncAttributes.m)}>
-                        {[...Array(24).keys()].map(value =>
-                            <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
-                        )}
-                    </Select>时
-                    <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => myUpdateDriverSync(syncAttributes.sync, syncAttributes.h, e.target.value)}>
-                        {[...Array(60).keys()].map(value =>
-                            <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
-                        )}
-                    </Select>分
-                </> : <>配置加载中...</>}
-            </Attr>
-            <Attr k="上次同步结束时间">{info?.lastDoneTime ? `${moment(info.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}` : "?"}</Attr>
-            <Attr k="同步">{(info?.status === undefined ||
+            <Attr k="上次测试结束时间">{info?.lastDoneTime ? `${moment(info.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}` : "?"}</Attr>
+            <Attr k="测试">{(info?.status === undefined ||
                 info?.status === StatusIdle ||
                 info?.status === StatusFinished ||
                 info?.status === StatusCanceled ||
                 info?.status === StatusError) &&
-                <IconButton onClick={e => startDriverLocalFile(true, driver.id, localFileAttributes.srcPath, localFileAttributes.encoder)}>
+                <IconButton onClick={e => startDriverLocalFileFilter(true, driver.id, localFileAttributes.srcPath, localFileAttributes.encoder)}>
                     <PlayArrow />
                 </IconButton>
             }
@@ -132,7 +117,7 @@ export default ({ driver }) => {
                     </IconButton>
                 }
                 {info?.status === StatusRunning &&
-                    <IconButton onClick={e => startDriverLocalFile(false, driver.id, localFileAttributes.srcPath, localFileAttributes.encoder)}>
+                    <IconButton onClick={e => startDriverLocalFileFilter(false, driver.id, localFileAttributes.srcPath, localFileAttributes.encoder)}>
                         <Stop />
                     </IconButton>
                 }
@@ -148,12 +133,11 @@ export default ({ driver }) => {
                     </div>
                 </a>
             </Attr>
-            <Attr k="当前文件大小">{info?.curFile ? humanize.filesize(info.curSize) : ""}</Attr>
             <Attr k="当前目录下文件数量">{info?.curDir ? info.curDirItemCnt : ""}</Attr>
-            <Attr k="同步大小">{info ? `${humanize.filesize(info.size)}/${humanize.filesize(info.totalSize)}` : "?"}</Attr>
-            <Attr k="同步文件数量">{info ? `${info.fileCount}/${info.totalFileCount}` : "?"}</Attr>
-            <Attr k="同步目录数量">{info ? `${info.dirCount}/${info.totalDirCount}` : "?"}</Attr>
-            <Attr k="同步失败的文件或目录">{info ? info.warnings.map((w, i) => (<ul key={i}><li>{w}</li></ul>)) : "?"}</Attr>
+            <Attr k="总大小">{info ? humanize.filesize(info.totalSize) : "?"}</Attr>
+            <Attr k="总文件数量">{info ? info.totalFileCount : "?"}</Attr>
+            <Attr k="总目录数量">{info ? info.totalDirCount : "?"}</Attr>
+            <Attr k="失败的文件或目录">{info ? info.warnings.map((w, i) => (<ul key={i}><li>{w}</li></ul>)) : "?"}</Attr>
         </Grid>
     )
 };
