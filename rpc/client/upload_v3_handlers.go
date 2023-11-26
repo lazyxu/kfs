@@ -57,7 +57,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	if err != nil {
 		return err
 	}
-	uploadReqDirItemCheckV3 := make([]*pb.UploadReqDirItemCheckV3, cap(infos))
+	uploadReqDirItemCheckV3 := make([]*pb.UploadReqDirItemCheckV3, len(infos))
 	for i, info := range infos {
 		h.uploadProcess.PushFile(info)
 		modifyTime := uint64(info.ModTime().UnixNano())

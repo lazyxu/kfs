@@ -1,8 +1,7 @@
 import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from '@mui/icons-material';
-import { Box, Grid, IconButton } from "@mui/material";
-import { startAllLocalFileSync } from 'api/driver';
-import { getDriverLocalFile, getDriverSync, updateDriverSync } from 'api/web/driver';
+import { Box, Grid, IconButton, Input } from "@mui/material";
+import { getDriverLocalFile } from 'api/web/driver';
 import { startDriverLocalFileFilter } from 'api/web/exif';
 import { noteError } from 'components/Notification/Notification';
 import { getSysConfig } from 'hox/sysConfig';
@@ -28,10 +27,9 @@ function Attr({ k, children }) {
 
 export default ({ driver }) => {
     const [info, setInfo] = useState();
-    const [syncAttributes, setSyncAttributes] = useState();
+    const [ignore, setIgnore] = useState("");
     const [localFileAttributes, setLocalFileAttributes] = useState();
     useEffect(() => {
-        getDriverSync(driver.id).then(n => setSyncAttributes(n));
         getDriverLocalFile(driver.id).then(n => setLocalFileAttributes(n));
     }, []);
     const controller = new AbortController();
@@ -79,30 +77,25 @@ export default ({ driver }) => {
             controller.abort();
         }
     }, []);
-    const myUpdateDriverSync = function (sync, h, m) {
-        updateDriverSync(driver.id, sync, h, m)
-            .then(() => {
-                setSyncAttributes(prev => { return { ...prev, sync, h, m }; });
-                if (sync) {
-                    startAllLocalFileSync([{
-                        id: driver.id,
-                        h, m,
-                        srcPath: localFileAttributes.srcPath,
-                        encoder: localFileAttributes.encoder,
-                    }]);
-                }
-            });
-    };
     let curFile = info?.curFile ? info.curFile : info?.curDir ? info.curDir : "";
     return (
         <Grid container spacing={1.5} sx={{ alignItems: "center" }}>
             <Attr k="上次测试结束时间">{info?.lastDoneTime ? `${moment(info.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}` : "?"}</Attr>
+            <Attr k="本地文件夹路径">{localFileAttributes ?
+                <a title={localFileAttributes.srcPath} onClick={() => {
+                    const { shell } = window.require('@electron/remote');
+                    shell.openPath(localFileAttributes.srcPath);
+                }} >{localFileAttributes.srcPath}</a> : "加载中..."}</Attr>
+            <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}>
+                <Box>过滤规则：</Box>
+                <Input multiline sx={{ width: "100%" }} onChange={e => setIgnore(e.target.value)} />
+            </Grid>
             <Attr k="测试">{(info?.status === undefined ||
                 info?.status === StatusIdle ||
                 info?.status === StatusFinished ||
                 info?.status === StatusCanceled ||
                 info?.status === StatusError) &&
-                <IconButton onClick={e => startDriverLocalFileFilter(true, driver.id, localFileAttributes.srcPath, localFileAttributes.encoder)}>
+                <IconButton onClick={e => startDriverLocalFileFilter(true, driver.id, localFileAttributes.srcPath, ignore)}>
                     <PlayArrow />
                 </IconButton>
             }
@@ -117,7 +110,7 @@ export default ({ driver }) => {
                     </IconButton>
                 }
                 {info?.status === StatusRunning &&
-                    <IconButton onClick={e => startDriverLocalFileFilter(false, driver.id, localFileAttributes.srcPath, localFileAttributes.encoder)}>
+                    <IconButton onClick={e => startDriverLocalFileFilter(false, driver.id, localFileAttributes.srcPath, ignore)}>
                         <Stop />
                     </IconButton>
                 }
