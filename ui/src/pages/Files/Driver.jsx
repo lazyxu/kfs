@@ -98,7 +98,7 @@ export default ({ driver, setDriverAttribute }) => {
                         </MenuItem>
                         <MenuItem onClick={() => { setAnchorEl(null); setDriverAttribute(driver) }}>
                             <Settings />
-                            <ListItemText>设置</ListItemText>
+                            <ListItemText>属性</ListItemText>
                         </MenuItem>
                         <MenuItem disabled>
                             <DriveFileRenameOutline />

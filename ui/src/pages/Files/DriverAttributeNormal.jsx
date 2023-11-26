@@ -1,0 +1,74 @@
+import { Box, Divider, Grid } from "@mui/material";
+import { getDriverLocalFile, getDriverSync, getDriversDirCount, getDriversFileCount, getDriversFileSize } from 'api/web/driver';
+import humanize from 'humanize';
+import moment from "moment/moment";
+import { useEffect, useState } from 'react';
+
+function formatTime(t) {
+    return moment(t / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
+}
+
+function Attr({ k, children }) {
+    return <>
+        <Grid xs={4} item sx={{ overflowWrap: "anywhere" }}><Box>{k}：</Box></Grid>
+        <Grid xs={8} item sx={{ overflowWrap: "anywhere" }}>{children}</Grid>
+    </>
+}
+
+function getDriverType(driver) {
+    switch (driver.type) {
+        case "baiduPhoto":
+            return "一刻相册备份盘";
+        case "localFile":
+            return "本地文件备份盘";
+        case "":
+            return "普通云盘";
+        default:
+            break;
+    }
+}
+
+export default ({ driver }) => {
+    // TODO: get more calculated attributes from server.
+    const [attributes, setAttributes] = useState({});
+    const [syncAttributes, setSyncAttributes] = useState();
+    const [localFileAttributes, setLocalFileAttributes] = useState();
+    useEffect(() => {
+        if (driver.type === "baiduPhoto" || driver.type === "localFile") {
+            getDriverSync(driver.id).then(n => setSyncAttributes(n));
+        }
+        if (driver.type === "localFile") {
+            getDriverLocalFile(driver.id).then(n => setLocalFileAttributes(n));
+        }
+        getDriversFileSize(driver.id).then(n => setAttributes(prev => { return { ...prev, fileSize: n }; }));
+        getDriversFileCount(driver.id).then(n => setAttributes(prev => { return { ...prev, fileCount: n }; }));
+        getDriversDirCount(driver.id).then(n => setAttributes(prev => { return { ...prev, dirCount: n }; }));
+    }, []);
+    return (
+        <Grid container spacing={1.5} sx={{ alignItems: "center" }}>
+            <Attr k="id">{driver.id}</Attr>
+            <Attr k="名称">{driver.name}</Attr>
+            <Attr k="描述">{driver.description}</Attr>
+            <Attr k="类型">{getDriverType(driver)}</Attr>
+            <Attr k="总大小">{humanize.filesize(attributes.fileSize)}</Attr>
+            <Attr k="文件数量">{attributes.fileCount}</Attr>
+            <Attr k="目录数量">{attributes.dirCount}</Attr>
+            {/* <Box variant="body"> */}
+            {/* <Box>文件总数：{driver.count}</Box> */}
+            {/* <Box>总大小：{humanize.filesize(driver.size)}</Box> */}
+            {/* <Typography>可修改该云盘的设备：any</Typography> */}
+            {/* <Typography>可读取该云盘的设备：any</Typography> */}
+            {/* </Box> */}
+            {driver.type === "localFile" && <>
+                <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}><Divider /></Grid>
+                <Attr k="设备ID">{localFileAttributes ? localFileAttributes.deviceId : "加载中..."}</Attr>
+                <Attr k="本地文件夹路径">{localFileAttributes ?
+                    <a variant="text" onClick={() => {
+                        const { shell } = window.require('@electron/remote');
+                        shell.openPath(localFileAttributes.srcPath);
+                    }} >{localFileAttributes.srcPath}</a> : "加载中..."}</Attr>
+                <Attr k="上传时压缩">{localFileAttributes ? localFileAttributes.encoder : "加载中..."}</Attr>
+            </>}
+        </Grid>
+    );
+};
