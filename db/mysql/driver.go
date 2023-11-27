@@ -15,12 +15,16 @@ func (db *DB) InsertDriverBaiduPhoto(ctx context.Context, driverName string, des
 	return dbBase.InsertDriverBaiduPhoto(ctx, db.db, db, driverName, description, accessToken, refreshToken)
 }
 
-func (db *DB) InsertDriverLocalFile(ctx context.Context, driverName string, description string, deviceId uint64, srcPath string, encoder string, concurrent int) (exist bool, err error) {
-	return dbBase.InsertDriverLocalFile(ctx, db.db, db, driverName, description, deviceId, srcPath, encoder, concurrent)
+func (db *DB) InsertDriverLocalFile(ctx context.Context, driverName string, description string, deviceId uint64, srcPath string, ignores string, encoder string) (exist bool, err error) {
+	return dbBase.InsertDriverLocalFile(ctx, db.db, db, driverName, description, deviceId, srcPath, ignores, encoder)
 }
 
 func (db *DB) UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, h int64, m int64) error {
 	return dbBase.UpdateDriverSync(ctx, db.db, driverId, sync, h, m)
+}
+
+func (db *DB) UpdateDriverLocalFile(ctx context.Context, driverId uint64, srcPath, ignores, encoder string) error {
+	return dbBase.UpdateDriverLocalFile(ctx, db.db, driverId, srcPath, ignores, encoder)
 }
 
 func (db *DB) ResetDriver(ctx context.Context, driverId uint64) error {

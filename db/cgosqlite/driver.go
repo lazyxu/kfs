@@ -18,16 +18,22 @@ func (db *DB) InsertDriverBaiduPhoto(ctx context.Context, driverName string, des
 	return dbBase.InsertDriverBaiduPhoto(ctx, conn, db, driverName, description, accessToken, refreshToken)
 }
 
-func (db *DB) InsertDriverLocalFile(ctx context.Context, driverName string, description string, deviceId uint64, srcPath string, encoder string, concurrent int) (exist bool, err error) {
+func (db *DB) InsertDriverLocalFile(ctx context.Context, driverName string, description string, deviceId uint64, srcPath string, ignores string, encoder string) (exist bool, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.InsertDriverLocalFile(ctx, conn, db, driverName, description, deviceId, srcPath, encoder, concurrent)
+	return dbBase.InsertDriverLocalFile(ctx, conn, db, driverName, description, deviceId, srcPath, ignores, encoder)
 }
 
 func (db *DB) UpdateDriverSync(ctx context.Context, driverId uint64, sync bool, h int64, m int64) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.UpdateDriverSync(ctx, conn, driverId, sync, h, m)
+}
+
+func (db *DB) UpdateDriverLocalFile(ctx context.Context, driverId uint64, srcPath, ignores, encoder string) error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.UpdateDriverLocalFile(ctx, conn, driverId, srcPath, ignores, encoder)
 }
 
 func (db *DB) ResetDriver(ctx context.Context, driverId uint64) error {

@@ -181,8 +181,8 @@ func (db *DB) Create() error {
 		id           INT64          NOT NULL PRIMARY KEY,
 	    deviceId     INTEGER        NOT NULL DEFAULT 0,
 		srcPath      VARCHAR(32767) NOT NULL DEFAULT "",
+	    ignores      TEXT           NOT NULL DEFAULT "",
 		encoder      VARCHAR(64)    NOT NULL DEFAULT "",
-	    concurrent   INT8           NOT NULL DEFAULT 0,
 	    FOREIGN KEY (id)  REFERENCES   _driver(id)
 	);
 

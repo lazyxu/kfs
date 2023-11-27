@@ -18,5 +18,6 @@ type Driver struct {
 	// local file
 	DeviceId uint64 `json:"deviceId"`
 	SrcPath  string `json:"srcPath"`
+	Ignores  string `json:"ignores"`
 	Encoder  string `json:"encoder"`
 }

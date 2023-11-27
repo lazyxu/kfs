@@ -53,13 +53,9 @@ func apiNewDriverLocalFile(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "id should be a number")
 	}
 	srcPath := c.QueryParam("srcPath")
+	ignores := c.QueryParam("ignores")
 	encoder := c.QueryParam("encoder")
-	concurrentStr := c.QueryParam("concurrent")
-	concurrent, err := strconv.ParseUint(concurrentStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "concurrent should be a number")
-	}
-	exist, err := kfsCore.Db.InsertDriverLocalFile(c.Request().Context(), name, description, deviceId, srcPath, encoder, int(concurrent))
+	exist, err := kfsCore.Db.InsertDriverLocalFile(c.Request().Context(), name, description, deviceId, srcPath, ignores, encoder)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -128,6 +124,23 @@ func apiUpdateDriverSync(c echo.Context) error {
 	}
 	if d.Typ == dbBase.DRIVER_TYPE_BAIDU_PHOTO {
 		startCloudSync(driverId, h, m)
+	}
+	return c.String(http.StatusOK, "")
+}
+
+func apiUpdateDriverLocalFile(c echo.Context) error {
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "driverId should be a number")
+	}
+	srcPath := c.QueryParam("srcPath")
+	ignores := c.QueryParam("ignores")
+	encoder := c.QueryParam("encoder")
+	err = kfsCore.Db.UpdateDriverLocalFile(c.Request().Context(), driverId, srcPath, ignores, encoder)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
 	}
 	return c.String(http.StatusOK, "")
 }

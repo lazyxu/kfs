@@ -41,6 +41,16 @@ export async function updateDriverSync(driverId, sync, h, m) {
     }
 }
 
+export async function updateDriverLocalFile(driverId, srcPath, ignores, encoder) {
+    try {
+        console.log('web.updateDriverLocalFile', driverId, srcPath, ignores, encoder);
+        return await httpGet("/api/v1/updateDriverLocalFile", { driverId, srcPath, ignores, encoder });
+    } catch (e) {
+        noteError("设置定时同步失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
 export async function deleteDriver(id) {
     console.log('web.deleteDriver', id);
     return await httpDelete("/api/v1/drivers", { id });

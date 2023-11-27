@@ -54,7 +54,7 @@ func InsertDriverBaiduPhoto(ctx context.Context, conn *sql.DB, db DbImpl, driver
 	return
 }
 
-func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, deviceId uint64, srcPath string, encoder string, concurrent int) (exist bool, err error) {
+func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, deviceId uint64, srcPath string, ignores string, encoder string) (exist bool, err error) {
 	res, err := conn.ExecContext(ctx, `
 	INSERT INTO _driver (
 		name,
@@ -81,9 +81,9 @@ func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverN
 		id,
 		deviceId,
 	    srcPath,
-	    encoder,
-	    concurrent
-	) VALUES (?, ?, ?, ?, ?)`, id, deviceId, srcPath, encoder, concurrent)
+	    ignores,
+	    encoder
+	) VALUES (?, ?, ?, ?, ?)`, id, deviceId, srcPath, ignores, encoder)
 	return
 }
 
@@ -92,6 +92,17 @@ func UpdateDriverSync(ctx context.Context, conn *sql.DB, driverId uint64, sync b
 	UPDATE _driver_sync
 	SET sync = ?, h = ?, m = ?
 	WHERE id = ?;`, sync, h, m, driverId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateDriverLocalFile(ctx context.Context, conn *sql.DB, driverId uint64, srcPath, ignores, encoder string) error {
+	_, err := conn.ExecContext(ctx, `
+	UPDATE _driver_local_file
+	SET srcPath = ?, ignores = ?, encoder = ?
+	WHERE id = ?;`, srcPath, ignores, encoder, driverId)
 	if err != nil {
 		return err
 	}
@@ -209,7 +220,7 @@ func ListCloudDriverSync(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driv
 
 func ListLocalFileDriver(ctx context.Context, txOrDb TxOrDb, deviceId uint64) (drivers []dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT _driver.id, h, m, srcPath, encoder
+	SELECT _driver.id, h, m, srcPath, ignores, encoder
 	FROM _driver_local_file LEFT JOIN _driver_sync LEFT JOIN _driver
 	WHERE _driver_local_file.deviceId = ? AND _driver_local_file.id = _driver_sync.id AND _driver_sync.sync = 1 AND _driver_sync.id = _driver.id AND _driver.type = ?;
 	`, deviceId, DRIVER_TYPE_LOCAL_FILE)
@@ -220,7 +231,7 @@ func ListLocalFileDriver(ctx context.Context, txOrDb TxOrDb, deviceId uint64) (d
 	drivers = []dao.Driver{}
 	for rows.Next() {
 		var driver dao.Driver
-		err = rows.Scan(&driver.Id, &driver.H, &driver.M, &driver.SrcPath, &driver.Encoder)
+		err = rows.Scan(&driver.Id, &driver.H, &driver.M, &driver.SrcPath, &driver.Ignores, &driver.Encoder)
 		if err != nil {
 			return
 		}
@@ -231,14 +242,14 @@ func ListLocalFileDriver(ctx context.Context, txOrDb TxOrDb, deviceId uint64) (d
 
 func GetDriverLocalFile(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT deviceId, srcPath, encoder FROM _driver_local_file WHERE id = ?;
+	SELECT deviceId, srcPath, ignores, encoder FROM _driver_local_file WHERE id = ?;
 	`, driverId)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	if rows.Next() {
-		err = rows.Scan(&driver.DeviceId, &driver.SrcPath, &driver.Encoder)
+		err = rows.Scan(&driver.DeviceId, &driver.SrcPath, &driver.Ignores, &driver.Encoder)
 		if err != nil {
 			return
 		}
