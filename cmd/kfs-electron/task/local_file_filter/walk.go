@@ -27,7 +27,13 @@ type filterHandlers struct {
 }
 
 func (h *filterHandlers) FilePathFilter(filePath string) bool {
-	return h.gitIgnore.MatchesPath(filePath)
+	ignored := h.gitIgnore.MatchesPath(filePath)
+	if ignored {
+		println(filePath + ": ignored")
+	} else {
+		println(filePath)
+	}
+	return ignored
 }
 
 func (h *filterHandlers) OnFileError(filePath string, err error) {
@@ -47,6 +53,11 @@ func (h *filterHandlers) DirHandler(ctx context.Context, filePath string, dirInf
 	}
 
 	for _, info := range infos {
+		select {
+		case <-ctx.Done():
+			return context.Canceled
+		default:
+		}
 		h.d.addTaskTotal(info)
 	}
 
@@ -72,7 +83,8 @@ func (d *DriverLocalFile) checkFilter(ctx context.Context, driverId uint64, srcP
 	if os.PathSeparator == '\\' {
 		ignores = strings.ReplaceAll(ignores, "\\", "/")
 	}
-	gitIgnore := ignore.CompileIgnoreLines(ignores)
+	list := strings.Split(ignores, "\n")
+	gitIgnore := ignore.CompileIgnoreLines(list...)
 	handlers := &filterHandlers{
 		d:         d,
 		driverId:  driverId,
