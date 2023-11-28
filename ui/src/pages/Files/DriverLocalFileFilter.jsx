@@ -146,6 +146,7 @@ export default ({ driver }) => {
             <Attr k="总大小">{info ? humanize.filesize(info.totalSize) : "?"}</Attr>
             <Attr k="总文件数量">{info ? info.totalFileCount : "?"}</Attr>
             <Attr k="总目录数量">{info ? info.totalDirCount : "?"}</Attr>
+            <Attr k="忽略的文件或目录">{info ? info.ignores.map((w, i) => (<ul key={i}><li>{w}</li></ul>)) : "?"}</Attr>
             <Attr k="失败的文件或目录">{info ? info.warnings.map((w, i) => (<ul key={i}><li>{w}</li></ul>)) : "?"}</Attr>
         </Grid>
     )

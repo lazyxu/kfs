@@ -81,10 +81,11 @@ type TaskInfo struct {
 	ErrMsg        string   `json:"errMsg"`
 	Warnings      []string `json:"warnings"`
 	startTime     time.Time
-	CurFile       string `json:"curFile"`
-	CurSize       uint64 `json:"curSize"`
-	CurDirItemCnt uint64 `json:"curDirItemCnt"`
-	CurDir        string `json:"curDir"`
+	CurFile       string   `json:"curFile"`
+	CurSize       uint64   `json:"curSize"`
+	CurDirItemCnt uint64   `json:"curDirItemCnt"`
+	CurDir        string   `json:"curDir"`
+	Ignores       []string `json:"ignores"`
 }
 
 func (d *DriverLocalFile) setTaskStatus(status int) {
@@ -112,6 +113,14 @@ func (d *DriverLocalFile) addTaskWarning(errMsg string) {
 	d.mutex.Unlock()
 }
 
+func (d *DriverLocalFile) addTaskIgnores(ignore string) {
+	d.mutex.Lock()
+	d.taskInfo.Ignores = append(d.taskInfo.Ignores, ignore)
+	d.taskInfo.Cost = time.Now().Sub(d.taskInfo.startTime).Milliseconds()
+	s.SendAll()
+	d.mutex.Unlock()
+}
+
 func (d *DriverLocalFile) setTaskStatusWithLock(status int) {
 	d.taskInfo.Status = status
 	if status == StatusRunning {
@@ -127,6 +136,7 @@ func (d *DriverLocalFile) setTaskStatusWithLock(status int) {
 		d.taskInfo.CurDir = ""
 		d.taskInfo.CurDirItemCnt = 0
 		d.taskInfo.Warnings = make([]string, 0)
+		d.taskInfo.Ignores = make([]string, 0)
 		d.taskInfo.startTime = time.Now()
 	} else if status == StatusFinished || status == StatusCanceled || status == StatusError {
 		d.taskInfo.cancel = nil
@@ -193,6 +203,7 @@ func GetOrLoadDriver(driverId uint64) (*DriverLocalFile, error) {
 			cancel:   nil,
 			Status:   StatusIdle,
 			Warnings: make([]string, 0),
+			Ignores:  make([]string, 0),
 		},
 		mutex: &sync.Mutex{},
 	})

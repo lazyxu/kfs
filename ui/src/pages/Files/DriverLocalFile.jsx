@@ -154,6 +154,7 @@ export default ({ driver }) => {
             <Attr k="同步大小">{info ? `${humanize.filesize(info.size)}/${humanize.filesize(info.totalSize)}` : "?"}</Attr>
             <Attr k="同步文件数量">{info ? `${info.fileCount}/${info.totalFileCount}` : "?"}</Attr>
             <Attr k="同步目录数量">{info ? `${info.dirCount}/${info.totalDirCount}` : "?"}</Attr>
+            <Attr k="忽略的文件或目录">{info ? info.ignores.map((w, i) => (<ul key={i}><li>{w}</li></ul>)) : "?"}</Attr>
             <Attr k="同步失败的文件或目录">{info ? info.warnings.map((w, i) => (<ul key={i}><li>{w}</li></ul>)) : "?"}</Attr>
         </Grid>
     )

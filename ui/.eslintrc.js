@@ -29,5 +29,6 @@ module.exports = {
         "no-param-reassign": "off",
         "no-return-assign": "off",
         "react/self-closing-comp": "off",
+        "complexity": "off",
     },
 };

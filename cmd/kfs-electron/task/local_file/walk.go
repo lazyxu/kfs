@@ -27,6 +27,7 @@ func (h *WebUploadDirProcess) FilePathFilter(filePath string) bool {
 	ignored := h.gitIgnore.MatchesPath(filePath)
 	if ignored {
 		println(filePath + ": ignored")
+		h.d.addTaskIgnores(filePath)
 	} else {
 		println(filePath)
 	}
