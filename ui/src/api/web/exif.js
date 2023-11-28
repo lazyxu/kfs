@@ -22,12 +22,12 @@ export async function startBaiduPhotoTask(start, driverId) {
     }
 }
 
-export async function startDriverLocalFile(start, driverId, srcPath, encoder) {
+export async function startDriverLocalFile(start, driverId, srcPath, ignores, encoder) {
     try {
         let serverAddr = getSysConfig().sysConfig.socketServer;
-        console.log('web.startDriverLocalFile', start, driverId, serverAddr, srcPath, encoder);
+        console.log('web.startDriverLocalFile', start, driverId, serverAddr, srcPath, ignores, encoder);
         return await localHttpPost("/api/v1/startDriverLocalFile", {
-            start, driverId, serverAddr, srcPath, encoder
+            start, driverId, serverAddr, srcPath, ignores, encoder
         });
     } catch (e) {
         noteError("备份本地文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));

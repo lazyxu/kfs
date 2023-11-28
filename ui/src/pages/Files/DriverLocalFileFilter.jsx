@@ -1,7 +1,8 @@
 import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from '@mui/icons-material';
 import { Box, Button, Grid, IconButton, Input } from "@mui/material";
-import { getDriverLocalFile, updateDriverLocalFile } from 'api/web/driver';
+import { startAllLocalFileSync } from 'api/driver';
+import { getDriverLocalFile, getDriverSync, updateDriverLocalFile } from 'api/web/driver';
 import { startDriverLocalFileFilter } from 'api/web/exif';
 import { noteError } from 'components/Notification/Notification';
 import { getSysConfig } from 'hox/sysConfig';
@@ -27,10 +28,12 @@ function Attr({ k, children }) {
 
 export default ({ driver }) => {
     const [info, setInfo] = useState();
+    const [syncAttributes, setSyncAttributes] = useState();
     const [ignores, setIgnores] = useState("");
     const [localFileAttributes, setLocalFileAttributes] = useState();
     useEffect(() => {
-        getDriverLocalFile(driver.id).then(n => {setLocalFileAttributes(n); setIgnores(n.ignores)});
+        getDriverSync(driver.id).then(n => setSyncAttributes(n));
+        getDriverLocalFile(driver.id).then(n => { setLocalFileAttributes(n); setIgnores(n.ignores) });
     }, []);
     const controller = new AbortController();
     useEffect(() => {
@@ -87,9 +90,19 @@ export default ({ driver }) => {
                 }} >{localFileAttributes.srcPath}</a> : "加载中..."}</Attr>
             <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}>
                 <Box>过滤规则 <Button variant="text" size="small" onClick={() => {
-                    // TODO: startAllLocalFileSync
                     updateDriverLocalFile(driver.id, localFileAttributes.srcPath, ignores, localFileAttributes.encoder)
-                }}>保存</Button></Box> 
+                        .then(() => {
+                            if (syncAttributes.sync) {
+                                startAllLocalFileSync([{
+                                    id: driver.id,
+                                    h: syncAttributes.h, m: syncAttributes.m,
+                                    srcPath: localFileAttributes.srcPath,
+                                    ignores,
+                                    encoder: localFileAttributes.encoder,
+                                }]);
+                            }
+                        });
+                }}>保存</Button></Box>
                 <Input multiline sx={{ width: "100%" }} value={ignores} onChange={e => setIgnores(e.target.value)} />
             </Grid>
             <Attr k="上次测试结束时间">{info?.lastDoneTime ? `${moment(info.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}` : "?"}</Attr>

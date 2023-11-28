@@ -88,6 +88,7 @@ export default ({ driver }) => {
                         id: driver.id,
                         h, m,
                         srcPath: localFileAttributes.srcPath,
+                        ignores: localFileAttributes.ignores,
                         encoder: localFileAttributes.encoder,
                     }]);
                 }
@@ -117,7 +118,7 @@ export default ({ driver }) => {
                 info?.status === StatusFinished ||
                 info?.status === StatusCanceled ||
                 info?.status === StatusError) &&
-                <IconButton onClick={e => startDriverLocalFile(true, driver.id, localFileAttributes.srcPath, localFileAttributes.encoder)}>
+                <IconButton onClick={e => startDriverLocalFile(true, driver.id, localFileAttributes.srcPath, localFileAttributes.ignores, localFileAttributes.encoder)}>
                     <PlayArrow />
                 </IconButton>
             }
@@ -132,7 +133,7 @@ export default ({ driver }) => {
                     </IconButton>
                 }
                 {info?.status === StatusRunning &&
-                    <IconButton onClick={e => startDriverLocalFile(false, driver.id, localFileAttributes.srcPath, localFileAttributes.encoder)}>
+                    <IconButton onClick={e => startDriverLocalFile(false, driver.id, localFileAttributes.srcPath, localFileAttributes.ignores, localFileAttributes.encoder)}>
                         <Stop />
                     </IconButton>
                 }

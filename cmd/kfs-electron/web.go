@@ -66,13 +66,14 @@ func apiStarDriverLocalFile(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "driverId should be a number")
 	}
 	srcPath := c.QueryParam("srcPath")
+	ignores := c.QueryParam("ignores")
 	encoder := c.QueryParam("encoder")
 	ctx := c.Request().Context()
 	d, err := local_file.GetOrLoadDriver(driverId)
 	if err != nil {
 		return err
 	}
-	d.StartOrStop(ctx, start, serverAddr, srcPath, encoder)
+	d.StartOrStop(ctx, start, serverAddr, srcPath, ignores, encoder)
 	return c.String(http.StatusOK, "")
 }
 

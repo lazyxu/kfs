@@ -32,6 +32,10 @@ type uploadHandlersV3 struct {
 	conn             net.Conn
 }
 
+func (h *uploadHandlersV3) FilePathFilter(filePath string) bool {
+	return h.uploadProcess.FilePathFilter(filePath)
+}
+
 func (h *uploadHandlersV3) OnFileError(filePath string, err error) {
 	h.uploadProcess.OnFileError(filePath, err)
 }
@@ -84,7 +88,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 		return err
 	}
 
-	uploadReqDirItemV3 := make([]*pb.UploadReqDirItemV3, cap(infos))
+	uploadReqDirItemV3 := make([]*pb.UploadReqDirItemV3, len(infos))
 	for i, hash := range respCheck.Hash {
 		info := infos[i]
 		p := filepath.Join(filePath, info.Name())

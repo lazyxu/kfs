@@ -18,4 +18,5 @@ type UploadDirProcess interface {
 	EndDir(filePath string, info os.FileInfo)
 	OnFileError(filePath string, err error)
 	PushFile(info os.FileInfo)
+	FilePathFilter(filePath string) bool
 }

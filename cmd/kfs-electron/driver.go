@@ -16,6 +16,7 @@ var cronTasks sync.Map
 
 type CronTask struct {
 	c      *cron.Cron
+	id     cron.EntryID
 	cancel context.CancelFunc
 }
 
@@ -31,26 +32,28 @@ func startAllLocalFileSync(c echo.Context) error {
 		return err
 	}
 	for _, d := range p.Drivers {
-		startLocalFileSync(d.Id, p.ServerAddr, d.H, d.M, d.SrcPath, d.Encoder)
+		startLocalFileSync(d.Id, p.ServerAddr, d.H, d.M, d.SrcPath, d.Ignores, d.Encoder)
 	}
 	return c.String(http.StatusOK, "")
 }
 
-func startLocalFileSync(driverId uint64, serverAddr string, h int64, m int64, srcPath, encoder string) {
-	actual, loaded := cronTasks.LoadOrStore(driverId, CronTask{
+func startLocalFileSync(driverId uint64, serverAddr string, h int64, m int64, srcPath, ignores, encoder string) {
+	actual, loaded := cronTasks.LoadOrStore(driverId, &CronTask{
 		c:      cron.New(),
+		id:     -1,
 		cancel: nil,
 	})
-	t := actual.(CronTask)
+	t := actual.(*CronTask)
 	if loaded {
 		if t.cancel != nil {
 			t.cancel()
 			t.cancel = nil
 		}
-		t.c.Stop()
+		t.c.Remove(t.id)
 	}
 	spec := fmt.Sprintf("%d %d * * ?", m, h)
-	_, err := t.c.AddFunc(spec, func() {
+	var err error
+	t.id, err = t.c.AddFunc(spec, func() {
 		ctx, cancel := context.WithCancel(context.TODO())
 		t.cancel = cancel
 		d, err := local_file.GetOrLoadDriver(driverId)
@@ -58,7 +61,7 @@ func startLocalFileSync(driverId uint64, serverAddr string, h int64, m int64, sr
 			cronTasks.LoadAndDelete(driverId)
 			return
 		}
-		d.StartOrStop(ctx, true, serverAddr, srcPath, encoder)
+		d.StartOrStop(ctx, true, serverAddr, srcPath, ignores, encoder)
 	})
 	if err != nil {
 		panic(err)

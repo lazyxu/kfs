@@ -6,18 +6,31 @@ import (
 	"fmt"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/client"
+	ignore "github.com/sabhiram/go-gitignore"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type WebUploadDirProcess struct {
-	d *DriverLocalFile
+	d         *DriverLocalFile
+	gitIgnore *ignore.GitIgnore
 }
 
 var _ core.UploadDirProcess = &WebUploadDirProcess{}
 
 func (w *WebUploadDirProcess) StartFile(filePath string, info os.FileInfo) {
 	w.d.setTaskFile(filePath, info)
+}
+
+func (h *WebUploadDirProcess) FilePathFilter(filePath string) bool {
+	ignored := h.gitIgnore.MatchesPath(filePath)
+	if ignored {
+		println(filePath + ": ignored")
+	} else {
+		println(filePath)
+	}
+	return ignored
 }
 
 func (w *WebUploadDirProcess) OnFileError(filePath string, err error) {
@@ -41,7 +54,7 @@ func (w *WebUploadDirProcess) PushFile(info os.FileInfo) {
 	w.d.addTaskTotal(info)
 }
 
-func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint64, serverAddr, srcPath, encoder string) error {
+func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint64, serverAddr, srcPath, ignores, encoder string) error {
 	if !filepath.IsAbs(srcPath) {
 		return errors.New("请输入绝对路径")
 	}
@@ -52,15 +65,20 @@ func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint6
 	if !info.IsDir() {
 		return errors.New("源目录不存在")
 	}
-	fmt.Println("backup start", driverId, serverAddr, srcPath, encoder)
+	fmt.Println("backup start", driverId, serverAddr, srcPath, ignores, encoder)
 
 	fs := &client.RpcFs{
 		SocketServerAddr: serverAddr,
 	}
-	w := &WebUploadDirProcess{
-		d: d,
+	if os.PathSeparator == '\\' {
+		ignores = strings.ReplaceAll(ignores, "\\", "/")
 	}
-
+	list := strings.Split(ignores, "\n")
+	gitIgnore := ignore.CompileIgnoreLines(list...)
+	w := &WebUploadDirProcess{
+		d:         d,
+		gitIgnore: gitIgnore,
+	}
 	err = fs.UploadDir(ctx, driverId, "/", srcPath, core.UploadDirConfig{
 		UploadDirProcess: w,
 		Encoder:          encoder,
