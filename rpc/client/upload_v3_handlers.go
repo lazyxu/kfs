@@ -59,7 +59,8 @@ func (h *uploadHandlersV3) formatPath(filePath string) ([]string, error) {
 func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo, continues []bool) error {
 	dirPath, err := h.formatPath(filePath)
 	if err != nil {
-		return err
+		h.uploadProcess.OnFileError(filePath, err)
+		return nil
 	}
 	uploadReqDirItemCheckV3 := make([]*pb.UploadReqDirItemCheckV3, len(infos))
 	for i, info := range infos {
@@ -88,7 +89,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 		return err
 	}
 
-	uploadReqDirItemV3 := make([]*pb.UploadReqDirItemV3, len(infos))
+	uploadReqDirItemV3 := []*pb.UploadReqDirItemV3{}
 	for i, hash := range respCheck.Hash {
 		info := infos[i]
 		p := filepath.Join(filePath, info.Name())
@@ -101,13 +102,18 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 		default:
 		}
 		if !info.IsDir() && hash == "" {
-			hash, err = h.uploadFile(ctx, p, info)
+			var fileErr error
+			hash, fileErr, err = h.uploadFile(ctx, p, info)
+			if fileErr != nil {
+				h.uploadProcess.OnFileError(p, fileErr)
+				continue
+			}
 			if err != nil {
 				return err
 			}
 		}
 		modifyTime := uint64(info.ModTime().UnixNano())
-		uploadReqDirItemV3[i] = &pb.UploadReqDirItemV3{
+		uploadReqDirItemV3 = append(uploadReqDirItemV3, &pb.UploadReqDirItemV3{
 			Name:       info.Name(),
 			Hash:       hash,
 			Mode:       uint64(info.Mode()),
@@ -116,7 +122,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 			ModifyTime: modifyTime,
 			ChangeTime: modifyTime,
 			AccessTime: modifyTime,
-		}
+		})
 		if !info.IsDir() {
 			h.uploadProcess.EndFile(p, info)
 		}
@@ -178,17 +184,17 @@ func (h *uploadHandlersV3) getHash(f *os.File) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info os.FileInfo) (hash string, err error) {
-	f, err := os.Open(filePath)
-	if err != nil {
+func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info os.FileInfo) (hash string, fileErr error, err error) {
+	f, fileErr := os.Open(filePath)
+	if fileErr != nil {
 		return
 	}
 	defer func() {
 		f.Close()
 	}()
 	size := uint64(info.Size())
-	hash, err = h.getHash(f)
-	if err != nil {
+	hash, fileErr = h.getHash(f)
+	if fileErr != nil {
 		return
 	}
 
