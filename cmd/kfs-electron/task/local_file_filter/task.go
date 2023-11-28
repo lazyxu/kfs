@@ -199,7 +199,7 @@ func GetOrLoadDriver(driverId uint64) (*DriverLocalFile, error) {
 	return d.(*DriverLocalFile), nil
 }
 
-func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool, srcPath, ignore string) {
+func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool, srcPath, ignores string) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 	if !start {
@@ -214,7 +214,7 @@ func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool, srcPath, 
 	ctx, cancel := context.WithCancel(context.TODO())
 	d.taskInfo.cancel = cancel
 	go func() {
-		err := d.checkFilter(ctx, d.driverId, srcPath, ignore)
+		err := d.checkFilter(ctx, d.driverId, srcPath, ignores)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				d.setTaskStatus(StatusCanceled)

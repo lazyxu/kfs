@@ -30,7 +30,7 @@ export default ({ driver }) => {
     const [ignores, setIgnores] = useState("");
     const [localFileAttributes, setLocalFileAttributes] = useState();
     useEffect(() => {
-        getDriverLocalFile(driver.id).then(n => setLocalFileAttributes(n));
+        getDriverLocalFile(driver.id).then(n => {setLocalFileAttributes(n); setIgnores(n.ignores)});
     }, []);
     const controller = new AbortController();
     useEffect(() => {
@@ -86,11 +86,11 @@ export default ({ driver }) => {
                     shell.openPath(localFileAttributes.srcPath);
                 }} >{localFileAttributes.srcPath}</a> : "加载中..."}</Attr>
             <Grid xs={12} item sx={{ overflowWrap: "anywhere" }}>
-                <Box>过滤规则：</Box> <Button variant="outlined" onClick={() => {
+                <Box>过滤规则 <Button variant="text" size="small" onClick={() => {
                     // TODO: startAllLocalFileSync
-                    updateDriverLocalFile(driver.id, localFileAttributes.srcPath, localFileAttributes.encoder, ignores)
-                }}>保存</Button>
-                <Input multiline sx={{ width: "100%" }} onChange={e => setIgnores(e.target.value)} />
+                    updateDriverLocalFile(driver.id, localFileAttributes.srcPath, ignores, localFileAttributes.encoder)
+                }}>保存</Button></Box> 
+                <Input multiline sx={{ width: "100%" }} value={ignores} onChange={e => setIgnores(e.target.value)} />
             </Grid>
             <Attr k="上次测试结束时间">{info?.lastDoneTime ? `${moment(info.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}` : "?"}</Attr>
             <Attr k="测试">{(info?.status === undefined ||

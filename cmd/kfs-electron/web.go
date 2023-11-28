@@ -88,12 +88,12 @@ func apiStarDriverLocalFileFilter(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "driverId should be a number")
 	}
 	srcPath := c.QueryParam("srcPath")
-	ignore := c.QueryParam("ignore")
+	ignores := c.QueryParam("ignores")
 	ctx := c.Request().Context()
 	d, err := local_file_filter.GetOrLoadDriver(driverId)
 	if err != nil {
 		return err
 	}
-	d.StartOrStop(ctx, start, srcPath, ignore)
+	d.StartOrStop(ctx, start, srcPath, ignores)
 	return c.String(http.StatusOK, "")
 }

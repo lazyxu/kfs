@@ -35,11 +35,11 @@ export async function startDriverLocalFile(start, driverId, srcPath, encoder) {
     }
 }
 
-export async function startDriverLocalFileFilter(start, driverId, srcPath, ignore) {
+export async function startDriverLocalFileFilter(start, driverId, srcPath, ignores) {
     try {
-        console.log('web.startDriverLocalFileFilter', start, driverId, srcPath, ignore);
+        console.log('web.startDriverLocalFileFilter', start, driverId, srcPath, ignores);
         return await localHttpPost("/api/v1/startDriverLocalFileFilter", {
-            start, driverId, srcPath, ignore,
+            start, driverId, srcPath, ignores,
         });
     } catch (e) {
         noteError("测试过滤规则设置失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));

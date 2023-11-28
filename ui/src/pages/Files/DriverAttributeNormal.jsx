@@ -1,5 +1,5 @@
-import { Box, Divider, Grid } from "@mui/material";
-import { getDriverLocalFile, getDriverSync, getDriversDirCount, getDriversFileCount, getDriversFileSize } from 'api/web/driver';
+import { Box, Divider, Grid, Input } from "@mui/material";
+import { getDriverLocalFile, getDriversDirCount, getDriversFileCount, getDriversFileSize } from 'api/web/driver';
 import humanize from 'humanize';
 import moment from "moment/moment";
 import { useEffect, useState } from 'react';
@@ -31,12 +31,8 @@ function getDriverType(driver) {
 export default ({ driver }) => {
     // TODO: get more calculated attributes from server.
     const [attributes, setAttributes] = useState({});
-    const [syncAttributes, setSyncAttributes] = useState();
     const [localFileAttributes, setLocalFileAttributes] = useState();
     useEffect(() => {
-        if (driver.type === "baiduPhoto" || driver.type === "localFile") {
-            getDriverSync(driver.id).then(n => setSyncAttributes(n));
-        }
         if (driver.type === "localFile") {
             getDriverLocalFile(driver.id).then(n => setLocalFileAttributes(n));
         }
@@ -68,6 +64,9 @@ export default ({ driver }) => {
                         shell.openPath(localFileAttributes.srcPath);
                     }} >{localFileAttributes.srcPath}</a> : "加载中..."}</Attr>
                 <Attr k="上传时压缩">{localFileAttributes ? localFileAttributes.encoder : "加载中..."}</Attr>
+                <Attr k="过滤规则">
+                    <Input disabled multiline sx={{ width: "100%" }} value={localFileAttributes?.ignores} />
+                </Attr>
             </>}
         </Grid>
     );
