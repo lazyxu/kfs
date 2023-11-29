@@ -2,13 +2,15 @@ package main
 
 import (
 	"errors"
-	"github.com/lazyxu/kfs/cmd/kfs-server/task/baidu_photo"
-	"github.com/lazyxu/kfs/cmd/kfs-server/task/metadata"
 	"image"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/baidu_photo"
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/list"
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/metadata"
 
 	"github.com/disintegration/imaging"
 	"github.com/h2non/filetype/matchers"
@@ -53,6 +55,9 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/listLocalFileDriver", apiListLocalFileDriver)
 
 	e.GET("/api/v1/list", apiList)
+	e.GET("/api/v1/event/list", func(c echo.Context) error {
+		return list.Handle(c, kfsCore)
+	})
 	e.GET("/api/v1/listDriverFileByHash", apiListDriverFileByHash)
 	e.GET("/api/v1/openFile", apiOpenFile)
 	e.GET("/api/v1/downloadFile", apiDownloadFile)

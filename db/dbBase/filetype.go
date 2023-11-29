@@ -41,7 +41,7 @@ func ListExpectFileType(ctx context.Context, conn *sql.DB) (hashList []string, e
 	return
 }
 
-func GetFileType(ctx context.Context, conn *sql.DB, hash string) (fileType *dao.FileType, err error) {
+func GetFileType(ctx context.Context, conn *sql.DB, hash string) (fileType dao.FileType, err error) {
 	rows, err := conn.QueryContext(ctx, `
 	SELECT 
 		Type,
@@ -54,9 +54,7 @@ func GetFileType(ctx context.Context, conn *sql.DB, hash string) (fileType *dao.
 	}
 	defer rows.Close()
 	if rows.Next() {
-		var t dao.FileType
-		fileType = &t
-		err = rows.Scan(&t.Type, &t.SubType, &t.Extension)
+		err = rows.Scan(&fileType.Type, &fileType.SubType, &fileType.Extension)
 		if err != nil {
 			return
 		}

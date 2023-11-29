@@ -304,7 +304,7 @@ func GetMetadata(ctx context.Context, conn *sql.DB, hash string) (metadata dao.M
 	metadata = dao.Metadata{
 		Hash:          hash,
 		Exif:          e,
-		FileType:      t,
+		FileType:      &t,
 		VideoMetadata: m,
 	}
 	return metadata, nil
