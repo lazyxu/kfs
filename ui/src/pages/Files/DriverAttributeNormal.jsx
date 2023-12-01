@@ -42,10 +42,10 @@ export default ({ driver }) => {
     }, []);
     return (
         <Grid container spacing={1.5} sx={{ alignItems: "center" }}>
-            <Attr k="id">{driver.id}</Attr>
-            <Attr k="名称">{driver.name}</Attr>
-            <Attr k="描述">{driver.description}</Attr>
-            <Attr k="类型">{getDriverType(driver)}</Attr>
+            <Attr k="云盘ID">{driver.id}</Attr>
+            <Attr k="云盘名称">{driver.name}</Attr>
+            <Attr k="云盘描述">{driver.description}</Attr>
+            <Attr k="云盘类型">{getDriverType(driver)}</Attr>
             <Attr k="总大小">{humanize.filesize(attributes.fileSize)}</Attr>
             <Attr k="文件数量">{attributes.fileCount}</Attr>
             <Attr k="目录数量">{attributes.dirCount}</Attr>

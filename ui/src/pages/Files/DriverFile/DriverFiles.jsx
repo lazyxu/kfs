@@ -5,6 +5,7 @@ import { noteError } from "components/Notification/Notification";
 import useResourceManager from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
 import { useEffect, useState } from 'react';
+import FileAttribute from "./FileAttribute";
 import FileMenu from "./FileMenu";
 
 export default function () {
@@ -14,7 +15,7 @@ export default function () {
     let { driverId, filePath } = resourceManager;
     const controller = new AbortController();
     const [fileMenu, setFileMenu] = useState(null);
-    console.log("dirItemsTotal", dirItemsTotal)
+    let [fileAttribute, setFileAttribute] = useState();
     useEffect(() => {
         setDirItems([]);
         fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/list?driverId=${driverId}&${filePath.map(f => "filePath[]=" + f).join("&")}`, {
@@ -85,6 +86,7 @@ export default function () {
                 共{dirItems.length}/{dirItemsTotal}个项目
             </Stack>
             <FileMenu contextMenu={fileMenu} setContextMenu={setFileMenu} />
+            {fileAttribute && <FileAttribute />}
         </>
     );
 }
