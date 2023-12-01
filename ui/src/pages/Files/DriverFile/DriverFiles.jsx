@@ -1,26 +1,22 @@
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { Box, Grid, Stack } from "@mui/material";
-import DefaultContextMenu from "components/ContextMenu/DefaultContextMenu";
-import FileContextMenu from "components/ContextMenu/FileContextMenu";
-import Dialog from "components/Dialog";
 import File from "components/File";
 import { noteError } from "components/Notification/Notification";
-import useContextMenu from "hox/contextMenu";
 import useResourceManager from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import FileMenu from "./FileMenu";
 
 export default function () {
     const [dirItems, setDirItems] = useState([]);
     const [dirItemsTotal, setDirItemsTotal] = useState(0);
     const [resourceManager, setResourceManager] = useResourceManager();
     let { driverId, filePath } = resourceManager;
-    const [contextMenu, setContextMenu] = useContextMenu();
-    const filesElm = useRef(null);
     const controller = new AbortController();
+    const [fileMenu, setFileMenu] = useState(null);
     useEffect(() => {
         setDirItems([]);
-        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/list?driverId=${driverId}&${filePath.map(f=>"filePath[]="+f).join("&")}`, {
+        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/list?driverId=${driverId}&${filePath.map(f => "filePath[]=" + f).join("&")}`, {
             signal: controller.signal,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
@@ -71,24 +67,11 @@ export default function () {
     }, [resourceManager.filePath]);
     return (
         <>
-            <Box style={{ flex: "1", overflowY: 'auto', alignContent: "flex-start" }}
-                ref={filesElm} onContextMenu={(e) => {
-                    e.preventDefault();
-                    // console.log(e.target, e.currentTarget, e.target === e.currentTarget);
-                    // if (e.target === e.currentTarget) {
-                    const { clientX, clientY } = e;
-                    let { x, y, width, height } = e.currentTarget.getBoundingClientRect();
-                    setContextMenu({
-                        type: 'default',
-                        clientX, clientY,
-                        x, y, width, height,
-                    })
-                    // }
-                }}>
+            <Box style={{ flex: "1", overflowY: 'auto', alignContent: "flex-start" }} >
                 <Grid container padding={1} spacing={1}>
                     {dirItems.map((dirItem, i) => (
                         <Grid item key={dirItem.name}>
-                            <File filesElm={filesElm} dirItem={dirItem} key={dirItem.name} />
+                            <File setContextMenu={setFileMenu} dirItem={dirItem} key={dirItem.name} />
                         </Grid>
                     ))}
                 </Grid>
@@ -101,9 +84,7 @@ export default function () {
             >
                 共{dirItems.length}/{dirItemsTotal}个项目
             </Stack>
-            <DefaultContextMenu />
-            <FileContextMenu />
-            <Dialog />
+            <FileMenu contextMenu={fileMenu} setContextMenu={setFileMenu} />
         </>
     );
 }

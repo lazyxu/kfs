@@ -3,7 +3,7 @@ import { listDriver } from "api/driver";
 import AbsolutePath from 'components/AbsolutePath';
 import useResourceManager from 'hox/resourceManager';
 import { useEffect } from "react";
-import DriverFiles from "./DriverFiles";
+import DriverFiles from "./DriverFile/DriverFiles";
 import Drivers from "./Drivers";
 
 export default function () {
