@@ -7,9 +7,7 @@ export async function listDriver(setResourceManager) {
     try {
         console.log('api.listDriver');
         let drivers = await httpGet("/api/v1/drivers");
-        setResourceManager(prev => {
-            return { ...prev, drivers, driverId: null, driverName: null, filePath: [], dirItems: null, file: null };
-        });
+        setResourceManager({ drivers });
     } catch (e) {
         noteError("获取云盘列表失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;

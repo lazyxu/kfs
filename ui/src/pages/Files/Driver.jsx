@@ -1,7 +1,7 @@
 import { ClearAll, ContentCopy, Delete, DriveFileRenameOutline, MoreVert, OpenInNew, Settings } from '@mui/icons-material';
 import { Box, Card, CardContent, IconButton, Link, ListItemText, Menu, MenuItem, Stack, alpha, styled } from "@mui/material";
 import { deleteDriver, resetDriver } from 'api/driver';
-import { list } from "api/fs";
+import { list, openDir } from "api/fs";
 import SvgIcon from "components/Icon/SvgIcon";
 import useContextMenu from "hox/contextMenu";
 import useResourceManager from 'hox/resourceManager';
@@ -60,7 +60,7 @@ export default ({ driver, setDriverAttribute }) => {
                     alignItems="center"
                     spacing={2}
                 >
-                    <Link onClick={() => list(setResourceManager, driver.id, driver.name, [])}>
+                    <Link onClick={() => openDir(setResourceManager, driver.id, driver.name, [])}>
                         <Box sx={{ height: "64px", width: "64px" }} >
                             {driver.type === 'baiduPhoto' ?
                                 <img src='baiduPhoto.png' style={{ maxWidth: "100%", maxHeight: "100%" }} />

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"go.uber.org/zap"
 	"image"
 	"net/http"
 	"os"
@@ -27,8 +28,14 @@ func webServer(webPortString string) {
 	e := echo.New()
 
 	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Skipper:          middleware.DefaultSkipper,
+		Format:           `${time_custom} ${remote_ip} ${method} ${status} ${uri} ${latency_human} ${error}` + "\n",
+		CustomTimeFormat: "2006-01-02 15:04:05.00000",
+	}))
+	// TODO
+	zapLogger, _ := zap.NewDevelopment()
+	e.Use(Recover(zapLogger))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins:  []string{"*"},
 		AllowHeaders:  []string{"*"},

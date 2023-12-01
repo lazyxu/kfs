@@ -12,13 +12,14 @@ import (
 	"github.com/lazyxu/kfs/rpc/server"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
 type Response struct {
-	File   dao.DriverFile `json:"file"`
-	ErrMsg string         `json:"errMsg"`
-	N      int            `json:"n"`
+	File   *dao.DriverFile `json:"file"`
+	ErrMsg string          `json:"errMsg"`
+	N      int             `json:"n"`
 }
 
 func send(c echo.Context, msg Response) {
@@ -61,16 +62,18 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 	send(c, Response{N: len(files)})
 
 	for _, file := range files {
-		err = TryAnalyze(c.Request().Context(), kfsCore, file.Hash)
-		if errors.Is(err, context.Canceled) {
-			fmt.Println("Connection closed")
-			return nil
+		if !os.FileMode(file.Mode).IsDir() {
+			err = TryAnalyze(c.Request().Context(), kfsCore, file.Hash)
+			if errors.Is(err, context.Canceled) {
+				fmt.Println("Connection closed")
+				return nil
+			}
+			if err != nil {
+				send(c, Response{File: &file, ErrMsg: err.Error()})
+				continue
+			}
 		}
-		if err != nil {
-			send(c, Response{ErrMsg: err.Error()})
-		} else {
-			send(c, Response{File: file})
-		}
+		send(c, Response{File: &file})
 	}
 	return nil
 }

@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { list, openFile } from "api/fs";
+import { openDir, openFile } from "api/fs";
 import { isDCIM, isViewable, modeIsDir } from "api/utils/api";
 import { getMetadata } from "api/web/exif";
 import ImageViewer from "components/FileViewer/ImageViewer";
@@ -20,7 +20,7 @@ export default function ({ dirItem }) {
         <Box className="file-icon-box">
             {modeIsDir(dirItem.mode) ?
                 <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit" onClick={() => {
-                    list(setResourceManager, driverId, driverName, filePath);
+                    openDir(setResourceManager, driverId, driverName, filePath);
                 }} /> :
                 isDCIM(dirItem.name) ?
                     <img src={`${sysConfig.webServer}/thumbnail?size=64&hash=${dirItem.hash}`} loading="lazy" onClick={() => getMetadata(dirItem.hash).then(m => {
