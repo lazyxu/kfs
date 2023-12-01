@@ -14,12 +14,13 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Response struct {
-	File   *dao.DriverFile `json:"file"`
-	ErrMsg string          `json:"errMsg"`
-	N      int             `json:"n"`
+	Files  []dao.DriverFile `json:"files,omitempty"`
+	ErrMsg string           `json:"errMsg,omitempty"`
+	N      int              `json:"n,omitempty"`
 }
 
 func send(c echo.Context, msg Response) {
@@ -59,8 +60,11 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 		return err
 	}
 
-	send(c, Response{N: len(files)})
+	n := len(files)
+	send(c, Response{N: n})
 
+	tick := time.NewTicker(time.Second)
+	curFiles := []dao.DriverFile{}
 	for _, file := range files {
 		if !os.FileMode(file.Mode).IsDir() {
 			err = TryAnalyze(c.Request().Context(), kfsCore, file.Hash)
@@ -69,11 +73,19 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 				return nil
 			}
 			if err != nil {
-				send(c, Response{File: &file, ErrMsg: err.Error()})
-				continue
+				send(c, Response{ErrMsg: err.Error()})
 			}
 		}
-		send(c, Response{File: &file})
+		curFiles = append(curFiles, file)
+		select {
+		case <-tick.C:
+			send(c, Response{Files: curFiles})
+			curFiles = []dao.DriverFile{}
+		default:
+		}
+	}
+	if len(curFiles) != 0 {
+		send(c, Response{Files: curFiles})
 	}
 	return nil
 }

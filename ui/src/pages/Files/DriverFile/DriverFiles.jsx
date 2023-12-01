@@ -14,10 +14,12 @@ export default function () {
     let { driverId, filePath } = resourceManager;
     const controller = new AbortController();
     const [fileMenu, setFileMenu] = useState(null);
+    console.log("dirItemsTotal", dirItemsTotal)
     useEffect(() => {
         setDirItems([]);
         fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/list?driverId=${driverId}&${filePath.map(f => "filePath[]=" + f).join("&")}`, {
             signal: controller.signal,
+            openWhenHidden: true,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
                     return; // everything's good
@@ -34,13 +36,11 @@ export default function () {
                     return;
                 }
                 let info = JSON.parse(msg.data);
-                console.log("===info===", info);
                 if (info.errMsg) {
                     noteError(info.errMsg);
                 }
-                if (info.file) {
-                    // TODO: create too many arrays?
-                    setDirItems(prev => [...prev, info.file]);
+                if (info.files) {
+                    setDirItems(prev => [...prev, ...info.files]);
                 } else {
                     setDirItemsTotal(info.n);
                 }
