@@ -1,7 +1,7 @@
-import { ClearAll, ContentCopy, Delete, DriveFileRenameOutline, MoreVert, OpenInNew, Settings } from '@mui/icons-material';
-import { Box, Card, CardContent, IconButton, Link, ListItemText, Menu, MenuItem, Stack, alpha, styled } from "@mui/material";
+import { ClearAll, ContentCopy, Delete, DriveFileRenameOutline, OpenInNew, Settings } from '@mui/icons-material';
+import { Box, ListItemText, Menu, MenuItem, Stack, Typography, alpha, styled } from "@mui/material";
 import { deleteDriver, resetDriver } from 'api/driver';
-import { list, openDir } from "api/fs";
+import { openDir } from "api/fs";
 import SvgIcon from "components/Icon/SvgIcon";
 import useContextMenu from "hox/contextMenu";
 import useResourceManager from 'hox/resourceManager';
@@ -53,72 +53,65 @@ export default ({ driver, setDriverAttribute }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useContextMenu();
     return (
-        <Card sx={{ minWidth: 275 }} variant="outlined">
-            <CardContent>
+        <>
+            <Box
+                title={`云盘名称：${driver.name}\n云盘描述：${driver.description}`}
+                onContextMenu={(e) => { e.preventDefault(); setAnchorEl(e.currentTarget); }}
+                sx={{ padding: "1em", ":hover": { cursor: "pointer", backgroundColor: (theme) => theme.palette.action.hover } }}
+            >
                 <Stack
                     direction="row"
                     alignItems="center"
                     spacing={2}
+                    onClick={() => openDir(setResourceManager, driver.id, driver.name, [])}
                 >
-                    <Link onClick={() => openDir(setResourceManager, driver.id, driver.name, [])}>
-                        <Box sx={{ height: "64px", width: "64px" }} >
-                            {driver.type === 'baiduPhoto' ?
-                                <img src='baiduPhoto.png' style={{ maxWidth: "100%", maxHeight: "100%" }} />
-                                : driver.type === 'localFile' ?
-                                    <SvgIcon icon="shangchuan" fontSize="inherit" style={{ height: "64px", width: "64px" }} />
-                                    :
-                                    <SvgIcon icon="wangpan" fontSize="inherit" style={{ height: "64px", width: "64px" }} />
-                            }
-                        </Box>
-                    </Link>
-                    <Stack
-                        direction="column"
-                        sx={{ flex: 1 }}
-                    >
-                        <Link underline="hover" onClick={() => list(setResourceManager, driver.id, driver.name, [])} sx={{ flex: 1 }}>
-                            <Box>{driver.name}</Box>
-                        </Link>
-                        <Box color="text.secondary" sx={{ flex: 1 }}>
+                    <Box sx={{ height: "64px", width: "64px" }}>
+                        {driver.type === 'baiduPhoto' ?
+                            <img src='baiduPhoto.png' style={{ maxWidth: "100%", maxHeight: "100%" }} />
+                            : driver.type === 'localFile' ?
+                                <SvgIcon icon="shangchuan" fontSize="inherit" style={{ height: "64px", width: "64px" }} />
+                                :
+                                <SvgIcon icon="wangpan" fontSize="inherit" style={{ height: "64px", width: "64px" }} />
+                        }
+                    </Box>
+                    <Stack direction="column" sx={{ width: "10em" }}>
+                        <Typography sx={{ whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", display: "block" }}>{driver.name}</Typography>
+                        <Typography sx={{ flex: 1, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", display: "block" }} color="text.secondary">
                             {driver.description}
-                        </Box>
+                        </Typography>
                     </Stack>
-                    <IconButton aria-label="settings" onClick={e => {
-                        setAnchorEl(e.currentTarget);
-                    }}>
-                        <MoreVert />
-                    </IconButton>
-                    <StyledMenu
-                        anchorEl={anchorEl}
-                        open={Boolean(anchorEl)}
-                        onClose={() => setAnchorEl(null)}
-                    >
-                        <MenuItem onClick={() => list(setResourceManager, driver.id, driver.name, [])}>
-                            <OpenInNew />
-                            <ListItemText>打开</ListItemText>
-                        </MenuItem>
-                        <MenuItem onClick={() => { setAnchorEl(null); setDriverAttribute(driver) }}>
-                            <Settings />
-                            <ListItemText>属性</ListItemText>
-                        </MenuItem>
-                        <MenuItem disabled>
-                            <DriveFileRenameOutline />
-                            <ListItemText>重命名</ListItemText>
-                        </MenuItem>
-                        <MenuItem disabled>
-                            <ContentCopy />
-                            <ListItemText>复制</ListItemText>
-                        </MenuItem>
-                        <MenuItem onClick={() => resetDriver(driver.id).then(() => setAnchorEl(null))} >
-                            <ClearAll />
-                            <ListItemText>重置</ListItemText>
-                        </MenuItem>
-                        <MenuItem onClick={() => deleteDriver(setResourceManager, driver.id).then(() => setAnchorEl(null))} disableRipple>
-                            <Delete />
-                            <ListItemText>删除</ListItemText>
-                        </MenuItem>
-                    </StyledMenu>
                 </Stack>
-            </CardContent>
-        </Card>
+            </Box>
+            <StyledMenu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => setAnchorEl(null)}
+            >
+                <MenuItem onClick={() => openDir(setResourceManager, driver.id, driver.name, [])}>
+                    <OpenInNew />
+                    <ListItemText>打开</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => { setAnchorEl(null); setDriverAttribute(driver) }}>
+                    <Settings />
+                    <ListItemText>属性</ListItemText>
+                </MenuItem>
+                <MenuItem disabled>
+                    <DriveFileRenameOutline />
+                    <ListItemText>重命名</ListItemText>
+                </MenuItem>
+                <MenuItem disabled>
+                    <ContentCopy />
+                    <ListItemText>复制</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => resetDriver(driver.id).then(() => setAnchorEl(null))} >
+                    <ClearAll />
+                    <ListItemText>重置</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => deleteDriver(setResourceManager, driver.id).then(() => setAnchorEl(null))} disableRipple>
+                    <Delete />
+                    <ListItemText>删除</ListItemText>
+                </MenuItem>
+            </StyledMenu>
+        </>
     )
 };

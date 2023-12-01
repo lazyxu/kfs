@@ -1,6 +1,6 @@
 import { Link, Stack } from "@mui/material";
 import { listDriver } from "api/driver";
-import { list, openFile } from "api/fs";
+import { openDir, openFile } from "api/fs";
 import useResourceManager from 'hox/resourceManager';
 import SvgIcon from "../../Icon/SvgIcon";
 
@@ -12,7 +12,7 @@ export default ({type, name, icon, filePath}) => {
                 if (type === "file") {
                     openFile(setResourceManager, resourceManager.driverId, filePath, resourceManager.file);
                 } else {
-                    list(setResourceManager, resourceManager.driverId, resourceManager.driverName, filePath);
+                    openDir(setResourceManager, resourceManager.driverId, resourceManager.driverName, filePath);
                 }
             } else {
                 listDriver(setResourceManager);
