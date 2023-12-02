@@ -14,7 +14,7 @@ export default () => {
         >
             <Breadcrumbs separator=">" maxItems={5}>
                 <PathElement type="driver" name="我的云盘" />
-                <PathElement name={resourceManager.driverName} filePath={[]} />
+                <PathElement name={resourceManager.driver?.name} filePath={[]} />
                 {(resourceManager.filePath || []).map((elemName, i) =>
                     <PathElement
                         type={i === resourceManager.filePath.length - 1 && !resourceManager.dirItems ? "file" : "dir"}

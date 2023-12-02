@@ -5,9 +5,9 @@ import { modeIsDir } from "api/utils/api";
 import Menu from "components/Menu";
 import useResourceManager from "hox/resourceManager";
 
-export default function ({ contextMenu, setContextMenu }) {
+export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
     const [resourceManager, setResourceManager] = useResourceManager();
-    const { driverId, driverName, filePath, mode } = contextMenu || {};
+    const { driver, filePath, mode } = contextMenu;
     return (
         <Menu
             contextMenu={contextMenu}
@@ -17,7 +17,7 @@ export default function ({ contextMenu, setContextMenu }) {
             <MenuItem onClick={() => {
                 if (modeIsDir(mode)) {
                     setContextMenu(null);
-                    openDir(setResourceManager, driverId, driverName, filePath);
+                    openDir(setResourceManager, driver, filePath);
                 } else {
                     // openFile(setResourceManager, driverId, filePath, dirItem);
                 }
@@ -25,14 +25,17 @@ export default function ({ contextMenu, setContextMenu }) {
                 <OpenInNew />
                 <ListItemText>打开</ListItemText>
             </MenuItem>
-            <MenuItem onClick={() => {
+            <MenuItem disabled={modeIsDir(mode)} onClick={() => {
                 setContextMenu(null);
-                download(driverId, filePath);
-            }} disabled={modeIsDir(mode)}>
+                download(driver.id, filePath);
+            }}>
                 <Download />
                 <ListItemText>下载</ListItemText>
             </MenuItem>
-            <MenuItem disabled>
+            <MenuItem onClick={() => {
+                setContextMenu(null);
+                setFileAttribute(contextMenu);
+            }} >
                 <Settings />
                 <ListItemText>属性</ListItemText>
             </MenuItem>

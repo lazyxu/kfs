@@ -14,26 +14,27 @@ export default function ({ dirItem }) {
     const [open, setOpen] = useState(false);
     const [metadata, setMetadata] = useState();
     const [resourceManager, setResourceManager] = useResourceManager();
-    let { driverId, driverName, filePath } = resourceManager;
-    filePath = filePath.concat(dirItem.name);
+    const { driver, filePath } = resourceManager;
+    const { name, mode } = dirItem;
+    const curFilePath = filePath.concat(name);
     return (
         <Box className="file-icon-box">
-            {modeIsDir(dirItem.mode) ?
+            {modeIsDir(mode) ?
                 <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit" onClick={() => {
-                    openDir(setResourceManager, driverId, driverName, filePath);
+                    openDir(setResourceManager, driver, curFilePath);
                 }} /> :
-                isDCIM(dirItem.name) ?
+                isDCIM(name) ?
                     <img src={`${sysConfig.webServer}/thumbnail?size=64&hash=${dirItem.hash}`} loading="lazy" onClick={() => getMetadata(dirItem.hash).then(m => {
                         setMetadata(m);
                         setOpen(true);
                     })} />
-                    : dirItem.name.toLowerCase().endsWith(".txt") ?
+                    : name.toLowerCase().endsWith(".txt") ?
                         <SvgIcon icon="txt3" className='file-icon file-icon-file file-icon-file-viewable' fontSize="inherit" onClick={() => {
-                            openFile(setResourceManager, driverId, filePath, dirItem);
+                            openFile(setResourceManager, driverId, curFilePath, dirItem);
                         }} />
-                        : isViewable(dirItem.name) ?
+                        : isViewable(name) ?
                             <SvgIcon icon="file12" className='file-icon file-icon-file file-icon-file-viewable' fontSize="inherit" onClick={() => {
-                                openFile(setResourceManager, driverId, filePath, dirItem);
+                                openFile(setResourceManager, driverId, curFilePath, dirItem);
                             }} />
                             : <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit" />
             }

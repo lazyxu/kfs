@@ -22,8 +22,8 @@ export async function list(setResourceManager, driverId, driverName, filePath) {
     }
 }
 
-export async function openDir(setResourceManager, driverId, driverName, filePath) {
-    setResourceManager({ driverId, driverName, filePath });
+export async function openDir(setResourceManager, driver, filePath) {
+    setResourceManager({ driver, filePath });
 }
 
 export async function openFile(setResourceManager, driverId, filePath, dirItem) {

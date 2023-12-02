@@ -5,9 +5,9 @@ import './index.scss';
 
 export default function ({ dirItem, setContextMenu }) {
     const [resourceManager, setResourceManager] = useResourceManager();
-    let { driverId, driverName, filePath } = resourceManager;
-    const { name, mode } = dirItem;
-    filePath = filePath.concat(name);
+    const { driver, filePath } = resourceManager;
+    const { name } = dirItem
+    const curFilePath = filePath.concat(name);
     return (
         <Stack component="span" sx={{ ":hover": { backgroundColor: (theme) => theme.palette.action.hover } }}
             className='file-normal'
@@ -18,12 +18,12 @@ export default function ({ dirItem, setContextMenu }) {
                 e.preventDefault();
                 setContextMenu({
                     mouseX: e.clientX, mouseY: e.clientY,
-                    driverId, driverName, filePath, mode
+                    driver, filePath, dirItem
                 });
             }}
         >
             <Box>
-                <FileIcon dirItem={dirItem} filePath={filePath} />
+                <FileIcon dirItem={dirItem} filePath={curFilePath} />
             </Box>
             <Box kfs-attr="file" style={{ width: "100%", overflowWrap: "break-word", textAlign: "center" }}>{name}</Box>
         </Stack>

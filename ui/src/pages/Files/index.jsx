@@ -16,7 +16,7 @@ export default function () {
         <Box sx={{ display: 'flex', flex: "1", flexDirection: 'column', minHeight: '0' }}>
             <AbsolutePath />
             {resourceManager.drivers && <Drivers />}
-            {resourceManager.hasOwnProperty("driverId") && <DriverFiles />}
+            {resourceManager.hasOwnProperty("driver") && <DriverFiles />}
         </Box>
     );
 }

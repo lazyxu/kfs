@@ -24,7 +24,7 @@ export default ({ driver, setDriverAttribute }) => {
                     direction="row"
                     alignItems="center"
                     spacing={2}
-                    onClick={() => openDir(setResourceManager, driver.id, driver.name, [])}
+                    onClick={() => openDir(setResourceManager, driver, [])}
                 >
                     <Box sx={{ height: "64px", width: "64px" }}>
                         {driver.type === 'baiduPhoto' ?
@@ -48,7 +48,7 @@ export default ({ driver, setDriverAttribute }) => {
                 open={contextMenu !== null}
                 onClose={() => setContextMenu(null)}
             >
-                <MenuItem onClick={() => openDir(setResourceManager, driver.id, driver.name, [])}>
+                <MenuItem onClick={() => openDir(setResourceManager, driver, [])}>
                     <OpenInNew />
                     <ListItemText>打开</ListItemText>
                 </MenuItem>

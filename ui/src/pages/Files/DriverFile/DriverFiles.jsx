@@ -12,13 +12,13 @@ export default function () {
     const [dirItems, setDirItems] = useState([]);
     const [dirItemsTotal, setDirItemsTotal] = useState(0);
     const [resourceManager, setResourceManager] = useResourceManager();
-    let { driverId, filePath } = resourceManager;
+    let { driver, filePath } = resourceManager;
     const controller = new AbortController();
     const [fileMenu, setFileMenu] = useState(null);
-    let [fileAttribute, setFileAttribute] = useState();
+    let [fileAttribute, setFileAttribute] = useState(null);
     useEffect(() => {
         setDirItems([]);
-        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/list?driverId=${driverId}&${filePath.map(f => "filePath[]=" + f).join("&")}`, {
+        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/list?driverId=${driver.id}&${filePath.map(f => "filePath[]=" + f).join("&")}`, {
             signal: controller.signal,
             openWhenHidden: true,
             async onopen(response) {
@@ -37,6 +37,7 @@ export default function () {
                     return;
                 }
                 let info = JSON.parse(msg.data);
+                console.log(info);
                 if (info.errMsg) {
                     noteError(info.errMsg);
                 }
@@ -85,8 +86,8 @@ export default function () {
             >
                 共{dirItems.length}/{dirItemsTotal}个项目
             </Stack>
-            <FileMenu contextMenu={fileMenu} setContextMenu={setFileMenu} />
-            {fileAttribute && <FileAttribute />}
+            {fileMenu && <FileMenu contextMenu={fileMenu} setContextMenu={setFileMenu} setFileAttribute={setFileAttribute} />}
+            {fileAttribute && <FileAttribute fileAttribute={fileAttribute} setFileAttribute={setFileAttribute} />}
         </>
     );
 }

@@ -1,8 +1,9 @@
 import { Close } from '@mui/icons-material';
 import { Box, Dialog, DialogContent, DialogTitle, Grid } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
+import { getPerm, modeIsDir } from 'api/utils/api';
+import humanize from 'humanize';
 import moment from "moment/moment";
-import { useState } from 'react';
 
 function formatTime(t) {
     return moment(t / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
@@ -28,10 +29,11 @@ function getDriverType(driver) {
     }
 }
 
-export default ({ setOpen, driver }) => {
-    const [attributeType, setAttributeType] = useState(0);
+export default ({ fileAttribute, setFileAttribute }) => {
+    const { driver, filePath, dirItem } = fileAttribute;
+    const isDir = modeIsDir(dirItem.mode);
     return (
-        <Dialog open={true} fullWidth={true} onClose={() => setOpen(false)}>
+        <Dialog open={true} fullWidth={true} onClose={() => setFileAttribute(null)}>
             <DialogTitle sx={{
                 backgroundColor: theme => theme.background.primary,
                 color: theme => theme.context.secondary
@@ -39,7 +41,7 @@ export default ({ setOpen, driver }) => {
                 云盘属性
                 <IconButton
                     aria-label="close"
-                    onClick={() => setOpen(false)}
+                    onClick={() => setFileAttribute(null)}
                     sx={{
                         position: 'absolute',
                         right: 8,
@@ -59,22 +61,21 @@ export default ({ setOpen, driver }) => {
                     <Attr k="云盘名称">{driver.name}</Attr>
                     <Attr k="云盘描述">{driver.description}</Attr>
                     <Attr k="云盘类型">{getDriverType(driver)}</Attr>
-
-                    <Attr k="名称">{dialog.dirItem.name}</Attr>
-                    <Attr k="路径">{"/" + filePath.join("/")}</Attr>
-                    <Attr k="哈希值">{dialog.dirItem.hash}</Attr>
+                    <Attr k="文件名称">{dirItem.name}</Attr>
+                    <Attr k="文件路径">{"/" + filePath.join("/")}</Attr>
+                    <Attr k="哈希值">{dirItem.hash}</Attr>
                     <Attr k="类型">{isDir ? "文件夹" : "文件"}</Attr>
-                    <Attr k="文件大小">{humanize.filesize(dialog.dirItem.size)}</Attr>
-                    <Attr k="文件权限">{getPerm(dialog.dirItem.mode).toString(8)}</Attr>
+                    {!isDir && <Attr k="文件大小">{humanize.filesize(dirItem.size)}</Attr>}
+                    <Attr k="文件权限">{getPerm(dirItem.mode).toString(8)}</Attr>
                     {isDir && <>
-                        <Attr k="文件数量">{dialog.dirItem.count}</Attr>
-                        <Attr k="文件总数量">{dialog.dirItem.totalCount}</Attr>
+                        <Attr k="文件数量">{dirItem.count}</Attr>
+                        <Attr k="文件总数量">{dirItem.totalCount}</Attr>
                     </>
                     }
-                    <Attr k="创建时间">{formatTime(dialog.dirItem.createTime)}</Attr>
-                    <Attr k="属性修改时间">{formatTime(dialog.dirItem.changeTime)}</Attr>
-                    <Attr k="内容修改时间">{formatTime(dialog.dirItem.modifyTime)}</Attr>
-                    <Attr k="访问时间">{formatTime(dialog.dirItem.accessTime)}</Attr>
+                    <Attr k="创建时间">{formatTime(dirItem.createTime)}</Attr>
+                    <Attr k="属性修改时间">{formatTime(dirItem.changeTime)}</Attr>
+                    <Attr k="内容修改时间">{formatTime(dirItem.modifyTime)}</Attr>
+                    <Attr k="访问时间">{formatTime(dirItem.accessTime)}</Attr>
                 </Grid>
             </DialogContent>
         </Dialog>
