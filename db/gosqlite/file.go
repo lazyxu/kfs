@@ -43,6 +43,12 @@ func (db *DB) UpsertDriverFile(ctx context.Context, f dao.DriverFile) error {
 	return dbBase.UpsertDriverFile(ctx, conn, f)
 }
 
+func (db *DB) UpsertDriverFiles(ctx context.Context, files []dao.DriverFile) error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.UpsertDriverFiles(ctx, conn, db, files)
+}
+
 func (db *DB) ListDriverFile(ctx context.Context, driverId uint64, filePath []string) (files []dao.DriverFile, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)

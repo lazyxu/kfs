@@ -245,6 +245,62 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 	return err
 }
 
+func upsertDriverFilesQuery(row int) (string, error) {
+	var qs strings.Builder
+	_, err := qs.WriteString(`
+	INSERT OR REPLACE INTO _driver_file (
+		driverId,
+		dirPath,
+		name,
+	    version,
+		hash,
+		mode,
+		size,
+		createTime,
+		modifyTime,
+		changeTime,
+		accessTime
+	) VALUES `)
+	if err != nil {
+		return "", err
+	}
+	for i := 0; i < row; i++ {
+		if i != 0 {
+			qs.WriteString(", ")
+		}
+		qs.WriteString("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	}
+	qs.WriteString(`;`)
+	return qs.String(), err
+}
+
+func UpsertDriverFiles(ctx context.Context, conn *sql.DB, db DbImpl, files []dao.DriverFile) error {
+	tx, err := conn.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = CommitAndRollback(tx, err)
+	}()
+	err = InsertBatch[dao.DriverFile](ctx, tx, db.MaxBatchSize(), files, 11, upsertDriverFilesQuery, func(args []interface{}, start int, f dao.DriverFile) {
+		args[start] = f.DriverId
+		args[start+1] = arrayToJson(f.DirPath)
+		args[start+2] = f.Name
+		args[start+3] = f.Version
+		args[start+4] = f.Hash
+		args[start+5] = f.Mode
+		args[start+6] = f.Size
+		args[start+7] = f.CreateTime
+		args[start+8] = f.ModifyTime
+		args[start+9] = f.ChangeTime
+		args[start+10] = f.AccessTime
+	})
+	if err != nil {
+		return err
+	}
+	return err
+}
+
 func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _driver_file (

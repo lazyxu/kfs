@@ -32,6 +32,10 @@ func (db *DB) UpsertDriverFile(ctx context.Context, f dao.DriverFile) error {
 	return dbBase.UpsertDriverFileMysql(ctx, db.db, f)
 }
 
+func (db *DB) UpsertDriverFiles(ctx context.Context, files []dao.DriverFile) error {
+	return dbBase.UpsertDriverFiles(ctx, db.db, db, files)
+}
+
 func (db *DB) ListDriverFile(ctx context.Context, driverId uint64, filePath []string) (files []dao.DriverFile, err error) {
 	return dbBase.ListDriverFile(ctx, db.db, driverId, filePath)
 }

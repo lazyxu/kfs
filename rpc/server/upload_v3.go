@@ -3,10 +3,11 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/dustin/go-humanize"
-	"github.com/pierrec/lz4"
 	"io"
 	"strings"
+
+	"github.com/dustin/go-humanize"
+	"github.com/pierrec/lz4"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
@@ -86,6 +87,28 @@ func handleUploadV3Dir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 			return err
 		}
 	}
+	// println(conn.RemoteAddr().String(), "UploadDir.NEW", req.DriverId, "/"+strings.Join(req.DirPath, "/"))
+	// files := make([]dao.DriverFile, len(req.UploadReqDirItemV3))
+	// for i, item := range req.UploadReqDirItemV3 {
+	// 	files[i] = dao.DriverFile{
+	// 		DriverId:   req.DriverId,
+	// 		DirPath:    req.DirPath,
+	// 		Name:       item.Name,
+	// 		Version:    0,
+	// 		Hash:       item.Hash,
+	// 		Mode:       item.Mode,
+	// 		Size:       item.Size,
+	// 		CreateTime: item.CreateTime,
+	// 		ModifyTime: item.ModifyTime,
+	// 		ChangeTime: item.ChangeTime,
+	// 		AccessTime: item.AccessTime,
+	// 	}
+	// }
+	// err = kfsCore.Db.UpsertDriverFiles(context.TODO(), files)
+	// if err != nil {
+	// 	fmt.Println("Upload error", err.Error())
+	// 	return err
+	// }
 	return nil
 }
 
