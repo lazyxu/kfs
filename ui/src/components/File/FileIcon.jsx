@@ -9,7 +9,7 @@ import { getSysConfig } from "hox/sysConfig";
 import { useState } from "react";
 import SvgIcon from "../Icon/SvgIcon";
 
-export default function ({ dirItem }) {
+export default function ({ dirItem, inView }) {
     const sysConfig = getSysConfig().sysConfig;
     const [open, setOpen] = useState(false);
     const [metadata, setMetadata] = useState();
@@ -23,7 +23,7 @@ export default function ({ dirItem }) {
                 <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit" onClick={() => {
                     openDir(setResourceManager, driver, curFilePath);
                 }} /> :
-                isDCIM(name) ?
+                inView && isDCIM(name) ?
                     <img src={`${sysConfig.webServer}/thumbnail?size=64&hash=${dirItem.hash}`} loading="lazy" onClick={() => getMetadata(dirItem.hash).then(m => {
                         setMetadata(m);
                         setOpen(true);
