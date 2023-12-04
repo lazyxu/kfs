@@ -1,9 +1,17 @@
 import { Box, Stack } from "@mui/material";
 import useResourceManager from 'hox/resourceManager';
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import FileIcon from './FileIcon';
 import './index.scss';
+
+const useGetState = (initiateState) => {
+    const [state, setState] = useState(initiateState);
+    const stateRef = useRef(state);
+    stateRef.current = state;
+    const getState = useCallback(() => stateRef.current, []);
+    return [state, setState, getState];
+};
 
 export default ({ dirItem, setContextMenu }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -11,15 +19,16 @@ export default ({ dirItem, setContextMenu }) => {
     const { name } = dirItem
     const curFilePath = useRef([]);
     const { ref, inView } = useInView({ threshold: 0 });
-    const hasBeenInView = useRef(false);
+    const [hasBeenInView, setHasBeenInView, getHasBeenInView] = useGetState(false);
     useEffect(() => {
         curFilePath.current = filePath.concat(name);
     }, []);
     useEffect(() => {
-        if (!inView || hasBeenInView.current) {
+        const hasBeenIn = getHasBeenInView();
+        if (!inView || hasBeenIn) {
             return;
         }
-        hasBeenInView.current = true;
+        setHasBeenInView(true);
     }, [inView]);
     return (
         <Stack ref={ref} sx={{ ":hover": { backgroundColor: (theme) => theme.palette.action.hover } }}
@@ -35,9 +44,7 @@ export default ({ dirItem, setContextMenu }) => {
                 });
             }}
         >
-            <Box>
-                <FileIcon dirItem={dirItem} filePath={curFilePath.current} hasBeenInView={hasBeenInView.current} driver={driver} />
-            </Box>
+            {curFilePath.current.length && <FileIcon dirItem={dirItem} filePath={curFilePath.current} hasBeenInView={hasBeenInView} driver={driver} />}
             <Box kfs-attr="file" style={{ width: "100%", overflowWrap: "break-word", textAlign: "center" }}>{name}</Box>
         </Stack>
     )

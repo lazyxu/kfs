@@ -15,7 +15,7 @@ export default memo( ({ driver, filePath, dirItem, hasBeenInView })=> {
     const [metadata, setMetadata] = useState();
     const [resourceManager, setResourceManager] = useResourceManager();
     const { name, mode } = dirItem;
-    console.log("===render", filePath, hasBeenInView)
+    // console.log("===render", filePath, hasBeenInView)
     return (
         <Box className="file-icon-box">
             {modeIsDir(mode) ?
