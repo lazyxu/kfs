@@ -21,3 +21,9 @@ type Driver struct {
 	Ignores  string `json:"ignores"`
 	Encoder  string `json:"encoder"`
 }
+
+type DirCalculatedInfo struct {
+	FileSize  uint64 `json:"fileSize"`
+	FileCount uint64 `json:"fileCount"`
+	DirCount  uint64 `json:"dirCount"`
+}

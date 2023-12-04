@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/db/gosqlite"
+	"github.com/lazyxu/kfs/db/cgosqlite"
 	"github.com/lazyxu/kfs/db/mysql"
 	storage "github.com/lazyxu/kfs/storage/local"
 	"log"
@@ -69,7 +69,7 @@ func getStorageByType(typ string) (func(string) (dao.Storage, error), error) {
 func getDatabaseByType(typ string) (func(string) (dao.Database, error), error) {
 	switch typ {
 	case "sqlite":
-		return gosqlite.New, nil
+		return cgosqlite.New, nil
 	case "mysql":
 		return mysql.New, nil
 	}

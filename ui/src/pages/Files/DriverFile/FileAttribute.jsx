@@ -2,8 +2,10 @@ import { Close } from '@mui/icons-material';
 import { Box, Dialog, DialogContent, DialogTitle, Grid } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import { getPerm, modeIsDir } from 'api/utils/api';
+import { getDriversDirCalculatedInfo } from 'api/web/driver';
 import humanize from 'humanize';
 import moment from "moment/moment";
+import { useEffect, useState } from 'react';
 
 function formatTime(t) {
     return moment(t / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
@@ -32,6 +34,12 @@ function getDriverType(driver) {
 export default ({ fileAttribute, setFileAttribute }) => {
     const { driver, filePath, dirItem } = fileAttribute;
     const isDir = modeIsDir(dirItem.mode);
+    const [attributes, setAttributes] = useState({});
+    const { name, mode } = dirItem;
+    const curFilePath = filePath.concat(name);
+    useEffect(() => {
+        getDriversDirCalculatedInfo(driver.id, curFilePath).then(setAttributes);
+    }, []);
     return (
         <Dialog open={true} fullWidth={true} onClose={() => setFileAttribute(null)}>
             <DialogTitle sx={{
@@ -61,15 +69,15 @@ export default ({ fileAttribute, setFileAttribute }) => {
                     <Attr k="云盘名称">{driver.name}</Attr>
                     <Attr k="云盘描述">{driver.description}</Attr>
                     <Attr k="云盘类型">{getDriverType(driver)}</Attr>
-                    <Attr k="文件名称">{dirItem.name}</Attr>
-                    <Attr k="文件路径">{"/" + filePath.join("/")}</Attr>
+                    <Attr k="文件路径">{"/" + curFilePath.join("/")}</Attr>
                     <Attr k="哈希值">{dirItem.hash}</Attr>
                     <Attr k="类型">{isDir ? "文件夹" : "文件"}</Attr>
                     {!isDir && <Attr k="文件大小">{humanize.filesize(dirItem.size)}</Attr>}
                     <Attr k="文件权限">{getPerm(dirItem.mode).toString(8)}</Attr>
                     {isDir && <>
-                        <Attr k="文件数量">{dirItem.count}</Attr>
-                        <Attr k="文件总数量">{dirItem.totalCount}</Attr>
+                        <Attr k="目录下总大小">{humanize.filesize(attributes.fileSize)}</Attr>
+                        <Attr k="目录下文件总数量">{attributes.fileCount}</Attr>
+                        <Attr k="目录下目录总数量">{attributes.dirCount}</Attr>
                     </>
                     }
                     <Attr k="创建时间">{formatTime(dirItem.createTime)}</Attr>

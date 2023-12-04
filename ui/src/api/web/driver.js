@@ -87,3 +87,13 @@ export async function getDriversDirCount(id) {
         throw e;
     }
 }
+
+export async function getDriversDirCalculatedInfo(driverId, filePath) {
+    try {
+        console.log('web.getDriversDirCalculatedInfo', driverId, filePath);
+        return await httpGet("/api/v1/drivers/dirCalculatedInfo", { driverId, filePath });
+    } catch (e) {
+        noteError("获取云盘目录计算属性失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}

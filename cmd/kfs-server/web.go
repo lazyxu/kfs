@@ -74,6 +74,7 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/drivers/fileSize", apiDriversFileSize)
 	e.GET("/api/v1/drivers/fileCount", apiDriversFileCount)
 	e.GET("/api/v1/drivers/dirCount", apiDriversDirCount)
+	e.GET("/api/v1/drivers/dirCalculatedInfo", apiDriversDirCalculatedInfo)
 
 	e.GET("/thumbnail", apiThumbnail)
 	e.GET("/api/v1/analysisExif", apiExifStatus)
@@ -131,6 +132,24 @@ func apiDriversDirCount(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "id should be a number")
 	}
 	n, err := kfsCore.Db.GetDriverDirCount(c.Request().Context(), id)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, n)
+}
+
+func apiDriversDirCalculatedInfo(c echo.Context) error {
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "driverId should be a number")
+	}
+	filePath := c.QueryParams()["filePath[]"]
+	if filePath == nil {
+		filePath = []string{}
+	}
+	n, err := kfsCore.Db.GetDriverDirCalculatedInfo(c.Request().Context(), driverId, filePath)
 	if err != nil {
 		c.Logger().Error(err)
 		return err

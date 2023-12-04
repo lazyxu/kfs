@@ -74,3 +74,7 @@ func (db *DB) GetDriverFileCount(ctx context.Context, driverId uint64) (n uint64
 func (db *DB) GetDriverDirCount(ctx context.Context, driverId uint64) (n uint64, err error) {
 	return dbBase.GetDriverDirCount(ctx, db.db, driverId)
 }
+
+func (db *DB) GetDriverDirCalculatedInfo(ctx context.Context, driverId uint64, filePath []string) (info dao.DirCalculatedInfo, err error) {
+	return dbBase.GetDriverDirCalculatedInfo(ctx, db.db, driverId, filePath)
+}

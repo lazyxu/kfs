@@ -3,6 +3,7 @@ package dbBase
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"github.com/lazyxu/kfs/dao"
 )
 
@@ -304,6 +305,67 @@ func GetDriverDirCount(ctx context.Context, txOrDb TxOrDb, driverId uint64) (n u
 		if err != nil {
 			return
 		}
+	}
+	return
+}
+
+func GetDriverDirCalculatedInfo(ctx context.Context, txOrDb TxOrDb, driverId uint64, filePath []string) (info dao.DirCalculatedInfo, err error) {
+	var like string
+	if len(filePath) != 0 {
+		data, err := json.Marshal(filePath)
+		if err != nil {
+			panic(err)
+		}
+		like = string(data)
+		like = like[:len(like)-1] + "%"
+	} else {
+		like = "%"
+	}
+	var rows *sql.Rows
+	{
+		rows, err = txOrDb.QueryContext(ctx, `
+	SELECT IFNULL(SUM(size), 0) FROM _driver_file WHERE driverId = ? AND mode < 2147483648 AND dirPath LIKE ?;
+	`, driverId, like)
+		if err != nil {
+			return
+		}
+		if rows.Next() {
+			err = rows.Scan(&info.FileSize)
+			if err != nil {
+				return
+			}
+		}
+		rows.Close()
+	}
+	{
+		rows, err = txOrDb.QueryContext(ctx, `
+	SELECT COUNT(1) FROM _driver_file WHERE driverId = ? AND mode < 2147483648 AND dirPath LIKE ?;
+	`, driverId, like)
+		if err != nil {
+			return
+		}
+		if rows.Next() {
+			err = rows.Scan(&info.FileCount)
+			if err != nil {
+				return
+			}
+		}
+		rows.Close()
+	}
+	{
+		rows, err = txOrDb.QueryContext(ctx, `
+	SELECT COUNT(1) FROM _driver_file WHERE driverId = ? AND mode >= 2147483648 AND dirPath LIKE ?;
+	`, driverId, like)
+		if err != nil {
+			return
+		}
+		if rows.Next() {
+			err = rows.Scan(&info.DirCount)
+			if err != nil {
+				return
+			}
+		}
+		rows.Close()
 	}
 	return
 }

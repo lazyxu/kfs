@@ -1,5 +1,5 @@
 import { Box, Divider, Grid, Input } from "@mui/material";
-import { getDriverLocalFile, getDriversDirCount, getDriversFileCount, getDriversFileSize } from 'api/web/driver';
+import { getDriverLocalFile, getDriversDirCalculatedInfo } from 'api/web/driver';
 import humanize from 'humanize';
 import moment from "moment/moment";
 import { useEffect, useState } from 'react';
@@ -29,16 +29,13 @@ function getDriverType(driver) {
 }
 
 export default ({ driver }) => {
-    // TODO: get more calculated attributes from server.
     const [attributes, setAttributes] = useState({});
     const [localFileAttributes, setLocalFileAttributes] = useState();
     useEffect(() => {
         if (driver.type === "localFile") {
-            getDriverLocalFile(driver.id).then(n => setLocalFileAttributes(n));
+            getDriverLocalFile(driver.id).then(attrs => setLocalFileAttributes(attrs));
         }
-        getDriversFileSize(driver.id).then(n => setAttributes(prev => { return { ...prev, fileSize: n }; }));
-        getDriversFileCount(driver.id).then(n => setAttributes(prev => { return { ...prev, fileCount: n }; }));
-        getDriversDirCount(driver.id).then(n => setAttributes(prev => { return { ...prev, dirCount: n }; }));
+        getDriversDirCalculatedInfo(driver.id).then(setAttributes);
     }, []);
     return (
         <Grid container spacing={1.5} sx={{ alignItems: "center" }}>

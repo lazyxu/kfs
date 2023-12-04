@@ -62,6 +62,7 @@ type Database interface {
 	GetDriverFileSize(ctx context.Context, driverId uint64) (n uint64, err error)
 	GetDriverFileCount(ctx context.Context, driverId uint64) (n uint64, err error)
 	GetDriverDirCount(ctx context.Context, driverId uint64) (n uint64, err error)
+	GetDriverDirCalculatedInfo(ctx context.Context, driverId uint64, filePath []string) (info DirCalculatedInfo, err error)
 
 	InsertFile(ctx context.Context, hash string, size uint64) error
 	InsertFileMd5(ctx context.Context, hash string, hashMd5 string) error
