@@ -7,6 +7,7 @@ import { getSysConfig } from "hox/sysConfig";
 import { useEffect, useState } from 'react';
 import FileAttribute from "./FileAttribute";
 import FileMenu from "./FileMenu";
+import Menu from "./Menu";
 
 export default function () {
     const [dirItems, setDirItems] = useState([]);
@@ -14,6 +15,7 @@ export default function () {
     const [resourceManager, setResourceManager] = useResourceManager();
     let { driver, filePath } = resourceManager;
     const controller = new AbortController();
+    const [menu, setMenu] = useState(null);
     const [fileMenu, setFileMenu] = useState(null);
     let [fileAttribute, setFileAttribute] = useState(null);
     useEffect(() => {
@@ -70,7 +72,15 @@ export default function () {
     return (
         <>
             <Box style={{ flex: "1", overflowY: 'auto', alignContent: "flex-start" }} >
-                <Grid container padding={1} spacing={1}>
+                <Grid container padding={1} spacing={1}
+                    onContextMenu={(e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        setMenu({
+                            mouseX: e.clientX, mouseY: e.clientY,
+                            driver, filePath,
+                        });
+                    }}
+                >
                     {dirItems.map((dirItem, i) => (
                         <Grid item key={dirItem.name}>
                             <File setContextMenu={setFileMenu} dirItem={dirItem} key={dirItem.name} />
@@ -86,6 +96,7 @@ export default function () {
             >
                 共{dirItems.length}/{dirItemsTotal}个项目
             </Stack>
+            {menu && <Menu contextMenu={menu} setContextMenu={setMenu} />}
             {fileMenu && <FileMenu contextMenu={fileMenu} setContextMenu={setFileMenu} setFileAttribute={setFileAttribute} />}
             {fileAttribute && <FileAttribute fileAttribute={fileAttribute} setFileAttribute={setFileAttribute} />}
         </>

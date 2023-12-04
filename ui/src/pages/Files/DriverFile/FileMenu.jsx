@@ -32,6 +32,22 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
                 <Download />
                 <ListItemText>下载</ListItemText>
             </MenuItem>
+            <MenuItem disabled>
+                <ContentCut />
+                <ListItemText>剪切</ListItemText>
+            </MenuItem>
+            <MenuItem disabled>
+                <ContentCopy />
+                <ListItemText>复制</ListItemText>
+            </MenuItem>
+            <MenuItem disabled>
+                <Delete />
+                <ListItemText>删除</ListItemText>
+            </MenuItem>
+            <MenuItem disabled>
+                <DriveFileRenameOutline />
+                <ListItemText>重命名</ListItemText>
+            </MenuItem>
             <MenuItem onClick={() => {
                 setContextMenu(null);
                 setFileAttribute(contextMenu);
@@ -42,22 +58,6 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
             <MenuItem disabled>
                 <IosShare />
                 <ListItemText>分享</ListItemText>
-            </MenuItem>
-            <MenuItem disabled>
-                <ContentCut />
-                <ListItemText>剪切</ListItemText>
-            </MenuItem>
-            <MenuItem disabled>
-                <ContentCopy />
-                <ListItemText>复制</ListItemText>
-            </MenuItem>
-            <MenuItem disabled>
-                <DriveFileRenameOutline />
-                <ListItemText>重命名</ListItemText>
-            </MenuItem>
-            <MenuItem disabled>
-                <Delete />
-                <ListItemText>删除</ListItemText>
             </MenuItem>
             <MenuItem disabled>
                 <History />

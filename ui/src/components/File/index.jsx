@@ -19,7 +19,7 @@ export default function ({ dirItem, setContextMenu }) {
             alignItems="center"
             spacing={1}
             onContextMenu={(e) => {
-                e.preventDefault();
+                e.preventDefault(); e.stopPropagation();
                 setContextMenu({
                     mouseX: e.clientX, mouseY: e.clientY,
                     driver, filePath, dirItem

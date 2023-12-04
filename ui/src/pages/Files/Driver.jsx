@@ -15,7 +15,7 @@ export default ({ driver, setDriverAttribute }) => {
             <Box
                 title={`云盘名称：${driver.name}\n云盘描述：${driver.description}`}
                 onContextMenu={(e) => {
-                    e.preventDefault();
+                    e.preventDefault(); e.stopPropagation();
                     setContextMenu({ mouseX: e.clientX, mouseY: e.clientY });
                 }}
                 sx={{ padding: "1em", ":hover": { cursor: "pointer", backgroundColor: (theme) => theme.palette.action.hover } }}
