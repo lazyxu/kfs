@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"go.uber.org/zap"
 	"image"
@@ -367,6 +368,8 @@ func orientation(img image.Image, exif *dao.Exif) image.Image {
 	return img
 }
 
+var thumbnailTaskChan = make(chan struct{}, 5)
+
 func apiThumbnail(c echo.Context) error {
 	hash := c.QueryParam("hash")
 	sizeStr := c.QueryParam("size")
@@ -400,7 +403,19 @@ func apiThumbnail(c echo.Context) error {
 	thumbnailFilePath := filepath.Join(kfsCore.ThumbnailDir(), filename+".jpg")
 	f, err1 := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err1) {
-		println("generate thumbnail for", filename, fileType.SubType)
+		select {
+		case thumbnailTaskChan <- struct{}{}:
+			println("generate thumbnail for", filename, fileType.SubType)
+		case <-c.Request().Context().Done():
+			println("deadlineExceeded generating thumbnail for", filename, fileType.SubType)
+			return context.DeadlineExceeded
+		case <-c.Request().Cancel:
+			println("canceled generating thumbnail for", filename, fileType.SubType)
+			return context.Canceled
+		}
+		defer func() {
+			<-thumbnailTaskChan
+		}()
 		if fileType.Extension == matchers.TypeHeif.Extension {
 			rc, err := kfsCore.S.ReadWithSize(hash)
 			if err != nil {

@@ -44,7 +44,7 @@ export default ({ dirItem, setContextMenu }) => {
                 });
             }}
         >
-            {curFilePath.current.length && <FileIcon dirItem={dirItem} filePath={curFilePath.current} hasBeenInView={hasBeenInView} driver={driver} />}
+            {curFilePath.current.length && <FileIcon dirItem={dirItem} filePath={curFilePath.current} hasBeenInView={hasBeenInView} driver={driver} inView={inView}/>}
             <Box kfs-attr="file" style={{ width: "100%", overflowWrap: "break-word", textAlign: "center" }}>{name}</Box>
         </Stack>
     )

@@ -8,8 +8,9 @@ import useResourceManager from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
 import { memo, useState } from "react";
 import SvgIcon from "../Icon/SvgIcon";
+import ImgCancelable from "./ImgCancelable";
 
-export default memo( ({ driver, filePath, dirItem, hasBeenInView })=> {
+export default memo( ({ driver, filePath, dirItem, hasBeenInView, inView })=> {
     const sysConfig = getSysConfig().sysConfig;
     const [open, setOpen] = useState(false);
     const [metadata, setMetadata] = useState();
@@ -22,8 +23,8 @@ export default memo( ({ driver, filePath, dirItem, hasBeenInView })=> {
                 <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit" onClick={() => {
                     openDir(setResourceManager, driver, filePath);
                 }} /> :
-                hasBeenInView && isDCIM(name) ?
-                    <img src={`${sysConfig.webServer}/thumbnail?size=64&hash=${dirItem.hash}`} loading="lazy" onClick={() => getMetadata(dirItem.hash).then(m => {
+                isDCIM(name) ?
+                    <ImgCancelable src={`${sysConfig.webServer}/thumbnail?size=64&hash=${dirItem.hash}`} inView={inView} onClick={() => getMetadata(dirItem.hash).then(m => {
                         setMetadata(m);
                         setOpen(true);
                     })} />
