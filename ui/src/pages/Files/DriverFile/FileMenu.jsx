@@ -7,17 +7,19 @@ import useResourceManager from "hox/resourceManager";
 
 export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
     const [resourceManager, setResourceManager] = useResourceManager();
-    const { driver, filePath, mode } = contextMenu;
+    const { driver, filePath, dirItem } = contextMenu;
+    const { name, mode } = dirItem;
+    const curFilePath = filePath.concat(name);
     return (
         <Menu
             contextMenu={contextMenu}
             open={contextMenu !== null}
             onClose={() => setContextMenu(null)}
         >
-            <MenuItem onClick={() => {
+            <MenuItem disabled={!modeIsDir(mode)} onClick={() => {
                 if (modeIsDir(mode)) {
                     setContextMenu(null);
-                    openDir(setResourceManager, driver, filePath);
+                    openDir(setResourceManager, driver, curFilePath);
                 } else {
                     // openFile(setResourceManager, driverId, filePath, dirItem);
                 }

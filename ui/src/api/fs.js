@@ -23,6 +23,7 @@ export async function list(setResourceManager, driverId, driverName, filePath) {
 }
 
 export async function openDir(setResourceManager, driver, filePath) {
+    console.log('openDir', driver, filePath);
     setResourceManager({ driver, filePath });
 }
 
