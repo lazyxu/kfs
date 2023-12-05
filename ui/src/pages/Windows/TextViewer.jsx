@@ -1,9 +1,7 @@
-import { Close } from '@mui/icons-material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import ModeEditIcon from '@mui/icons-material/ModeEdit';
-import { Box, Dialog, DialogContent, DialogTitle, Link, Stack, Tooltip, Typography } from "@mui/material";
+import { Close, ContentCopy, Save } from '@mui/icons-material';
+import { default as Delete } from '@mui/icons-material/Delete';
+import { default as FileDownload } from '@mui/icons-material/FileDownload';
+import { Box, Dialog, DialogContent, Link, Stack } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import { download, openFile } from "api/fs";
 import { getSysConfig } from "hox/sysConfig";
@@ -11,7 +9,6 @@ import useWindows, { closeWindow } from 'hox/windows';
 import humanize from 'humanize';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import styles from './TextViewer.module.scss';
 
 export default ({ id, props }) => {
     let { driver, filePath, dirItem } = props;
@@ -25,84 +22,100 @@ export default ({ id, props }) => {
     }, []);
     return (
         <Dialog open={true} fullScreen={true} onClose={() => closeWindow(setWindows, id)}>
-            <DialogTitle sx={{
-                backgroundColor: theme => theme.background.primary,
-                color: theme => theme.context.secondary
-            }}>
-                文本编辑器
-                <IconButton
-                    aria-label="close"
-                    onClick={() => closeWindow(setWindows, id)}
+            <Stack direction="row" justifyContent="space-between"
+                title={driver.name + ":/" + filePath.join("/")} sx={{
+                    color: theme => theme.context.secondary,
+                    backgroundColor: theme => theme.background.secondary,
+                }}
+            >
+                <Box sx={{ height: "28px", lineHeight: "28px", paddingLeft: "1em" }}>
+                    {dirItem.name} - 文本编辑器
+                </Box>
+                <IconButton aria-label="close" onClick={() => closeWindow(setWindows, id)}
                     sx={{
-                        position: 'absolute',
-                        right: 8,
-                        top: 8,
-                        color: (theme) => theme.palette.grey[500],
+                        padding: "4px 12px", borderRadius: '0',
+                        color: theme => theme.context.secondary,
+                        ":hover": {
+                            backgroundColor: "red",
+                        }
                     }}
                 >
-                    <Close />
+                    <Close sx={{ width: "20px", height: "20px" }} />
                 </IconButton>
-            </DialogTitle>
-            <DialogContent sx={{
-                backgroundColor: theme => theme.background.primary,
-                color: theme => theme.context.primary
+            </Stack>
+            <Box sx={{
+                height: "28px", padding: "0",
+                color: theme => theme.context.secondary,
+                backgroundColor: theme => theme.background.secondary,
             }}>
-                <Stack
-                    className={styles.fileHeaderViewer}
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    spacing={0.5}
+                <Stack direction="row" alignItems="center" sx={{
+                    height: "28px", padding: "0", paddingLeft: "1em",
+                    backgroundColor: theme => theme.background.secondary,
+                    color: theme => theme.context.secondary
+                }}
                 >
-                    {humanize.filesize(dirItem.size)} | {time}
-                    <Stack
-                        direction="row"
-                        justifyContent="flex-end"
-                        alignItems="flex-end"
-                        spacing={0.5}
+                    <IconButton title="保存" disabled
+                        sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
                     >
-                        <Tooltip title="编辑">
-                            <span><IconButton color="inherit" disabled={true}>
-                                <ModeEditIcon fontSize="small" />
-                            </IconButton></span>
-                        </Tooltip>
-                        <Tooltip title="复制文本内容">
-                            <span><IconButton onClick={() => {
-                                navigator.clipboard.writeText(loaded.content);
-                            }} disabled={!loaded || loaded.tooLarge}>
-                                <ContentCopyIcon fontSize="small" />
-                            </IconButton></span>
-                        </Tooltip>
-                        <Tooltip title="下载">
-                            <span><IconButton onClick={() => {
-                                download(driver.id, filePath)
-                            }}>
-                                <FileDownloadIcon fontSize="small" />
-                            </IconButton></span>
-                        </Tooltip>
-                        <Tooltip title="删除">
-                            <span><IconButton disabled={true}>
-                                <DeleteIcon fontSize="small" />
-                            </IconButton></span>
-                        </Tooltip>
-                    </Stack>
+                        <Save fontSize="small" sx={{ width: "20px", height: "20px" }} />
+                    </IconButton>
+                    <IconButton title="复制文本内容" onClick={() => {
+                        navigator.clipboard.writeText(loaded.content);
+                    }} disabled={!loaded || loaded.tooLarge}
+                        sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
+                    >
+                        <ContentCopy fontSize="small" sx={{ width: "20px", height: "20px" }} />
+                    </IconButton>
+                    <IconButton title="下载" onClick={() => {
+                        download(driver.id, filePath)
+                    }}
+                        sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
+                    >
+                        <FileDownload fontSize="small" sx={{ width: "20px", height: "20px" }} />
+                    </IconButton>
+                    <IconButton title="删除" disabled
+                        sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
+                    >
+                        <Delete fontSize="small" sx={{ width: "20px", height: "20px" }} />
+                    </IconButton>
                 </Stack>
-                <Box style={{ flex: "auto" }} className={styles.fileViewer}>
-                    {!loaded ?
-                        <>加载中...</> :
-                        loaded.tooLarge ?
-                            <>
-                                文件大于{humanize.filesize(getSysConfig().sysConfig.maxContentSize)}，不支持在线查看，你可以选择
-                                <Link underline="hover" onClick={() => {
-                                    download(driver.id, filePath)
-                                }}>下载该文件</Link>。
-                            </> :
-                            <Typography sx={{ wordBreak: "break-all" }}>
-                                {loaded.content}
-                            </Typography>
-                    }
-                </Box>
+            </Box>
+            <DialogContent sx={{
+                padding: "0", paddingLeft: "5px",
+                color: theme => theme.context.primary,
+                backgroundColor: theme => theme.background.primary,
+            }}>
+                {!loaded ?
+                    <>加载中...</> :
+                    loaded.tooLarge ?
+                        <>
+                            文件大于{humanize.filesize(getSysConfig().sysConfig.maxContentSize)}，不支持在线查看，你可以选择
+                            <Link underline="hover" onClick={() => {
+                                download(driver.id, filePath)
+                            }}>下载该文件</Link>。
+                        </> :
+                        <p style={{ wordBreak: "break-all", whiteSpace: "break-spaces", outline: "none" }} contentEditable>
+                            {loaded.content}
+                        </p>
+                }
             </DialogContent>
+            <Box sx={{
+                flex: "0 0 auto", padding: "8px",
+                color: theme => theme.context.secondary,
+                backgroundColor: theme => theme.background.secondary,
+            }}>
+                <Stack direction="row" justifyContent="space-between"
+                    title={driver.name + ":/" + filePath.join("/")} sx={{
+                    }}
+                >
+                    <Box >
+                        {humanize.filesize(dirItem.size)}
+                    </Box>
+                    <Box >
+                        {time}
+                    </Box>
+                </Stack>
+            </Box>
         </Dialog>
     )
 };
