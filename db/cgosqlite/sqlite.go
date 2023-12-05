@@ -67,10 +67,14 @@ func (db *DB) Remove() error {
 	defer db.putConn(conn)
 	_, err := conn.Exec(`
 	DROP TABLE IF EXISTS _file;
-	DROP TABLE IF EXISTS _dir;
-	DROP TABLE IF EXISTS _dirItem;
-	DROP TABLE IF EXISTS _commit;
-	DROP TABLE IF EXISTS _branch;
+	DROP TABLE IF EXISTS _file_md5;
+	DROP TABLE IF EXISTS _exif;
+	DROP TABLE IF EXISTS _height_width;
+	DROP TABLE IF EXISTS _video_metadata;
+	DROP TABLE IF EXISTS _file_type;
+	DROP TABLE IF EXISTS _live_photo;
+	DROP TABLE IF EXISTS _driver;
+	DROP TABLE IF EXISTS _driver_file;
 	`)
 	return err
 }
@@ -78,43 +82,130 @@ func (db *DB) Remove() error {
 func (db *DB) Create() error {
 	conn := db.getConn()
 	defer db.putConn(conn)
+	// TODO: id as PRIMARY KEY
+	// id   INT64    NOT NULL PRIMARY KEY AUTOINCREMENT,
+	// hash CHAR(64) NOT NULL UNIQUE,
 	_, err := conn.Exec(`
 	CREATE TABLE IF NOT EXISTS _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
-		size INTEGER  NOT NULL
+		size INT64    NOT NULL
 	);
+	CREATE TABLE IF NOT EXISTS _file_md5 (
+		hash CHAR(64) NOT NULL PRIMARY KEY,
+		md5  CHAR(32) NOT NULL
+	);
+	CREATE INDEX IF NOT EXISTS index_md5 ON _file_md5 (md5);
 
 	CREATE TABLE IF NOT EXISTS _exif (
-		hash             CHAR(64)     NOT NULL PRIMARY KEY,
-	    version          CHAR(4)      DEFAULT NULL,
-	    dateTime         INTEGER      DEFAULT NULL,
-	    hostComputer     VARCHAR(255) DEFAULT NULL,
-	    GPSLatitudeRef   CHAR(1)      DEFAULT NULL,
-	    GPSLatitude      DOUBLE       DEFAULT NULL,
-	    GPSLongitudeRef  CHAR(1)      DEFAULT NULL,
-	    GPSLongitude     DOUBLE       DEFAULT NULL,
-	    FOREIGN KEY (hash)  REFERENCES _file(hash)
+		hash                CHAR(64)     NOT NULL PRIMARY KEY,
+		ExifVersion         CHAR(4)      DEFAULT NULL,
+		ImageDescription    VARCHAR(255) DEFAULT NULL,
+		Orientation         INT8         DEFAULT NULL,
+		DateTime            VARCHAR(19)  DEFAULT NULL,
+		DateTimeOriginal    VARCHAR(19)  DEFAULT NULL,
+		DateTimeDigitized   VARCHAR(19)  DEFAULT NULL,
+		OffsetTime          VARCHAR(6)   DEFAULT NULL,
+		OffsetTimeOriginal  VARCHAR(6)   DEFAULT NULL,
+		OffsetTimeDigitized VARCHAR(6)   DEFAULT NULL,
+		SubsecTime          VARCHAR(9)   DEFAULT NULL,
+		SubsecTimeOriginal  VARCHAR(9)   DEFAULT NULL,
+		SubsecTimeDigitized VARCHAR(9)   DEFAULT NULL,
+		HostComputer        VARCHAR(255) DEFAULT NULL,
+		Make                VARCHAR(255) DEFAULT NULL,
+		Model               VARCHAR(255) DEFAULT NULL,
+		ExifImageWidth      INT64        DEFAULT NULL,
+		ExifImageLength     INT64        DEFAULT NULL,
+		GPSLatitudeRef      CHAR(1)      DEFAULT NULL,
+		GPSLatitude         DOUBLE       DEFAULT NULL,
+		GPSLongitudeRef     CHAR(1)      DEFAULT NULL,
+		GPSLongitude        DOUBLE       DEFAULT NULL,
+		FOREIGN KEY (hash)  REFERENCES   _file(hash)
+	);
+
+	CREATE TABLE IF NOT EXISTS _height_width (
+		hash       CHAR(64)     NOT NULL PRIMARY KEY,
+		height     INT64        DEFAULT NULL,
+		width      INT64        DEFAULT NULL,
+		FOREIGN KEY (hash)  REFERENCES   _file(hash)
+	);
+
+	CREATE TABLE IF NOT EXISTS _video_metadata (
+		hash                CHAR(64)     NOT NULL PRIMARY KEY,
+		Codec               VARCHAR(255) DEFAULT NULL,
+		Created             INT64        DEFAULT NULL,
+		Modified            INT64        DEFAULT NULL,
+		Duration            DOUBLE       DEFAULT NULL,
+		FOREIGN KEY (hash)  REFERENCES   _file(hash)
+	);
+
+	CREATE TABLE IF NOT EXISTS _file_type (
+		hash               CHAR(64)     NOT NULL PRIMARY KEY,
+		Type               VARCHAR(255) NOT NULL,
+		SubType            VARCHAR(255) NOT NULL,
+		Extension          VARCHAR(255) NOT NULL,
+		FOREIGN KEY (hash) REFERENCES   _file(hash)
+	);
+
+	CREATE TABLE IF NOT EXISTS _live_photo (
+		movHash                CHAR(64)     NOT NULL PRIMARY KEY,
+		heicHash               CHAR(64)     DEFAULT NULL,
+		jpgHash                CHAR(64)     DEFAULT NULL,
+		FOREIGN KEY (movHash)  REFERENCES   _file(hash),
+		FOREIGN KEY (heicHash) REFERENCES   _file(hash),
+		FOREIGN KEY (jpgHash)  REFERENCES   _file(hash)
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver (
-		name        VARCHAR(256) NOT NULL PRIMARY KEY,
-		description VARCHAR(256) NOT NULL DEFAULT ""
+		id           INTEGER        NOT NULL PRIMARY KEY AUTOINCREMENT,
+		name         VARCHAR(256)   NOT NULL UNIQUE,
+		description  VARCHAR(256)   NOT NULL DEFAULT "",
+		Type         VARCHAR(256)   NOT NULL DEFAULT ""
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver_sync (
+		id           INT64          NOT NULL PRIMARY KEY,
+		sync         INT1           NOT NULL DEFAULT 1,
+		h            INT8           NOT NULL DEFAULT 4,
+		m            INT8           NOT NULL DEFAULT 0,
+	    FOREIGN KEY (id)  REFERENCES   _driver(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver_baidu_photo (
+		id           INT64          NOT NULL PRIMARY KEY,
+		accessToken  VARCHAR(256)   NOT NULL DEFAULT "",
+		refreshToken VARCHAR(256)   NOT NULL DEFAULT "",
+	    FOREIGN KEY (id)  REFERENCES   _driver(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver_local_file (
+		id           INT64          NOT NULL PRIMARY KEY,
+	    deviceId     INTEGER        NOT NULL DEFAULT 0,
+		srcPath      VARCHAR(32767) NOT NULL DEFAULT "",
+	    ignores      TEXT           NOT NULL DEFAULT "",
+		encoder      VARCHAR(64)    NOT NULL DEFAULT "",
+	    FOREIGN KEY (id)  REFERENCES   _driver(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS _device (
+		id          INTEGER      NOT NULL PRIMARY KEY AUTOINCREMENT,
+		name        VARCHAR(256) NOT NULL,
+		os          VARCHAR(256) NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver_file (
-		driverName VARCHAR(256)   NOT NULL,
+		driverId    INTEGER        NOT NULL,
 		dirPath     VARCHAR(32767) NOT NULL,
 		name        VARCHAR(255)   NOT NULL,
-	    version     INTEGER        NOT NULL,
+	    version     INT64          NOT NULL,
 		hash        CHAR(64)       NOT NULL,
-		mode        INTEGER        NOT NULL,
-		size        INTEGER        NOT NULL,
-		createTime  INTEGER        NOT NULL,
-		modifyTime  INTEGER        NOT NULL,
-		changeTime  INTEGER        NOT NULL,
-		accessTime  INTEGER        NOT NULL,
-		PRIMARY KEY (driverName, dirPath, name, version),
-		FOREIGN KEY (driverName)  REFERENCES _driver(name)
+		mode        INT64          NOT NULL,
+		size        INT64          NOT NULL,
+		createTime  INT64          NOT NULL,
+		modifyTime  INT64          NOT NULL,
+		changeTime  INT64          NOT NULL,
+		accessTime  INT64          NOT NULL,
+		PRIMARY KEY (driverId, dirPath, name, version),
+		FOREIGN KEY (driverId)  REFERENCES _driver(id)
 	);
 	`) // https://blog.csdn.net/jimmyleeee/article/details/124682486
 	return err
