@@ -11,6 +11,7 @@ import { SnackbarProvider } from 'notistack';
 import Dcim from 'pages/Dcim';
 import DedicatedSpace from 'pages/DedicatedSpace/DedicatedSpace';
 import SystemConfig from 'pages/Setting/SystemConfig';
+import Windows from 'pages/Windows';
 import React, { useEffect } from "react";
 import UAParser from "ua-parser-js";
 import useMenu from "./hox/menu";
@@ -175,6 +176,7 @@ function App() {
                 {menu === '设置' && <SystemConfig />}
                 {menu === '存储空间' && <DedicatedSpace />}
             </Box>
+            <Windows/>
         </SnackbarProvider>
     );
 }

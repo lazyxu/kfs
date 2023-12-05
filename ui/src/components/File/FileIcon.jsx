@@ -1,20 +1,22 @@
 import { Box } from "@mui/material";
-import { openDir, openFile } from "api/fs";
+import { openDir } from "api/fs";
 import { isDCIM, isViewable, modeIsDir } from "api/utils/api";
 import { getMetadata } from "api/web/exif";
 import ImageViewer from "components/FileViewer/ImageViewer";
 import VideoViewer from "components/FileViewer/VideoViewer";
 import useResourceManager from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
+import useWindows, { APP_TEXT_VIEWER, newWindow } from "hox/windows";
 import { memo, useState } from "react";
 import SvgIcon from "../Icon/SvgIcon";
 import ImgCancelable from "./ImgCancelable";
 
-export default memo( ({ driver, filePath, dirItem, hasBeenInView, inView })=> {
+export default memo(({ driver, filePath, dirItem, hasBeenInView, inView }) => {
     const sysConfig = getSysConfig().sysConfig;
     const [open, setOpen] = useState(false);
     const [metadata, setMetadata] = useState();
     const [resourceManager, setResourceManager] = useResourceManager();
+    const [windows, setWindows] = useWindows();
     const { name, mode } = dirItem;
     // console.log("===render", filePath, hasBeenInView)
     return (
@@ -30,11 +32,11 @@ export default memo( ({ driver, filePath, dirItem, hasBeenInView, inView })=> {
                     })} />
                     : name.toLowerCase().endsWith(".txt") ?
                         <SvgIcon icon="txt3" className='file-icon file-icon-file file-icon-file-viewable' fontSize="inherit" onClick={() => {
-                            openFile(setResourceManager, driverId, curFilePath, dirItem);
+                            newWindow(setWindows, APP_TEXT_VIEWER, { driver, filePath, dirItem });
                         }} />
                         : isViewable(name) ?
                             <SvgIcon icon="file12" className='file-icon file-icon-file file-icon-file-viewable' fontSize="inherit" onClick={() => {
-                                openFile(setResourceManager, driverId, curFilePath, dirItem);
+                                newWindow(setWindows, APP_TEXT_VIEWER, { driver, filePath, dirItem });
                             }} />
                             : <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit" />
             }

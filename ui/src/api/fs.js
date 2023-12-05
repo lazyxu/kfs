@@ -26,7 +26,7 @@ export async function openDir(setResourceManager, driver, filePath) {
     setResourceManager({ driver, filePath });
 }
 
-export async function openFile(setResourceManager, driverId, filePath, dirItem) {
+export async function openFile(driverId, filePath) {
     try {
         console.log('api.openFile', driverId, filePath);
         let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/openFile`, {
@@ -39,17 +39,9 @@ export async function openFile(setResourceManager, driverId, filePath, dirItem) 
         });
         let tooLarge = resp.headers.get("Kfs-Too-Large");
         let content = resp.data;
-        dirItem.content = content;
-        dirItem.tooLarge = tooLarge;
-        setResourceManager(prev => {
-            return {
-                ...prev, driverId, filePath,
-                dirItems: null, drivers: null,
-                file: dirItem,
-            };
-        });
+        return {content, tooLarge};
     } catch (e) {
-        noteError("打开文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        noteError("加载文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
 }
