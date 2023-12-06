@@ -1,6 +1,7 @@
 import axios from "axios";
 import { noteError } from "components/Notification/Notification";
 import { getSysConfig } from "../hox/sysConfig";
+import { httpGet } from "./webServer";
 
 export async function openFile(driverId, filePath) {
     try {
@@ -51,4 +52,12 @@ export async function download(driverId, filePath) {
         noteError("打开文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
+}
+
+
+export async function listDriverFileByHash(hash) {
+    console.log('api.listDriverFileByHash', hash);
+    return await httpGet("/api/v1/listDriverFileByHash", {
+        hash
+    });
 }

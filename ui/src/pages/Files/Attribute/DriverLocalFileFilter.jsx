@@ -1,9 +1,8 @@
 import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from '@mui/icons-material';
 import { Box, Button, Grid, IconButton, Input } from "@mui/material";
-import { startAllLocalFileSync } from 'api/driver';
-import { getDriverLocalFile, getDriverSync, updateDriverLocalFile } from 'api/web/driver';
-import { startDriverLocalFileFilter } from 'api/web/exif';
+import { getDriverLocalFile, getDriverSync, startAllLocalFileSync, updateDriverLocalFile } from 'api/driver';
+import { startDriverLocalFileFilter } from 'api/exif';
 import { noteError } from 'components/Notification/Notification';
 import { getSysConfig } from 'hox/sysConfig';
 import humanize from 'humanize';

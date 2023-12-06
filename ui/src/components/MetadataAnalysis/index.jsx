@@ -1,7 +1,7 @@
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { HourglassDisabled, HourglassTop, MarkUnreadChatAlt, Message, PlayArrow, Stop } from "@mui/icons-material";
 import { Box, IconButton, Menu } from "@mui/material";
-import { analyzeMetadata } from "api/web/exif";
+import { analyzeMetadata } from "api/exif";
 import { noteError, noteWarning } from "components/Notification/Notification";
 import { getSysConfig } from "hox/sysConfig";
 import moment from "moment";

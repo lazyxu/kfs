@@ -1,8 +1,6 @@
-import { Box, Button, Container, Paper, Typography } from "@mui/material";
+import { Box, Button } from "@mui/material";
+import { exifStatus } from 'api/exif';
 import { useEffect, useState } from "react";
-import { analysisExif, exifStatus } from 'api/web/exif';
-import LinearProgressWithLabel from "pages/BackupTask/LinearProgressWithLabel";
-import { Label, ShortText } from "@mui/icons-material";
 
 export default function ({ onNewExif }) {
     const [status, setStatus] = useState({ analyzing: false });

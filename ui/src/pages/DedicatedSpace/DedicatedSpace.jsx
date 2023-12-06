@@ -1,6 +1,6 @@
 import { Box, InputLabel, Stack, Typography } from '@mui/material';
+import { getDiskUsage } from 'api/disk';
 import { toPrecent } from 'api/utils/api';
-import { getDiskUsage } from 'api/web/disk';
 import humanize from 'humanize';
 import { useEffect, useState } from 'react';
 

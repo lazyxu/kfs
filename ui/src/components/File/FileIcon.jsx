@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
+import { getMetadata } from "api/exif";
 import { isDCIM, isViewable, modeIsDir } from "api/utils/api";
-import { getMetadata } from "api/web/exif";
 import ImageViewer from "components/FileViewer/ImageViewer";
 import VideoViewer from "components/FileViewer/VideoViewer";
 import useResourceManager, { openDir } from "hox/resourceManager";

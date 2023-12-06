@@ -1,4 +1,4 @@
-import { httpGet, httpPost, httpDelete } from "./localServer";
+import { httpDelete, httpGet, httpPost } from "./localServer";
 
 export async function listBackupTask() {
     console.log('web.listBackupTask');

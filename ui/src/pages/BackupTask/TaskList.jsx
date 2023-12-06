@@ -1,7 +1,7 @@
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { Close, HourglassDisabled, HourglassTop, PlayArrow, RestartAlt, SettingsApplications, Stop } from "@mui/icons-material";
 import { Box, Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import { deleteBackupTask, startBackupTask } from "api/web/backup";
+import { deleteBackupTask, startBackupTask } from "api/backup";
 import { noteError, noteSuccess } from "components/Notification/Notification";
 import { getSysConfig } from "hox/sysConfig";
 import moment from "moment";

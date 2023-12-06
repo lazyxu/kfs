@@ -1,5 +1,5 @@
 import { Box, Divider, Grid, Input } from "@mui/material";
-import { getDriverLocalFile, getDriversDirCalculatedInfo } from 'api/web/driver';
+import { getDriverLocalFile, getDriversDirCalculatedInfo } from 'api/driver';
 import humanize from 'humanize';
 import moment from "moment/moment";
 import { useEffect, useState } from 'react';

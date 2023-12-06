@@ -1,8 +1,8 @@
 import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from '@mui/icons-material';
 import { Box, Grid, IconButton, MenuItem, Select, Switch } from "@mui/material";
-import { getDriverSync, updateDriverSync } from 'api/web/driver';
-import { startBaiduPhotoTask } from 'api/web/exif';
+import { getDriverSync, updateDriverSync } from 'api/driver';
+import { startBaiduPhotoTask } from 'api/exif';
 import { noteError } from 'components/Notification/Notification';
 import { getSysConfig } from 'hox/sysConfig';
 import { useEffect, useState } from 'react';

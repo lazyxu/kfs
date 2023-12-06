@@ -1,6 +1,6 @@
 import { Box, Drawer } from "@mui/material";
-import { useEffect, useState } from "react";
-import { listDriverFileByHash } from "api/web/fs";
+import { listDriverFileByHash } from "api/fs";
+import { useEffect } from "react";
 
 export default function ({ hash, open, setOpen, sameFiles, setSameFiles }) {
     useEffect(() => {
