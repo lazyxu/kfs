@@ -1,5 +1,4 @@
 import { Close, ContentCopy, Save } from '@mui/icons-material';
-import { default as Delete } from '@mui/icons-material/Delete';
 import { default as FileDownload } from '@mui/icons-material/FileDownload';
 import { Box, Dialog, DialogContent, Link, Stack } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
@@ -12,9 +11,9 @@ import { useEffect, useState } from 'react';
 
 export default ({ id, props }) => {
     let { driver, filePath, dirItem } = props;
+    console.log("TextViewer", id, props);
     dirItem = dirItem || {};
     const [loaded, setLoaded] = useState();
-    console.log("TextViewer", id, props);
     const [windows, setWindows] = useWindows();
     let time = moment(dirItem.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
     useEffect(() => {
@@ -73,11 +72,6 @@ export default ({ id, props }) => {
                     >
                         <FileDownload fontSize="small" sx={{ width: "20px", height: "20px" }} />
                     </IconButton>
-                    <IconButton title="删除" disabled
-                        sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
-                    >
-                        <Delete fontSize="small" sx={{ width: "20px", height: "20px" }} />
-                    </IconButton>
                 </Stack>
             </Box>
             <DialogContent sx={{
@@ -104,10 +98,7 @@ export default ({ id, props }) => {
                 color: theme => theme.context.secondary,
                 backgroundColor: theme => theme.background.secondary,
             }}>
-                <Stack direction="row" justifyContent="space-between"
-                    title={driver.name + ":/" + filePath.join("/")} sx={{
-                    }}
-                >
+                <Stack direction="row" justifyContent="space-between">
                     <Box >
                         {humanize.filesize(dirItem.size)}
                     </Box>

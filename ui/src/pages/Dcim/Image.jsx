@@ -1,9 +1,9 @@
-import { useState } from "react";
-import styles from './image.module.scss';
-import ImageViewer from "components/FileViewer/ImageViewer";
-import moment from "moment";
 import VideoViewer from "components/FileViewer/VideoViewer";
 import { getSysConfig } from "hox/sysConfig";
+import moment from "moment";
+import ImageViewer from "pages/Windows/ImageViewer";
+import { useState } from "react";
+import styles from './image.module.scss';
 
 export default function ({ metadata }) {
     const sysConfig = getSysConfig().sysConfig;
