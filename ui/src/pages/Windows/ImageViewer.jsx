@@ -41,28 +41,31 @@ export default function ({ id, props }) {
                         {filePath[filePath.length - 1]} - 图片查看器
                     </Box>
                     <Stack direction="row" justifyContent="flex-end" >
-                        <IconButton title="下载" disabled={!driverFile}
-                            href={`${sysConfig.webServer}/api/v1/download?hash=${driverFile?.hash}`}
-                            download={driverFile?.name}
-                            sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
-                        >
-                            <Download fontSize="small" sx={{ width: "20px", height: "20px" }} />
-                        </IconButton>
-                        <IconButton title="相同文件" onClick={() => setOpenSameFiles(true)}
-                            sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
-                        >
-                            <AllInbox fontSize="small" sx={{ width: "20px", height: "20px" }} />
-                        </IconButton>
-                        {driverFile && <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
-                            sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
-                        >
-                            <Info fontSize="small" sx={{ width: "20px", height: "20px" }} />
-                        </IconButton>}
-                        <IconButton title="文件元数据" onClick={() => setOpenMetadata(true)}
-                            sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
-                        >
-                            <PrivacyTip fontSize="small" sx={{ width: "20px", height: "20px" }} />
-                        </IconButton>
+                        {driverFile && <>
+                            <IconButton title="下载" disabled={!driverFile}
+                                href={`${sysConfig.webServer}/api/v1/download?hash=${driverFile.hash}`}
+                                download={driverFile.name}
+                                sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
+                            >
+                                <Download fontSize="small" sx={{ width: "20px", height: "20px" }} />
+                            </IconButton>
+                            <IconButton title="相同文件" onClick={() => setOpenSameFiles(true)}
+                                sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
+                            >
+                                <AllInbox fontSize="small" sx={{ width: "20px", height: "20px" }} />
+                            </IconButton>
+                            <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
+                                sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
+                            >
+                                <Info fontSize="small" sx={{ width: "20px", height: "20px" }} />
+                            </IconButton>
+                            <IconButton title="文件元数据" onClick={() => setOpenMetadata(true)}
+                                sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
+                            >
+                                <PrivacyTip fontSize="small" sx={{ width: "20px", height: "20px" }} />
+                            </IconButton>
+                        </>
+                        }
                         <IconButton aria-label="close" onClick={() => closeWindow(setWindows, id)}
                             sx={{
                                 padding: "4px 12px", borderRadius: '0',
@@ -94,20 +97,25 @@ export default function ({ id, props }) {
                     backgroundColor: theme => theme.background.secondary,
                 }}>
                     <Stack direction="row" justifyContent="space-between">
-                        {driverFile && <>
+                        {driverFile ? <>
                             <Box >
                                 {humanize.filesize(driverFile.size)}
                             </Box>
                             <Box >
                                 {moment(driverFile.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}
                             </Box>
-                        </>}
+                        </> :
+                            <Box >
+                                ...
+                            </Box>}
                     </Stack>
                 </Box>
             </Dialog>
-            <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={driverFile?.hash} sameFiles={sameFiles} setSameFiles={setSameFiles} disabled={!driverFile} />
-            <Metadata open={openMetadata} setOpen={setOpenMetadata} metadata={metadata} disabled={!metadata} />
-            {openAttribute && <FileAttribute fileAttribute={{driver, filePath, driverFile}} onClose={setOpenAttribute} />}
+            {driverFile && <>
+                <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={driverFile.hash} sameFiles={sameFiles} setSameFiles={setSameFiles} disabled={!driverFile} />
+                <Metadata open={openMetadata} setOpen={setOpenMetadata} metadata={metadata} disabled={!metadata} />
+                {openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
+            </>}
         </>
     );
 }

@@ -1,4 +1,4 @@
-import { Close, ContentCopy, Save } from '@mui/icons-material';
+import { Close, ContentCopy, Info, Save } from '@mui/icons-material';
 import { default as FileDownload } from '@mui/icons-material/FileDownload';
 import { Box, Dialog, DialogContent, Link, Stack } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
@@ -7,6 +7,7 @@ import { getSysConfig } from "hox/sysConfig";
 import useWindows, { closeWindow } from 'hox/windows';
 import humanize from 'humanize';
 import moment from 'moment';
+import FileAttribute from 'pages/Files/DriverFiles/FileAttribute';
 import { useEffect, useState } from 'react';
 
 export default ({ id, props }) => {
@@ -15,6 +16,7 @@ export default ({ id, props }) => {
     const [windows, setWindows] = useWindows();
     const [driverFile, setDriverFile] = useState();
     const [loaded, setLoaded] = useState();
+    const [openAttribute, setOpenAttribute] = useState(false);
     useEffect(() => {
         openFile(driver.id, filePath).then(setLoaded);
         getDriverFile(driver.id, filePath).then(setDriverFile);
@@ -30,29 +32,7 @@ export default ({ id, props }) => {
                 <Box sx={{ height: "28px", lineHeight: "28px", paddingLeft: "1em" }}>
                     {filePath[filePath.length - 1]} - 文本编辑器
                 </Box>
-                <IconButton aria-label="close" onClick={() => closeWindow(setWindows, id)}
-                    sx={{
-                        padding: "4px 12px", borderRadius: '0',
-                        color: theme => theme.context.secondary,
-                        ":hover": {
-                            backgroundColor: "red",
-                        }
-                    }}
-                >
-                    <Close sx={{ width: "20px", height: "20px" }} />
-                </IconButton>
-            </Stack>
-            <Box sx={{
-                height: "28px", padding: "0",
-                color: theme => theme.context.secondary,
-                backgroundColor: theme => theme.background.secondary,
-            }}>
-                <Stack direction="row" alignItems="center" sx={{
-                    height: "28px", padding: "0", paddingLeft: "1em",
-                    backgroundColor: theme => theme.background.secondary,
-                    color: theme => theme.context.secondary
-                }}
-                >
+                <Stack direction="row" justifyContent="flex-end" >
                     <IconButton title="保存" disabled
                         sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
                     >
@@ -72,8 +52,24 @@ export default ({ id, props }) => {
                     >
                         <FileDownload fontSize="small" sx={{ width: "20px", height: "20px" }} />
                     </IconButton>
+                    {driverFile && <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
+                        sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
+                    >
+                        <Info fontSize="small" sx={{ width: "20px", height: "20px" }} />
+                    </IconButton>}
+                    <IconButton aria-label="close" onClick={() => closeWindow(setWindows, id)}
+                        sx={{
+                            padding: "4px 12px", borderRadius: '0',
+                            color: theme => theme.context.secondary,
+                            ":hover": {
+                                backgroundColor: "red",
+                            }
+                        }}
+                    >
+                        <Close sx={{ width: "20px", height: "20px" }} />
+                    </IconButton>
                 </Stack>
-            </Box>
+            </Stack>
             <DialogContent sx={{
                 padding: "0", paddingLeft: "5px",
                 color: theme => theme.context.primary,
@@ -99,16 +95,20 @@ export default ({ id, props }) => {
                 backgroundColor: theme => theme.background.secondary,
             }}>
                 <Stack direction="row" justifyContent="space-between">
-                    {driverFile && <>
+                    {driverFile ? <>
                         <Box >
                             {humanize.filesize(driverFile.size)}
                         </Box>
                         <Box >
                             {moment(driverFile.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}
                         </Box>
-                    </>}
+                    </> :
+                        <Box >
+                            ...
+                        </Box>}
                 </Stack>
             </Box>
+            {openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
         </Dialog>
     )
 };
