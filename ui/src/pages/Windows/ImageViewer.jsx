@@ -1,7 +1,7 @@
 import { AllInbox, Close, Download, Info, PrivacyTip } from "@mui/icons-material";
 import { Box, Dialog, DialogContent, IconButton, Stack } from "@mui/material";
 import { getMetadata } from "api/exif";
-import { getDriverFile } from "api/fs";
+import { download, getDriverFile } from "api/fs";
 import { getSysConfig } from "hox/sysConfig";
 import useWindows, { closeWindow } from "hox/windows";
 import humanize from "humanize";
@@ -42,9 +42,7 @@ export default function ({ id, props }) {
                     </Box>
                     <Stack direction="row" justifyContent="flex-end" >
                         {driverFile && <>
-                            <IconButton title="下载" disabled={!driverFile}
-                                href={`${sysConfig.webServer}/api/v1/download?hash=${driverFile.hash}`}
-                                download={driverFile.name}
+                            <IconButton title="下载" onClick={() => { download(driver.id, filePath) }}
                                 sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
                             >
                                 <Download fontSize="small" sx={{ width: "20px", height: "20px" }} />
@@ -112,7 +110,7 @@ export default function ({ id, props }) {
                 </Box>
             </Dialog>
             {driverFile && <>
-                <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={driverFile.hash} sameFiles={sameFiles} setSameFiles={setSameFiles} disabled={!driverFile} />
+                <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={driverFile.hash} sameFiles={sameFiles} setSameFiles={setSameFiles} />
                 <Metadata open={openMetadata} setOpen={setOpenMetadata} metadata={metadata} disabled={!metadata} />
                 {openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
             </>}

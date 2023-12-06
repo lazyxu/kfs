@@ -45,9 +45,7 @@ export default ({ id, props }) => {
                     >
                         <ContentCopy fontSize="small" sx={{ width: "20px", height: "20px" }} />
                     </IconButton>
-                    <IconButton title="下载" onClick={() => {
-                        download(driver.id, filePath)
-                    }}
+                    <IconButton title="下载" onClick={() => { download(driver.id, filePath) }}
                         sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
                     >
                         <FileDownload fontSize="small" sx={{ width: "20px", height: "20px" }} />
