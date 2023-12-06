@@ -1,12 +1,10 @@
 import { Button, DialogActions, DialogContent, TextField } from "@mui/material";
-import useResourceManager from "hox/resourceManager";
 import { useState } from 'react';
-import { newDriver } from "../../api/driver";
+import { newDriver } from "../../../api/driver";
 
-export default function ({ setOpen }) {
+export default function ({ onSucc }) {
     let [name, setName] = useState("");
     let [description, setDescription] = useState("");
-    const [resourceManager, setResourceManager] = useResourceManager();
     return (
         <>
             <DialogContent sx={{
@@ -34,7 +32,7 @@ export default function ({ setOpen }) {
                 color: theme => theme.context.primary
             }}>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={name === ""} onClick={() => {
-                    newDriver(setResourceManager, name, description).then(() => setOpen(false));
+                    newDriver(name, description).then(onSucc);
                 }}>确定</Button>
             </DialogActions>
         </>

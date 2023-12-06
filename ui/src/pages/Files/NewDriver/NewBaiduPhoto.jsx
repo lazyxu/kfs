@@ -2,10 +2,10 @@ import { Button, DialogActions, DialogContent, Link, Stack, TextField } from "@m
 import useResourceManager from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
 import { useState } from 'react';
-import { newDriverBaiduPhoto } from "../../api/driver";
+import { newDriverBaiduPhoto } from "../../../api/driver";
 
 // https://pan.baidu.com/union/doc/ol0rsap9s
-export default function ({ setOpen }) {
+export default function ({ onSucc }) {
     let [name, setName] = useState("");
     let [description, setDescription] = useState("");
     let [code, setCode] = useState("");
@@ -59,7 +59,7 @@ export default function ({ setOpen }) {
                 color: theme => theme.context.primary
             }}>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={name === "" || code === ""} onClick={() => {
-                    newDriverBaiduPhoto(setResourceManager, name, description, code).then(() => setOpen(false));
+                    newDriverBaiduPhoto(setResourceManager, name, description, code).then(onSucc);
                 }}>确定</Button>
             </DialogActions>
         </>

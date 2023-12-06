@@ -5,10 +5,10 @@ import NewBaiduPhoto from "./NewBaiduPhoto";
 import NewLocalFileDriver from "./NewLocalFileDriver";
 import NewNormalDriver from "./NewNormalDriver";
 
-export default function ({ setOpen }) {
+export default function ({ onClose, onSucc }) {
     let [driverType, setDriverType] = useState(0);
     return (
-        <Dialog fullWidth={true} open={true} onClose={() => setOpen(false)}>
+        <Dialog fullWidth={true} open={true} onClose={onClose}>
             <DialogTitle sx={{
                 backgroundColor: theme => theme.background.primary,
                 color: theme => theme.context.secondary,
@@ -16,7 +16,7 @@ export default function ({ setOpen }) {
                 <Typography>新建云盘</Typography>
                 <IconButton
                     aria-label="close"
-                    onClick={() => setOpen(false)}
+                    onClick={onClose}
                     sx={{
                         position: 'absolute',
                         right: 8,
@@ -37,9 +37,9 @@ export default function ({ setOpen }) {
                     <Tab key={i} value={i} label={v} id={`simple-tab-${i}`} />
                 )}
             </Tabs>
-            {driverType === 0 && <NewNormalDriver setOpen={setOpen} />}
-            {driverType === 1 && <NewBaiduPhoto setOpen={setOpen} />}
-            {driverType === 2 && <NewLocalFileDriver setOpen={setOpen} />}
+            {driverType === 0 && <NewNormalDriver onSucc={onSucc} />}
+            {driverType === 1 && <NewBaiduPhoto onSucc={onSucc} />}
+            {driverType === 2 && <NewLocalFileDriver onSucc={onSucc} />}
         </Dialog>
     );
 };

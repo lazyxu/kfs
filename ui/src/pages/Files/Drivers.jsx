@@ -2,18 +2,19 @@ import { Add, Refresh } from "@mui/icons-material";
 import { Grid, ListItemText, MenuItem } from "@mui/material";
 import { listDriver } from "api/driver";
 import Menu from 'components/Menu';
-import useResourceManager from 'hox/resourceManager';
-import { useState } from 'react';
-import Dialog from "../../components/Dialog";
+import { useEffect, useState } from 'react';
+import DriverAttribute from "./Attribute/DriverAttribute";
 import Driver from "./Driver";
-import DriverAttribute from "./DriverAttribute";
-import NewDriver from "./NewDriver";
+import NewDriver from "./NewDriver/NewDriver";
 
 export default function () {
-    const [resourceManager, setResourceManager] = useResourceManager();
+    let [drivers, setDrivers] = useState([]);
     let [openNewDrive, setOpenNewDrive] = useState(false);
     let [driverAttribute, setDriverAttribute] = useState();
     const [contextMenu, setContextMenu] = useState(null);
+    useEffect(() => {
+        listDriver().then(setDrivers);
+    }, []);
     return (
         <>
             <Grid container padding={1} spacing={1}
@@ -23,7 +24,7 @@ export default function () {
                     setContextMenu({ mouseX: e.clientX, mouseY: e.clientY });
                 }}
             >
-                {resourceManager.drivers.map((driver, i) => (
+                {drivers.map((driver, i) => (
                     <Grid item key={driver.name}>
                         <Driver driver={driver} setDriverAttribute={setDriverAttribute}>{driver.name}</Driver>
                     </Grid>
@@ -38,14 +39,13 @@ export default function () {
                     <Add />
                     <ListItemText>新建云盘</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={() => { setContextMenu(null); listDriver(setResourceManager) }}>
+                <MenuItem onClick={() => { listDriver().then(drivers => { setContextMenu(null); setDrivers(drivers); }) }}>
                     <Refresh />
                     <ListItemText>刷新</ListItemText>
                 </MenuItem>
             </Menu>
-            {openNewDrive && <NewDriver setOpen={setOpenNewDrive} />}
-            {driverAttribute && <DriverAttribute setOpen={setDriverAttribute} driver={driverAttribute} />}
-            <Dialog />
+            {openNewDrive && <NewDriver onClose={() => setOpenNewDrive(false)} onSucc={() => { setOpenNewDrive(false); listDriver().then(setDrivers); }} />}
+            {driverAttribute && <DriverAttribute onClose={() => setDriverAttribute(false)} driver={driverAttribute} />}
         </>
     );
 }

@@ -1,5 +1,5 @@
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
-import { Box, Grid, Stack } from "@mui/material";
+import { Grid, Stack } from "@mui/material";
 import File from "components/File";
 import { noteError } from "components/Notification/Notification";
 import useResourceManager from "hox/resourceManager";
@@ -71,23 +71,22 @@ export default function () {
     }, [resourceManager.filePath]);
     return (
         <>
-            <Box style={{ flex: "1", overflowY: 'auto', alignContent: "flex-start" }} >
-                <Grid container padding={1} spacing={1}
-                    onContextMenu={(e) => {
-                        e.preventDefault(); e.stopPropagation();
-                        setMenu({
-                            mouseX: e.clientX, mouseY: e.clientY,
-                            driver, filePath,
-                        });
-                    }}
-                >
-                    {dirItems.map((dirItem, i) => (
-                        <Grid item key={dirItem.name}>
-                            <File setContextMenu={setFileMenu} dirItem={dirItem} key={dirItem.name} />
-                        </Grid>
-                    ))}
-                </Grid>
-            </Box>
+            <Grid container padding={1} spacing={1}
+                sx={{ flex: "1", overflowY: 'auto', alignContent: "flex-start" }}
+                onContextMenu={(e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    setMenu({
+                        mouseX: e.clientX, mouseY: e.clientY,
+                        driver, filePath,
+                    });
+                }}
+            >
+                {dirItems.map((dirItem, i) => (
+                    <Grid item key={dirItem.name}>
+                        <File setContextMenu={setFileMenu} dirItem={dirItem} key={dirItem.name} />
+                    </Grid>
+                ))}
+            </Grid>
             <Stack className='filePath'
                 direction="row"
                 justifyContent="flex-start"

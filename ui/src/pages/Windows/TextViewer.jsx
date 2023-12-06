@@ -14,7 +14,7 @@ export default ({ id, props }) => {
     let { driver, filePath, dirItem } = props;
     dirItem = dirItem || {};
     const [loaded, setLoaded] = useState();
-    console.log("fileViewer", id, props)
+    console.log("TextViewer", id, props);
     const [windows, setWindows] = useWindows();
     let time = moment(dirItem.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
     useEffect(() => {

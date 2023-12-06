@@ -32,10 +32,10 @@ function getDriverType(driver) {
     }
 }
 
-export default ({ setOpen, driver }) => {
+export default ({ onClose, driver }) => {
     const [attributeType, setAttributeType] = useState(0);
     return (
-        <Dialog open={true} fullWidth={true} onClose={() => setOpen(false)}>
+        <Dialog open={true} fullWidth={true} onClose={() => onClose()}>
             <DialogTitle sx={{
                 backgroundColor: theme => theme.background.primary,
                 color: theme => theme.context.secondary
@@ -43,7 +43,7 @@ export default ({ setOpen, driver }) => {
                 云盘属性
                 <IconButton
                     aria-label="close"
-                    onClick={() => setOpen(false)}
+                    onClick={() => onClose()}
                     sx={{
                         position: 'absolute',
                         right: 8,
@@ -76,7 +76,7 @@ export default ({ setOpen, driver }) => {
                         <Tab key={2} value={2} label="过滤规则设置" />,
                     ]}
                 </Tabs>
-                {attributeType === 0 && <DriverAttributeNormal setOpen={setOpen} driver={driver} />}
+                {attributeType === 0 && <DriverAttributeNormal driver={driver} />}
                 {attributeType === 1 && (driver.type === "baiduPhoto" ? <DriverBaiduPhoto driver={driver} /> : <DriverLocalFile driver={driver} />)}
                 {attributeType === 2 && <DriverLocalFileFilter driver={driver} />}
             </DialogContent>

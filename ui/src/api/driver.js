@@ -3,22 +3,26 @@ import { getSysConfig } from "hox/sysConfig";
 import { httpPostBody as httpPostBodyLocal } from "./web/localServer";
 import { httpDelete, httpGet, httpPost } from "./web/webServer";
 
-export async function listDriver(setResourceManager) {
+export async function listDriver() {
     try {
         console.log('api.listDriver');
         let drivers = await httpGet("/api/v1/drivers");
-        setResourceManager({ drivers });
+        return drivers;
     } catch (e) {
         noteError("获取云盘列表失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
 }
 
-export async function newDriver(setResourceManager, name, description) {
+export async function openDrivers(setResourceManager) {
+    console.log('openDrivers');
+    setResourceManager({});
+}
+
+export async function newDriver(name, description) {
     try {
         console.log('api.newDriver', name, description);
         let exist = await httpPost("/api/v1/drivers", { name, description });
-        await listDriver(setResourceManager);
         if (exist) {
             throw new Error("云盘名称重复: " + name);
         }

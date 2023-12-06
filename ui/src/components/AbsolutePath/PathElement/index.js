@@ -1,5 +1,5 @@
 import { Link, Stack } from "@mui/material";
-import { listDriver } from "api/driver";
+import { openDrivers } from "api/driver";
 import { openDir } from "api/fs";
 import useResourceManager from 'hox/resourceManager';
 import useWindows from "hox/windows";
@@ -14,7 +14,7 @@ export default ({ type, name, icon, filePath }) => {
             if (filePath) {
                 openDir(setResourceManager, driver, filePath);
             } else {
-                listDriver(setResourceManager);
+                openDrivers(setResourceManager);
             }
         })}>
             <Stack direction="row"

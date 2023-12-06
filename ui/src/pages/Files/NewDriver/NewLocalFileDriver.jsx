@@ -5,7 +5,7 @@ import useResourceManager from "hox/resourceManager";
 import useSysConfig from "hox/sysConfig";
 import { useState } from 'react';
 
-export default function ({ setOpen }) {
+export default function ({ onSucc }) {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [srcPath, setSrcPath] = useState('');
@@ -86,7 +86,7 @@ export default function ({ setOpen }) {
                 color: theme => theme.context.primary
             }}>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={srcPath === "" || name === ""} onClick={() => {
-                    newLocalFileDriver(setResourceManager, name, description, sysConfig.deviceId, srcPath, encoder, concurrent).then(() => setOpen(false));
+                    newLocalFileDriver(setResourceManager, name, description, sysConfig.deviceId, srcPath, encoder, concurrent).then(onSucc);
                 }}>确定</Button>
             </DialogActions>
         </>
