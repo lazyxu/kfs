@@ -63,6 +63,7 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/listLocalFileDriver", apiListLocalFileDriver)
 
 	e.GET("/api/v1/list", apiList)
+	e.GET("/api/v1/driverFile", apiGetDriverFile)
 	e.GET("/api/v1/event/list", func(c echo.Context) error {
 		return list.Handle(c, kfsCore)
 	})
@@ -72,9 +73,6 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/download", apiDownload)
 	e.GET("/api/v1/image", apiImage)
 
-	e.GET("/api/v1/drivers/fileSize", apiDriversFileSize)
-	e.GET("/api/v1/drivers/fileCount", apiDriversFileCount)
-	e.GET("/api/v1/drivers/dirCount", apiDriversDirCount)
 	e.GET("/api/v1/drivers/dirCalculatedInfo", apiDriversDirCalculatedInfo)
 
 	e.GET("/thumbnail", apiThumbnail)
@@ -96,48 +94,6 @@ func webServer(webPortString string) {
 	println("KFS web server listening at:", webPortString)
 	// Start server
 	e.Logger.Fatal(e.Start(":" + webPortString))
-}
-
-func apiDriversFileSize(c echo.Context) error {
-	idStr := c.QueryParam("id")
-	id, err := strconv.ParseUint(idStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "id should be a number")
-	}
-	n, err := kfsCore.Db.GetDriverFileSize(c.Request().Context(), id)
-	if err != nil {
-		c.Logger().Error(err)
-		return err
-	}
-	return ok(c, n)
-}
-
-func apiDriversFileCount(c echo.Context) error {
-	idStr := c.QueryParam("id")
-	id, err := strconv.ParseUint(idStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "id should be a number")
-	}
-	n, err := kfsCore.Db.GetDriverFileCount(c.Request().Context(), id)
-	if err != nil {
-		c.Logger().Error(err)
-		return err
-	}
-	return ok(c, n)
-}
-
-func apiDriversDirCount(c echo.Context) error {
-	idStr := c.QueryParam("id")
-	id, err := strconv.ParseUint(idStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "id should be a number")
-	}
-	n, err := kfsCore.Db.GetDriverDirCount(c.Request().Context(), id)
-	if err != nil {
-		c.Logger().Error(err)
-		return err
-	}
-	return ok(c, n)
 }
 
 func apiDriversDirCalculatedInfo(c echo.Context) error {
@@ -180,7 +136,26 @@ func apiList(c echo.Context) error {
 	if filePath == nil {
 		filePath = []string{}
 	}
-	files, err := kfsCore.ListDriverFile(c.Request().Context(), driverId, filePath)
+	files, err := kfsCore.Db.ListDriverFile(c.Request().Context(), driverId, filePath)
+	if err != nil {
+		println(err.Error())
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, files)
+}
+
+func apiGetDriverFile(c echo.Context) error {
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "driverId should be a number")
+	}
+	filePath := c.QueryParams()["filePath[]"]
+	if filePath == nil {
+		filePath = []string{}
+	}
+	files, err := kfsCore.Db.GetDriverFile(c.Request().Context(), driverId, filePath)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)

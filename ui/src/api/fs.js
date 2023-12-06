@@ -16,7 +16,7 @@ export async function openFile(driverId, filePath) {
         });
         let tooLarge = resp.headers.get("Kfs-Too-Large");
         let content = resp.data;
-        return {content, tooLarge};
+        return { content, tooLarge };
     } catch (e) {
         noteError("加载文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
@@ -59,5 +59,12 @@ export async function listDriverFileByHash(hash) {
     console.log('api.listDriverFileByHash', hash);
     return await httpGet("/api/v1/listDriverFileByHash", {
         hash
+    });
+}
+
+export async function getDriverFile(driverId, filePath) {
+    console.log('api.getDriverFile', driverId, filePath);
+    return await httpGet("/api/v1/driverFile", {
+        driverId, filePath
     });
 }

@@ -13,10 +13,10 @@ func (db *DB) WriteFile(ctx context.Context, file dao.File) error {
 	return dbBase.WriteFileWithTxOrDb(ctx, conn, db, file)
 }
 
-func (db *DB) GetDriverFile(ctx context.Context, driverId uint64, splitPath []string) (file dao.DriverFile, err error) {
+func (db *DB) GetDriverFile(ctx context.Context, driverId uint64, filePath []string) (file dao.DriverFile, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.GetDriverFile(ctx, conn, driverId, splitPath)
+	return dbBase.GetDriverFile(ctx, conn, driverId, filePath)
 }
 
 func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []string, item dao.DirItem) (commit dao.Commit, branch dao.Branch, err error) {

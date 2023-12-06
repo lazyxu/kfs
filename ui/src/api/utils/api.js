@@ -18,6 +18,22 @@ export function isDCIM(name) {
     return false;
 }
 
+export function isImage(name) {
+    name = name.toLowerCase()
+    if (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") || name.endsWith(".heic")) {
+        return true;
+    }
+    return false;
+}
+
+export function isVideo(name) {
+    name = name.toLowerCase()
+    if (name.endsWith(".mp4") || name.endsWith(".mov")) {
+        return true;
+    }
+    return false;
+}
+
 export function isViewable(name) {
     name = name.toLowerCase()
     if (name.endsWith(".txt") || name.endsWith(".md") ||

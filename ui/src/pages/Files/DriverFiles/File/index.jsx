@@ -13,10 +13,10 @@ const useGetState = (initiateState) => {
     return [state, setState, getState];
 };
 
-export default ({ dirItem, setContextMenu }) => {
+export default ({ driverFile, setContextMenu }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     const { driver, dirPath } = resourceManager;
-    const { name } = dirItem
+    const { name } = driverFile
     const filePath = useRef([]);
     const { ref, inView } = useInView({ threshold: 0 });
     const [hasBeenInView, setHasBeenInView, getHasBeenInView] = useGetState(false);
@@ -40,11 +40,11 @@ export default ({ dirItem, setContextMenu }) => {
                 e.preventDefault(); e.stopPropagation();
                 setContextMenu({
                     mouseX: e.clientX, mouseY: e.clientY,
-                    driver, filePath: filePath.current, dirItem
+                    driver, filePath, driverFile
                 });
             }}
         >
-            {filePath.current.length && <FileIcon dirItem={dirItem} filePath={filePath.current} hasBeenInView={hasBeenInView} driver={driver} inView={inView}/>}
+            {filePath.current.length && <FileIcon driverFile={driverFile} filePath={filePath.current} hasBeenInView={hasBeenInView} driver={driver} inView={inView}/>}
             <Box kfs-attr="file" style={{ width: "100%", overflowWrap: "break-word", textAlign: "center" }}>{name}</Box>
         </Stack>
     )

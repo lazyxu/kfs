@@ -25,14 +25,14 @@ func WriteFileWithTxOrDb(ctx context.Context, txOrDb TxOrDb, db DbImpl, file dao
 
 var ErrNoSuchFileOrDir = errors.New("no such file or dir")
 
-func GetDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, splitPath []string) (file dao.DriverFile, err error) {
-	if len(splitPath) == 0 {
+func GetDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, filePath []string) (file dao.DriverFile, err error) {
+	if len(filePath) == 0 {
 		err = errors.New("/: Is a directory")
 		return
 	}
 	file.DriverId = driverId
-	file.DirPath = splitPath[:len(splitPath)-1]
-	file.Name = splitPath[len(splitPath)-1]
+	file.DirPath = filePath[:len(filePath)-1]
+	file.Name = filePath[len(filePath)-1]
 	file.Version = 0
 
 	rows, err := conn.QueryContext(ctx, `

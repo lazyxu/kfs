@@ -7,8 +7,8 @@ import useResourceManager from "hox/resourceManager";
 
 export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
     const [resourceManager, setResourceManager] = useResourceManager();
-    const { driver, filePath, dirItem } = contextMenu;
-    const { name, mode } = dirItem;
+    const { driver, filePath, driverFile } = contextMenu;
+    const { name, mode } = driverFile;
     return (
         <Menu
             contextMenu={contextMenu}
@@ -20,7 +20,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
                     setContextMenu(null);
                     openDir(setResourceManager, driver, filePath);
                 } else {
-                    // openFile(setResourceManager, driverId, filePath, dirItem);
+                    // openFile(setResourceManager, driverId, filePath, driverFile);
                 }
             }}>
                 <OpenInNew />

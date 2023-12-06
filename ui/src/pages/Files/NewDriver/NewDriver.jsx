@@ -16,7 +16,7 @@ export default function ({ onClose, onSucc }) {
                 <Typography>新建云盘</Typography>
                 <IconButton
                     aria-label="close"
-                    onClick={onClose}
+                    onClick={() => onClose()}
                     sx={{
                         position: 'absolute',
                         right: 8,

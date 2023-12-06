@@ -1,25 +1,34 @@
 import { AllInbox, Close, Download, Info, PrivacyTip } from "@mui/icons-material";
 import { Box, Dialog, DialogContent, IconButton, Stack } from "@mui/material";
+import { getMetadata } from "api/exif";
+import { getDriverFile } from "api/fs";
 import { getSysConfig } from "hox/sysConfig";
 import useWindows, { closeWindow } from "hox/windows";
 import humanize from "humanize";
 import moment from "moment";
-import { useState } from "react";
-import Attribute from "../../components/FileViewer/Attribute";
+import FileAttribute from "pages/Files/DriverFiles/FileAttribute";
+import { useEffect, useState } from "react";
 import Metadata from "../../components/FileViewer/Metadata";
 import SameFiles from "../../components/FileViewer/SameFiles";
 
 export default function ({ id, props }) {
-    let { metadata, hash, attribute } = props;
+    let { driver, filePath } = props;
+    // let { metadata, hash, attribute } = props;
     console.log("ImageViewer", id, props);
     const [windows, setWindows] = useWindows();
+    const [driverFile, setDriverFile] = useState();
+    const [metadata, setMetadata] = useState(false);
     const [openMetadata, setOpenMetadata] = useState(false);
     const [openSameFiles, setOpenSameFiles] = useState(false);
     const [openAttribute, setOpenAttribute] = useState(false);
     const [sameFiles, setSameFiles] = useState([]);
     const sysConfig = getSysConfig().sysConfig;
-    let { hash: hash2, exif, fileType } = metadata;
-    let time = moment(attribute?.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
+    useEffect(() => {
+        getDriverFile(driver.id, filePath).then(df => {
+            setDriverFile(df);
+            getMetadata(df.hash).then(setMetadata);
+        });
+    }, []);
     return (
         <>
             <Dialog open={true} fullScreen={true} onClose={() => closeWindow(setWindows, id)}>
@@ -29,12 +38,12 @@ export default function ({ id, props }) {
                 }}
                 >
                     <Box sx={{ height: "28px", lineHeight: "28px", paddingLeft: "1em" }}>
-                        {hash} - 图片查看器
+                        {filePath[filePath.length - 1]} - 图片查看器
                     </Box>
                     <Stack direction="row" justifyContent="flex-end" >
-                        <IconButton title="下载"
-                            href={`${sysConfig.webServer}/api/v1/download?hash=${hash}`}
-                            download={attribute ? attribute.name : sameFiles.length > 0 ? sameFiles[0].name : undefined}
+                        <IconButton title="下载" disabled={!driverFile}
+                            href={`${sysConfig.webServer}/api/v1/download?hash=${driverFile?.hash}`}
+                            download={driverFile?.name}
                             sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
                         >
                             <Download fontSize="small" sx={{ width: "20px", height: "20px" }} />
@@ -44,7 +53,7 @@ export default function ({ id, props }) {
                         >
                             <AllInbox fontSize="small" sx={{ width: "20px", height: "20px" }} />
                         </IconButton>
-                        {attribute && <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
+                        {driverFile && <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
                             sx={{ height: "24px", width: "24px", color: theme => theme.context.secondary }}
                         >
                             <Info fontSize="small" sx={{ width: "20px", height: "20px" }} />
@@ -77,7 +86,7 @@ export default function ({ id, props }) {
                     color: theme => theme.context.primary,
                     backgroundColor: theme => theme.background.primary,
                 }}>
-                    <img style={{ maxWidth: "100%", maxHeight: "100%" }} src={`${sysConfig.webServer}/api/v1/image?hash=${hash}`} />
+                    {driverFile && <img style={{ maxWidth: "100%", maxHeight: "100%" }} src={`${sysConfig.webServer}/api/v1/image?hash=${driverFile.hash}`} />}
                 </DialogContent>
                 <Box sx={{
                     flex: "0 0 auto", padding: "8px",
@@ -85,18 +94,20 @@ export default function ({ id, props }) {
                     backgroundColor: theme => theme.background.secondary,
                 }}>
                     <Stack direction="row" justifyContent="space-between">
-                        <Box >
-                            {humanize.filesize(attribute?.size)}
-                        </Box>
-                        <Box >
-                            {time}
-                        </Box>
+                        {driverFile && <>
+                            <Box >
+                                {humanize.filesize(driverFile.size)}
+                            </Box>
+                            <Box >
+                                {moment(driverFile.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}
+                            </Box>
+                        </>}
                     </Stack>
                 </Box>
             </Dialog>
-            <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={hash} sameFiles={sameFiles} setSameFiles={setSameFiles} />
-            <Metadata open={openMetadata} setOpen={setOpenMetadata} metadata={metadata} />
-            {attribute && <Attribute open={openAttribute} setOpen={setOpenAttribute} attribute={attribute} />}
+            <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={driverFile?.hash} sameFiles={sameFiles} setSameFiles={setSameFiles} disabled={!driverFile} />
+            <Metadata open={openMetadata} setOpen={setOpenMetadata} metadata={metadata} disabled={!metadata} />
+            {openAttribute && <FileAttribute fileAttribute={{driver, filePath, driverFile}} onClose={setOpenAttribute} />}
         </>
     );
 }

@@ -2,7 +2,7 @@ import { Close, ContentCopy, Save } from '@mui/icons-material';
 import { default as FileDownload } from '@mui/icons-material/FileDownload';
 import { Box, Dialog, DialogContent, Link, Stack } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
-import { download, openFile } from "api/fs";
+import { download, getDriverFile, openFile } from "api/fs";
 import { getSysConfig } from "hox/sysConfig";
 import useWindows, { closeWindow } from 'hox/windows';
 import humanize from 'humanize';
@@ -10,14 +10,14 @@ import moment from 'moment';
 import { useEffect, useState } from 'react';
 
 export default ({ id, props }) => {
-    let { driver, filePath, dirItem } = props;
+    let { driver, filePath } = props;
     console.log("TextViewer", id, props);
-    dirItem = dirItem || {};
-    const [loaded, setLoaded] = useState();
     const [windows, setWindows] = useWindows();
-    let time = moment(dirItem.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
+    const [driverFile, setDriverFile] = useState();
+    const [loaded, setLoaded] = useState();
     useEffect(() => {
         openFile(driver.id, filePath).then(setLoaded);
+        getDriverFile(driver.id, filePath).then(setDriverFile);
     }, []);
     return (
         <Dialog open={true} fullScreen={true} onClose={() => closeWindow(setWindows, id)}>
@@ -28,7 +28,7 @@ export default ({ id, props }) => {
                 }}
             >
                 <Box sx={{ height: "28px", lineHeight: "28px", paddingLeft: "1em" }}>
-                    {dirItem.name} - 文本编辑器
+                    {filePath[filePath.length - 1]} - 文本编辑器
                 </Box>
                 <IconButton aria-label="close" onClick={() => closeWindow(setWindows, id)}
                     sx={{
@@ -99,12 +99,14 @@ export default ({ id, props }) => {
                 backgroundColor: theme => theme.background.secondary,
             }}>
                 <Stack direction="row" justifyContent="space-between">
-                    <Box >
-                        {humanize.filesize(dirItem.size)}
-                    </Box>
-                    <Box >
-                        {time}
-                    </Box>
+                    {driverFile && <>
+                        <Box >
+                            {humanize.filesize(driverFile.size)}
+                        </Box>
+                        <Box >
+                            {moment(driverFile.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}
+                        </Box>
+                    </>}
                 </Stack>
             </Box>
         </Dialog>

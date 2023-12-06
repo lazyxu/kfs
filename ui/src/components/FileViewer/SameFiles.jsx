@@ -5,7 +5,7 @@ import { useEffect } from "react";
 export default function ({ hash, open, setOpen, sameFiles, setSameFiles }) {
     useEffect(() => {
         listDriverFileByHash(hash).then(setSameFiles);
-    }, []);
+    }, [hash]);
     return (
         <Drawer
             anchor="right"

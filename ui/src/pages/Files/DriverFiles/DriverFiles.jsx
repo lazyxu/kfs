@@ -10,8 +10,8 @@ import FileMenu from "./FileMenu";
 import Menu from "./Menu";
 
 export default function () {
-    const [dirItems, setDirItems] = useState([]);
-    const [dirItemsTotal, setDirItemsTotal] = useState(0);
+    const [driverFiles, setDriverFiles] = useState([]);
+    const [driverFilesTotal, setDriverFilesTotal] = useState(0);
     const [resourceManager, setResourceManager] = useResourceManager();
     const { driver, dirPath } = resourceManager;
     const controller = new AbortController();
@@ -19,7 +19,7 @@ export default function () {
     const [fileMenu, setFileMenu] = useState(null);
     const [fileAttribute, setFileAttribute] = useState(null);
     useEffect(() => {
-        setDirItems([]);
+        setDriverFiles([]);
         fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/list?driverId=${driver.id}&${dirPath.map(f => "filePath[]=" + f).join("&")}`, {
             signal: controller.signal,
             openWhenHidden: true,
@@ -44,9 +44,9 @@ export default function () {
                     noteError(info.errMsg);
                 }
                 if (info.files) {
-                    setDirItems(prev => [...prev, ...info.files]);
+                    setDriverFiles(prev => [...prev, ...info.files]);
                 } else {
-                    setDirItemsTotal(info.n);
+                    setDriverFilesTotal(info.n);
                 }
             },
             onclose() {
@@ -81,9 +81,9 @@ export default function () {
                     });
                 }}
             >
-                {dirItems.map((dirItem, i) => (
-                    <Grid item key={dirItem.name}>
-                        <File setContextMenu={setFileMenu} dirItem={dirItem} key={dirItem.name} />
+                {driverFiles.map((driverFile, i) => (
+                    <Grid item key={driverFile.name}>
+                        <File setContextMenu={setFileMenu} driverFile={driverFile} key={driverFile.name} />
                     </Grid>
                 ))}
             </Grid>
@@ -92,11 +92,11 @@ export default function () {
                 alignItems="center"
                 spacing={1}
             >
-                共{dirItems.length}/{dirItemsTotal}个项目
+                共{driverFiles.length}/{driverFilesTotal}个项目
             </Stack>
             {menu && <Menu contextMenu={menu} setContextMenu={setMenu} />}
             {fileMenu && <FileMenu contextMenu={fileMenu} setContextMenu={setFileMenu} setFileAttribute={setFileAttribute} />}
-            {fileAttribute && <FileAttribute fileAttribute={fileAttribute} setFileAttribute={setFileAttribute} />}
+            {fileAttribute && <FileAttribute fileAttribute={fileAttribute} onClose={() => setFileAttribute(null)} />}
         </>
     );
 }

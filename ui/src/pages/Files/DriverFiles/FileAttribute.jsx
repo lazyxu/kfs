@@ -31,16 +31,16 @@ function getDriverType(driver) {
     }
 }
 
-export default ({ fileAttribute, setFileAttribute }) => {
-    const { driver, filePath, dirItem } = fileAttribute;
-    const isDir = modeIsDir(dirItem.mode);
+export default ({ fileAttribute, onClose }) => {
+    const { driver, filePath, driverFile } = fileAttribute;
+    const isDir = modeIsDir(driverFile.mode);
+    const { name, mode } = driverFile;
     const [attributes, setAttributes] = useState({});
-    const { name, mode } = dirItem;
     useEffect(() => {
         getDriversDirCalculatedInfo(driver.id, filePath).then(setAttributes);
     }, []);
     return (
-        <Dialog open={true} fullWidth={true} onClose={() => setFileAttribute(null)}>
+        <Dialog open={true} fullWidth={true} onClose={onClose}>
             <DialogTitle sx={{
                 backgroundColor: theme => theme.background.primary,
                 color: theme => theme.context.secondary
@@ -48,7 +48,7 @@ export default ({ fileAttribute, setFileAttribute }) => {
                 云盘属性
                 <IconButton
                     aria-label="close"
-                    onClick={() => setFileAttribute(null)}
+                    onClick={() => onClose()}
                     sx={{
                         position: 'absolute',
                         right: 8,
@@ -69,20 +69,20 @@ export default ({ fileAttribute, setFileAttribute }) => {
                     <Attr k="云盘描述">{driver.description}</Attr>
                     <Attr k="云盘类型">{getDriverType(driver)}</Attr>
                     <Attr k="文件路径">{"/" + filePath.join("/")}</Attr>
-                    <Attr k="哈希值">{dirItem.hash}</Attr>
+                    <Attr k="哈希值">{driverFile.hash}</Attr>
                     <Attr k="类型">{isDir ? "文件夹" : "文件"}</Attr>
-                    {!isDir && <Attr k="文件大小">{humanize.filesize(dirItem.size)}</Attr>}
-                    <Attr k="文件权限">{getPerm(dirItem.mode).toString(8)}</Attr>
+                    {!isDir && <Attr k="文件大小">{humanize.filesize(driverFile.size)}</Attr>}
+                    <Attr k="文件权限">{getPerm(driverFile.mode).toString(8)}</Attr>
                     {isDir && <>
                         <Attr k="目录下总大小">{humanize.filesize(attributes.fileSize)}</Attr>
                         <Attr k="目录下文件总数量">{attributes.fileCount}</Attr>
                         <Attr k="目录下目录总数量">{attributes.dirCount}</Attr>
                     </>
                     }
-                    <Attr k="创建时间">{formatTime(dirItem.createTime)}</Attr>
-                    <Attr k="属性修改时间">{formatTime(dirItem.changeTime)}</Attr>
-                    <Attr k="内容修改时间">{formatTime(dirItem.modifyTime)}</Attr>
-                    <Attr k="访问时间">{formatTime(dirItem.accessTime)}</Attr>
+                    <Attr k="创建时间">{formatTime(driverFile.createTime)}</Attr>
+                    <Attr k="属性修改时间">{formatTime(driverFile.changeTime)}</Attr>
+                    <Attr k="内容修改时间">{formatTime(driverFile.modifyTime)}</Attr>
+                    <Attr k="访问时间">{formatTime(driverFile.accessTime)}</Attr>
                 </Grid>
             </DialogContent>
         </Dialog>

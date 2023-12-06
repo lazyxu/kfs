@@ -72,7 +72,7 @@ type Database interface {
 	UpsertDriverFile(ctx context.Context, f DriverFile) error
 	UpsertDriverFiles(ctx context.Context, files []DriverFile) error
 	ListDriverFile(ctx context.Context, driverId uint64, filePath []string) (files []DriverFile, err error)
-	GetDriverFile(ctx context.Context, driverId uint64, splitPath []string) (file DriverFile, err error)
+	GetDriverFile(ctx context.Context, driverId uint64, filePath []string) (file DriverFile, err error)
 	ListDriverFileByHash(ctx context.Context, hash string) (files []DriverFile, err error)
 	CheckExists(ctx context.Context, driverId uint64, dirPath []string, checks []DirItemCheck, hashList []string) error
 

@@ -53,7 +53,7 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 	if filePath == nil {
 		filePath = []string{}
 	}
-	files, err := kfsCore.ListDriverFile(c.Request().Context(), driverId, filePath)
+	files, err := kfsCore.Db.ListDriverFile(c.Request().Context(), driverId, filePath)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)

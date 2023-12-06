@@ -12,8 +12,8 @@ func (db *DB) WriteFile(ctx context.Context, file dao.File) error {
 	return dbBase.WriteFileWithTxOrDb(ctx, db.db, db, file)
 }
 
-func (db *DB) GetDriverFile(ctx context.Context, driverId uint64, splitPath []string) (file dao.DriverFile, err error) {
-	return dbBase.GetDriverFile(ctx, db.db, driverId, splitPath)
+func (db *DB) GetDriverFile(ctx context.Context, driverId uint64, filePath []string) (file dao.DriverFile, err error) {
+	return dbBase.GetDriverFile(ctx, db.db, driverId, filePath)
 }
 
 func (db *DB) UpsertDirItem(ctx context.Context, branchName string, splitPath []string, item dao.DirItem) (commit dao.Commit, branch dao.Branch, err error) {
