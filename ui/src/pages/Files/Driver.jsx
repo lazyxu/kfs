@@ -51,25 +51,25 @@ export default ({ driver, setDriverAttribute, onDelete }) => {
                     <OpenInNew />
                     <ListItemText>打开</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={() => { setContextMenu(null); setDriverAttribute(driver) }}>
-                    <Settings />
-                    <ListItemText>属性</ListItemText>
-                </MenuItem>
-                <MenuItem disabled>
-                    <DriveFileRenameOutline />
-                    <ListItemText>重命名</ListItemText>
+                <MenuItem onClick={() => resetDriver(driver.id).then(() => setContextMenu(null))} >
+                    <ClearAll />
+                    <ListItemText>重置</ListItemText>
                 </MenuItem>
                 <MenuItem disabled>
                     <ContentCopy />
                     <ListItemText>复制</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={() => resetDriver(driver.id).then(() => setContextMenu(null))} >
-                    <ClearAll />
-                    <ListItemText>重置</ListItemText>
-                </MenuItem>
                 <MenuItem onClick={() => deleteDriver(driver.id).then(() => {setContextMenu(null); onDelete(); })} disableRipple>
                     <Delete />
                     <ListItemText>删除</ListItemText>
+                </MenuItem>
+                <MenuItem disabled>
+                    <DriveFileRenameOutline />
+                    <ListItemText>重命名</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => { setContextMenu(null); setDriverAttribute(driver) }}>
+                    <Settings />
+                    <ListItemText>属性</ListItemText>
                 </MenuItem>
             </Menu>
         </>

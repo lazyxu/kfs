@@ -1,16 +1,14 @@
 import { Link, Stack } from "@mui/material";
 import useResourceManager, { openDir, openDrivers } from 'hox/resourceManager';
-import useWindows from "hox/windows";
 import SvgIcon from "../../Icon/SvgIcon";
 
-export default ({ type, name, icon, filePath }) => {
+export default ({ name, icon, dirPath }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     const { driver } = resourceManager;
-    const [windows, setWindows] = useWindows();
     return (
         <Link color="inherit" underline="hover" onClick={(() => {
-            if (filePath) {
-                openDir(setResourceManager, driver, filePath);
+            if (dirPath) {
+                openDir(setResourceManager, driver, dirPath);
             } else {
                 openDrivers(setResourceManager);
             }

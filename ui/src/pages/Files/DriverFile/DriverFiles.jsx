@@ -13,14 +13,14 @@ export default function () {
     const [dirItems, setDirItems] = useState([]);
     const [dirItemsTotal, setDirItemsTotal] = useState(0);
     const [resourceManager, setResourceManager] = useResourceManager();
-    let { driver, filePath } = resourceManager;
+    const { driver, dirPath } = resourceManager;
     const controller = new AbortController();
     const [menu, setMenu] = useState(null);
     const [fileMenu, setFileMenu] = useState(null);
-    let [fileAttribute, setFileAttribute] = useState(null);
+    const [fileAttribute, setFileAttribute] = useState(null);
     useEffect(() => {
         setDirItems([]);
-        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/list?driverId=${driver.id}&${filePath.map(f => "filePath[]=" + f).join("&")}`, {
+        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/list?driverId=${driver.id}&${dirPath.map(f => "filePath[]=" + f).join("&")}`, {
             signal: controller.signal,
             openWhenHidden: true,
             async onopen(response) {
@@ -68,7 +68,7 @@ export default function () {
             console.log("===abort===");
             controller.abort();
         }
-    }, [resourceManager.filePath]);
+    }, [resourceManager.dirPath]);
     return (
         <>
             <Grid container padding={1} spacing={1}
@@ -77,7 +77,7 @@ export default function () {
                     e.preventDefault(); e.stopPropagation();
                     setMenu({
                         mouseX: e.clientX, mouseY: e.clientY,
-                        driver, filePath,
+                        driver, dirPath,
                     });
                 }}
             >
@@ -87,8 +87,7 @@ export default function () {
                     </Grid>
                 ))}
             </Grid>
-            <Stack className='filePath'
-                direction="row"
+            <Stack direction="row"
                 justifyContent="flex-start"
                 alignItems="center"
                 spacing={1}

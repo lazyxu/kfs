@@ -15,13 +15,13 @@ const useGetState = (initiateState) => {
 
 export default ({ dirItem, setContextMenu }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
-    const { driver, filePath } = resourceManager;
+    const { driver, dirPath } = resourceManager;
     const { name } = dirItem
-    const curFilePath = useRef([]);
+    const filePath = useRef([]);
     const { ref, inView } = useInView({ threshold: 0 });
     const [hasBeenInView, setHasBeenInView, getHasBeenInView] = useGetState(false);
     useEffect(() => {
-        curFilePath.current = filePath.concat(name);
+        filePath.current = dirPath.concat(name);
     }, []);
     useEffect(() => {
         const hasBeenIn = getHasBeenInView();
@@ -40,11 +40,11 @@ export default ({ dirItem, setContextMenu }) => {
                 e.preventDefault(); e.stopPropagation();
                 setContextMenu({
                     mouseX: e.clientX, mouseY: e.clientY,
-                    driver, filePath, dirItem
+                    driver, filePath: filePath.current, dirItem
                 });
             }}
         >
-            {curFilePath.current.length && <FileIcon dirItem={dirItem} filePath={curFilePath.current} hasBeenInView={hasBeenInView} driver={driver} inView={inView}/>}
+            {filePath.current.length && <FileIcon dirItem={dirItem} filePath={filePath.current} hasBeenInView={hasBeenInView} driver={driver} inView={inView}/>}
             <Box kfs-attr="file" style={{ width: "100%", overflowWrap: "break-word", textAlign: "center" }}>{name}</Box>
         </Stack>
     )

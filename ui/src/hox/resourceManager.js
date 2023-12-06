@@ -18,7 +18,7 @@ export async function openDrivers(setResourceManager) {
   setResourceManager({});
 }
 
-export async function openDir(setResourceManager, driver, filePath) {
-  console.log('openDir', driver, filePath);
-  setResourceManager({ driver, filePath });
+export async function openDir(setResourceManager, driver, dirPath) {
+  console.log('openDir', driver, dirPath);
+  setResourceManager({ driver, dirPath });
 }

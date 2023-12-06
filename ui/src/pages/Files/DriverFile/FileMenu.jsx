@@ -9,7 +9,6 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
     const [resourceManager, setResourceManager] = useResourceManager();
     const { driver, filePath, dirItem } = contextMenu;
     const { name, mode } = dirItem;
-    const curFilePath = filePath.concat(name);
     return (
         <Menu
             contextMenu={contextMenu}
@@ -19,7 +18,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
             <MenuItem disabled={!modeIsDir(mode)} onClick={() => {
                 if (modeIsDir(mode)) {
                     setContextMenu(null);
-                    openDir(setResourceManager, driver, curFilePath);
+                    openDir(setResourceManager, driver, filePath);
                 } else {
                     // openFile(setResourceManager, driverId, filePath, dirItem);
                 }

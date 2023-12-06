@@ -36,9 +36,8 @@ export default ({ fileAttribute, setFileAttribute }) => {
     const isDir = modeIsDir(dirItem.mode);
     const [attributes, setAttributes] = useState({});
     const { name, mode } = dirItem;
-    const curFilePath = filePath.concat(name);
     useEffect(() => {
-        getDriversDirCalculatedInfo(driver.id, curFilePath).then(setAttributes);
+        getDriversDirCalculatedInfo(driver.id, filePath).then(setAttributes);
     }, []);
     return (
         <Dialog open={true} fullWidth={true} onClose={() => setFileAttribute(null)}>
@@ -69,7 +68,7 @@ export default ({ fileAttribute, setFileAttribute }) => {
                     <Attr k="云盘名称">{driver.name}</Attr>
                     <Attr k="云盘描述">{driver.description}</Attr>
                     <Attr k="云盘类型">{getDriverType(driver)}</Attr>
-                    <Attr k="文件路径">{"/" + curFilePath.join("/")}</Attr>
+                    <Attr k="文件路径">{"/" + filePath.join("/")}</Attr>
                     <Attr k="哈希值">{dirItem.hash}</Attr>
                     <Attr k="类型">{isDir ? "文件夹" : "文件"}</Attr>
                     {!isDir && <Attr k="文件大小">{humanize.filesize(dirItem.size)}</Attr>}

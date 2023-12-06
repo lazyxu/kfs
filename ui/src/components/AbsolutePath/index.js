@@ -5,6 +5,7 @@ import './index.scss';
 
 export default () => {
     const [resourceManager, setResourceManager] = useResourceManager();
+    const dirPath = resourceManager.dirPath || [];
     return (
         <Stack className='filePath'
             direction="row"
@@ -13,13 +14,10 @@ export default () => {
             spacing={1}
         >
             <Breadcrumbs separator=">" maxItems={5}>
-                <PathElement type="driver" name="我的云盘" />
-                <PathElement name={resourceManager.driver?.name} filePath={[]} />
-                {(resourceManager.filePath || []).map((elemName, i) =>
-                    <PathElement
-                        type={i === resourceManager.filePath.length - 1 && !resourceManager.dirItems ? "file" : "dir"}
-                        key={i} name={elemName}
-                        filePath={resourceManager.filePath.slice(0, i + 1)} />
+                <PathElement name="我的云盘" />
+                <PathElement name={resourceManager.driver?.name} dirPath={[]} />
+                {dirPath.map((name, i) =>
+                    <PathElement key={i} name={name} dirPath={dirPath.slice(0, i + 1)} />
                 )}
             </Breadcrumbs>
         </Stack>
