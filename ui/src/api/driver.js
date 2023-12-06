@@ -14,11 +14,6 @@ export async function listDriver() {
     }
 }
 
-export async function openDrivers(setResourceManager) {
-    console.log('openDrivers');
-    setResourceManager({});
-}
-
 export async function newDriver(name, description) {
     try {
         console.log('api.newDriver', name, description);
@@ -32,11 +27,10 @@ export async function newDriver(name, description) {
     }
 }
 
-export async function newDriverBaiduPhoto(setResourceManager, name, description, code) {
+export async function newDriverBaiduPhoto(name, description, code) {
     try {
         console.log('api.newDriverBaiduPhoto', name, description, code);
         let exist = await httpPost("/api/v1/driverBaiduPhotos", { name, description, code });
-        await listDriver(setResourceManager);
         if (exist) {
             throw new Error("云盘名称重复: " + name);
         }
@@ -46,11 +40,10 @@ export async function newDriverBaiduPhoto(setResourceManager, name, description,
     }
 }
 
-export async function newLocalFileDriver(setResourceManager, name, description, deviceId, srcPath, encoder, concurrent) {
+export async function newLocalFileDriver(name, description, deviceId, srcPath, encoder, concurrent) {
     try {
         console.log('api.newLocalFileDriver', name, description, srcPath, encoder, concurrent);
         let exist = await httpPost("/api/v1/driverLocalFiles", { name, description, deviceId, srcPath, encoder, concurrent });
-        await listDriver(setResourceManager);
         if (exist) {
             throw new Error("云盘名称重复: " + name);
         }
@@ -70,11 +63,10 @@ export async function resetDriver(driverId) {
     }
 }
 
-export async function deleteDriver(setResourceManager, driverId) {
+export async function deleteDriver(driverId) {
     try {
         console.log('api.deleteDriver', driverId);
         await httpDelete("/api/v1/drivers", { driverId });
-        await listDriver(setResourceManager);
     } catch (e) {
         noteError("删除云盘失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;

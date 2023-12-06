@@ -1,31 +1,6 @@
 import axios from "axios";
 import { noteError } from "components/Notification/Notification";
 import { getSysConfig } from "../hox/sysConfig";
-import * as mockApi from "./mock/fs";
-import * as webApi from "./web/fs";
-import { httpGet } from "./web/webServer";
-
-function getFsApi() {
-    return getSysConfig().sysConfig.api === "web" ? webApi : mockApi;
-}
-
-export async function list(setResourceManager, driverId, driverName, filePath) {
-    try {
-        console.log('api.list', driverId, filePath);
-        let dirItems = await httpGet("/api/v1/list", { driverId, filePath });
-        setResourceManager(prev => {
-            return { ...prev, driverId, driverName, filePath, dirItems, file: null, drivers: null };
-        });
-    } catch (e) {
-        noteError("获取文件列表失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
-        throw e;
-    }
-}
-
-export async function openDir(setResourceManager, driver, filePath) {
-    console.log('openDir', driver, filePath);
-    setResourceManager({ driver, filePath });
-}
 
 export async function openFile(driverId, filePath) {
     try {
@@ -45,18 +20,6 @@ export async function openFile(driverId, filePath) {
         noteError("加载文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
-}
-
-export async function newFile(setResourceManager, driverId, driverName, dirPath, fileName) {
-    console.log('api.newFile', driverId, dirPath, fileName);
-    await getFsApi().newFile(driverId, dirPath, fileName);
-    await list(setResourceManager, driverId, dirPath);
-}
-
-export async function newDir(setResourceManager, driverId, dirPath, fileName) {
-    console.log('api.newDir', driverId, dirPath, fileName);
-    await getFsApi().newDir(driverId, dirPath, fileName);
-    await list(setResourceManager, driverId, dirPath);
 }
 
 function downloadURI(uri, name) {

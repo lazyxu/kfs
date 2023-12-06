@@ -24,9 +24,9 @@ export default function () {
                     setContextMenu({ mouseX: e.clientX, mouseY: e.clientY });
                 }}
             >
-                {drivers.map((driver, i) => (
+                {drivers.map(driver => (
                     <Grid item key={driver.name}>
-                        <Driver driver={driver} setDriverAttribute={setDriverAttribute}>{driver.name}</Driver>
+                        <Driver driver={driver} setDriverAttribute={setDriverAttribute} onDelete={() => listDriver().then(setDrivers)}>{driver.name}</Driver>
                     </Grid>
                 ))}
             </Grid>

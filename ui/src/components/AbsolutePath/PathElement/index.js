@@ -1,7 +1,5 @@
 import { Link, Stack } from "@mui/material";
-import { openDrivers } from "api/driver";
-import { openDir } from "api/fs";
-import useResourceManager from 'hox/resourceManager';
+import useResourceManager, { openDir, openDrivers } from 'hox/resourceManager';
 import useWindows from "hox/windows";
 import SvgIcon from "../../Icon/SvgIcon";
 

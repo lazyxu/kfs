@@ -1,5 +1,4 @@
 import { Button, DialogActions, DialogContent, Link, Stack, TextField } from "@mui/material";
-import useResourceManager from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
 import { useState } from 'react';
 import { newDriverBaiduPhoto } from "../../../api/driver";
@@ -9,7 +8,6 @@ export default function ({ onSucc }) {
     let [name, setName] = useState("");
     let [description, setDescription] = useState("");
     let [code, setCode] = useState("");
-    const [resourceManager, setResourceManager] = useResourceManager();
     const appKey = "huREKC2eNTctaBWfh3LdiAYjZ9ARBh5g";
     let redirectUri = `${getSysConfig().sysConfig.webServer}/api/v1/driver/baidu/callback`;
     redirectUri = `http://1zkl.com`;
@@ -59,7 +57,7 @@ export default function ({ onSucc }) {
                 color: theme => theme.context.primary
             }}>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={name === "" || code === ""} onClick={() => {
-                    newDriverBaiduPhoto(setResourceManager, name, description, code).then(onSucc);
+                    newDriverBaiduPhoto(name, description, code).then(onSucc);
                 }}>确定</Button>
             </DialogActions>
         </>

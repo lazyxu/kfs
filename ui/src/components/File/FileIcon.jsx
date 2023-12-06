@@ -1,10 +1,9 @@
 import { Box } from "@mui/material";
-import { openDir } from "api/fs";
 import { isDCIM, isViewable, modeIsDir } from "api/utils/api";
 import { getMetadata } from "api/web/exif";
 import ImageViewer from "components/FileViewer/ImageViewer";
 import VideoViewer from "components/FileViewer/VideoViewer";
-import useResourceManager from "hox/resourceManager";
+import useResourceManager, { openDir } from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
 import useWindows, { APP_TEXT_VIEWER, newWindow } from "hox/windows";
 import { memo, useState } from "react";

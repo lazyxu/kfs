@@ -1,13 +1,12 @@
 import { ClearAll, ContentCopy, Delete, DriveFileRenameOutline, OpenInNew, Settings } from '@mui/icons-material';
 import { Box, ListItemText, MenuItem, Stack, Typography } from "@mui/material";
 import { deleteDriver, resetDriver } from 'api/driver';
-import { openDir } from "api/fs";
 import SvgIcon from "components/Icon/SvgIcon";
 import Menu from 'components/Menu';
-import useResourceManager from 'hox/resourceManager';
+import useResourceManager, { openDir } from 'hox/resourceManager';
 import { useState } from 'react';
 
-export default ({ driver, setDriverAttribute }) => {
+export default ({ driver, setDriverAttribute, onDelete }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [contextMenu, setContextMenu] = useState(null);
     return (
@@ -68,7 +67,7 @@ export default ({ driver, setDriverAttribute }) => {
                     <ClearAll />
                     <ListItemText>重置</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={() => deleteDriver(setResourceManager, driver.id).then(() => setContextMenu(null))} disableRipple>
+                <MenuItem onClick={() => deleteDriver(driver.id).then(() => {setContextMenu(null); onDelete(); })} disableRipple>
                     <Delete />
                     <ListItemText>删除</ListItemText>
                 </MenuItem>

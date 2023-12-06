@@ -1,10 +1,8 @@
 import { Add, Bookmark, ContentPaste, CreateNewFolder, DriveFolderUpload, History, IosShare, Settings, UploadFile } from "@mui/icons-material";
 import { ListItemText, MenuItem } from "@mui/material";
 import Menu from "components/Menu";
-import useResourceManager from "hox/resourceManager";
 
 export default function ({ contextMenu, setContextMenu }) {
-    const [resourceManager, setResourceManager] = useResourceManager();
     const { driver, filePath } = contextMenu;
     return (
         <Menu
