@@ -1,7 +1,7 @@
 import { Box } from "@mui/material";
-import AbsolutePath from 'components/AbsolutePath';
 import useResourceManager from 'hox/resourceManager';
-import DriverFiles from "./DriverFile/DriverFiles";
+import AbsolutePath from './AbsolutePath';
+import DriverFiles from "./DriverFiles/DriverFiles";
 import Drivers from "./Drivers";
 
 export default function () {

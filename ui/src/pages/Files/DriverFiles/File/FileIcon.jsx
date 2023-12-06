@@ -7,7 +7,7 @@ import useResourceManager, { openDir } from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
 import useWindows, { APP_TEXT_VIEWER, newWindow } from "hox/windows";
 import { memo, useState } from "react";
-import SvgIcon from "../Icon/SvgIcon";
+import SvgIcon from "../../../../components/Icon/SvgIcon";
 import ImgCancelable from "./ImgCancelable";
 
 export default memo(({ driver, filePath, dirItem, hasBeenInView, inView }) => {

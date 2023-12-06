@@ -6,7 +6,6 @@ import { listLocalFileDriver, startAllLocalFileSync } from 'api/driver';
 import SvgIcon from 'components/Icon/SvgIcon';
 import MetadataAnalysis from 'components/MetadataAnalysis';
 import { SnackbarAction } from 'components/Notification/Notification';
-import Version from 'components/Version';
 import { SnackbarProvider } from 'notistack';
 import Dcim from 'pages/Dcim';
 import DedicatedSpace from 'pages/DedicatedSpace/DedicatedSpace';
@@ -33,6 +32,20 @@ async function newDeviceIfNeeded(sysConfig, setSysConfig) {
         setSysConfig(prev => { return { ...prev, deviceId } });
     }
     listLocalFileDriver(deviceId).then(drivers => startAllLocalFileSync(drivers))
+}
+
+function Version() {
+    return (
+        <Box sx={{
+            position: 'absolute',
+            bottom: "0",
+            fontFamily: "KaiTi, STKaiti;",
+        }}>
+            <Typography>
+                {process.env.REACT_APP_PLATFORM}.{process.env.NODE_ENV}
+            </Typography>
+        </Box>
+    );
 }
 
 function App() {
