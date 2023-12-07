@@ -58,6 +58,5 @@ refreshOpenApp();
 export function getOpenApp(name) {
   const ext = name.substring(name.lastIndexOf(".")).toLowerCase();
   const app = openAppByExt[ext];
-  console.log("===getOpenApp", name, ext, openAppByExt, app);
   return app;
 }

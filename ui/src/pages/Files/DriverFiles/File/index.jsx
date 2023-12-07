@@ -40,12 +40,18 @@ export default ({ driverFile, setContextMenu }) => {
                 e.preventDefault(); e.stopPropagation();
                 setContextMenu({
                     mouseX: e.clientX, mouseY: e.clientY,
-                    driver, filePath, driverFile
+                    driver, filePath: filePath.current, driverFile
                 });
             }}
         >
-            {filePath.current.length && <FileIcon driverFile={driverFile} filePath={filePath.current} hasBeenInView={hasBeenInView} driver={driver} inView={inView}/>}
-            <Box kfs-attr="file" style={{ width: "100%", overflowWrap: "break-word", textAlign: "center" }}>{name}</Box>
+            {filePath.current.length && <FileIcon driverFile={driverFile} filePath={filePath.current} hasBeenInView={hasBeenInView} driver={driver} inView={inView} />}
+            <Box kfs-attr="file" sx={{
+                width: "100%", textAlign: "center",
+                overflowWrap: "break-word", textOverflow: "ellipsis",
+                maxHeight: "80px", overflowY: "hidden", lineHeight: "20px",
+            }}>
+                {name}
+            </Box>
         </Stack>
     )
 };
