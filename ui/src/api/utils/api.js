@@ -36,7 +36,7 @@ export function isVideo(name) {
 
 export function isViewable(name) {
     name = name.toLowerCase()
-    if (name.endsWith(".txt") || name.endsWith(".md") ||
+    if (name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".log") ||
         name.endsWith(".go") || name.endsWith(".js") || name.endsWith(".java") || name.endsWith(".c")
     ) {
         return true;
