@@ -1,6 +1,7 @@
-import { Box, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 import useResourceManager from 'hox/resourceManager';
 import { useCallback, useEffect, useRef, useState } from "react";
+import Dotdotdot from "react-dotdotdot";
 import { useInView } from "react-intersection-observer";
 import FileIcon from './FileIcon';
 import './index.scss';
@@ -45,13 +46,11 @@ export default ({ driverFile, setContextMenu }) => {
             }}
         >
             {filePath.current.length && <FileIcon driverFile={driverFile} filePath={filePath.current} hasBeenInView={hasBeenInView} driver={driver} inView={inView} />}
-            <Box kfs-attr="file" sx={{
-                width: "100%", textAlign: "center",
-                overflowWrap: "break-word", textOverflow: "ellipsis",
-                maxHeight: "80px", overflowY: "hidden", lineHeight: "20px",
-            }}>
-                {name}
-            </Box>
+            <div style={{ width: "100%", textAlign: "center" }}>
+                <Dotdotdot clamp={5}>
+                    <p style={{ overflowWrap: "break-word" }}>{name}</p>
+                </Dotdotdot>
+            </div>
         </Stack>
     )
 };
