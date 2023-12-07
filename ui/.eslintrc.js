@@ -30,5 +30,6 @@ module.exports = {
         "no-return-assign": "off",
         "react/self-closing-comp": "off",
         "complexity": "off",
+        "guard-for-in": "off",
     },
 };

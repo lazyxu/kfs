@@ -30,3 +30,34 @@ export function closeWindow(setWindows, id) {
 export const APP_IMAGE_VIEWER = "APP_IMAGE_VIEWER";
 export const APP_VIDEO_VIEWER = "APP_VIDEO_VIEWER";
 export const APP_TEXT_VIEWER = "APP_TEXT_VIEWER";
+
+const appExtensions = {
+  APP_TEXT_VIEWER: [".txt", ".md", ".log",
+    ".go", ".js", ".jsx", ".java", ".c", ".h", ".c++", ".cpp"
+  ],
+  APP_IMAGE_VIEWER: [".jpg", ".jpeg", ".png", ".heic"],
+  APP_VIDEO_VIEWER: [".mp4", ".mov"],
+}
+
+const defaultApp = {
+}
+
+let openAppByExt = {}
+
+export function refreshOpenApp() {
+  for (const app in appExtensions) {
+    const extensions = appExtensions[app];
+    for (const ext of extensions) {
+      openAppByExt[ext] = app;
+    }
+  }
+}
+
+refreshOpenApp();
+
+export function getOpenApp(name) {
+  const ext = name.substring(name.lastIndexOf(".")).toLowerCase();
+  const app = openAppByExt[ext];
+  console.log("===getOpenApp", name, ext, openAppByExt, app);
+  return app;
+}
