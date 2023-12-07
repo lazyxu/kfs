@@ -1,10 +1,8 @@
 import { Box } from "@mui/material";
-import { getMetadata } from "api/exif";
 import { isImage, isVideo, isViewable, modeIsDir } from "api/utils/api";
-import VideoViewer from "components/FileViewer/VideoViewer";
 import useResourceManager, { openDir } from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
-import useWindows, { APP_IMAGE_VIEWER, APP_TEXT_VIEWER, newWindow } from "hox/windows";
+import useWindows, { APP_IMAGE_VIEWER, APP_TEXT_VIEWER, APP_VIDEO_VIEWER, newWindow } from "hox/windows";
 import { memo, useState } from "react";
 import SvgIcon from "../../../../components/Icon/SvgIcon";
 import ImgCancelable from "./ImgCancelable";
@@ -28,10 +26,9 @@ export default memo(({ driver, filePath, driverFile, hasBeenInView, inView }) =>
                         newWindow(setWindows, APP_IMAGE_VIEWER, { driver, filePath });
                     }} /> :
                     isVideo(name) ?
-                        <ImgCancelable src={`${sysConfig.webServer}/thumbnail?size=64&hash=${driverFile.hash}`} inView={inView} onClick={() => getMetadata(driverFile.hash).then(m => {
-                            setMetadata(m);
-                            setOpen(true);
-                        })} />
+                        <ImgCancelable src={`${sysConfig.webServer}/thumbnail?size=64&hash=${driverFile.hash}`} inView={inView} onClick={() => {
+                            newWindow(setWindows, APP_VIDEO_VIEWER, { driver, filePath });
+                        }} />
                         : name.toLowerCase().endsWith(".txt") ?
                             <SvgIcon icon="txt3" className='file-icon file-icon-file file-icon-file-viewable' fontSize="inherit" onClick={() => {
                                 newWindow(setWindows, APP_TEXT_VIEWER, { driver, filePath });
@@ -42,7 +39,6 @@ export default memo(({ driver, filePath, driverFile, hasBeenInView, inView }) =>
                                 }} />
                                 : <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit" />
             }
-            {open && metadata?.fileType?.type === "video" && <VideoViewer open={open} setOpen={setOpen} metadata={metadata} hash={metadata.hash} attribute={driverFile} />}
         </Box>
     );
 });
