@@ -1,7 +1,32 @@
 import { createGlobalStore } from 'hox';
 import { useState } from 'react';
 
-export const [useWindows, getWindows] = createGlobalStore(() => useState({}));
+export const [useWindows, getWindows] = createGlobalStore(() => useState({
+  "1": {
+      "id": 1,
+      "app": "APP_TEXT_VIEWER",
+      "props": {
+          "driver": {
+              "id": 1,
+              "name": "人格",
+              "description": "",
+              "type": "localFile",
+              "sync": false,
+              "h": 0,
+              "m": 0,
+              "accessToken": "",
+              "refreshToken": "",
+              "deviceId": 0,
+              "srcPath": "",
+              "ignores": "",
+              "encoder": ""
+          },
+          "filePath": [
+              "0.txt"
+          ]
+      }
+  }
+}));
 
 export default useWindows;
 
