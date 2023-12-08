@@ -324,13 +324,13 @@ func GetDriverDirCalculatedInfo(ctx context.Context, txOrDb TxOrDb, driverId uin
 	var rows *sql.Rows
 	{
 		rows, err = txOrDb.QueryContext(ctx, `
-	SELECT IFNULL(SUM(size), 0) FROM _driver_file WHERE driverId = ? AND mode < 2147483648 AND dirPath LIKE ?;
+	SELECT COUNT(1), IFNULL(SUM(size), 0) FROM _driver_file WHERE driverId = ? AND mode < 2147483648 AND dirPath LIKE ?;
 	`, driverId, like)
 		if err != nil {
 			return
 		}
 		if rows.Next() {
-			err = rows.Scan(&info.FileSize)
+			err = rows.Scan(&info.FileCount, &info.FileSize)
 			if err != nil {
 				return
 			}
@@ -339,13 +339,13 @@ func GetDriverDirCalculatedInfo(ctx context.Context, txOrDb TxOrDb, driverId uin
 	}
 	{
 		rows, err = txOrDb.QueryContext(ctx, `
-	SELECT COUNT(1) FROM _driver_file WHERE driverId = ? AND mode < 2147483648 AND dirPath LIKE ?;
+	SELECT COUNT(1), IFNULL(SUM(size), 0) FROM (SELECT distinct hash, size FROM _driver_file WHERE driverId = ? AND mode < 2147483648 AND dirPath LIKE ?)
 	`, driverId, like)
 		if err != nil {
 			return
 		}
 		if rows.Next() {
-			err = rows.Scan(&info.FileCount)
+			err = rows.Scan(&info.DistinctFileCount, &info.DistinctFileSize)
 			if err != nil {
 				return
 			}

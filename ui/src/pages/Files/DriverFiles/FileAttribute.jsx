@@ -74,9 +74,9 @@ export default ({ fileAttribute, onClose }) => {
                     {!isDir && <Attr k="文件大小">{humanize.filesize(driverFile.size)}</Attr>}
                     <Attr k="文件权限">{getPerm(driverFile.mode).toString(8)}</Attr>
                     {isDir && <>
-                        <Attr k="目录下总大小">{humanize.filesize(attributes.fileSize)}</Attr>
-                        <Attr k="目录下文件总数量">{attributes.fileCount}</Attr>
-                        <Attr k="目录下目录总数量">{attributes.dirCount}</Attr>
+                        <Attr k="目录下文件">共 {attributes.fileCount} 个，总大小 {humanize.filesize(attributes.fileSize)}</Attr>
+                        <Attr k="目录下重复文件">共 {attributes.fileCount - attributes.distinctFileCount} 个，总大小  {humanize.filesize(attributes.fileSize - attributes.distinctFileSize)}</Attr>
+                        <Attr k="子目录">共 {attributes.dirCount} 个</Attr>
                     </>
                     }
                     <Attr k="创建时间">{formatTime(driverFile.createTime)}</Attr>

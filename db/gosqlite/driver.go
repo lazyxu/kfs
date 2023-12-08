@@ -90,24 +90,6 @@ func (db *DB) GetDriverLocalFile(ctx context.Context, driverId uint64) (driver d
 	return dbBase.GetDriverLocalFile(ctx, conn, driverId)
 }
 
-func (db *DB) GetDriverFileSize(ctx context.Context, driverId uint64) (n uint64, err error) {
-	conn := db.getConn()
-	defer db.putConn(conn)
-	return dbBase.GetDriverFileSize(ctx, conn, driverId)
-}
-
-func (db *DB) GetDriverFileCount(ctx context.Context, driverId uint64) (n uint64, err error) {
-	conn := db.getConn()
-	defer db.putConn(conn)
-	return dbBase.GetDriverFileCount(ctx, conn, driverId)
-}
-
-func (db *DB) GetDriverDirCount(ctx context.Context, driverId uint64) (n uint64, err error) {
-	conn := db.getConn()
-	defer db.putConn(conn)
-	return dbBase.GetDriverDirCount(ctx, conn, driverId)
-}
-
 func (db *DB) GetDriverDirCalculatedInfo(ctx context.Context, driverId uint64, filePath []string) (info dao.DirCalculatedInfo, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)

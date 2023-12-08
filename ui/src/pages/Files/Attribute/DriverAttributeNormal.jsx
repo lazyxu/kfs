@@ -43,9 +43,9 @@ export default ({ driver }) => {
             <Attr k="云盘名称">{driver.name}</Attr>
             <Attr k="云盘描述">{driver.description}</Attr>
             <Attr k="云盘类型">{getDriverType(driver)}</Attr>
-            <Attr k="总大小">{humanize.filesize(attributes.fileSize)}</Attr>
-            <Attr k="文件数量">{attributes.fileCount}</Attr>
-            <Attr k="目录数量">{attributes.dirCount}</Attr>
+            <Attr k="文件">共 {attributes.fileCount} 个，总大小 {humanize.filesize(attributes.fileSize)}</Attr>
+            <Attr k="重复文件">共 {attributes.fileCount - attributes.distinctFileCount} 个，总大小  {humanize.filesize(attributes.fileSize - attributes.distinctFileSize)}</Attr>
+            <Attr k="目录">共 {attributes.dirCount} 个</Attr>
             {/* <Box variant="body"> */}
             {/* <Box>文件总数：{driver.count}</Box> */}
             {/* <Box>总大小：{humanize.filesize(driver.size)}</Box> */}

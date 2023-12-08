@@ -23,7 +23,9 @@ type Driver struct {
 }
 
 type DirCalculatedInfo struct {
-	FileSize  uint64 `json:"fileSize"`
-	FileCount uint64 `json:"fileCount"`
-	DirCount  uint64 `json:"dirCount"`
+	FileSize          uint64 `json:"fileSize"`
+	FileCount         uint64 `json:"fileCount"`
+	DistinctFileSize  uint64 `json:"distinctFileSize"`
+	DistinctFileCount uint64 `json:"distinctFileCount"`
+	DirCount          uint64 `json:"dirCount"`
 }
