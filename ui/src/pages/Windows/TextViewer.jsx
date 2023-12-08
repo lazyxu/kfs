@@ -1,24 +1,27 @@
-import { ContentCopy, Info, Save } from '@mui/icons-material';
+import { AllInbox, ContentCopy, Info, Save } from '@mui/icons-material';
 import { default as FileDownload } from '@mui/icons-material/FileDownload';
-import { Box, Link, Stack } from "@mui/material";
+import { Badge, Box, Link, Stack } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
-import { download, getDriverFile, openFile } from "api/fs";
+import { download, listDriverFileByHash, openFile } from "api/fs";
 import { getSysConfig } from "hox/sysConfig";
 import humanize from 'humanize';
 import moment from 'moment';
 import FileAttribute from 'pages/Files/DriverFiles/FileAttribute';
 import { useEffect, useState } from 'react';
+import SameFiles from "./SameFiles";
 import { StatusBar, TitleBar, Window, WorkingArea } from './Window';
 
 export default ({ id, props }) => {
-    let { driver, filePath } = props;
+    const { driver, filePath, driverFile } = props;
     console.log("TextViewer", id, props);
-    const [driverFile, setDriverFile] = useState();
+    const { hash } = driverFile;
     const [loaded, setLoaded] = useState();
     const [openAttribute, setOpenAttribute] = useState(false);
+    const [sameFiles, setSameFiles] = useState([]);
+    const [openSameFiles, setOpenSameFiles] = useState(false);
     useEffect(() => {
+        listDriverFileByHash(hash).then(setSameFiles);
         openFile(driver.id, filePath).then(setLoaded);
-        getDriverFile(driver.id, filePath).then(setDriverFile);
     }, []);
     return (
         <Window id={id}>
@@ -40,11 +43,18 @@ export default ({ id, props }) => {
                 >
                     <FileDownload fontSize="small" />
                 </IconButton>
-                {driverFile && <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
+                <IconButton title="相同文件" onClick={() => setOpenSameFiles(true)}
+                    sx={{ color: theme => theme.context.secondary }}
+                >
+                    <Badge badgeContent={sameFiles.length} color="secondary">
+                        <AllInbox fontSize="small" />
+                    </Badge>
+                </IconButton>
+                <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
                     sx={{ color: theme => theme.context.secondary }}
                 >
                     <Info />
-                </IconButton>}
+                </IconButton>
             </>} />
             <WorkingArea>
                 {!loaded ?
@@ -63,19 +73,15 @@ export default ({ id, props }) => {
             </WorkingArea>
             <StatusBar>
                 <Stack direction="row" justifyContent="space-between">
-                    {driverFile ? <>
-                        <Box >
-                            {humanize.filesize(driverFile.size)}
-                        </Box>
-                        <Box >
-                            {moment(driverFile.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}
-                        </Box>
-                    </> :
-                        <Box >
-                            ...
-                        </Box>}
+                    <Box >
+                        {humanize.filesize(driverFile.size)}
+                    </Box>
+                    <Box >
+                        {moment(driverFile.modifyTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss")}
+                    </Box>
                 </Stack>
             </StatusBar>
+            {openSameFiles && <SameFiles hash={hash} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
             {openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     )

@@ -1,12 +1,12 @@
 import { AllInbox, Download, Info, PrivacyTip } from "@mui/icons-material";
-import { Box, ButtonGroup, IconButton } from "@mui/material";
+import { Badge, Box, ButtonGroup, IconButton } from "@mui/material";
 import { getMetadata } from "api/exif";
 import { downloadByHash, listDriverFileByHash } from "api/fs";
 import { getSysConfig } from "hox/sysConfig";
 import FileAttribute from "pages/Files/DriverFiles/FileAttribute";
 import { useEffect, useState } from "react";
-import Metadata from "../../components/FileViewer/Metadata";
-import SameFiles from "../../components/FileViewer/SameFiles";
+import Metadata from "./Metadata";
+import SameFiles from "./SameFiles";
 import { TitleBar, Window, WorkingArea } from "./Window";
 
 export default function ({ id, props }) {
@@ -21,9 +21,9 @@ export default function ({ id, props }) {
     const [downloadName, setDownloadName] = useState();
     const [metadata, setMetadata] = useState();
     const [openMetadata, setOpenMetadata] = useState(false);
+    const [sameFiles, setSameFiles] = useState([]);
     const [openSameFiles, setOpenSameFiles] = useState(false);
     const [openAttribute, setOpenAttribute] = useState(false);
-    const [sameFiles, setSameFiles] = useState([]);
     const sysConfig = getSysConfig().sysConfig;
     useEffect(() => {
         getMetadata(hash).then(setMetadata);
@@ -49,7 +49,9 @@ export default function ({ id, props }) {
                 <IconButton title="相同文件" onClick={() => setOpenSameFiles(true)}
                     sx={{ color: theme => theme.context.secondary }}
                 >
-                    <AllInbox fontSize="small" />
+                    <Badge badgeContent={sameFiles.length} color="secondary">
+                        <AllInbox fontSize="small" />
+                    </Badge>
                 </IconButton>
                 {driverFile && <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
                     sx={{ color: theme => theme.context.secondary }}
@@ -76,8 +78,8 @@ export default function ({ id, props }) {
                     {hash && <img style={{ maxWidth: "100%", maxHeight: "100%" }} src={`${sysConfig.webServer}/api/v1/image?hash=${hash}`} />}
                 </Box>
             </WorkingArea>
-            <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={hash} sameFiles={sameFiles} setSameFiles={setSameFiles} />
-            <Metadata open={openMetadata} setOpen={setOpenMetadata} metadata={metadata} disabled={!metadata} />
+            {openSameFiles && <SameFiles hash={hash} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
+            {openMetadata && <Metadata hash={hash} metadata={metadata} onClose={setOpenMetadata}/>}
             {driverFile && openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     );

@@ -1,12 +1,12 @@
 import { AllInbox, Download, Info, PrivacyTip } from "@mui/icons-material";
-import { Box, ButtonGroup, IconButton } from "@mui/material";
+import { Badge, Box, ButtonGroup, IconButton } from "@mui/material";
 import { getMetadata } from "api/exif";
 import { downloadByHash, listDriverFileByHash } from "api/fs";
 import { getSysConfig } from "hox/sysConfig";
 import FileAttribute from "pages/Files/DriverFiles/FileAttribute";
 import { useEffect, useState } from "react";
-import Metadata from "../../components/FileViewer/Metadata";
-import SameFiles from "../../components/FileViewer/SameFiles";
+import Metadata from "./Metadata";
+import SameFiles from "./SameFiles";
 import { TitleBar, Window, WorkingArea } from "./Window";
 
 export default function ({ id, props }) {
@@ -49,7 +49,9 @@ export default function ({ id, props }) {
                 <IconButton title="相同文件" onClick={() => setOpenSameFiles(true)}
                     sx={{ color: theme => theme.context.secondary }}
                 >
-                    <AllInbox fontSize="small" />
+                    <Badge badgeContent={sameFiles.length} color="secondary">
+                        <AllInbox fontSize="small" />
+                    </Badge>
                 </IconButton>
                 {driverFile && <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
                     sx={{ color: theme => theme.context.secondary }}

@@ -23,6 +23,7 @@ type IDriverFile interface {
 // https://zhuanlan.zhihu.com/p/343682839
 type DriverFile struct {
 	DriverId   uint64   `json:"driverId"`
+	DriverName string   `json:"driverName"`
 	DirPath    []string `json:"dirPath"`
 	Name       string   `json:"name"`
 	Version    uint64   `json:"version"`

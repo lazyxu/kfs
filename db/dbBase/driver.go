@@ -258,57 +258,6 @@ func GetDriverLocalFile(ctx context.Context, txOrDb TxOrDb, driverId uint64) (dr
 	return
 }
 
-func GetDriverFileSize(ctx context.Context, txOrDb TxOrDb, driverId uint64) (n uint64, err error) {
-	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT IFNULL(SUM(size), 0) FROM _driver_file WHERE driverId = ? AND mode < 2147483648;
-	`, driverId)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	if rows.Next() {
-		err = rows.Scan(&n)
-		if err != nil {
-			return
-		}
-	}
-	return
-}
-
-func GetDriverFileCount(ctx context.Context, txOrDb TxOrDb, driverId uint64) (n uint64, err error) {
-	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT COUNT(1) FROM _driver_file WHERE driverId = ? AND mode < 2147483648;
-	`, driverId)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	if rows.Next() {
-		err = rows.Scan(&n)
-		if err != nil {
-			return
-		}
-	}
-	return
-}
-
-func GetDriverDirCount(ctx context.Context, txOrDb TxOrDb, driverId uint64) (n uint64, err error) {
-	rows, err := txOrDb.QueryContext(ctx, `
-	SELECT COUNT(1) FROM _driver_file WHERE driverId = ? AND mode >= 2147483648;
-	`, driverId)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	if rows.Next() {
-		err = rows.Scan(&n)
-		if err != nil {
-			return
-		}
-	}
-	return
-}
-
 func GetDriverDirCalculatedInfo(ctx context.Context, txOrDb TxOrDb, driverId uint64, filePath []string) (info dao.DirCalculatedInfo, err error) {
 	var like string
 	if len(filePath) != 0 {

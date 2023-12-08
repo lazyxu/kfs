@@ -1,18 +1,18 @@
-import { Box, Drawer, } from "@mui/material";
+import { Box, Drawer } from "@mui/material";
 
-export default function ({ attribute, open, setOpen }) {
+export default function ({ hash, metadata, onClose }) {
     return (
         <Drawer
             anchor="right"
-            open={open}
-            onClose={() => setOpen(false)}
+            open="true"
+            onClose={onClose}
             sx={{ zIndex: 1350 }}
             SlideProps={{ sx: { maxWidth: "90%" } }}
         >
             <Box
                 sx={{ whiteSpace: "pre" }}
             >
-                {JSON.stringify(attribute, null, 2)}
+                {JSON.stringify(metadata, null, 2)}
             </Box>
         </Drawer>
     );

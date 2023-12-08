@@ -86,11 +86,12 @@ func ListDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, filePath
 
 func ListDriverFileByHash(ctx context.Context, conn *sql.DB, hash string) (files []dao.DriverFile, err error) {
 	rows, err := conn.QueryContext(ctx, `
-		SELECT driverId,
-			dirPath,
-			name,
-			version
-		FROM _driver_file WHERE hash=?
+		SELECT _driver.id,
+			_driver.name,
+			_driver_file.dirPath,
+			_driver_file.name,
+			_driver_file.version
+		FROM _driver_file LEFT JOIN _driver WHERE _driver_file.hash=? AND _driver.id = _driver_file.driverId
 	`, hash)
 	if err != nil {
 		return
@@ -102,6 +103,7 @@ func ListDriverFileByHash(ctx context.Context, conn *sql.DB, hash string) (files
 		var dirPathJson []byte
 		err = rows.Scan(
 			&file.DriverId,
+			&file.DriverName,
 			&dirPathJson,
 			&file.Name,
 			&file.Version)
