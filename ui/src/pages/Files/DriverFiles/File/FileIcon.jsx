@@ -25,7 +25,7 @@ export default memo(({ driver, filePath, driverFile, hasBeenInView, inView }) =>
         );
     }
     const app = getOpenApp(name);
-    const onClick = () => newWindow(setWindows, app, { driver, filePath });
+    const onClick = () => newWindow(setWindows, app, { driver, filePath, driverFile });
     return (
         <Box className="file-icon-box">
             {

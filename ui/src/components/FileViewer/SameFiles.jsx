@@ -1,11 +1,6 @@
 import { Box, Drawer } from "@mui/material";
-import { listDriverFileByHash } from "api/fs";
-import { useEffect } from "react";
 
-export default function ({ hash, open, setOpen, sameFiles, setSameFiles }) {
-    useEffect(() => {
-        listDriverFileByHash(hash).then(setSameFiles);
-    }, [hash]);
+export default function ({ hash, open, setOpen, sameFiles }) {
     return (
         <Drawer
             anchor="right"

@@ -1,15 +1,13 @@
-import VideoViewer from "components/FileViewer/VideoViewer";
 import { getSysConfig } from "hox/sysConfig";
+import useWindows, { APP_IMAGE_VIEWER, APP_VIDEO_VIEWER, newWindow } from "hox/windows";
 import moment from "moment";
-import ImageViewer from "pages/Windows/ImageViewer";
-import { useState } from "react";
 import styles from './image.module.scss';
 
 export default function ({ metadata }) {
     const sysConfig = getSysConfig().sysConfig;
-    const [open, setOpen] = useState(false);
     let { hash, exif, fileType, shotTime, shotEquipment, videoMetadata } = metadata;
     let time = shotTime.isValid() ? shotTime.format("YYYY年MM月DD日 HH:mm:ss") : "未知时间";
+    const [windows, setWindows] = useWindows();
     return (
         <>
             {fileType.type === "image" && <img style={{ width: "100%" }} className={styles.clickable}
@@ -20,7 +18,7 @@ export default function ({ metadata }) {
                     + (exif.GPSLatitudeRef ? (exif.GPSLatitudeRef + " " + exif.GPSLatitude + "\n") : "")
                     + (exif.GPSLongitudeRef ? (exif.GPSLongitudeRef + " " + exif.GPSLongitude + "\n") : "")
                     + hash}
-                onClick={() => setOpen(true)}
+                onClick={() => newWindow(setWindows, APP_IMAGE_VIEWER, { hash })}
             />}
             {fileType.type === "video" && <img style={{ width: "100%" }} className={styles.clickable}
                 src={`${sysConfig.webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
@@ -31,10 +29,8 @@ export default function ({ metadata }) {
                     + (videoMetadata ? (moment(videoMetadata.Created / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss") + "\n") : "")
                     + (videoMetadata ? (videoMetadata.Duration + "s\n") : "")
                     + hash}
-                onClick={() => setOpen(true)}
+                onClick={() => newWindow(setWindows, APP_VIDEO_VIEWER, { hash })}
             />}
-            {open && fileType.type === "video" && <VideoViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
-            {open && fileType.type === "image" && <ImageViewer open={open} setOpen={setOpen} metadata={metadata} hash={hash} />}
         </>
     );
 }

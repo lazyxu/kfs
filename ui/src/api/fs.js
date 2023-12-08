@@ -49,7 +49,20 @@ export async function download(driverId, filePath) {
         });
         downloader(resp.data, filePath[filePath.length - 1]);
     } catch (e) {
-        noteError("打开文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        noteError("下载文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
+export async function downloadByHash(hash, name) {
+    try {
+        console.log('api.downloadByHash', hash, name);
+        let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/image?hash=${hash}`, {
+            responseType: "arraybuffer",
+        });
+        downloader(resp.data, name);
+    } catch (e) {
+        noteError("下载文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
 }
