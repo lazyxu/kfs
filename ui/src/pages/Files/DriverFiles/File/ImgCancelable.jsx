@@ -1,4 +1,4 @@
-import SvgIcon from "components/Icon/SvgIcon";
+import { Skeleton } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const useGetState = (initiateState) => {
@@ -9,7 +9,7 @@ const useGetState = (initiateState) => {
     return [state, setState, getState];
 };
 
-export default ({ src, inView, onClick }) => {
+export default ({ src, inView, onClick, title }) => {
     const [url, setUrl] = useState();
     const [loaded, setLoaded, getLoaded] = useGetState(0);
     const controller = useRef(new AbortController());
@@ -38,11 +38,11 @@ export default ({ src, inView, onClick }) => {
     }, [inView]);
     if (url) {
         return (
-            <img src={url} loading="lazy" onClick={onClick} />
+            <img title={title} src={url} loading="lazy" onClick={onClick} width="100%" height="100%" />
         );
     } else {
         return (
-            <SvgIcon icon="file12" className='file-icon file-icon-file' fontSize="inherit" />
+            <Skeleton title={title} variant="rectangular" animation={false} width="100%" height="100%" />
         )
     }
 };

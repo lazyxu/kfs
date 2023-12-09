@@ -1,6 +1,9 @@
+import { Box } from "@mui/material";
 import { getSysConfig } from "hox/sysConfig";
 import useWindows, { APP_IMAGE_VIEWER, APP_VIDEO_VIEWER, newWindow } from "hox/windows";
 import moment from "moment";
+import ImgCancelable from "pages/Files/DriverFiles/File/ImgCancelable";
+import { useInView } from "react-intersection-observer";
 import styles from './image.module.scss';
 
 export default function ({ metadata }) {
@@ -8,9 +11,10 @@ export default function ({ metadata }) {
     let { hash, exif, fileType, shotTime, shotEquipment, videoMetadata } = metadata;
     let time = shotTime.isValid() ? shotTime.format("YYYY年MM月DD日 HH:mm:ss") : "未知时间";
     const [windows, setWindows] = useWindows();
+    const { ref, inView } = useInView({ threshold: 0 });
     return (
-        <>
-            {fileType.type === "image" && <img style={{ width: "100%" }} className={styles.clickable}
+        <Box ref={ref} sx={{ width: "100%", height: "100%" }}>
+            {fileType.type === "image" && <ImgCancelable inView={inView} style={{ width: "100%" }} className={styles.clickable}
                 src={`${sysConfig.webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
                 title={time + "\n"
                     + shotEquipment + "\n"
@@ -20,7 +24,7 @@ export default function ({ metadata }) {
                     + hash}
                 onClick={() => newWindow(setWindows, APP_IMAGE_VIEWER, { hash })}
             />}
-            {fileType.type === "video" && <img style={{ width: "100%" }} className={styles.clickable}
+            {fileType.type === "video" && <ImgCancelable inView={inView} style={{ width: "100%" }} className={styles.clickable}
                 src={`${sysConfig.webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`} loading="lazy"
                 title={time + "\n"
                     + shotEquipment + "\n"
@@ -31,6 +35,6 @@ export default function ({ metadata }) {
                     + hash}
                 onClick={() => newWindow(setWindows, APP_VIDEO_VIEWER, { hash })}
             />}
-        </>
+        </Box>
     );
 }
