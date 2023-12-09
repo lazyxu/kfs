@@ -21,9 +21,9 @@ export default function ({ id, props }) {
     const [downloadName, setDownloadName] = useState();
     const [metadata, setMetadata] = useState();
     const [openMetadata, setOpenMetadata] = useState(false);
+    const [sameFiles, setSameFiles] = useState([]);
     const [openSameFiles, setOpenSameFiles] = useState(false);
     const [openAttribute, setOpenAttribute] = useState(false);
-    const [sameFiles, setSameFiles] = useState([]);
     const sysConfig = getSysConfig().sysConfig;
     useEffect(() => {
         getMetadata(hash).then(setMetadata);
@@ -81,8 +81,8 @@ export default function ({ id, props }) {
                     </video>}
                 </Box>
             </WorkingArea>
-            <SameFiles open={openSameFiles} setOpen={setOpenSameFiles} hash={hash} sameFiles={sameFiles} setSameFiles={setSameFiles} />
-            <Metadata open={openMetadata} setOpen={setOpenMetadata} metadata={metadata} disabled={!metadata} />
+            {openSameFiles && <SameFiles hash={hash} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
+            {openMetadata && <Metadata hash={hash} metadata={metadata} onClose={setOpenMetadata}/>}
             {driverFile && openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     );

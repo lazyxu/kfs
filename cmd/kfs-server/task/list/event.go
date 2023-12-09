@@ -5,16 +5,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/lazyxu/kfs/core"
-	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/db/dbBase"
-	"github.com/lazyxu/kfs/rpc/server"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/db/dbBase"
+	"github.com/lazyxu/kfs/rpc/server"
 )
 
 type Response struct {
@@ -65,6 +66,7 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 
 	tick := time.NewTicker(time.Second)
 	curFiles := []dao.DriverFile{}
+	packetSize := 1
 	for _, file := range files {
 		if !os.FileMode(file.Mode).IsDir() {
 			err = TryAnalyze(c.Request().Context(), kfsCore, file.Hash)
@@ -79,13 +81,18 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 		curFiles = append(curFiles, file)
 		select {
 		case <-tick.C:
-			send(c, Response{Files: curFiles})
+			send(c, Response{Files: curFiles, N: n})
 			curFiles = []dao.DriverFile{}
 		default:
+			if len(curFiles) > packetSize {
+				send(c, Response{Files: curFiles, N: n})
+				curFiles = []dao.DriverFile{}
+				packetSize = packetSize * 2
+			}
 		}
 	}
 	if len(curFiles) != 0 {
-		send(c, Response{Files: curFiles})
+		send(c, Response{Files: curFiles, N: n})
 	}
 	return nil
 }

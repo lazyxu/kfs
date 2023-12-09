@@ -15,10 +15,10 @@ export default ({ src, inView, onClick, title }) => {
     const controller = useRef(new AbortController());
     useEffect(() => {
         const l = getLoaded();
-        console.log(src, inView, l);
+        // console.log(src, inView, l);
         if (inView && l === 0) {
             setLoaded(1);
-            console.log(src, "fetch");
+            // console.log(src, "fetch");
             fetch(src, {
                 method: 'get',
                 signal: controller.current.signal,
@@ -30,7 +30,7 @@ export default ({ src, inView, onClick, title }) => {
             });
         }
         if (!inView && l === 1) {
-            console.log(src, "abort", controller.current);
+            // console.log(src, "abort", controller.current);
             controller.current.abort();
             controller.current = new AbortController();
             setLoaded(0);
