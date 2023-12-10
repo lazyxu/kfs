@@ -1,12 +1,15 @@
 import { Bookmark, ContentCopy, ContentCut, Delete, Download, DriveFileRenameOutline, History, IosShare, OpenInNew, Settings } from "@mui/icons-material";
 import { ListItemText, MenuItem } from "@mui/material";
-import { download, openDir } from "api/fs";
+import { getDriverLocalFile } from "api/driver";
+import { download } from "api/fs";
 import { modeIsDir } from "api/utils/api";
 import Menu from "components/Menu";
-import useResourceManager from "hox/resourceManager";
+import useResourceManager, { openDir } from "hox/resourceManager";
+import useWindows, { getOpenApp, newWindow } from "hox/windows";
 
 export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
     const [resourceManager, setResourceManager] = useResourceManager();
+    const [windows, setWindows] = useWindows();
     const { driver, filePath, driverFile } = contextMenu;
     const { name, mode } = driverFile;
     return (
@@ -15,17 +18,42 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
             open={contextMenu !== null}
             onClose={() => setContextMenu(null)}
         >
-            <MenuItem disabled={!modeIsDir(mode)} onClick={() => {
+            <MenuItem onClick={() => {
+                setContextMenu(null);
                 if (modeIsDir(mode)) {
-                    setContextMenu(null);
                     openDir(setResourceManager, driver, filePath);
                 } else {
-                    // openFile(setResourceManager, driverId, filePath, driverFile);
+                    const app = getOpenApp(name);
+                    newWindow(setWindows, app, { driver, filePath, driverFile });;
                 }
             }}>
                 <OpenInNew />
                 <ListItemText>打开</ListItemText>
             </MenuItem>
+            {process.env.REACT_APP_PLATFORM !== 'web' && <>
+                <MenuItem onClick={() => {
+                    setContextMenu(null);
+                    getDriverLocalFile(driver.id).then(driverLocalFile => {
+                        // console.log(driver, driverLocalFile, filePath);
+                        const { shell } = window.require('@electron/remote');
+                        shell.openPath(driverLocalFile.srcPath + "\\" + filePath.join("\\"));
+                    });
+                }}>
+                    <OpenInNew />
+                    <ListItemText>打开本地文件</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => {
+                    setContextMenu(null);
+                    getDriverLocalFile(driver.id).then(driverLocalFile => {
+                        // console.log(driver, driverLocalFile, filePath);
+                        const { shell } = window.require('@electron/remote');
+                        shell.showItemInFolder(driverLocalFile.srcPath + "\\" + filePath.join("\\"));
+                    });
+                }}>
+                    <OpenInNew />
+                    <ListItemText>打开本地文件位置</ListItemText>
+                </MenuItem>
+            </>}
             <MenuItem disabled={modeIsDir(mode)} onClick={() => {
                 setContextMenu(null);
                 download(driver.id, filePath);

@@ -1,3 +1,4 @@
+import { noteWarning } from 'components/Notification/Notification';
 import { createGlobalStore } from 'hox';
 import { useState } from 'react';
 
@@ -12,6 +13,10 @@ export function newId() {
 }
 
 export function newWindow(setWindows, app, props) {
+  if (!app) {
+    noteWarning("不支持打开该文件");
+    return;
+  }
   setWindows(prev => {
     let id = newId();
     return { ...prev, [id]: { id, app, props } }

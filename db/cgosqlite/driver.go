@@ -84,7 +84,7 @@ func (db *DB) ListLocalFileDriver(ctx context.Context, deviceId uint64) (drivers
 	return dbBase.ListLocalFileDriver(ctx, conn, deviceId)
 }
 
-func (db *DB) GetDriverLocalFile(ctx context.Context, driverId uint64) (driver dao.Driver, err error) {
+func (db *DB) GetDriverLocalFile(ctx context.Context, driverId uint64) (driver *dao.Driver, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.GetDriverLocalFile(ctx, conn, driverId)

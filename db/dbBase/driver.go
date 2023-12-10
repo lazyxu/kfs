@@ -241,7 +241,7 @@ func ListLocalFileDriver(ctx context.Context, txOrDb TxOrDb, deviceId uint64) (d
 	return
 }
 
-func GetDriverLocalFile(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver dao.Driver, err error) {
+func GetDriverLocalFile(ctx context.Context, txOrDb TxOrDb, driverId uint64) (driver *dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
 	SELECT deviceId, srcPath, ignores, encoder FROM _driver_local_file WHERE id = ?;
 	`, driverId)
@@ -250,6 +250,7 @@ func GetDriverLocalFile(ctx context.Context, txOrDb TxOrDb, driverId uint64) (dr
 	}
 	defer rows.Close()
 	if rows.Next() {
+		driver = &dao.Driver{}
 		err = rows.Scan(&driver.DeviceId, &driver.SrcPath, &driver.Ignores, &driver.Encoder)
 		if err != nil {
 			return

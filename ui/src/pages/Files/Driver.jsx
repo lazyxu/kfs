@@ -1,6 +1,6 @@
 import { ClearAll, ContentCopy, Delete, DriveFileRenameOutline, OpenInNew, Settings } from '@mui/icons-material';
 import { Box, ListItemText, MenuItem, Stack, Typography } from "@mui/material";
-import { deleteDriver, resetDriver } from 'api/driver';
+import { deleteDriver, getDriverLocalFile, resetDriver } from 'api/driver';
 import SvgIcon from "components/Icon/SvgIcon";
 import Menu from 'components/Menu';
 import useResourceManager, { openDir } from 'hox/resourceManager';
@@ -51,6 +51,19 @@ export default ({ driver, setDriverAttribute, onDelete }) => {
                     <OpenInNew />
                     <ListItemText>打开</ListItemText>
                 </MenuItem>
+                {/* TODO: device id */}
+                {process.env.REACT_APP_PLATFORM !== 'web' && driver.type === 'localFile' && 
+                    <MenuItem onClick={() => {
+                        setContextMenu(null);
+                        getDriverLocalFile(driver.id).then(driverLocalFile => {
+                            const { shell } = window.require('@electron/remote');
+                            shell.showItemInFolder(driverLocalFile.srcPath);
+                        });
+                    }}>
+                        <OpenInNew />
+                        <ListItemText>打开本地文件位置</ListItemText>
+                    </MenuItem>
+                }
                 <MenuItem onClick={() => resetDriver(driver.id).then(() => setContextMenu(null))} >
                     <ClearAll />
                     <ListItemText>重置</ListItemText>
@@ -59,7 +72,7 @@ export default ({ driver, setDriverAttribute, onDelete }) => {
                     <ContentCopy />
                     <ListItemText>复制</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={() => deleteDriver(driver.id).then(() => {setContextMenu(null); onDelete(); })} disableRipple>
+                <MenuItem onClick={() => deleteDriver(driver.id).then(() => { setContextMenu(null); onDelete(); })} disableRipple>
                     <Delete />
                     <ListItemText>删除</ListItemText>
                 </MenuItem>

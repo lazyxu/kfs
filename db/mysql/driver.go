@@ -59,7 +59,7 @@ func (db *DB) ListLocalFileDriver(ctx context.Context, deviceId uint64) (drivers
 	return dbBase.ListLocalFileDriver(ctx, db.db, deviceId)
 }
 
-func (db *DB) GetDriverLocalFile(ctx context.Context, driverId uint64) (driver dao.Driver, err error) {
+func (db *DB) GetDriverLocalFile(ctx context.Context, driverId uint64) (driver *dao.Driver, err error) {
 	return dbBase.GetDriverLocalFile(ctx, db.db, driverId)
 }
 

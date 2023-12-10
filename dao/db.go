@@ -57,7 +57,7 @@ type Database interface {
 	GetDriverSync(ctx context.Context, driverId uint64) (driver Driver, err error)
 	ListCloudDriverSync(ctx context.Context) (drivers []Driver, err error)
 	ListLocalFileDriver(ctx context.Context, deviceId uint64) (drivers []Driver, err error)
-	GetDriverLocalFile(ctx context.Context, driverId uint64) (driver Driver, err error)
+	GetDriverLocalFile(ctx context.Context, driverId uint64) (driver *Driver, err error)
 
 	GetDriverDirCalculatedInfo(ctx context.Context, driverId uint64, filePath []string) (info DirCalculatedInfo, err error)
 
