@@ -1,5 +1,6 @@
-import { Inbox, Mail } from '@mui/icons-material';
-import MenuIcon from '@mui/icons-material/Menu';
+import Inbox from '@mui/icons-material/Inbox';
+import Mail from '@mui/icons-material/Mail';
+import Menu from '@mui/icons-material/Menu';
 import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, styled, useColorScheme } from "@mui/material";
 import { newDevice } from 'api/device';
 import { listLocalFileDriver, startAllLocalFileSync } from 'api/driver';
@@ -97,7 +98,7 @@ function App() {
                                 ...(open && { display: 'none' }),
                             }}
                         >
-                            <MenuIcon />
+                            <Menu />
                         </IconButton>
                         <Typography variant="h6" noWrap component="div" sx={{ flex: 1 }}>
                             {menu}

@@ -1,4 +1,4 @@
-import { Close } from '@mui/icons-material';
+import Close from '@mui/icons-material/Close';
 import { Box, ButtonGroup, Dialog, DialogContent, Stack } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import useWindows, { closeWindow } from 'hox/windows';

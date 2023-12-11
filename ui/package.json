@@ -1,0 +1,11 @@
+{
+    "private": true,
+    "scripts": {
+      "start": "cd web && react-scripts start"
+    },
+    "workspaces": [
+        "web",
+        "electron",
+        "packages/*"
+    ]
+}
