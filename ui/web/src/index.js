@@ -1,10 +1,9 @@
-import React from 'react';
+import { HoxRoot } from 'hox';
 import ReactDOM from 'react-dom/client';
-import {HoxRoot} from 'hox';
 
-import 'reset.scss';
-import 'normalize.css';
-import 'index.scss';
+import './index.scss';
+import './normalize.css';
+import './reset.scss';
 
 import reportWebVitals from './reportWebVitals';
 import ThemeApp from "./ThemeApp";
