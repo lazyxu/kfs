@@ -63,13 +63,13 @@ case $1 in
   start)
     case $2 in
       web)
-        cd $root/ui
+        cd $root/ui/web
         NODE_ENV=development REACT_APP_PLATFORM=web yarn start
         ;;
 
       electron)
         trap "kill 0" EXIT
-        cd $root/ui
+        cd $root/ui/web
         tempfile=$(mktemp)
         NODE_ENV=development REACT_APP_PLATFORM=$(go env GOOS) yarn watch > $tempfile 2>&1 &
         cnt=1
@@ -94,7 +94,7 @@ case $1 in
   build)
     case $2 in
       server)
-        cd $root/ui
+        cd $root/ui/web
         yarn
         DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production REACT_APP_PLATFORM=web BUILD_PATH=$root/cmd/kfs-server/build homepage=/ yarn build
         cd $root/cmd/kfs-server
@@ -120,8 +120,8 @@ case $1 in
         cd $root/cmd/kfs-electron
         echo "GOOS=$GOOS GOARCH=$GOARCH"
         GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-electron
-        cp kfs-electron $root/ui
-        cd $root/ui
+        cp kfs-electron $root/ui/web
+        cd $root/ui/web
         yarn
         DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production REACT_APP_PLATFORM=$(go env GOOS) BUILD_PATH=electron-production PUBLIC_URL=. yarn build
         yarn build:electron
@@ -154,7 +154,7 @@ case $1 in
         bash scripts.sh build server
         ./cmd/kfs-server/kfs-server tmp &
         backend_process=$!
-        cd $root/ui
+        cd $root/ui/web
         yarn
         yarn test
         kill $backend_process

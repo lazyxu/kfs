@@ -2024,6 +2024,8 @@
   version "5.14.19"
   resolved "https://registry.npmmirror.com/@mui/icons-material/-/icons-material-5.14.19.tgz#6e0f4e9d89f99517d3c0ee65dee7ac97753755af"
   integrity sha512-yjP8nluXxZGe3Y7pS+yxBV+hWZSsSBampCxkZwaw+1l+feL+rfP74vbEFbMrX/Kil9I/Y1tWfy5bs/eNvwNpWw==
+  dependencies:
+    "@babel/runtime" "^7.23.4"
 
 "@mui/material@^5.11.8":
   version "5.14.20"

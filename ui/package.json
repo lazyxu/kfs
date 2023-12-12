@@ -1,11 +1,9 @@
 {
-    "private": true,
-    "scripts": {
-      "start": "cd web && react-scripts start"
-    },
-    "workspaces": [
-        "web",
-        "electron",
-        "packages/*"
-    ]
+  "name": "kfs",
+  "private": true,
+  "workspaces": [
+    "web",
+    "electron",
+    "packages/**"
+  ]
 }

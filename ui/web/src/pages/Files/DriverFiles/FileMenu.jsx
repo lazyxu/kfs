@@ -1,8 +1,8 @@
+import { modeIsDir } from "@kfs/api";
 import { Bookmark, ContentCopy, ContentCut, Delete, Download, DriveFileRenameOutline, History, IosShare, OpenInNew, Settings } from "@mui/icons-material";
 import { ListItemText, MenuItem } from "@mui/material";
 import { getDriverLocalFile } from "api/driver";
 import { download } from "api/fs";
-import { modeIsDir } from "api/utils/api";
 import Menu from "components/Menu";
 import useResourceManager, { openDir } from "hox/resourceManager";
 import useWindows, { getOpenApp, newWindow } from "hox/windows";

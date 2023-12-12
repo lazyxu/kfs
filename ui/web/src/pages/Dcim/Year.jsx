@@ -1,6 +1,6 @@
-import Image from "./Image";
+import { parseShotTime } from "@kfs/api";
 import { Box, Grid } from "@mui/material";
-import { parseShotTime } from "api/utils/api";
+import Image from "./Image";
 
 export default function ({ metadataList }) {
     let dateMap = {};

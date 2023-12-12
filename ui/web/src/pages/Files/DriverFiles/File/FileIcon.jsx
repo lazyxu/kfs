@@ -1,5 +1,5 @@
+import { modeIsDir } from "@kfs/api";
 import { Box } from "@mui/material";
-import { modeIsDir } from "api/utils/api";
 import useResourceManager, { openDir } from "hox/resourceManager";
 import { getSysConfig } from "hox/sysConfig";
 import useWindows, { APP_IMAGE_VIEWER, APP_TEXT_VIEWER, APP_VIDEO_VIEWER, getOpenApp, newWindow } from "hox/windows";
