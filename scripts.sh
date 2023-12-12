@@ -4,7 +4,7 @@ set -e
 
 root=$(cd "$(dirname "$0")"; pwd)
 
-cp pb/fs.proto ui/public
+cp pb/fs.proto ui/web/public
 cp pb/fs.proto ui
 
 is_command_exist () {

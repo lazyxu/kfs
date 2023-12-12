@@ -1,3 +1,16 @@
+import { newDevice } from '@kfs/common/api/device';
+import SvgIcon from '@kfs/common/components/Icon/SvgIcon';
+import MetadataAnalysis from '@kfs/common/components/MetadataAnalysis';
+import { SnackbarAction } from '@kfs/common/components/Notification/Notification';
+import useMenu from "@kfs/common/hox/menu";
+import useSysConfig from "@kfs/common/hox/sysConfig";
+import BackupTask from "@kfs/common/pages/BackupTask";
+import Dcim from '@kfs/common/pages/Dcim';
+import DedicatedSpace from '@kfs/common/pages/DedicatedSpace/DedicatedSpace';
+import Devices from "@kfs/common/pages/Devices";
+import Files from "@kfs/common/pages/Files";
+import SystemConfig from '@kfs/common/pages/Setting/SystemConfig';
+import Windows from '@kfs/common/pages/Windows';
 import Inbox from '@mui/icons-material/Inbox';
 import Mail from '@mui/icons-material/Mail';
 import Menu from '@mui/icons-material/Menu';
@@ -5,19 +18,6 @@ import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButto
 import { SnackbarProvider } from 'notistack';
 import React, { useEffect } from "react";
 import { UAParser } from 'ua-parser-js';
-import { newDevice } from './api/device';
-import SvgIcon from './components/Icon/SvgIcon';
-import MetadataAnalysis from './components/MetadataAnalysis';
-import { SnackbarAction } from './components/Notification/Notification';
-import useMenu from "./hox/menu";
-import useSysConfig from "./hox/sysConfig";
-import BackupTask from "./pages/BackupTask";
-import Dcim from './pages/Dcim';
-import DedicatedSpace from './pages/DedicatedSpace/DedicatedSpace';
-import Devices from "./pages/Devices";
-import Files from "./pages/Files";
-import SystemConfig from './pages/Setting/SystemConfig';
-import Windows from './pages/Windows';
 
 async function newDeviceIfNeeded(sysConfig, setSysConfig) {
     console.log("newDeviceIfNeeded", sysConfig);
