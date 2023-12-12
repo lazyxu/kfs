@@ -69,9 +69,9 @@ case $1 in
 
       electron)
         trap "kill 0" EXIT
-        cd $root/ui/web
+        cd $root/ui/electron
         tempfile=$(mktemp)
-        NODE_ENV=development REACT_APP_PLATFORM=$(go env GOOS) yarn watch > $tempfile 2>&1 &
+        NODE_ENV=development REACT_APP_PLATFORM=$(go env GOOS) yarn build:watch > $tempfile 2>&1 &
         cnt=1
         while IFS= read -r line; do
           echo $line
@@ -120,8 +120,8 @@ case $1 in
         cd $root/cmd/kfs-electron
         echo "GOOS=$GOOS GOARCH=$GOARCH"
         GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-electron
-        cp kfs-electron $root/ui/web
-        cd $root/ui/web
+        cp kfs-electron $root/ui/electron
+        cd $root/ui/electron
         yarn
         DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production REACT_APP_PLATFORM=$(go env GOOS) BUILD_PATH=electron-production PUBLIC_URL=. yarn build
         yarn build:electron
