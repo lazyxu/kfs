@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/lazyxu/kfs/pb";
+
+message DownloadReq {
+  string branchName = 1;
+  string path = 2;
+}
+
+message DownloadResp {
+  bytes bytes = 1;
+}
+
+message BranchInfoResp {
+  string name = 1;
+  string description = 2;
+  uint64 commitId = 3;
+  uint64 size = 4;
+  uint64 count = 5;
+}
+
+message BranchResp {
+  bool exist = 1;
+}
+
+message UploadReqFile {
+  string hash = 1;
+  uint64 size = 2;
+  bytes bytes = 3;
+  bool isLastChunk = 4;
+}
+
+message UploadReqDir {
+  repeated DirItem dirItem = 1;
+}
+
+message UploadReqRoot {
+  string branchName = 1;
+  string path = 2;
+  DirItem dirItem = 3;
+}
+
+message UploadReq {
+  UploadReqFile file = 1;
+  UploadReqDir dir = 2;
+  UploadReqRoot root = 3;
+}
+
+message UploadReqV2 {
+  uint64 DriverId = 1;
+  repeated string DirPath = 2;
+  string Name = 3;
+  string Hash = 4;
+  uint64 Mode = 5;
+  uint64 Size = 6;
+  uint64 CreateTime = 7;
+  uint64 ModifyTime = 8;
+  uint64 ChangeTime = 9;
+  uint64 AccessTime = 10;
+}
+
+message UploadReqV3 {
+  uint64 DriverId = 1;
+  repeated string DirPath = 2;
+  repeated UploadReqDirItemV3 uploadReqDirItemV3 = 3;
+}
+
+message UploadReqDirItemV3 {
+  string Name = 3;
+  string Hash = 4;
+  uint64 Mode = 5;
+  uint64 Size = 6;
+  uint64 CreateTime = 7;
+  uint64 ModifyTime = 8;
+  uint64 ChangeTime = 9;
+  uint64 AccessTime = 10;
+}
+
+message UploadReqCheckV3 {
+  uint64 DriverId = 1;
+  repeated string DirPath = 2;
+  repeated UploadReqDirItemCheckV3 uploadReqDirItemCheckV3 = 3;
+}
+
+message UploadReqDirItemCheckV3 {
+  string Name = 3;
+  uint64 Size = 6;
+  uint64 ModifyTime = 8;
+}
+
+message UploadFileV3 {
+  string Hash = 4;
+  uint64 Size = 6;
+}
+
+message FileOrDir {
+  uint64 id = 1;
+  string hash = 2;
+  uint64 size = 3;
+  uint64 count = 4;
+  uint64 totalCount = 5;
+}
+
+message UploadRespV3 {
+  repeated string hash = 1;
+}
+
+message UploadResp {
+  bool exist = 1;
+  DirResp dir = 2;
+  BranchCommitResp branch = 3;
+}
+
+message UploadRespV2 {
+  string err = 1;
+}
+
+message BranchCommitResp {
+  string hash = 1;
+  uint64 commitId = 2;
+  uint64 size = 3;
+  uint64 count = 4;
+}
+
+message DirResp {
+  string hash = 1;
+  uint64 size = 2;
+  uint64 count = 3;
+  uint64 totalCount = 4;
+}
+
+message UploadErrResp {
+  string err = 1;
+  string path = 2;
+}
+
+// socket protoc
+
+message PathReq {
+  string branchName = 1;
+  string path = 2;
+}
+
+message DirItem {
+  string Hash = 1;
+  string Name = 2;
+  uint64 Mode = 3;
+  uint64 Size = 4;
+  uint64 Count = 5;
+  uint64 TotalCount = 6;
+  uint64 CreateTime = 7;
+  uint64 ModifyTime = 8;
+  uint64 ChangeTime = 9;
+  uint64 AccessTime = 10;
+}
+
+message TouchReq {
+  string branchName = 1;
+  string path = 2;
+  uint64 Mode = 3;
+  uint64 Time = 4;
+}
+
+message TouchResp {
+  string hash = 1;
+  uint64 commitId = 2;
+  uint64 size = 3;
+  uint64 count = 4;
+}

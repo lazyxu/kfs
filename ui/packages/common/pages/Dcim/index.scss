@@ -1,0 +1,23 @@
+.viewAll {
+    overflow-y: scroll;
+    .item {
+        height: 300px;
+        width: 300px;
+    }
+    @media handheld {
+        .item {
+            height: 100px;
+            width: 100px;
+        }
+    }
+    @media screen {
+        .item {
+            height: 200px;
+            width: 200px;
+        }
+    }
+}
+
+.viewByDate {
+    
+}

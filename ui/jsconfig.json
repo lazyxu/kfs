@@ -1,0 +1,14 @@
+{
+    "include": [
+        "packages/**/src"
+    ],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@kfs/*": [
+                "packages/*"
+            ],
+            "@mui/system": ["@mui/material/node_modules/@mui/system"],
+        },
+    }
+}

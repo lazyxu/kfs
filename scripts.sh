@@ -68,21 +68,8 @@ case $1 in
         ;;
 
       electron)
-        trap "kill 0" EXIT
-        cd $root/ui/web
-        tempfile=$(mktemp)
-        NODE_ENV=development REACT_APP_PLATFORM=$(go env GOOS) yarn watch > $tempfile 2>&1 &
-        cnt=1
-        while IFS= read -r line; do
-          echo $line
-          if [[ $line =~ "Start webpack watch" ]]; then
-            cnt=`expr $cnt + 1`
-          fi
-          if [[ $cnt == 2 ]]; then
-            break;
-          fi
-        done < <(tail -f $tempfile)
-        yarn start:electron
+        cd $root/ui/electron
+        yarn dev
         ;;
 
       *)

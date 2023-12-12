@@ -1,0 +1,56 @@
+.file-normal {
+  width: 5em;
+  border: 1px solid transparent;
+
+  .file-icon-box {
+    margin: 0.3em;
+    height: 4em;
+    width: 4em;
+    border-radius: 0.3em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .file-icon {
+      height: 4em;
+      width: 4em;
+    }
+    img {
+      cursor: pointer;
+      max-height: 4em;
+      max-width: 4em;
+    }
+  }
+  .file-icon-file {
+    color: var(--mui-palette-file);
+    //border: 1px solid var(--mui-palette-file);
+  }
+  .file-icon-file-viewable {
+    cursor: pointer;
+  }
+  .file-icon-folder {
+    color: var(--mui-palette-folder);
+    cursor: pointer;
+    //border: 1px solid var(--mui-palette-folder);
+  }
+  .file-name-wrapper {
+    margin-top: 0.2em;
+    width: 100%;
+    text-align: center;
+    background-color: transparent;
+    .file-name {
+      height: 100%;
+      width: 100%;
+      font-size: 1em;
+      padding: 0;
+      overflow : hidden;
+      text-overflow: ellipsis;
+      border-radius: 0.3em;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      user-select: none;
+      overflow-wrap: break-word;
+      margin: 0;
+    }
+  }
+}
