@@ -1,4 +1,4 @@
-import { noteWarning } from 'components/Notification/Notification';
+import { noteWarning } from '@/components/Notification/Notification';
 import { createGlobalStore } from 'hox';
 import { useState } from 'react';
 

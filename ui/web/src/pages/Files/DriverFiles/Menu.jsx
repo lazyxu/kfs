@@ -1,6 +1,6 @@
+import Menu from "@/components/Menu";
 import { Add, Bookmark, ContentPaste, CreateNewFolder, DriveFolderUpload, History, IosShare, Settings, UploadFile } from "@mui/icons-material";
 import { ListItemText, MenuItem } from "@mui/material";
-import Menu from "components/Menu";
 
 export default function ({ contextMenu, setContextMenu }) {
     const { driver, filePath } = contextMenu;

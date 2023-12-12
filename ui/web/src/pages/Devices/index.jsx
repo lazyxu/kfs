@@ -1,5 +1,5 @@
+import { listDevice } from "@/api/device";
 import { Box, Grid } from "@mui/material";
-import { listDevice } from "api/device";
 import { useEffect, useState } from "react";
 import Device from "./Device";
 

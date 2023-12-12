@@ -1,9 +1,9 @@
+import { noteError } from "@/components/Notification/Notification";
+import useResourceManager from "@/hox/resourceManager";
+import { getSysConfig } from "@/hox/sysConfig";
+import File from "@/pages/Files/DriverFiles/File";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { Grid, Stack } from "@mui/material";
-import { noteError } from "components/Notification/Notification";
-import useResourceManager from "hox/resourceManager";
-import { getSysConfig } from "hox/sysConfig";
-import File from "pages/Files/DriverFiles/File";
 import { useEffect, useState } from 'react';
 import FileAttribute from "./FileAttribute";
 import FileMenu from "./FileMenu";

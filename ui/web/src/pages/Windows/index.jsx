@@ -1,4 +1,4 @@
-import useWindows, { APP_IMAGE_VIEWER, APP_TEXT_VIEWER, APP_VIDEO_VIEWER } from "hox/windows";
+import useWindows, { APP_IMAGE_VIEWER, APP_TEXT_VIEWER, APP_VIDEO_VIEWER } from "@/hox/windows";
 import ImageViewer from "./ImageViewer";
 import TextViewer from "./TextViewer";
 import VideoViewer from "./VideoViewer";

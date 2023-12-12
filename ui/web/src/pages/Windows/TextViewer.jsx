@@ -1,12 +1,12 @@
+import { download, listDriverFileByHash, openFile } from "@/api/fs";
+import { getSysConfig } from "@/hox/sysConfig";
+import FileAttribute from '@/pages/Files/DriverFiles/FileAttribute';
 import { AllInbox, ContentCopy, Info, Save } from '@mui/icons-material';
 import { default as FileDownload } from '@mui/icons-material/FileDownload';
 import { Badge, Box, Link, Stack } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
-import { download, listDriverFileByHash, openFile } from "api/fs";
-import { getSysConfig } from "hox/sysConfig";
 import humanize from 'humanize';
 import moment from 'moment';
-import FileAttribute from 'pages/Files/DriverFiles/FileAttribute';
 import { useEffect, useState } from 'react';
 import SameFiles from "./SameFiles";
 import { StatusBar, TitleBar, Window, WorkingArea } from './Window';

@@ -1,8 +1,8 @@
+import { noteError, noteWarning } from "@/components/Notification/Notification";
+import { getSysConfig } from "@/hox/sysConfig";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { Close } from "@mui/icons-material";
 import { Alert, Box, IconButton, Typography } from "@mui/material";
-import { noteError, noteWarning } from "components/Notification/Notification";
-import { getSysConfig } from "hox/sysConfig";
 import humanize from "humanize";
 import humanizeDuration from "humanize-duration";
 import { useEffect, useState } from "react";

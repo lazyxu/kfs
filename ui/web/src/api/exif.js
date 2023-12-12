@@ -1,5 +1,5 @@
-import { noteError } from "components/Notification/Notification";
-import { getSysConfig } from "hox/sysConfig";
+import { noteError } from "@/components/Notification/Notification";
+import { getSysConfig } from "@/hox/sysConfig";
 import { httpPost as localHttpPost } from "./localServer";
 import { httpGet, httpPost } from "./webServer";
 

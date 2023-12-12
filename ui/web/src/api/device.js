@@ -1,4 +1,4 @@
-import { noteError } from "components/Notification/Notification";
+import { noteError } from "@/components/Notification/Notification";
 import { httpDelete, httpGet, httpPost } from "./webServer";
 
 export async function listDevice(setDevices) {

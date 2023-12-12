@@ -1,5 +1,5 @@
+import { getSysConfig } from "@/hox/sysConfig";
 import axios from "axios";
-import { getSysConfig } from "hox/sysConfig";
 
 export async function httpGet(path, params) {
     let resp = await axios.get(`${getSysConfig().sysConfig.webServer}${path}`, {params});

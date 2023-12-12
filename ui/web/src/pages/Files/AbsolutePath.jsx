@@ -1,6 +1,6 @@
+import SvgIcon from "@/components/Icon/SvgIcon";
+import useResourceManager, { openDir, openDrivers } from '@/hox/resourceManager';
 import { Breadcrumbs, Link, Stack } from "@mui/material";
-import SvgIcon from "components/Icon/SvgIcon";
-import useResourceManager, { openDir, openDrivers } from 'hox/resourceManager';
 
 function PathElement({ name, icon, dirPath }) {
     const [resourceManager, setResourceManager] = useResourceManager();

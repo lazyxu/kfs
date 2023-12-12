@@ -1,5 +1,5 @@
+import useResourceManager from '@/hox/resourceManager';
 import { Stack } from "@mui/material";
-import useResourceManager from 'hox/resourceManager';
 import { useCallback, useEffect, useRef, useState } from "react";
 import Dotdotdot from "react-dotdotdot";
 import { useInView } from "react-intersection-observer";

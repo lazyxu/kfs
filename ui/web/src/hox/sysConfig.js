@@ -1,13 +1,13 @@
 import { createGlobalStore } from 'hox';
 import { useEffect, useState } from 'react';
 
-import defaultConfig from 'kfsConfig/default';
-import kfsConfig from 'kfsConfig/localStorage';
+import kfsConfig from '@/kfsConfig/config.web';
+import defaultConfig from '@/kfsConfig/default';
 
 function useFunc() {
   const [sysConfig, setSysConfig] = useState(kfsConfig.get() || defaultConfig);
   useEffect(() => {
-    if (process.env.REACT_APP_PLATFORM === 'web' && process.env.NODE_ENV === 'production') {
+    if (import.meta.env.REACT_APP_PLATFORM === 'web' && import.meta.env.NODE_ENV === 'production') {
       sysConfig.webServer = location.origin;
     }
     kfsConfig.set(sysConfig);

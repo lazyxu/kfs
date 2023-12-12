@@ -1,11 +1,11 @@
+import { getDriverLocalFile } from "@/api/driver";
+import { download } from "@/api/fs";
+import Menu from "@/components/Menu";
+import useResourceManager, { openDir } from "@/hox/resourceManager";
+import useWindows, { getOpenApp, newWindow } from "@/hox/windows";
 import { modeIsDir } from "@kfs/api";
 import { Bookmark, ContentCopy, ContentCut, Delete, Download, DriveFileRenameOutline, History, IosShare, OpenInNew, Settings } from "@mui/icons-material";
 import { ListItemText, MenuItem } from "@mui/material";
-import { getDriverLocalFile } from "api/driver";
-import { download } from "api/fs";
-import Menu from "components/Menu";
-import useResourceManager, { openDir } from "hox/resourceManager";
-import useWindows, { getOpenApp, newWindow } from "hox/windows";
 
 export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -30,7 +30,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
                 <OpenInNew />
                 <ListItemText>打开</ListItemText>
             </MenuItem>
-            {process.env.REACT_APP_PLATFORM !== 'web' && <>
+            {import.meta.env.REACT_APP_PLATFORM !== 'web' && <>
                 <MenuItem onClick={() => {
                     setContextMenu(null);
                     getDriverLocalFile(driver.id).then(driverLocalFile => {

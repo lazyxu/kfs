@@ -1,8 +1,8 @@
+import { getSysConfig } from "@/hox/sysConfig";
+import useWindows, { APP_IMAGE_VIEWER, APP_VIDEO_VIEWER, newWindow } from "@/hox/windows";
+import ImgCancelable from "@/pages/Files/DriverFiles/File/ImgCancelable";
 import { Box } from "@mui/material";
-import { getSysConfig } from "hox/sysConfig";
-import useWindows, { APP_IMAGE_VIEWER, APP_VIDEO_VIEWER, newWindow } from "hox/windows";
 import moment from "moment";
-import ImgCancelable from "pages/Files/DriverFiles/File/ImgCancelable";
 import { useInView } from "react-intersection-observer";
 import styles from './image.module.scss';
 

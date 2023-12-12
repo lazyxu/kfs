@@ -4,6 +4,8 @@ import Menu from '@mui/icons-material/Menu';
 import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, styled, useColorScheme } from "@mui/material";
 import { SnackbarProvider } from 'notistack';
 import React, { useEffect } from "react";
+import { UAParser } from 'ua-parser-js';
+import { newDevice } from './api/device';
 import SvgIcon from './components/Icon/SvgIcon';
 import MetadataAnalysis from './components/MetadataAnalysis';
 import { SnackbarAction } from './components/Notification/Notification';
@@ -40,7 +42,7 @@ function Version() {
             fontFamily: "KaiTi, STKaiti;",
         }}>
             <Typography>
-                {process.env.REACT_APP_PLATFORM}.{process.env.NODE_ENV}
+                {import.meta.env.REACT_APP_PLATFORM}.{import.meta.env.NODE_ENV}
             </Typography>
         </Box>
     );
@@ -74,7 +76,7 @@ function App() {
         ...theme.mixins.toolbar,
         justifyContent: 'flex-end',
     }));
-    console.log(process.env);
+    console.log(import.meta.env);
     return (
         <SnackbarProvider action={SnackbarAction} >
             <Box sx={{
@@ -117,7 +119,7 @@ function App() {
                         onKeyDown={toggleDrawer(false)}
                     >
                         <List>
-                            {(process.env.REACT_APP_PLATFORM === 'web' ? [
+                            {(import.meta.env.REACT_APP_PLATFORM === 'web' ? [
                                 { icon: 'wangpan', name: '我的云盘' },
                                 { icon: 'DCIM', name: '我的相册' },
                                 { icon: 'devices', name: '设备列表' },

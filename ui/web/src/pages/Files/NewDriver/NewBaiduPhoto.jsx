@@ -1,5 +1,5 @@
+import { getSysConfig } from "@/hox/sysConfig";
 import { Button, DialogActions, DialogContent, Link, Stack, TextField } from "@mui/material";
-import { getSysConfig } from "hox/sysConfig";
 import { useState } from 'react';
 import { newDriverBaiduPhoto } from "../../../api/driver";
 
@@ -41,7 +41,7 @@ export default function ({ onSucc }) {
                         onChange={e => setCode(e.target.value)}
                         sx={{ flex: 1 }}
                     />
-                    {process.env.REACT_APP_PLATFORM === 'web' ?
+                    {import.meta.env.REACT_APP_PLATFORM === 'web' ?
                         <Link target="_blank" href={url}>
                             点击获取授权码
                         </Link> :

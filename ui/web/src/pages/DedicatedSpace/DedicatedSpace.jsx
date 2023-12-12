@@ -1,6 +1,6 @@
+import { getDiskUsage } from '@/api/disk';
 import { toPrecent } from '@kfs/api';
 import { Box, InputLabel, Stack, Typography } from '@mui/material';
-import { getDiskUsage } from 'api/disk';
 import humanize from 'humanize';
 import { useEffect, useState } from 'react';
 

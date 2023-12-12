@@ -1,9 +1,9 @@
+import { getMetadata } from "@/api/exif";
+import { downloadByHash, listDriverFileByHash } from "@/api/fs";
+import { getSysConfig } from "@/hox/sysConfig";
+import FileAttribute from "@/pages/Files/DriverFiles/FileAttribute";
 import { AllInbox, Download, Info, PrivacyTip } from "@mui/icons-material";
 import { Badge, Box, ButtonGroup, IconButton } from "@mui/material";
-import { getMetadata } from "api/exif";
-import { downloadByHash, listDriverFileByHash } from "api/fs";
-import { getSysConfig } from "hox/sysConfig";
-import FileAttribute from "pages/Files/DriverFiles/FileAttribute";
 import { useEffect, useState } from "react";
 import Metadata from "./Metadata";
 import SameFiles from "./SameFiles";

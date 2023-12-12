@@ -1,10 +1,10 @@
+import { getDriverLocalFile, getDriverSync, startAllLocalFileSync, updateDriverLocalFile } from '@/api/driver';
+import { startDriverLocalFileFilter } from '@/api/exif';
+import { noteError } from '@/components/Notification/Notification';
+import { getSysConfig } from '@/hox/sysConfig';
 import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from '@mui/icons-material';
 import { Box, Button, Grid, IconButton, Input } from "@mui/material";
-import { getDriverLocalFile, getDriverSync, startAllLocalFileSync, updateDriverLocalFile } from 'api/driver';
-import { startDriverLocalFileFilter } from 'api/exif';
-import { noteError } from 'components/Notification/Notification';
-import { getSysConfig } from 'hox/sysConfig';
 import humanize from 'humanize';
 import humanizeDuration from "humanize-duration";
 import moment from 'moment';

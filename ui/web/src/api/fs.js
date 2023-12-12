@@ -1,5 +1,5 @@
+import { noteError } from "@/components/Notification/Notification";
 import axios from "axios";
-import { noteError } from "components/Notification/Notification";
 import { getSysConfig } from "../hox/sysConfig";
 import { httpGet } from "./webServer";
 

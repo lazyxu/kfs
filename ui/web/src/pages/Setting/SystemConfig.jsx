@@ -1,5 +1,5 @@
+import useSysConfig from '@/hox/sysConfig';
 import { Box, Button, FormControlLabel, InputLabel, Radio, RadioGroup, Stack, TextField } from '@mui/material';
-import useSysConfig from 'hox/sysConfig';
 
 export default () => {
     const { sysConfig, setSysConfig, resetSysConfig } = useSysConfig();
@@ -22,7 +22,7 @@ export default () => {
                                 )}
                             </RadioGroup>
                         </Box>
-                        {process.env.NODE_ENV === 'production' ? [] :
+                        {import.meta.env.NODE_ENV === 'production' ? [] :
                             <Box>
                                 <InputLabel sx={{ display: "inline" }}>API：</InputLabel>
                                 <RadioGroup sx={{ display: "inline" }}
@@ -44,7 +44,7 @@ export default () => {
                                 onChange={e => setSysConfig(c => ({ ...c, webServer: e.target.value }))}
                             />
                         </Box>
-                        {process.env.REACT_APP_PLATFORM === 'web' ? [] :
+                        {import.meta.env.REACT_APP_PLATFORM === 'web' ? [] :
                             <>
                                 <Box>
                                     <InputLabel sx={{ display: "inline" }}>Socket服务器：</InputLabel>

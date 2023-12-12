@@ -1,5 +1,5 @@
+import { exifStatus } from '@/api/exif';
 import { Box, Button } from "@mui/material";
-import { exifStatus } from 'api/exif';
 import { useEffect, useState } from "react";
 
 export default function ({ onNewExif }) {

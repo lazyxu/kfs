@@ -64,7 +64,7 @@ case $1 in
     case $2 in
       web)
         cd $root/ui/web
-        NODE_ENV=development REACT_APP_PLATFORM=web yarn start
+        NODE_ENV=development REACT_APP_PLATFORM=web yarn dev
         ;;
 
       electron)

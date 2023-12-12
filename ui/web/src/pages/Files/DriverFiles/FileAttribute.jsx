@@ -1,8 +1,8 @@
+import { getDriversDirCalculatedInfo } from '@/api/driver';
 import { getPerm, modeIsDir } from '@kfs/api';
 import { Close } from '@mui/icons-material';
 import { Box, Dialog, DialogContent, DialogTitle, Grid } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
-import { getDriversDirCalculatedInfo } from 'api/driver';
 import humanize from 'humanize';
 import moment from "moment/moment";
 import { useEffect, useState } from 'react';

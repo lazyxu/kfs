@@ -1,9 +1,9 @@
+import { deleteDriver, getDriverLocalFile, resetDriver } from '@/api/driver';
+import SvgIcon from "@/components/Icon/SvgIcon";
+import Menu from '@/components/Menu';
+import useResourceManager, { openDir } from '@/hox/resourceManager';
 import { ClearAll, ContentCopy, Delete, DriveFileRenameOutline, OpenInNew, Settings } from '@mui/icons-material';
 import { Box, ListItemText, MenuItem, Stack, Typography } from "@mui/material";
-import { deleteDriver, getDriverLocalFile, resetDriver } from 'api/driver';
-import SvgIcon from "components/Icon/SvgIcon";
-import Menu from 'components/Menu';
-import useResourceManager, { openDir } from 'hox/resourceManager';
 import { useState } from 'react';
 
 export default ({ driver, setDriverAttribute, onDelete }) => {
@@ -52,7 +52,7 @@ export default ({ driver, setDriverAttribute, onDelete }) => {
                     <ListItemText>打开</ListItemText>
                 </MenuItem>
                 {/* TODO: device id */}
-                {process.env.REACT_APP_PLATFORM !== 'web' && driver.type === 'localFile' && 
+                {import.meta.env.REACT_APP_PLATFORM !== 'web' && driver.type === 'localFile' && 
                     <MenuItem onClick={() => {
                         setContextMenu(null);
                         getDriverLocalFile(driver.id).then(driverLocalFile => {

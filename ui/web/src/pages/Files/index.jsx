@@ -1,5 +1,5 @@
+import useResourceManager from '@/hox/resourceManager';
 import { Box } from "@mui/material";
-import useResourceManager from 'hox/resourceManager';
 import AbsolutePath from './AbsolutePath';
 import DriverFiles from "./DriverFiles/DriverFiles";
 import Drivers from "./Drivers";

@@ -1,8 +1,8 @@
+import { deleteDevice } from '@/api/device';
+import SvgIcon from "@/components/Icon/SvgIcon";
+import useSysConfig from '@/hox/sysConfig';
 import { Delete, DriveFileRenameOutline, MoreVert } from '@mui/icons-material';
 import { Box, Card, CardContent, IconButton, ListItemText, Menu, MenuItem, Stack, alpha, styled } from "@mui/material";
-import { deleteDevice } from 'api/device';
-import SvgIcon from "components/Icon/SvgIcon";
-import useSysConfig from 'hox/sysConfig';
 import { useState } from 'react';
 
 const StyledMenu = styled((props) => (

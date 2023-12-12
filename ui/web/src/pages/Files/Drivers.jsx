@@ -1,7 +1,7 @@
+import { listDriver } from "@/api/driver";
+import Menu from '@/components/Menu';
 import { Add, Refresh } from "@mui/icons-material";
 import { Grid, ListItemText, MenuItem } from "@mui/material";
-import { listDriver } from "api/driver";
-import Menu from 'components/Menu';
 import { useEffect, useState } from 'react';
 import DriverAttribute from "./Attribute/DriverAttribute";
 import Driver from "./Driver";
