@@ -1,143 +1,198 @@
-import Versions from './components/Versions'
-import icons from './assets/icons.svg'
+import { newDevice } from '@kfs/common/api/device';
+import { listLocalFileDriver, startAllLocalFileSync } from '@kfs/common/api/driver';
+import SvgIcon from '@kfs/common/components/Icon/SvgIcon';
+import MetadataAnalysis from '@kfs/common/components/MetadataAnalysis';
+import { SnackbarAction } from '@kfs/common/components/Notification/Notification';
+import useMenu from "@kfs/common/hox/menu";
+import useSysConfig from "@kfs/common/hox/sysConfig";
+import BackupTask from "@kfs/common/pages/BackupTask";
+import Dcim from '@kfs/common/pages/Dcim';
+import DedicatedSpace from '@kfs/common/pages/DedicatedSpace/DedicatedSpace';
+import Devices from "@kfs/common/pages/Devices";
+import Files from "@kfs/common/pages/Files";
+import SystemConfig from '@kfs/common/pages/Setting/SystemConfig';
+import Windows from '@kfs/common/pages/Windows';
+import Inbox from '@mui/icons-material/Inbox';
+import Mail from '@mui/icons-material/Mail';
+import Menu from '@mui/icons-material/Menu';
+import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, styled, useColorScheme } from "@mui/material";
+import { SnackbarProvider } from 'notistack';
+import React, { useEffect } from "react";
+import { UAParser } from 'ua-parser-js';
 
-function App() {
-  return (
-    <div className="container">
-      <Versions></Versions>
-
-      <svg className="hero-logo" viewBox="0 0 900 300">
-        <use xlinkHref={`${icons}#electron`} />
-      </svg>
-      <h2 className="hero-text">You{"'"}ve successfully created an Electron project with React</h2>
-      <p className="hero-tagline">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-
-      <div className="links">
-        <div className="link-item">
-          <a target="_blank" href="https://electron-vite.org" rel="noopener noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="link-item link-dot">•</div>
-        <div className="link-item">
-          <a
-            target="_blank"
-            href="https://github.com/alex8088/electron-vite"
-            rel="noopener noreferrer"
-          >
-            Getting Help
-          </a>
-        </div>
-        <div className="link-item link-dot">•</div>
-        <div className="link-item">
-          <a
-            target="_blank"
-            href="https://github.com/alex8088/quick-start/tree/master/packages/create-electron"
-            rel="noopener noreferrer"
-          >
-            create-electron
-          </a>
-        </div>
-      </div>
-
-      <div className="features">
-        <div className="feature-item">
-          <article>
-            <h2 className="title">Configuring</h2>
-            <p className="detail">
-              Config with <span>electron.vite.config.ts</span> and refer to the{' '}
-              <a target="_blank" href="https://electron-vite.org/config" rel="noopener noreferrer">
-                config guide
-              </a>
-              .
-            </p>
-          </article>
-        </div>
-        <div className="feature-item">
-          <article>
-            <h2 className="title">HMR</h2>
-            <p className="detail">
-              Edit <span>src/renderer</span> files to test HMR. See{' '}
-              <a
-                target="_blank"
-                href="https://electron-vite.org/guide/hmr.html"
-                rel="noopener noreferrer"
-              >
-                docs
-              </a>
-              .
-            </p>
-          </article>
-        </div>
-        <div className="feature-item">
-          <article>
-            <h2 className="title">Hot Reloading</h2>
-            <p className="detail">
-              Run{' '}
-              <span>
-                {"'"}electron-vite dev --watch{"'"}
-              </span>{' '}
-              to enable. See{' '}
-              <a
-                target="_blank"
-                href="https://electron-vite.org/guide/hot-reloading.html"
-                rel="noopener noreferrer"
-              >
-                docs
-              </a>
-              .
-            </p>
-          </article>
-        </div>
-        <div className="feature-item">
-          <article>
-            <h2 className="title">Debugging</h2>
-            <p className="detail">
-              Check out <span>.vscode/launch.json</span>. See{' '}
-              <a
-                target="_blank"
-                href="https://electron-vite.org/guide/debugging.html"
-                rel="noopener noreferrer"
-              >
-                docs
-              </a>
-              .
-            </p>
-          </article>
-        </div>
-        <div className="feature-item">
-          <article>
-            <h2 className="title">Source Code Protection</h2>
-            <p className="detail">
-              Supported via built-in plugin <span>bytecodePlugin</span>. See{' '}
-              <a
-                target="_blank"
-                href="https://electron-vite.org/guide/source-code-protection.html"
-                rel="noopener noreferrer"
-              >
-                docs
-              </a>
-              .
-            </p>
-          </article>
-        </div>
-        <div className="feature-item">
-          <article>
-            <h2 className="title">Packaging</h2>
-            <p className="detail">
-              Use{' '}
-              <a target="_blank" href="https://www.electron.build" rel="noopener noreferrer">
-                electron-builder
-              </a>{' '}
-              and pre-configured to pack your app.
-            </p>
-          </article>
-        </div>
-      </div>
-    </div>
-  )
+async function newDeviceIfNeeded(sysConfig, setSysConfig) {
+    console.log("newDeviceIfNeeded", sysConfig);
+    let deviceId = sysConfig.deviceId;
+    if (!sysConfig.hasOwnProperty("deviceId")) {
+        let parser = new UAParser(navigator.userAgent);
+        let parserOS = parser.getOS();
+        console.log(parserOS);
+        let os = parserOS.name + " " + parserOS.version;
+        let name = os;
+        deviceId = await newDevice(name, os);
+        setSysConfig(prev => { return { ...prev, deviceId } });
+    }
+    listLocalFileDriver(deviceId).then(drivers => startAllLocalFileSync(drivers))
 }
 
-export default App
+function Version() {
+    return (
+        <Box sx={{
+            position: 'absolute',
+            bottom: "0",
+            fontFamily: "KaiTi, STKaiti;",
+        }}>
+            <Typography>
+                {import.meta.env.REACT_APP_PLATFORM}.{import.meta.env.NODE_ENV}
+            </Typography>
+        </Box>
+    );
+}
+
+function App() {
+    const { sysConfig, setSysConfig } = useSysConfig();
+    const { menu, setMenu } = useMenu();
+    const { mode, setMode } = useColorScheme();
+    const [open, setOpen] = React.useState(false);
+    const toggleDrawer = (open) => (event) => {
+        if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+            return;
+        }
+
+        setOpen(open);
+    };
+    useEffect(() => {
+        newDeviceIfNeeded(sysConfig, setSysConfig)
+    });
+    useEffect(() => {
+        // document.body.setAttribute('data-theme', sysConfig.theme);
+        console.log("mode:", mode, "=>", sysConfig.theme);
+        setMode(sysConfig.theme);
+    }, [sysConfig.theme]);
+    const DrawerHeader = styled('div')(({ theme }) => ({
+        display: 'flex',
+        alignItems: 'center',
+        padding: theme.spacing(0, 1),
+        // necessary for content to be below app bar
+        ...theme.mixins.toolbar,
+        justifyContent: 'flex-end',
+    }));
+    console.log(import.meta.env);
+    return (
+        <SnackbarProvider action={SnackbarAction} >
+            <Box sx={{
+                position: 'fixed', width: "100%", height: "100%",
+                display: 'flex', flexDirection: 'column',
+                backgroundColor: theme => theme.background.primary,
+                color: theme => theme.context.primary
+            }}>
+                <AppBar position="fixed" open={open}>
+                    <Toolbar>
+                        <IconButton
+                            color="inherit"
+                            aria-label="open drawer"
+                            onClick={() => setOpen(true)}
+                            edge="start"
+                            sx={{
+                                marginRight: 2,
+                                ...(open && { display: 'none' }),
+                            }}
+                        >
+                            <Menu />
+                        </IconButton>
+                        <Typography variant="h6" noWrap component="div" sx={{ flex: 1 }}>
+                            {menu}
+                        </Typography>
+                        <Box>
+                            <MetadataAnalysis />
+                        </Box>
+                    </Toolbar>
+                </AppBar>
+                <Drawer
+                    anchor="left"
+                    open={open}
+                    onClose={toggleDrawer(false)}
+                >
+                    <Box
+                        sx={{ width: 250 }}
+                        role="presentation"
+                        onClick={toggleDrawer(false)}
+                        onKeyDown={toggleDrawer(false)}
+                    >
+                        <List>
+                            {(import.meta.env.REACT_APP_PLATFORM === 'web' ? [
+                                { icon: 'wangpan', name: '我的云盘' },
+                                { icon: 'DCIM', name: '我的相册' },
+                                { icon: 'devices', name: '设备列表' },
+                                { icon: 'peizhi', name: '设置' },
+                                { icon: 'equipment_data-02_fn', name: '存储空间' },
+                            ] : [
+                                { icon: 'wangpan', name: '我的云盘' },
+                                { icon: 'DCIM', name: '我的相册' },
+                                { icon: 'yuntongbu', name: '备份任务' },
+                                { icon: 'devices', name: '设备列表' },
+                                { icon: 'peizhi', name: '设置' },
+                                { icon: 'equipment_data-02_fn', name: '存储空间' },
+                            ]).map((item, index) => (
+                                <ListItem key={item.name} disablePadding onClick={() => setMenu(item.name)}>
+                                    <ListItemButton>
+                                        <ListItemIcon>
+                                            <SvgIcon icon={item.icon} style={{ height: "24px", width: "24px" }} />
+                                        </ListItemIcon>
+                                        <ListItemText primary={item.name} />
+                                    </ListItemButton>
+                                </ListItem>
+                            ))}
+                        </List>
+                        <Divider />
+                        <List>
+                            {[
+                                { icon: '', name: '文件类型' },
+                                { icon: '', name: '文件大小' },
+                                { icon: 'swapVertical', name: '传输列表' },
+                                { icon: 'system', name: '资源监控' },
+                                { icon: '', name: '我的书签' },
+                                { icon: '', name: '分享历史' },
+                                { icon: '', name: '操作历史' },
+                                { icon: '', name: '搜索' },
+                            ].map((item, index) => (
+                                <ListItem key={item.name} disablePadding onClick={() => setMenu(item.name)}>
+                                    <ListItemButton>
+                                        <ListItemIcon>
+                                            <SvgIcon icon={item.icon} />
+                                        </ListItemIcon>
+                                        <ListItemText primary={item.name} />
+                                    </ListItemButton>
+                                </ListItem>
+                            ))}
+                        </List>
+                        <Divider />
+                        <List>
+                            {['All mail', 'Trash', 'Spam'].map((text, index) => (
+                                <ListItem key={text} disablePadding>
+                                    <ListItemButton>
+                                        <ListItemIcon>
+                                            {index % 2 === 0 ? <Inbox /> : <Mail />}
+                                        </ListItemIcon>
+                                        <ListItemText primary={text} />
+                                    </ListItemButton>
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Box>
+                    <Version />
+                </Drawer>
+                <DrawerHeader />
+                {menu === '我的云盘' && <Files />}
+                {menu === '我的相册' && <Dcim />}
+                {menu === '备份任务' && <BackupTask />}
+                {menu === '设备列表' && <Devices />}
+                {menu === '设置' && <SystemConfig />}
+                {menu === '存储空间' && <DedicatedSpace />}
+            </Box>
+            <Windows/>
+        </SnackbarProvider>
+    );
+}
+
+export default App;
