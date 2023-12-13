@@ -1,5 +1,6 @@
 import useSysConfig from '@kfs/common/hox/sysConfig';
 import { Box, Button, FormControlLabel, InputLabel, Radio, RadioGroup, Stack, TextField } from '@mui/material';
+import { getEnv } from '../../hox/env';
 
 export default () => {
     const { sysConfig, setSysConfig, resetSysConfig } = useSysConfig();
@@ -22,21 +23,6 @@ export default () => {
                                 )}
                             </RadioGroup>
                         </Box>
-                        {import.meta.env.NODE_ENV === 'production' ? [] :
-                            <Box>
-                                <InputLabel sx={{ display: "inline" }}>API：</InputLabel>
-                                <RadioGroup sx={{ display: "inline" }}
-                                    row
-                                    value={sysConfig.api}
-                                    onChange={e => setSysConfig(c => ({ ...c, api: e.target.value }))}
-                                    size="small"
-                                >
-                                    {["mock", "web"].map(value =>
-                                        <FormControlLabel key={value} value={value} control={<Radio />} label={value} />
-                                    )}
-                                </RadioGroup>
-                            </Box>
-                        }
                         <Box>
                             <InputLabel sx={{ display: "inline" }}>Web服务器：</InputLabel>
                             <TextField variant="standard" size="small"
@@ -44,7 +30,7 @@ export default () => {
                                 onChange={e => setSysConfig(c => ({ ...c, webServer: e.target.value }))}
                             />
                         </Box>
-                        {import.meta.env.REACT_APP_PLATFORM === 'web' ? [] :
+                        {getEnv().VITE_APP_PLATFORM === 'web' ? [] :
                             <>
                                 <Box>
                                     <InputLabel sx={{ display: "inline" }}>Socket服务器：</InputLabel>

@@ -5,6 +5,7 @@ import useResourceManager, { openDir } from '@kfs/common/hox/resourceManager';
 import { ClearAll, ContentCopy, Delete, DriveFileRenameOutline, OpenInNew, Settings } from '@mui/icons-material';
 import { Box, ListItemText, MenuItem, Stack, Typography } from "@mui/material";
 import { useState } from 'react';
+import { getEnv } from '../../hox/env';
 
 export default ({ driver, setDriverAttribute, onDelete }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
@@ -52,7 +53,7 @@ export default ({ driver, setDriverAttribute, onDelete }) => {
                     <ListItemText>打开</ListItemText>
                 </MenuItem>
                 {/* TODO: device id */}
-                {import.meta.env.REACT_APP_PLATFORM !== 'web' && driver.type === 'localFile' && 
+                {getEnv().VITE_APP_PLATFORM !== 'web' && driver.type === 'localFile' && 
                     <MenuItem onClick={() => {
                         setContextMenu(null);
                         getDriverLocalFile(driver.id).then(driverLocalFile => {

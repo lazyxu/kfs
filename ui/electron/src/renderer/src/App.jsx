@@ -3,6 +3,7 @@ import { listLocalFileDriver, startAllLocalFileSync } from '@kfs/common/api/driv
 import SvgIcon from '@kfs/common/components/Icon/SvgIcon';
 import MetadataAnalysis from '@kfs/common/components/MetadataAnalysis';
 import { SnackbarAction } from '@kfs/common/components/Notification/Notification';
+import useEnv from '@kfs/common/hox/env';
 import useMenu from "@kfs/common/hox/menu";
 import useSysConfig from "@kfs/common/hox/sysConfig";
 import BackupTask from "@kfs/common/pages/BackupTask";
@@ -17,7 +18,7 @@ import Mail from '@mui/icons-material/Mail';
 import Menu from '@mui/icons-material/Menu';
 import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, styled, useColorScheme } from "@mui/material";
 import { SnackbarProvider } from 'notistack';
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { UAParser } from 'ua-parser-js';
 
 async function newDeviceIfNeeded(sysConfig, setSysConfig) {
@@ -35,7 +36,7 @@ async function newDeviceIfNeeded(sysConfig, setSysConfig) {
     listLocalFileDriver(deviceId).then(drivers => startAllLocalFileSync(drivers))
 }
 
-function Version() {
+function Version({ env }) {
     return (
         <Box sx={{
             position: 'absolute',
@@ -43,7 +44,7 @@ function Version() {
             fontFamily: "KaiTi, STKaiti;",
         }}>
             <Typography>
-                {import.meta.env.REACT_APP_PLATFORM}.{import.meta.env.NODE_ENV}
+                {env.VITE_APP_PLATFORM}.{env.MODE}
             </Typography>
         </Box>
     );
@@ -53,7 +54,9 @@ function App() {
     const { sysConfig, setSysConfig } = useSysConfig();
     const { menu, setMenu } = useMenu();
     const { mode, setMode } = useColorScheme();
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = useState(false);
+    const [env, setEnv] = useEnv();
+    console.log("App.import.meta", import.meta, env);
     const toggleDrawer = (open) => (event) => {
         if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
             return;
@@ -62,7 +65,8 @@ function App() {
         setOpen(open);
     };
     useEffect(() => {
-        newDeviceIfNeeded(sysConfig, setSysConfig)
+        newDeviceIfNeeded(sysConfig, setSysConfig);
+        setEnv(import.meta.env);
     });
     useEffect(() => {
         // document.body.setAttribute('data-theme', sysConfig.theme);
@@ -120,20 +124,14 @@ function App() {
                         onKeyDown={toggleDrawer(false)}
                     >
                         <List>
-                            {(import.meta.env.REACT_APP_PLATFORM === 'web' ? [
-                                { icon: 'wangpan', name: '我的云盘' },
-                                { icon: 'DCIM', name: '我的相册' },
-                                { icon: 'devices', name: '设备列表' },
-                                { icon: 'peizhi', name: '设置' },
-                                { icon: 'equipment_data-02_fn', name: '存储空间' },
-                            ] : [
+                            {[
                                 { icon: 'wangpan', name: '我的云盘' },
                                 { icon: 'DCIM', name: '我的相册' },
                                 { icon: 'yuntongbu', name: '备份任务' },
                                 { icon: 'devices', name: '设备列表' },
                                 { icon: 'peizhi', name: '设置' },
                                 { icon: 'equipment_data-02_fn', name: '存储空间' },
-                            ]).map((item, index) => (
+                            ].map((item, index) => (
                                 <ListItem key={item.name} disablePadding onClick={() => setMenu(item.name)}>
                                     <ListItemButton>
                                         <ListItemIcon>
@@ -180,7 +178,7 @@ function App() {
                             ))}
                         </List>
                     </Box>
-                    <Version />
+                    <Version env={env} />
                 </Drawer>
                 <DrawerHeader />
                 {menu === '我的云盘' && <Files />}
@@ -190,7 +188,7 @@ function App() {
                 {menu === '设置' && <SystemConfig />}
                 {menu === '存储空间' && <DedicatedSpace />}
             </Box>
-            <Windows/>
+            <Windows />
         </SnackbarProvider>
     );
 }

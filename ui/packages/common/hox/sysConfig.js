@@ -3,11 +3,12 @@ import { useEffect, useState } from 'react';
 
 import kfsConfig from '@kfs/common/kfsConfig/config.web';
 import defaultConfig from '@kfs/common/kfsConfig/default';
+import { getEnv } from './env';
 
 function useFunc() {
   const [sysConfig, setSysConfig] = useState(kfsConfig.get() || defaultConfig);
   useEffect(() => {
-    if (import.meta.env.REACT_APP_PLATFORM === 'web' && import.meta.env.NODE_ENV === 'production') {
+    if (getEnv().VITE_APP_PLATFORM === 'web' && getEnv().MODE === 'production') {
       sysConfig.webServer = location.origin;
     }
     kfsConfig.set(sysConfig);

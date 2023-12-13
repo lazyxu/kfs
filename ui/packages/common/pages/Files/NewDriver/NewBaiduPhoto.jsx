@@ -2,6 +2,7 @@ import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { Button, DialogActions, DialogContent, Link, Stack, TextField } from "@mui/material";
 import { useState } from 'react';
 import { newDriverBaiduPhoto } from "../../../api/driver";
+import { getEnv } from "../../../hox/env";
 
 // https://pan.baidu.com/union/doc/ol0rsap9s
 export default function ({ onSucc }) {
@@ -41,7 +42,7 @@ export default function ({ onSucc }) {
                         onChange={e => setCode(e.target.value)}
                         sx={{ flex: 1 }}
                     />
-                    {import.meta.env.REACT_APP_PLATFORM === 'web' ?
+                    {getEnv().VITE_APP_PLATFORM === 'web' ?
                         <Link target="_blank" href={url}>
                             点击获取授权码
                         </Link> :
