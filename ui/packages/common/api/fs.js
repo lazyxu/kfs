@@ -6,11 +6,11 @@ import { httpGet } from "./webServer";
 export async function openFile(driverId, filePath) {
     try {
         console.log('api.openFile', driverId, filePath);
-        let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/openFile`, {
+        let resp = await axios.get(`${getSysConfig().webServer}/api/v1/openFile`, {
             params: {
                 driverId,
                 filePath,
-                maxContentSize: getSysConfig().sysConfig.maxContentSize,
+                maxContentSize: getSysConfig().maxContentSize,
             },
             transformResponse: x => x,
         });
@@ -40,7 +40,7 @@ function downloader(data, name) {
 export async function download(driverId, filePath) {
     try {
         console.log('api.download', driverId, filePath);
-        let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/downloadFile`, {
+        let resp = await axios.get(`${getSysConfig().webServer}/api/v1/downloadFile`, {
             params: {
                 driverId,
                 filePath,
@@ -57,7 +57,7 @@ export async function download(driverId, filePath) {
 export async function downloadByHash(hash, name) {
     try {
         console.log('api.downloadByHash', hash, name);
-        let resp = await axios.get(`${getSysConfig().sysConfig.webServer}/api/v1/image?hash=${hash}`, {
+        let resp = await axios.get(`${getSysConfig().webServer}/api/v1/image?hash=${hash}`, {
             responseType: "arraybuffer",
         });
         downloader(resp.data, name);

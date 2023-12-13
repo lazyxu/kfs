@@ -34,7 +34,7 @@ export default function () {
     const controller = new AbortController();
     useEffect(() => {
         setTaskInfo();
-        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/metadataAnalysisTask`, {
+        fetchEventSource(`${getSysConfig().webServer}/api/v1/event/metadataAnalysisTask`, {
             signal: controller.signal,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {

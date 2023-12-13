@@ -24,7 +24,7 @@ export default function ({ id, props }) {
     const [sameFiles, setSameFiles] = useState([]);
     const [openSameFiles, setOpenSameFiles] = useState(false);
     const [openAttribute, setOpenAttribute] = useState(false);
-    const sysConfig = getSysConfig().sysConfig;
+    const sysConfig = getSysConfig();
     useEffect(() => {
         getMetadata(hash).then(setMetadata);
         if (driverFile) {

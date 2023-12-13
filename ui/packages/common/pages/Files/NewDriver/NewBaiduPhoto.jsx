@@ -10,7 +10,7 @@ export default function ({ onSucc }) {
     let [description, setDescription] = useState("");
     let [code, setCode] = useState("");
     const appKey = "huREKC2eNTctaBWfh3LdiAYjZ9ARBh5g";
-    let redirectUri = `${getSysConfig().sysConfig.webServer}/api/v1/driver/baidu/callback`;
+    let redirectUri = `${getSysConfig().webServer}/api/v1/driver/baidu/callback`;
     redirectUri = `http://1zkl.com`;
     redirectUri = "oob";
     const url = `https://openapi.baidu.com/oauth/2.0/authorize?response_type=code&client_id=${appKey}&redirect_uri=${redirectUri}&scope=basic,netdisk&qrcode=1`;

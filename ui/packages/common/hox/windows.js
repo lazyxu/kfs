@@ -2,9 +2,13 @@ import { noteWarning } from '@kfs/common/components/Notification/Notification';
 import { createGlobalStore } from 'hox';
 import { useState } from 'react';
 
-export const [useWindows, getWindows] = createGlobalStore(() => useState({}));
+export const [useWindows, useWindows2] = createGlobalStore(() => useState({}));
 
 export default useWindows;
+
+export const getWindows = () => {
+  return useWindows2()[0];
+}
 
 let windowId = 0;
 

@@ -2,7 +2,7 @@ import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import axios from "axios";
 
 export async function httpGet(path, params) {
-    let resp = await axios.get(`${getSysConfig().sysConfig.webServer}${path}`, {params});
+    let resp = await axios.get(`${getSysConfig().webServer}${path}`, {params});
     let json = resp.data;
     if (!json) {
         return;
@@ -14,7 +14,7 @@ export async function httpGet(path, params) {
 }
 
 export async function httpPost(path, params) {
-    let resp = await axios.post(`${getSysConfig().sysConfig.webServer}${path}`, null, {params});
+    let resp = await axios.post(`${getSysConfig().webServer}${path}`, null, {params});
     let json = resp.data;
     if (!json) {
         return;
@@ -26,7 +26,7 @@ export async function httpPost(path, params) {
 }
 
 export async function httpDelete(path, params) {
-    let resp = await axios.delete(`${getSysConfig().sysConfig.webServer}${path}`, {params});
+    let resp = await axios.delete(`${getSysConfig().webServer}${path}`, {params});
     let json = resp.data;
     if (!json) {
         return;

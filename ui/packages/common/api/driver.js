@@ -85,7 +85,7 @@ export async function listLocalFileDriver(deviceId) {
 
 export async function startAllLocalFileSync(drivers) {
     try {
-        let serverAddr = getSysConfig().sysConfig.socketServer;
+        let serverAddr = getSysConfig().socketServer;
         console.log('api.startAllLocalFileSync', serverAddr, drivers);
         return await httpPostBodyLocal("/api/v1/startAllLocalFileSync", { serverAddr, drivers });
     } catch (e) {

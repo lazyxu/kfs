@@ -7,7 +7,7 @@ import { useInView } from "react-intersection-observer";
 import styles from './image.module.scss';
 
 export default function ({ metadata }) {
-    const sysConfig = getSysConfig().sysConfig;
+    const sysConfig = getSysConfig();
     let { hash, exif, fileType, shotTime, shotEquipment, videoMetadata } = metadata;
     let time = shotTime.isValid() ? shotTime.format("YYYY年MM月DD日 HH:mm:ss") : "未知时间";
     const [windows, setWindows] = useWindows();

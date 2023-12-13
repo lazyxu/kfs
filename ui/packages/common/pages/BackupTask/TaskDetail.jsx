@@ -9,12 +9,12 @@ import { useEffect, useState } from "react";
 import LinearProgressWithLabel from "./LinearProgressWithLabel";
 
 export default function ({ taskDetail, setTaskDetail }) {
-    const sysConfig = getSysConfig().sysConfig;
+    const sysConfig = getSysConfig();
     const [taskInfo, setTaskInfo] = useState();
     const controller = new AbortController();
     useEffect(() => {
         setTaskInfo();
-        fetchEventSource(`http://127.0.0.1:${getSysConfig().sysConfig.port}/api/v1/event/backupTask/${taskDetail}`, {
+        fetchEventSource(`http://127.0.0.1:${getSysConfig().port}/api/v1/event/backupTask/${taskDetail}`, {
             signal: controller.signal,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {

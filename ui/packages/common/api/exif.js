@@ -24,7 +24,7 @@ export async function startBaiduPhotoTask(start, driverId) {
 
 export async function startDriverLocalFile(start, driverId, srcPath, ignores, encoder) {
     try {
-        let serverAddr = getSysConfig().sysConfig.socketServer;
+        let serverAddr = getSysConfig().socketServer;
         console.log('web.startDriverLocalFile', start, driverId, serverAddr, srcPath, ignores, encoder);
         return await localHttpPost("/api/v1/startDriverLocalFile", {
             start, driverId, serverAddr, srcPath, ignores, encoder

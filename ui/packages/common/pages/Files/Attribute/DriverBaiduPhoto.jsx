@@ -30,7 +30,7 @@ export default ({ driver }) => {
     }, []);
     const controller = new AbortController();
     useEffect(() => {
-        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/baiduPhotoTask/${driver.id}`, {
+        fetchEventSource(`${getSysConfig().webServer}/api/v1/event/baiduPhotoTask/${driver.id}`, {
             signal: controller.signal,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {

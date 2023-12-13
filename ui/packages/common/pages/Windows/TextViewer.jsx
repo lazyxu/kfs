@@ -61,7 +61,7 @@ export default ({ id, props }) => {
                     <>加载中...</> :
                     loaded.tooLarge ?
                         <>
-                            文件大于{humanize.filesize(getSysConfig().sysConfig.maxContentSize)}，不支持在线查看，你可以选择
+                            文件大于{humanize.filesize(getSysConfig().maxContentSize)}，不支持在线查看，你可以选择
                             <Link underline="hover" onClick={() => {
                                 download(driver.id, filePath)
                             }}>下载该文件</Link>。

@@ -20,7 +20,7 @@ export default function () {
     const [fileAttribute, setFileAttribute] = useState(null);
     useEffect(() => {
         setDriverFiles([]);
-        fetchEventSource(`${getSysConfig().sysConfig.webServer}/api/v1/event/list?driverId=${driver.id}&${dirPath.map(f => "filePath[]=" + f).join("&")}`, {
+        fetchEventSource(`${getSysConfig().webServer}/api/v1/event/list?driverId=${driver.id}&${dirPath.map(f => "filePath[]=" + f).join("&")}`, {
             signal: controller.signal,
             openWhenHidden: true,
             async onopen(response) {

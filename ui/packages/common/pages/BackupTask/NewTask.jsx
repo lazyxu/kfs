@@ -22,7 +22,7 @@ import { useState } from "react";
 import './index.scss';
 
 export default function ({ open, setOpen }) {
-    const sysConfig = getSysConfig().sysConfig;
+    const sysConfig = getSysConfig();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [driverName, setDriverName] = useState('');

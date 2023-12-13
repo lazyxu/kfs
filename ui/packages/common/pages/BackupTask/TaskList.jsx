@@ -26,11 +26,11 @@ const StatusMsgs = {
 };
 
 export default function ({ setTaskDetail }) {
-    const sysConfig = getSysConfig().sysConfig;
+    const sysConfig = getSysConfig();
     const [taskInfos, setTaskInfos] = useState({ list: [], runningTasks: {} });
     const controller = new AbortController();
     useEffect(() => {
-        fetchEventSource(`http://127.0.0.1:${getSysConfig().sysConfig.port}/api/v1/event/backupTask`, {
+        fetchEventSource(`http://127.0.0.1:${getSysConfig().port}/api/v1/event/backupTask`, {
             signal: controller.signal,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {

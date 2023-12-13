@@ -3,14 +3,12 @@ import useResourceManager, { openDir } from "@kfs/common/hox/resourceManager";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import useWindows, { APP_IMAGE_VIEWER, APP_TEXT_VIEWER, APP_VIDEO_VIEWER, getOpenApp, newWindow } from "@kfs/common/hox/windows";
 import { Box } from "@mui/material";
-import { memo, useState } from "react";
+import { memo } from "react";
 import SvgIcon from "../../../../components/Icon/SvgIcon";
 import ImgCancelable from "./ImgCancelable";
 
 export default memo(({ driver, filePath, driverFile, hasBeenInView, inView }) => {
-    const sysConfig = getSysConfig().sysConfig;
-    const [open, setOpen] = useState(false);
-    const [metadata, setMetadata] = useState();
+    const sysConfig = getSysConfig();
     const [resourceManager, setResourceManager] = useResourceManager();
     const [windows, setWindows] = useWindows();
     const { name, mode } = driverFile;

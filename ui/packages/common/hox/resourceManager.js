@@ -9,9 +9,13 @@ const initialState = {
   content: null,
 };
 
-export const [useResourceManager, getResourceManager] = createGlobalStore(() => useState(initialState));
+export const [useResourceManager, useResourceManager2] = createGlobalStore(() => useState(initialState));
 
 export default useResourceManager;
+
+export const getResourceManager = () => {
+  return useResourceManager2()[0];
+}
 
 export async function openDrivers(setResourceManager) {
   console.log('openDrivers');
