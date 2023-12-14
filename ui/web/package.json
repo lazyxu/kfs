@@ -9,6 +9,7 @@
     "type": "git",
     "url": "https://github.com/lazyxu/kfs.git"
   },
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
