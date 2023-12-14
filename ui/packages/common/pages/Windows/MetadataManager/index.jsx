@@ -1,9 +1,10 @@
 import { analyzeMetadata } from "@kfs/common/api/exif";
 import { noteError, noteWarning } from "@kfs/common/components/Notification/Notification";
+import { TitleBar, Window, WorkingArea } from "@kfs/common/components/Window/Window";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
-import { HourglassDisabled, HourglassTop, MarkUnreadChatAlt, Message, PlayArrow, Stop } from "@mui/icons-material";
-import { Box, IconButton, Menu } from "@mui/material";
+import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from "@mui/icons-material";
+import { Box, IconButton } from "@mui/material";
 import moment from "moment";
 import { useEffect, useState } from "react";
 
@@ -27,10 +28,8 @@ const StatusMsgs = {
     [StatusRunningAnalyze]: "正在解析",
 };
 
-export default function () {
-    const [anchorEl, setAnchorEl] = useState(null);
+export default function ({ id }) {
     const [taskInfo, setTaskInfo] = useState();
-    const [unreadMessage, setUnreadMessage] = useState(false);
     const controller = new AbortController();
     useEffect(() => {
         setTaskInfo();
@@ -60,7 +59,6 @@ export default function () {
                     noteWarning(info?.data?.errMsg);
                 }
                 setTaskInfo(info);
-                setUnreadMessage(true);
             },
             onclose() {
                 // if the server closes the connection unexpectedly, retry:
@@ -82,18 +80,9 @@ export default function () {
         }
     }, []);
     return (
-        <>
-            <IconButton onClick={e => {
-                setAnchorEl(e.currentTarget);
-                setUnreadMessage(false);
-            }}>
-                {unreadMessage ? <MarkUnreadChatAlt /> : <Message />}
-            </IconButton>
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => setAnchorEl(null)}
-            >
+        <Window id={id}>
+            <TitleBar id={id} title="元数据管理" />
+            <WorkingArea>
                 <Box sx={{ padding: "0.5em 1em" }}>
                     {(taskInfo?.status === undefined ||
                         taskInfo?.status === StatusIdle ||
@@ -140,7 +129,7 @@ export default function () {
                         上次执行结果：{taskInfo?.cnt}/{taskInfo?.total}
                     </Box>
                 }
-            </Menu>
-        </>
+            </WorkingArea>
+        </Window>
     )
 }

@@ -53,7 +53,7 @@ export default function () {
             (!chosenFileType || chosenFileType.includes(metadata.fileType.extension)))
         .sort(timeSortFn);
     return (
-        <Stack style={{ overflowY: 'auto' }}>
+        <Stack style={{ flex: "1", overflowY: 'auto' }}>
             <Stack
                 direction="row"
                 justifyContent="flex-end"

@@ -1,4 +1,5 @@
 import { download, listDriverFileByHash, openFile } from "@kfs/common/api/fs";
+import { StatusBar, TitleBar, Window, WorkingArea } from '@kfs/common/components/Window/Window';
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import FileAttribute from '@kfs/common/pages/Files/DriverFiles/FileAttribute';
 import { AllInbox, ContentCopy, Info, Save } from '@mui/icons-material';
@@ -9,7 +10,6 @@ import humanize from 'humanize';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import SameFiles from "./SameFiles";
-import { StatusBar, TitleBar, Window, WorkingArea } from './Window';
 
 export default ({ id, props }) => {
     const { driver, filePath, driverFile } = props;
@@ -58,14 +58,34 @@ export default ({ id, props }) => {
             </>} />
             <WorkingArea>
                 {!loaded ?
-                    <>加载中...</> :
+                    <Box sx={{
+                        height: "100%", width: "100%",
+                        textAlign: "center", "::before": {
+                            content: '""',
+                            display: "inline-block",
+                            verticalAlign: "middle",
+                            height: "100%",
+                        }
+                    }}>
+                        加载中...
+                    </Box> :
                     loaded.tooLarge ?
-                        <>
-                            文件大于{humanize.filesize(getSysConfig().maxContentSize)}，不支持在线查看，你可以选择
+                        <Box sx={{
+                            height: "100%", width: "100%",
+                            textAlign: "center", "::before": {
+                                content: '""',
+                                display: "inline-block",
+                                verticalAlign: "middle",
+                                height: "100%",
+                            }
+                        }}>
+                            文件大小为 {humanize.filesize(driverFile.size)}，
+                            大于{humanize.filesize(getSysConfig().maxContentSize)}，
+                            不支持在线查看，你可以选择
                             <Link underline="hover" onClick={() => {
                                 download(driver.id, filePath)
                             }}>下载该文件</Link>。
-                        </> :
+                        </Box> :
                         <p style={{ wordBreak: "break-all", whiteSpace: "break-spaces", outline: "none" }} contentEditable>
                             {loaded.content}
                         </p>

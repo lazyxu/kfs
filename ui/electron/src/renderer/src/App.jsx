@@ -1,11 +1,11 @@
 import { newDevice } from '@kfs/common/api/device';
 import { listLocalFileDriver, startAllLocalFileSync } from '@kfs/common/api/driver';
 import SvgIcon from '@kfs/common/components/Icon/SvgIcon';
-import MetadataAnalysis from '@kfs/common/components/MetadataAnalysis';
 import { SnackbarAction } from '@kfs/common/components/Notification/Notification';
 import useEnv from '@kfs/common/hox/env';
 import useMenu from "@kfs/common/hox/menu";
 import useSysConfig from "@kfs/common/hox/sysConfig";
+import useWindows, { APP_METADATA_MANAGER, newWindow } from "@kfs/common/hox/windows";
 import BackupTask from "@kfs/common/pages/BackupTask";
 import Dcim from '@kfs/common/pages/Dcim';
 import DedicatedSpace from '@kfs/common/pages/DedicatedSpace/DedicatedSpace';
@@ -56,6 +56,7 @@ function App() {
     const { mode, setMode } = useColorScheme();
     const [open, setOpen] = useState(false);
     const [env, setEnv] = useEnv();
+    const [windows, setWindows] = useWindows();
     console.log("App.import.meta", import.meta, env);
     const toggleDrawer = (open) => (event) => {
         if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -107,9 +108,6 @@ function App() {
                         <Typography variant="h6" noWrap component="div" sx={{ flex: 1 }}>
                             {menu}
                         </Typography>
-                        <Box>
-                            <MetadataAnalysis />
-                        </Box>
                     </Toolbar>
                 </AppBar>
                 <Drawer
@@ -129,10 +127,17 @@ function App() {
                                 { icon: 'DCIM', name: '我的相册' },
                                 { icon: 'yuntongbu', name: '备份任务' },
                                 { icon: 'devices', name: '设备列表' },
+                                { icon: '', name: '元数据' },
                                 { icon: 'peizhi', name: '设置' },
                                 { icon: 'equipment_data-02_fn', name: '存储空间' },
                             ].map((item, index) => (
-                                <ListItem key={item.name} disablePadding onClick={() => setMenu(item.name)}>
+                                <ListItem key={item.name} disablePadding onClick={() => {
+                                    if (item.name === "元数据") {
+                                        newWindow(setWindows, APP_METADATA_MANAGER);
+                                    } else {
+                                        setMenu(item.name);
+                                    }
+                                }}>
                                     <ListItemButton>
                                         <ListItemIcon>
                                             <SvgIcon icon={item.icon} style={{ height: "24px", width: "24px" }} />

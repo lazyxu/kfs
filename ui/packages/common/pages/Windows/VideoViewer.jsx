@@ -1,5 +1,6 @@
 import { getMetadata } from "@kfs/common/api/exif";
 import { downloadByHash, listDriverFileByHash } from "@kfs/common/api/fs";
+import { TitleBar, Window, WorkingArea } from "@kfs/common/components/Window/Window";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import FileAttribute from "@kfs/common/pages/Files/DriverFiles/FileAttribute";
 import { AllInbox, Download, Info, PrivacyTip } from "@mui/icons-material";
@@ -7,7 +8,6 @@ import { Badge, Box, ButtonGroup, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 import Metadata from "./Metadata";
 import SameFiles from "./SameFiles";
-import { TitleBar, Window, WorkingArea } from "./Window";
 
 export default function ({ id, props }) {
     let {
