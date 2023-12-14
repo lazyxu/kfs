@@ -1,42 +1,55 @@
-appId: com.electron.app
-productName: elec
-directories:
-  buildResources: build
+appId: "com.electron.lazyxu"
+productName: "考拉云盘"
+copyright: "Copyright © 2022 Xu Liang"
 files:
   - '!**/.vscode/*'
   - '!src/*'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+
 asarUnpack:
   - resources/**
-win:
-  executableName: elec
-nsis:
-  artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
 mac:
-  entitlementsInherit: build/entitlements.mac.plist
-  extendInfo:
-    - NSCameraUsageDescription: Application requests access to the device's camera.
-    - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
-    - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
-    - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
-  notarize: false
-dmg:
-  artifactName: ${name}-${version}.${ext}
-linux:
+  artifactName: ${name}-${version}-mac.${ext}
+  category: "com.apple.idms.appleid.prd.524658536a5a45574243647659714e625148656136773d3d"
+  icon: "./src/renderer/icon512.png"
   target:
-    - AppImage
-    - snap
-    - deb
-  maintainer: electronjs.org
-  category: Utility
-appImage:
-  artifactName: ${name}-${version}.${ext}
+    - "dmg"
+    - "zip"
+
+dmg:
+  writeUpdateInfo: false
+
+win:
+  artifactName: ${name}-${version}-win.${ext}
+  icon: "./src/renderer/icon512.png"
+  target:
+    - "nsis"
+    - "zip"
+
+# Config for the windows installer
+nsis:
+  oneClick: true
+  perMachine: true
+
+linux:
+  artifactName: ${name}-${version}-linux.${ext}
+  icon: "./src/renderer/icon512.png"
+  target:
+    - "snap"
+    - "AppImage"
+    - "zip"
+
+# Package electron code into a asar archive. Set to false to debug issues.
+asar: false
+
 npmRebuild: false
+
+extends: null
+
 publish:
-  provider: generic
-  url: https://example.com/auto-updates
+  provider: "github"
+  owner: "lazyxu"
+  repo: "kfs"
+

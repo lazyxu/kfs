@@ -4,9 +4,6 @@ set -e
 
 root=$(cd "$(dirname "$0")"; pwd)
 
-cp pb/fs.proto ui/web/public
-cp pb/fs.proto ui
-
 is_command_exist () {
   which $1 >/dev/null 2>&1
 }
@@ -84,7 +81,7 @@ case $1 in
       server)
         cd $root/ui/web
         yarn
-        DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production REACT_APP_PLATFORM=web BUILD_PATH=$root/cmd/kfs-server/build homepage=/ yarn build
+        yarn build
         cd $root/cmd/kfs-server
         echo "GOOS=$GOOS GOARCH=$GOARCH"
         if [[ $GOOS != '' && $GOARCH != '' ]]; then
@@ -108,11 +105,10 @@ case $1 in
         cd $root/cmd/kfs-electron
         echo "GOOS=$GOOS GOARCH=$GOARCH"
         GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-electron
-        cp kfs-electron $root/ui/electron
+        cp kfs-electron $root/ui/electron/resources/
         cd $root/ui/electron
         yarn
-        DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production REACT_APP_PLATFORM=$(go env GOOS) BUILD_PATH=electron-production PUBLIC_URL=. yarn build
-        yarn build:electron
+        DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production VITE_APP_PLATFORM=$(go env GOOS) BUILD_PATH=electron-production PUBLIC_URL=. yarn build
         ;;
 
       *)

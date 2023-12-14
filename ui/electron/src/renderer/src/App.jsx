@@ -68,7 +68,7 @@ function App() {
     useEffect(() => {
         newDeviceIfNeeded(sysConfig, setSysConfig);
         setEnv(import.meta.env);
-    });
+    }, []);
     useEffect(() => {
         // document.body.setAttribute('data-theme', sysConfig.theme);
         console.log("mode:", mode, "=>", sysConfig.theme);

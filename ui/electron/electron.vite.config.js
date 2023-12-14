@@ -10,7 +10,7 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()]
   },
   renderer: {
-    envPrefix: "VITE_",
+    envPrefix: 'VITE_',
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src')
