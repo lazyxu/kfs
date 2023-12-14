@@ -4,6 +4,7 @@ export default function ({ icon, color, className, style, onClick }) {
     return (
         <SvgIcon color={color ? color : "inherit"} fontSize="inherit" className={className} style={style} onClick={onClick}>
             <svg
+                fill="currentColor"
                 aria-hidden="true"
                 viewBox="0 0 200 200"
                 preserveAspectRatio="xMinYMin meet"
