@@ -104,8 +104,8 @@ case $1 in
       electron)
         cd $root/cmd/kfs-electron
         echo "GOOS=$GOOS GOARCH=$GOARCH"
-        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-electron
-        cp kfs-electron $root/ui/electron/resources/
+        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-electron.exe
+        cp kfs-electron.exe $root/ui/electron/resources/
         cd $root/ui/electron
         yarn
         DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production VITE_APP_PLATFORM=$(go env GOOS) BUILD_PATH=electron-production PUBLIC_URL=. yarn build

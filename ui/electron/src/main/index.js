@@ -15,8 +15,10 @@ if (!app.isPackaged) {
 if (app.isPackaged) {
   let configFilename = 'kfs-config.json'
   let configPath = path.join(process.resourcesPath, configFilename)
-  console.log('spawn kfs-electron', __dirname, path.join(__dirname, '../../resources/kfs-electron'))
-  let child = spawn(path.join(__dirname, '../../resources/kfs-electron'), ['-p', '11234'], {
+  let cwd = path.join(__dirname, '../../resources')
+  console.log('spawn kfs-electron', __dirname, cwd)
+  let child = spawn(".\\kfs-electron.exe", ['-p', '11234'], {
+    cwd,
     shell: true
   })
   let regex = new RegExp(/^Websocket server listening at: .+:(\d+)\n$/)
