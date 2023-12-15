@@ -5,10 +5,12 @@
     "packages":[
       "web",
       "electron",
+      "mobile",
       "packages/**"
     ],
     "nohoist": [
-      "**electron**"
+      "**electron**",
+      "**expo**"
     ]
   }
 }
