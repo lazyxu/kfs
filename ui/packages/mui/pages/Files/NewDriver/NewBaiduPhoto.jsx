@@ -1,4 +1,4 @@
-import { getSysConfig } from "@kfs/mui/hox/sysConfig";
+import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { Button, DialogActions, DialogContent, Link, Stack, TextField } from "@mui/material";
 import { useState } from 'react';
 import { newDriverBaiduPhoto } from "../../../api/driver";

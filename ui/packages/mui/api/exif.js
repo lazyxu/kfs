@@ -1,7 +1,7 @@
+import { httpPost as localHttpPost } from "@kfs/common/api/localServer";
+import { httpGet, httpPost } from "@kfs/common/api/webServer";
+import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { noteError } from "@kfs/mui/components/Notification/Notification";
-import { getSysConfig } from "@kfs/mui/hox/sysConfig";
-import { httpPost as localHttpPost } from "./localServer";
-import { httpGet, httpPost } from "./webServer";
 
 export async function analyzeMetadata(start) {
     console.log('web.analyzeMetadata', start);

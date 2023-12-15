@@ -1,7 +1,7 @@
+import useResourceManager, { openDir } from '@kfs/common/hox/resourceManager';
 import { deleteDriver, getDriverLocalFile, resetDriver } from '@kfs/mui/api/driver';
 import SvgIcon from "@kfs/mui/components/Icon/SvgIcon";
 import Menu from '@kfs/mui/components/Menu';
-import useResourceManager, { openDir } from '@kfs/mui/hox/resourceManager';
 import { ClearAll, ContentCopy, Delete, DriveFileRenameOutline, OpenInNew, Settings } from '@mui/icons-material';
 import { Box, ListItemText, MenuItem, Stack, Typography } from "@mui/material";
 import { useState } from 'react';

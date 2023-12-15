@@ -1,6 +1,6 @@
+import useSysConfig from '@kfs/common/hox/sysConfig';
 import { deleteDevice } from '@kfs/mui/api/device';
 import SvgIcon from "@kfs/mui/components/Icon/SvgIcon";
-import useSysConfig from '@kfs/mui/hox/sysConfig';
 import { Delete, DriveFileRenameOutline, MoreVert } from '@mui/icons-material';
 import { Box, Card, CardContent, IconButton, ListItemText, Menu, MenuItem, Stack, alpha, styled } from "@mui/material";
 import { useState } from 'react';

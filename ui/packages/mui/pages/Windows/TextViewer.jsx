@@ -1,6 +1,6 @@
+import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { download, listDriverFileByHash, openFile } from "@kfs/mui/api/fs";
 import { StatusBar, TitleBar, Window, WorkingArea } from '@kfs/mui/components/Window/Window';
-import { getSysConfig } from "@kfs/mui/hox/sysConfig";
 import FileAttribute from '@kfs/mui/pages/Files/DriverFiles/FileAttribute';
 import { AllInbox, ContentCopy, Info, Save } from '@mui/icons-material';
 import { default as FileDownload } from '@mui/icons-material/FileDownload';

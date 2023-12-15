@@ -1,4 +1,4 @@
-import { httpDelete, httpGet, httpPost } from "./localServer";
+import { httpDelete, httpGet, httpPost } from "@kfs/common/api/localServer";
 
 export async function listBackupTask() {
     console.log('web.listBackupTask');

@@ -1,4 +1,4 @@
-import useResourceManager from '@kfs/mui/hox/resourceManager';
+import useResourceManager from '@kfs/common/hox/resourceManager';
 import { Box } from "@mui/material";
 import AbsolutePath from './AbsolutePath';
 import DriverFiles from "./DriverFiles/DriverFiles";

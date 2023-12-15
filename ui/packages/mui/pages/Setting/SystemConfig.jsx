@@ -1,4 +1,4 @@
-import useSysConfig from '@kfs/mui/hox/sysConfig';
+import useSysConfig from '@kfs/common/hox/sysConfig';
 import { Box, Button, FormControlLabel, InputLabel, Radio, RadioGroup, Stack, TextField } from '@mui/material';
 
 export default () => {

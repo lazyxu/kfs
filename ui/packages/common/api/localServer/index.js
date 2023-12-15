@@ -1,4 +1,4 @@
-import { getSysConfig } from "@kfs/mui/hox/sysConfig";
+import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import axios from "axios";
 
 export async function httpGet(path, params) {

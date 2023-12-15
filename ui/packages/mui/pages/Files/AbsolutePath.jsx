@@ -1,5 +1,5 @@
+import useResourceManager, { openDir, openDrivers } from '@kfs/common/hox/resourceManager';
 import SvgIcon from "@kfs/mui/components/Icon/SvgIcon";
-import useResourceManager, { openDir, openDrivers } from '@kfs/mui/hox/resourceManager';
 import { Breadcrumbs, Link, Stack } from "@mui/material";
 
 function PathElement({ name, icon, dirPath }) {

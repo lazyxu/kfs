@@ -1,5 +1,5 @@
+import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { noteError, noteWarning } from "@kfs/mui/components/Notification/Notification";
-import { getSysConfig } from "@kfs/mui/hox/sysConfig";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { Close } from "@mui/icons-material";
 import { Alert, Box, IconButton, Typography } from "@mui/material";

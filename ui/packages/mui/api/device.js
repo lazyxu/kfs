@@ -1,5 +1,5 @@
+import { httpDelete, httpGet, httpPost } from "@kfs/common/api/webServer";
 import { noteError } from "@kfs/mui/components/Notification/Notification";
-import { httpDelete, httpGet, httpPost } from "./webServer";
 
 export async function listDevice(setDevices) {
     try {

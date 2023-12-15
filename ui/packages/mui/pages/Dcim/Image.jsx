@@ -1,4 +1,4 @@
-import { getSysConfig } from "@kfs/mui/hox/sysConfig";
+import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import useWindows, { APP_IMAGE_VIEWER, APP_VIDEO_VIEWER, newWindow } from "@kfs/mui/hox/windows";
 import ImgCancelable from "@kfs/mui/pages/Files/DriverFiles/File/ImgCancelable";
 import { Box } from "@mui/material";

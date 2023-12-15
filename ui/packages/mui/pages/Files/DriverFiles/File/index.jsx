@@ -1,4 +1,4 @@
-import useResourceManager from '@kfs/mui/hox/resourceManager';
+import useResourceManager from '@kfs/common/hox/resourceManager';
 import { Stack } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Dotdotdot from "react-dotdotdot";

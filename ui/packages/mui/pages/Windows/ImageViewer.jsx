@@ -1,7 +1,7 @@
+import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { getMetadata } from "@kfs/mui/api/exif";
 import { downloadByHash, listDriverFileByHash } from "@kfs/mui/api/fs";
 import { TitleBar, Window, WorkingArea } from "@kfs/mui/components/Window/Window";
-import { getSysConfig } from "@kfs/mui/hox/sysConfig";
 import FileAttribute from "@kfs/mui/pages/Files/DriverFiles/FileAttribute";
 import { AllInbox, Download, Info, PrivacyTip } from "@mui/icons-material";
 import { Badge, Box, ButtonGroup, IconButton } from "@mui/material";

@@ -1,8 +1,8 @@
 import { modeIsDir } from "@kfs/api";
+import useResourceManager, { openDir } from "@kfs/common/hox/resourceManager";
 import { getDriverLocalFile } from "@kfs/mui/api/driver";
 import { download } from "@kfs/mui/api/fs";
 import Menu from "@kfs/mui/components/Menu";
-import useResourceManager, { openDir } from "@kfs/mui/hox/resourceManager";
 import useWindows, { getOpenApp, newWindow } from "@kfs/mui/hox/windows";
 import { Bookmark, ContentCopy, ContentCut, Delete, Download, DriveFileRenameOutline, History, IosShare, OpenInNew, Settings } from "@mui/icons-material";
 import { ListItemText, MenuItem } from "@mui/material";
