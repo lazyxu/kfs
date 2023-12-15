@@ -1,6 +1,5 @@
 import SvgIcon from '@kfs/common/components/Icon/SvgIcon';
 import { SnackbarAction } from '@kfs/common/components/Notification/Notification';
-import useEnv from '@kfs/common/hox/env';
 import useMenu from "@kfs/common/hox/menu";
 import useSysConfig from "@kfs/common/hox/sysConfig";
 import useWindows, { APP_METADATA_MANAGER, newWindow } from "@kfs/common/hox/windows";
@@ -18,7 +17,7 @@ import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButto
 import { SnackbarProvider } from 'notistack';
 import { useEffect, useState } from "react";
 
-function Version({ env }) {
+function Version() {
     return (
         <Box sx={{
             position: 'absolute',
@@ -26,7 +25,7 @@ function Version({ env }) {
             fontFamily: "KaiTi, STKaiti;",
         }}>
             <Typography>
-                {env.VITE_APP_PLATFORM}.{env.MODE}
+                {window.kfs.env.VITE_APP_PLATFORM}.{window.kfs.env.MODE}
             </Typography>
         </Box>
     );
@@ -37,9 +36,7 @@ function App() {
     const { menu, setMenu } = useMenu();
     const { mode, setMode } = useColorScheme();
     const [open, setOpen] = useState(false);
-    const [env, setEnv] = useEnv();
     const [windows, setWindows] = useWindows();
-    console.log("App.import.meta", import.meta, env);
     const toggleDrawer = (open) => (event) => {
         if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
             return;
@@ -47,9 +44,6 @@ function App() {
 
         setOpen(open);
     };
-    useEffect(() => {
-        setEnv(import.meta.env);
-    });
     useEffect(() => {
         // document.body.setAttribute('data-theme', sysConfig.theme);
         console.log("mode:", mode, "=>", sysConfig.theme);
@@ -63,7 +57,6 @@ function App() {
         ...theme.mixins.toolbar,
         justifyContent: 'flex-end',
     }));
-    console.log(import.meta.env);
     return (
         <SnackbarProvider action={SnackbarAction} >
             <Box sx={{
@@ -163,7 +156,7 @@ function App() {
                             ))}
                         </List>
                     </Box>
-                    <Version env={env} />
+                    <Version />
                 </Drawer>
                 <DrawerHeader />
                 {menu === '我的云盘' && <Files />}

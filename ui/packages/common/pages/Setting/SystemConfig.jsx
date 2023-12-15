@@ -1,6 +1,5 @@
 import useSysConfig from '@kfs/common/hox/sysConfig';
 import { Box, Button, FormControlLabel, InputLabel, Radio, RadioGroup, Stack, TextField } from '@mui/material';
-import { getEnv } from '../../hox/env';
 
 export default () => {
     const { sysConfig, setSysConfig, resetSysConfig } = useSysConfig();
@@ -30,7 +29,7 @@ export default () => {
                                 onChange={e => setSysConfig(c => ({ ...c, webServer: e.target.value }))}
                             />
                         </Box>
-                        {getEnv().VITE_APP_PLATFORM === 'web' ? [] :
+                        {window.kfs.env.VITE_APP_PLATFORM === 'web' ? [] :
                             <>
                                 <Box>
                                     <InputLabel sx={{ display: "inline" }}>Socket服务器：</InputLabel>
