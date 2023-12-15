@@ -1,9 +1,14 @@
 {
   "name": "kfs",
   "private": true,
-  "workspaces": [
-    "web",
-    "electron",
-    "packages/**"
-  ]
+  "workspaces": {
+    "packages":[
+      "web",
+      "electron",
+      "packages/**"
+    ],
+    "nohoist": [
+      "**electron**"
+    ]
+  }
 }

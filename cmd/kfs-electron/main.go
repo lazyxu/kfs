@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	println("main")
 	err := rootCmd().Execute()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -33,6 +34,7 @@ func rootCmd() *cobra.Command {
 var db *gosqlite.DB
 
 func runRoot(cmd *cobra.Command, args []string) {
+	println("runRoot", args)
 	var err error
 	db, err = gosqlite.NewDb("electron.db")
 	if err != nil {
@@ -40,6 +42,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	portStr := cmd.Flag(PortStr).Value.String()
+	println("portStr", portStr)
 	lis, err := net.Listen("tcp", "0.0.0.0:"+portStr)
 	if err != nil {
 		panic(err)

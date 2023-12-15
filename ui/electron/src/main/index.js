@@ -4,6 +4,7 @@ import { spawn } from 'child_process'
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from 'electron'
 import reloader from 'electron-reloader'
 import fs from 'fs'
+import iconvLite from 'iconv-lite'
 import path from 'path'
 import { getProcesses } from './processManager'
 
@@ -15,12 +16,12 @@ if (app.isPackaged) {
   let configFilename = 'kfs-config.json'
   let configPath = path.join(process.resourcesPath, configFilename)
   console.log('spawn kfs-electron', __dirname, path.join(__dirname, '../../resources/kfs-electron'))
-  let child = spawn(path.join(__dirname, '../../resources/kfs-electron'), ['127.0.0.1:11234'], {
+  let child = spawn(path.join(__dirname, '../../resources/kfs-electron'), ['-p', '11234'], {
     shell: true
   })
   let regex = new RegExp(/^Websocket server listening at: .+:(\d+)\n$/)
   child.stdout.on('data', function (chunk) {
-    let stdout = chunk.toString()
+    let stdout = iconvLite.decode(chunk, 'cp936')
     console.log('kfs-electron stdout', stdout)
     let results = regex.exec(stdout)
     if (results && results[1]) {
@@ -33,7 +34,7 @@ if (app.isPackaged) {
     }
   })
   child.stderr.on('data', function (chunk) {
-    console.log('kfs-electron stderr', chunk.toString())
+    console.log('kfs-electron stderr', iconvLite.decode(chunk, 'cp936'))
   })
 }
 
