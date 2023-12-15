@@ -41,7 +41,7 @@ export default function ({ onSucc }) {
                         onChange={e => setCode(e.target.value)}
                         sx={{ flex: 1 }}
                     />
-                    {window.kfs.env.VITE_APP_PLATFORM === 'web' ?
+                    {window.kfsEnv.VITE_APP_PLATFORM === 'web' ?
                         <Link target="_blank" href={url}>
                             点击获取授权码
                         </Link> :

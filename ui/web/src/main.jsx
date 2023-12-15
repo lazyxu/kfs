@@ -8,9 +8,7 @@ import './reset.scss';
 import reportWebVitals from './reportWebVitals';
 import ThemeApp from "./ThemeApp";
 
-window.kfs = {
-    env: import.meta.env,
-};
+import "./global";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

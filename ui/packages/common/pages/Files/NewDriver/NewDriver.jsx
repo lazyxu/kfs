@@ -7,7 +7,7 @@ import NewNormalDriver from "./NewNormalDriver";
 
 export default function ({ onClose, onSucc }) {
     let [driverType, setDriverType] = useState(0);
-    console.log("window.kfs.env", window.kfs.env)
+    console.log("window.kfsEnv", window.kfsEnv)
     return (
         <Dialog fullWidth={true} open={true} onClose={onClose}>
             <DialogTitle sx={{
@@ -34,7 +34,7 @@ export default function ({ onClose, onSucc }) {
                 borderBottom: 1, borderColor: 'divider'
             }}
             >
-                {(window.kfs.env.VITE_APP_PLATFORM !== 'web' ?
+                {(window.kfsEnv.VITE_APP_PLATFORM !== 'web' ?
                     ["普通云盘", "一刻相册备份盘", "本地文件备份盘"] :
                     ["普通云盘", "一刻相册备份盘"]).map((v, i) =>
                         <Tab key={i} value={i} label={v} id={`simple-tab-${i}`} />

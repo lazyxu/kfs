@@ -30,7 +30,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
                 <OpenInNew />
                 <ListItemText>打开</ListItemText>
             </MenuItem>
-            {window.kfs.env.VITE_APP_PLATFORM !== 'web' && <>
+            {window.kfsEnv.VITE_APP_PLATFORM !== 'web' && <>
                 <MenuItem onClick={() => {
                     setContextMenu(null);
                     getDriverLocalFile(driver.id).then(driverLocalFile => {

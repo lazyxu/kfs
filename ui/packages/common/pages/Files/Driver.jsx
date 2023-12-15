@@ -52,7 +52,7 @@ export default ({ driver, setDriverAttribute, onDelete }) => {
                     <ListItemText>打开</ListItemText>
                 </MenuItem>
                 {/* TODO: device id */}
-                {window.kfs.env.VITE_APP_PLATFORM !== 'web' && driver.type === 'localFile' &&
+                {window.kfsEnv.VITE_APP_PLATFORM !== 'web' && driver.type === 'localFile' &&
                     <MenuItem onClick={() => {
                         setContextMenu(null);
                         getDriverLocalFile(driver.id).then(driverLocalFile => {

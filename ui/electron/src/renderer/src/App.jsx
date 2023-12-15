@@ -43,7 +43,7 @@ function Version() {
             fontFamily: "KaiTi, STKaiti;",
         }}>
             <Typography>
-                {window.kfs.env.VITE_APP_PLATFORM}.{window.kfs.env.MODE}
+                {window.kfsEnv.VITE_APP_PLATFORM}.{window.kfsEnv.MODE}
             </Typography>
         </Box>
     );

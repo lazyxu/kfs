@@ -29,7 +29,7 @@ export default () => {
                                 onChange={e => setSysConfig(c => ({ ...c, webServer: e.target.value }))}
                             />
                         </Box>
-                        {window.kfs.env.VITE_APP_PLATFORM === 'web' ? [] :
+                        {window.kfsEnv.VITE_APP_PLATFORM === 'web' ? [] :
                             <>
                                 <Box>
                                     <InputLabel sx={{ display: "inline" }}>Socket服务器：</InputLabel>
