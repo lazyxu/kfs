@@ -1,4 +1,4 @@
-import { getPerm, modeIsDir } from '@kfs/api';
+import { getPerm, modeIsDir } from '@kfs/common/api/utils';
 import { getDriversDirCalculatedInfo } from '@kfs/mui/api/driver';
 import { Close } from '@mui/icons-material';
 import { Box, Dialog, DialogContent, DialogTitle, Grid } from "@mui/material";

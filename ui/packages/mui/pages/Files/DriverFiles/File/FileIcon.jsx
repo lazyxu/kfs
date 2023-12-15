@@ -1,4 +1,4 @@
-import { modeIsDir } from "@kfs/api";
+import { modeIsDir } from "@kfs/common/api/utils";
 import useResourceManager, { openDir } from "@kfs/common/hox/resourceManager";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import useWindows, { APP_IMAGE_VIEWER, APP_TEXT_VIEWER, APP_VIDEO_VIEWER, getOpenApp, newWindow } from "@kfs/mui/hox/windows";

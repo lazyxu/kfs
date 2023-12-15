@@ -1,4 +1,4 @@
-import { parseShotTime } from "@kfs/api";
+import { parseShotTime } from "@kfs/common/api/utils";
 import { Box, Grid } from "@mui/material";
 import Image from "./Image";
 

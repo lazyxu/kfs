@@ -1,4 +1,4 @@
-import { modeIsDir } from "@kfs/api";
+import { modeIsDir } from "@kfs/common/api/utils";
 import useResourceManager, { openDir } from "@kfs/common/hox/resourceManager";
 import { getDriverLocalFile } from "@kfs/mui/api/driver";
 import { download } from "@kfs/mui/api/fs";

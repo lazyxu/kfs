@@ -1,4 +1,4 @@
-import { toPrecent } from '@kfs/api';
+import { toPrecent } from '@kfs/common/api/utils';
 import { getDiskUsage } from '@kfs/mui/api/disk';
 import { Box, InputLabel, Stack, Typography } from '@mui/material';
 import humanize from 'humanize';
