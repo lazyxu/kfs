@@ -1,15 +1,9 @@
-import { useState, useEffect } from 'react';
-import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import CircularProgress from '@mui/material/CircularProgress';
+import TextField from '@mui/material/TextField';
+import { useEffect, useState } from 'react';
 
-function sleep(delay = 0) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, delay);
-  });
-}
-
-export default function AsyncSelect({label, fetchOptions, onChange}) {
+export default function AsyncSelect({ label, fetchOptions, onChange }) {
   const [open, setOpen] = useState(false);
   const [fetch, setFetch] = useState(false);
   const [options, setOptions] = useState([]);

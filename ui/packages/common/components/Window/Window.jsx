@@ -3,7 +3,6 @@ import Close from '@mui/icons-material/Close';
 import { Box, ButtonGroup, Dialog, DialogContent, Stack } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 
-
 export function Window({ id, children }) {
     const [windows, setWindows] = useWindows();
     return (

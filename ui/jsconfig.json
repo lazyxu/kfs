@@ -8,7 +8,6 @@
             "@kfs/*": [
                 "packages/*"
             ],
-            "@mui/system": ["@mui/material/node_modules/@mui/system"],
         },
     }
 }
