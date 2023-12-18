@@ -1,6 +1,6 @@
 import { httpGet } from "@kfs/common/api/webServer";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { noteError } from "@kfs/mui/components/Notification/Notification";
+import { noteError } from "@kfs/mui/components/Notification";
 import axios from "axios";
 
 export async function openFile(driverId, filePath) {

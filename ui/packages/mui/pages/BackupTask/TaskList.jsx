@@ -1,6 +1,6 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { deleteBackupTask, startBackupTask } from "@kfs/mui/api/backup";
-import { noteError, noteSuccess } from "@kfs/mui/components/Notification/Notification";
+import { noteError, noteSuccess } from "@kfs/mui/components/Notification";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { Close, HourglassDisabled, HourglassTop, PlayArrow, RestartAlt, SettingsApplications, Stop } from "@mui/icons-material";
 import { Box, Button, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";

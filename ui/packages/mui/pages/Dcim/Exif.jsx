@@ -1,4 +1,4 @@
-import { exifStatus } from '@kfs/mui/api/exif';
+import { exifStatus } from '@kfs/common/api/webServer/exif';
 import { Box, Button } from "@mui/material";
 import { useEffect, useState } from "react";
 

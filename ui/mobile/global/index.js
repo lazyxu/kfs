@@ -1,3 +1,5 @@
+import Toast from "react-native-toast-message";
+
 let env = {
     VITE_APP_PLATFORM: "mobile",
     MODE: "development",
@@ -23,3 +25,11 @@ Object.defineProperty(window, "kfsConfig", {
         kfsConfig = json;
     },
 });
+
+window.noteError = () => {
+    Toast.show({
+        type: 'success',
+        text1: 'Hello',
+        text2: 'This is some something 👋'
+    });
+}

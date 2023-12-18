@@ -1,6 +1,6 @@
 import useResourceManager from "@kfs/common/hox/resourceManager";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { noteError } from "@kfs/mui/components/Notification/Notification";
+import { noteError } from "@kfs/mui/components/Notification";
 import File from "@kfs/mui/pages/Files/DriverFiles/File";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { Grid, Stack } from "@mui/material";

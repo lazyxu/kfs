@@ -1,7 +1,7 @@
 import { httpPost as localHttpPost } from "@kfs/common/api/localServer";
 import { httpGet, httpPost } from "@kfs/common/api/webServer";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { noteError } from "@kfs/mui/components/Notification/Notification";
+import { noteError } from "@kfs/mui/components/Notification";
 
 export async function analyzeMetadata(start) {
     console.log('web.analyzeMetadata', start);
@@ -45,23 +45,6 @@ export async function startDriverLocalFileFilter(start, driverId, srcPath, ignor
         noteError("测试过滤规则设置失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
-}
-
-export async function analysisExif(start) {
-    console.log('web.analysisExif', start);
-    return await httpPost("/api/v1/analysisExif", {
-        start,
-    });
-}
-
-export async function exifStatus() {
-    console.log('web.exifStatus');
-    return await httpGet("/api/v1/analysisExif");
-}
-
-export async function listExif() {
-    console.log('web.exif');
-    return await httpGet("/api/v1/exif");
 }
 
 export async function getMetadata(hash) {

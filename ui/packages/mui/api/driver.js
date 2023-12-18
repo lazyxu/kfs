@@ -1,7 +1,7 @@
 import { httpPostBody as httpPostBodyLocal } from "@kfs/common/api/localServer";
 import { httpDelete, httpGet, httpPost } from "@kfs/common/api/webServer";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { noteError } from "@kfs/mui/components/Notification/Notification";
+import { noteError } from "@kfs/mui/components/Notification";
 
 export async function listDriver() {
     try {

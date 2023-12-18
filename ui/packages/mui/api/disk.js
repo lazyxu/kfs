@@ -1,5 +1,5 @@
 import { httpGet } from "@kfs/common/api/webServer";
-import { noteError } from "@kfs/mui/components/Notification/Notification";
+import { noteError } from "@kfs/mui/components/Notification";
 
 export async function getDiskUsage() {
     try {

@@ -3,7 +3,7 @@ import useSysConfig from "@kfs/common/hox/sysConfig";
 import { newDevice } from '@kfs/mui/api/device';
 import { listLocalFileDriver, startAllLocalFileSync } from '@kfs/mui/api/driver';
 import SvgIcon from '@kfs/mui/components/Icon/SvgIcon';
-import { SnackbarAction } from '@kfs/mui/components/Notification/Notification';
+import { SnackbarAction } from '@kfs/mui/components/Notification';
 import useWindows, { APP_METADATA_MANAGER, newWindow } from "@kfs/mui/hox/windows";
 import BackupTask from "@kfs/mui/pages/BackupTask";
 import Dcim from '@kfs/mui/pages/Dcim';

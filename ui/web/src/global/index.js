@@ -1,3 +1,5 @@
+import { noteError } from "@kfs/mui/components/Notification";
+
 Object.defineProperty(window, 'kfsEnv', {
     value: import.meta.env,
     enumerable: false,
@@ -20,3 +22,5 @@ Object.defineProperty(window, "kfsConfig", {
         localStorage.setItem(KEY_KFS_CONFIG, JSON.stringify(json, undefined, 2));
     },
 });
+
+window.noteError = noteError;

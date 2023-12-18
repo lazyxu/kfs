@@ -1,6 +1,6 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { analyzeMetadata } from "@kfs/mui/api/exif";
-import { noteError, noteWarning } from "@kfs/mui/components/Notification/Notification";
+import { noteError, noteWarning } from "@kfs/mui/components/Notification";
 import { TitleBar, Window, WorkingArea } from "@kfs/mui/components/Window/Window";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from "@mui/icons-material";

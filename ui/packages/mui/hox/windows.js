@@ -1,6 +1,6 @@
-import { noteWarning } from '@kfs/mui/components/Notification/Notification';
 import { createGlobalStore } from 'hox';
 import { useState } from 'react';
+import { noteWarning } from '../components/Notification';
 
 export const [useWindows, useWindows2] = createGlobalStore(() => useState({}));
 

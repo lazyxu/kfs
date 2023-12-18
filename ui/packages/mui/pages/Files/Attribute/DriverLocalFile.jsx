@@ -1,7 +1,7 @@
 import { getSysConfig } from '@kfs/common/hox/sysConfig';
 import { getDriverLocalFile, getDriverSync, startAllLocalFileSync, updateDriverSync } from '@kfs/mui/api/driver';
 import { startDriverLocalFile } from '@kfs/mui/api/exif';
-import { noteError } from '@kfs/mui/components/Notification/Notification';
+import { noteError } from '@kfs/mui/components/Notification';
 import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from '@mui/icons-material';
 import { Box, Grid, IconButton, MenuItem, Select, Switch } from "@mui/material";

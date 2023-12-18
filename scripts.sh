@@ -70,6 +70,11 @@ case $1 in
         VITE_APP_PLATFORM=$(go env GOOS) yarn dev
         ;;
 
+      mobile)
+        cd $root/ui/mobile
+        VITE_APP_PLATFORM=mobile yarn start
+        ;;
+
       *)
         usage
         ;;

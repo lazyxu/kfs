@@ -1,7 +1,7 @@
 import { Box, Checkbox, FormControlLabel, IconButton, InputLabel, Radio, RadioGroup, Stack, Typography } from "@mui/material";
 // import FormControlLabel from '@mui/material/FormControlLabel';
 import { parseShotEquipment, parseShotTime, timeSortFn } from "@kfs/common/api/utils";
-import { listExif } from '@kfs/mui/api/exif';
+import { listExif } from '@kfs/common/api/webServer/exif';
 import { CalendarMonth, FilterAlt, Refresh } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import All from './All';

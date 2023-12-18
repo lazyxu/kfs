@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { HoxRoot } from "hox";
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import "./global";
 
 function App1() {
@@ -13,15 +14,17 @@ function App1() {
   console.log("drivers", drivers);
   useEffect(() => {
     httpGet("/api/v1/drivers").then(setDrivers);
+    window.noteError();
   }, []);
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
+      <Text>App.js!</Text>
       <Text>{JSON.stringify(sysConfig, undefined, 2)}</Text>
       {drivers.map(driver => (
         <Text key={driver.name}>{driver.name}</Text>
       ))}
       <StatusBar style="auto" />
+      <Toast />
     </View>
   );
 }
