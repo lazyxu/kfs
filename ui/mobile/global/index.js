@@ -13,7 +13,7 @@ Object.defineProperty(window, 'kfsEnv', {
 });
 
 let kfsConfig = {
-    webServer: "http://192.168.2.12:1123",
+    webServer: "http://127.0.0.1:1123",
 };
 
 const KEY_KFS_CONFIG = 'kfs-config';
@@ -26,10 +26,10 @@ Object.defineProperty(window, "kfsConfig", {
     },
 });
 
-window.noteError = () => {
+window.noteError = (msg) => {
     Toast.show({
-        type: 'success',
-        text1: 'Hello',
-        text2: 'This is some something 👋'
+        type: 'error',
+        text1: msg,
+        text2: msg
     });
 }

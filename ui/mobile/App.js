@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import "./global";
+import Photos from './pages/Photos';
 
 function App1() {
   const { sysConfig, setSysConfig } = useSysConfig();
@@ -14,7 +15,6 @@ function App1() {
   console.log("drivers", drivers);
   useEffect(() => {
     httpGet("/api/v1/drivers").then(setDrivers);
-    window.noteError();
   }, []);
   return (
     <View style={styles.container}>
@@ -23,6 +23,7 @@ function App1() {
       {drivers.map(driver => (
         <Text key={driver.name}>{driver.name}</Text>
       ))}
+      <Photos />
       <StatusBar style="auto" />
       <Toast />
     </View>
