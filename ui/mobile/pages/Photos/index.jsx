@@ -3,6 +3,7 @@ import { listExif } from '@kfs/common/api/webServer/exif';
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useRef, useState } from "react";
 import { Image, View } from 'react-native';
+import { Appbar } from "react-native-paper";
 function calImageWith(gridWith) {
     const n = gridWith / 100;
     return gridWith / Math.ceil(n);
@@ -57,19 +58,28 @@ export default function () {
             (!chosenFileType || chosenFileType.includes(metadata.fileType.extension)))
         .sort(timeSortFn);
     return (
-        <View style={{
-            display: "flex",
-            backgroundColor: '#fff',
-            width: "100%",
-            flexDirection:'row',
-            flexWrap: "wrap",
-        }} ref={ref}>
-            {filteredMetadataList.map(metadata =>
-                <Image key={metadata.hash} style={{
-                    width: width,
-                    height: width,
-                }} source={{ uri: `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${metadata.hash}` }} />
-            )}
-        </View>
+        <>
+            <Appbar.Header>
+                <Appbar.Content title="照片" />
+                <Appbar.Action icon="calendar" onPress={() => { }} />
+                <Appbar.Action icon="magnify" onPress={() => { }} />
+            </Appbar.Header>
+            <View style={{
+                display: "flex",
+                backgroundColor: '#fff',
+                width: "100%",
+                height: "100%",
+                overflow: "scroll",
+                flexDirection: 'row',
+                flexWrap: "wrap",
+            }} ref={ref}>
+                {filteredMetadataList.map(metadata =>
+                    <Image key={metadata.hash} style={{
+                        width: width,
+                        height: width,
+                    }} source={{ uri: `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${metadata.hash}` }} />
+                )}
+            </View>
+        </>
     );
 }

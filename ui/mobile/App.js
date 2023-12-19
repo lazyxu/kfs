@@ -40,7 +40,7 @@ const NotificationsRoute = () => {
 function App1() {
   const [index, setIndex] = useState(0);
   const [routes] = useState([
-    { key: 'music', title: 'Favorites', focusedIcon: 'heart', unfocusedIcon: 'heart-outline' },
+    { key: 'music', title: '照片', focusedIcon: 'heart', unfocusedIcon: 'heart-outline' },
     { key: 'albums', title: 'Albums', focusedIcon: 'album' },
     { key: 'recents', title: 'Recents', focusedIcon: 'history' },
     { key: 'notifications', title: 'Notifications', focusedIcon: 'bell', unfocusedIcon: 'bell-outline' },
@@ -58,7 +58,6 @@ function App1() {
       navigationState={{ index, routes }}
       onIndexChange={setIndex}
       renderScene={renderScene}
-      shifting={true}
     />
   );
 }
