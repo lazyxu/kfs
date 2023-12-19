@@ -10,7 +10,10 @@
     ],
     "nohoist": [
       "**electron**",
-      "**expo**"
+      "**expo**",
+      "**@expo",
+      "**@expo/**",
+      "**react-native**"
     ]
   }
 }
