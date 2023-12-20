@@ -146,6 +146,15 @@ func (db *DB) Create() error {
 		FOREIGN KEY (hash) REFERENCES   _file(hash)
 	);
 
+	CREATE TABLE IF NOT EXISTS _dcim_metadata_time (
+		hash               CHAR(64)     NOT NULL PRIMARY KEY,
+		time               INT64        DEFAULT NULL,
+	    year               INT64        DEFAULT NULL,
+	    month              INT64        DEFAULT NULL,
+	    day                INT64        DEFAULT NULL,
+		FOREIGN KEY (hash) REFERENCES   _file(hash)
+	);
+
 	CREATE TABLE IF NOT EXISTS _live_photo (
 		movHash                CHAR(64)     NOT NULL PRIMARY KEY,
 		heicHash               CHAR(64)     DEFAULT NULL,

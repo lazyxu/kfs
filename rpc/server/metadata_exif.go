@@ -12,6 +12,7 @@ import (
 	"github.com/lazyxu/kfs/dao"
 	"image"
 	"strings"
+	"time"
 )
 
 func GetJpegExifData(kfsCore *core.KFS, hash string) (e dao.Exif, err error) {
@@ -59,6 +60,50 @@ func getImageHeightWidth(kfsCore *core.KFS, hash string) (hw dao.HeightWidth, er
 	}, nil
 }
 
+func insertImageTime(ctx context.Context, kfsCore *core.KFS, hash string, e dao.Exif) error {
+	var t int64
+	if e.DateTime != "" {
+		//loc:=time.Local.String()
+		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTime+" "+e.OffsetTime)
+		if err == nil {
+			t = tt.UnixNano()
+		}
+	} else if e.DateTimeOriginal != "" {
+		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeOriginal+" "+e.OffsetTimeOriginal)
+		if err == nil {
+			t = tt.UnixNano()
+		}
+	} else if e.DateTimeDigitized != "" {
+		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeDigitized+" "+e.OffsetTimeDigitized)
+		if err == nil {
+			t = tt.UnixNano()
+		}
+	}
+	if t == 0 {
+		t = kfsCore.Db.GetEarliestCrated(ctx, hash)
+	}
+	_, err := kfsCore.Db.InsertDCIMMetadataTime(ctx, hash, t)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func insertVideoTime(ctx context.Context, kfsCore *core.KFS, hash string, m dao.VideoMetadata) error {
+	t := m.Created
+	if t == 0 {
+		t = m.Modified
+	}
+	if t == 0 {
+		t = kfsCore.Db.GetEarliestCrated(ctx, hash)
+	}
+	_, err := kfsCore.Db.InsertDCIMMetadataTime(ctx, hash, t)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType dao.FileType) error {
 	if fileType.Type == "image" {
 		//if fileType.SubType == matchers.TypeJpeg.MIME.Subtype {
@@ -82,6 +127,11 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType da
 			}
 			return nil
 		}
+		err = insertImageTime(ctx, kfsCore, hash, e)
+		// TODO: what if exist
+		if err != nil {
+			return err
+		}
 		_, err = kfsCore.Db.InsertExif(ctx, hash, e)
 		// TODO: what if exist
 		if err != nil {
@@ -104,6 +154,11 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType da
 			return nil
 		}
 		_, err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+		// TODO: what if exist
+		if err != nil {
+			return err
+		}
+		err = insertVideoTime(ctx, kfsCore, hash, m)
 		// TODO: what if exist
 		if err != nil {
 			return err

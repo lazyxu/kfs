@@ -286,6 +286,37 @@ func ListMetadata(ctx context.Context, conn *sql.DB) (list []dao.Metadata, err e
 	return
 }
 
+func ListMetadataTime(ctx context.Context, conn *sql.DB) (list []dao.Metadata, err error) {
+	list = make([]dao.Metadata, 0)
+	var rows *sql.Rows
+	rows, err = conn.QueryContext(ctx, `
+		SELECT 
+			_file_type.hash,
+			_file_type.Type,
+			_file_type.SubType,
+			_file_type.Extension,
+			time,
+			year,
+			month,
+			day
+		FROM _dcim_metadata_time LEFT JOIN _file_type WHERE _dcim_metadata_time.hash=_file_type.hash;
+		`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		m := dao.Metadata{FileType: &dao.FileType{}}
+		err = rows.Scan(&m.Hash, &m.FileType.Type, &m.FileType.SubType, &m.FileType.Extension,
+			&m.Time, &m.Year, &m.Month, &m.Day)
+		if err != nil {
+			return
+		}
+		list = append(list, m)
+	}
+	return
+}
+
 var ErrNoRecords = errors.New("no such records in db")
 
 func GetMetadata(ctx context.Context, conn *sql.DB, hash string) (metadata dao.Metadata, err error) {

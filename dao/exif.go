@@ -49,6 +49,10 @@ type HeightWidth struct {
 type Metadata struct {
 	Hash          string         `json:"hash"`
 	FileType      *FileType      `json:"fileType"`
+	Time          int64          `json:"time"`
+	Year          int64          `json:"year"`
+	Month         int64          `json:"month"`
+	Day           int64          `json:"day"`
 	HeightWidth   *HeightWidth   `json:"heightWidth"`
 	Exif          *Exif          `json:"exif"`
 	VideoMetadata *VideoMetadata `json:"videoMetadata"`

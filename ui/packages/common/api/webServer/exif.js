@@ -31,3 +31,14 @@ export async function listExif() {
         throw e;
     }
 }
+
+
+export async function listDCIMMetadataTime() {
+    try {
+        console.log('api.listDCIMMetadataTime');
+        return await httpGet("/api/v1/DCIMMetadataTime");
+    } catch (e) {
+        window.noteError("获取图片信息失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}

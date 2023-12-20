@@ -1,5 +1,5 @@
 import { parseShotEquipment, parseShotTime, timeSortFn } from "@kfs/common/api/utils";
-import { listExif } from '@kfs/common/api/webServer/exif';
+import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useRef, useState } from "react";
 import { Image, View } from 'react-native';
@@ -21,7 +21,8 @@ export default function () {
     const ref = useRef(null);
     const [width, setWidth] = useState(0);
     const refersh = () => {
-        listExif().then(metadataList => {
+        listDCIMMetadataTime().then(metadataList => {
+            console.log(metadataList, metadataList.filter(e=>e.time))
             let shotEquipmentMap = {};
             let fileTypeMap = {};
             metadataList.forEach(metadata => {

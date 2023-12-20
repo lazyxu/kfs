@@ -48,6 +48,14 @@ func apiListMetadata(c echo.Context) error {
 	return ok(c, data)
 }
 
+func apiListMetadataTime(c echo.Context) error {
+	data, err := kfsCore.Db.ListMetadataTime(c.Request().Context())
+	if err != nil {
+		return err
+	}
+	return ok(c, data)
+}
+
 func apiGetMetadata(c echo.Context) error {
 	hash := c.QueryParam("hash")
 	data, err := kfsCore.Db.GetMetadata(c.Request().Context(), hash)
