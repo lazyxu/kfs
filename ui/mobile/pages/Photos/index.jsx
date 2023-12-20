@@ -44,6 +44,7 @@ export default function () {
             <View style={{
                 width: "100%",
                 height: "100%",
+                overflow: "scroll",
             }} ref={ref}>
                 {metadataYearList.map(metadataYear =>
                     <View key={metadataYear.year}>
@@ -52,7 +53,6 @@ export default function () {
                             display: "flex",
                             backgroundColor: '#fff',
                             width: "100%",
-                            overflow: "scroll",
                             flexDirection: 'row',
                             flexWrap: "wrap",
                             alignContent: "flex-start"
