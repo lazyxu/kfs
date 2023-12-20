@@ -299,7 +299,7 @@ func ListMetadataTime(ctx context.Context, conn *sql.DB) (list []dao.Metadata, e
 			year,
 			month,
 			day
-		FROM _dcim_metadata_time LEFT JOIN _file_type WHERE _dcim_metadata_time.hash=_file_type.hash;
+		FROM _dcim_metadata_time LEFT JOIN _file_type WHERE _dcim_metadata_time.hash=_file_type.hash ORDER BY time DESC;
 		`)
 	if err != nil {
 		return

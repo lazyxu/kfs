@@ -1,63 +1,39 @@
-import { parseShotEquipment, parseShotTime, timeSortFn } from "@kfs/common/api/utils";
 import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useRef, useState } from "react";
-import { Image, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { Appbar } from "react-native-paper";
+
 function calImageWith(gridWith) {
-    const n = gridWith / 100;
-    return gridWith / Math.ceil(n);
+    return gridWith / 10;
 }
 
 export default function () {
-    const [metadataList, setMetadataList] = useState([]);
-    const [viewBy, setViewBy] = useState("所有照片");
-    const [calendar, setCalendar] = useState(false);
-    const [filter, setFilter] = useState(false);
-    const [chosenShotEquipment, setChosenShotEquipment] = useState();
-    const [shotEquipmentMap, setShotEquipmentMap] = useState({});
-    const [chosenFileType, setChosenFileType] = useState();
-    const [fileTypeMap, setFileTypeMap] = useState({});
+    const [metadataYearList, setMetadataYearList] = useState([]);
     const ref = useRef(null);
     const [width, setWidth] = useState(0);
     const refersh = () => {
-        listDCIMMetadataTime().then(metadataList => {
-            console.log(metadataList, metadataList.filter(e=>e.time))
-            let shotEquipmentMap = {};
-            let fileTypeMap = {};
-            metadataList.forEach(metadata => {
-                let { fileType } = metadata;
-                let shotEquipment = parseShotEquipment(metadata);
-                let shotTime = parseShotTime(metadata);
-                if (shotEquipmentMap.hasOwnProperty(shotEquipment)) {
-                    shotEquipmentMap[shotEquipment]++;
+        listDCIMMetadataTime().then(l => {
+            let year = -1;
+            let yearList = [];
+            let list;
+            for (const m of l) {
+                if (year !== m.year) {
+                    year = m.year;
+                    list = { year, list: [m.hash] }
+                    yearList.push(list);
                 } else {
-                    shotEquipmentMap[shotEquipment] = 1;
+                    list.list.push(m.hash);
                 }
-                if (fileTypeMap.hasOwnProperty(fileType.extension)) {
-                    fileTypeMap[fileType.extension]++;
-                } else {
-                    fileTypeMap[fileType.extension] = 1;
-                }
-                metadata.shotEquipment = shotEquipment;
-                metadata.shotTime = shotTime;
-            })
-            setMetadataList(metadataList);
-            setShotEquipmentMap(shotEquipmentMap);
-            setFileTypeMap(fileTypeMap);
+                console.log(year, yearList, list, m)
+            }
+            setMetadataYearList(yearList);
         });
     }
     useEffect(() => {
         refersh();
-        console.log(ref);
         setWidth(calImageWith(ref.current.offsetWidth));
     }, []);
-    console.log(width);
-    let filteredMetadataList = metadataList
-        .filter(metadata =>
-            (!chosenShotEquipment || chosenShotEquipment.includes(metadata.shotEquipment)) &&
-            (!chosenFileType || chosenFileType.includes(metadata.fileType.extension)))
-        .sort(timeSortFn);
     return (
         <>
             <Appbar.Header>
@@ -66,19 +42,29 @@ export default function () {
                 <Appbar.Action icon="magnify" onPress={() => { }} />
             </Appbar.Header>
             <View style={{
-                display: "flex",
-                backgroundColor: '#fff',
                 width: "100%",
                 height: "100%",
-                overflow: "scroll",
-                flexDirection: 'row',
-                flexWrap: "wrap",
             }} ref={ref}>
-                {filteredMetadataList.map(metadata =>
-                    <Image key={metadata.hash} style={{
-                        width: width,
-                        height: width,
-                    }} source={{ uri: `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${metadata.hash}` }} />
+                {metadataYearList.map(metadataYear =>
+                    <View key={metadataYear.year}>
+                        <Text>{metadataYear.year === 1970 ? "未知时间" : metadataYear.year}</Text>
+                        <View key={metadataYear.year} style={{
+                            display: "flex",
+                            backgroundColor: '#fff',
+                            width: "100%",
+                            overflow: "scroll",
+                            flexDirection: 'row',
+                            flexWrap: "wrap",
+                            alignContent: "flex-start"
+                        }}>
+                            {metadataYear.list.map(hash =>
+                                <Image key={hash} style={{
+                                    width: width,
+                                    height: width,
+                                }} source={{ uri: `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}` }} />
+                            )}
+                        </View>
+                    </View>
                 )}
             </View>
         </>
