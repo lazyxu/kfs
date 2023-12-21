@@ -75,6 +75,11 @@ case $1 in
         VITE_APP_PLATFORM=mobile yarn start
         ;;
 
+      mobile:web)
+        cd $root/ui/mobile
+        VITE_APP_PLATFORM=mobile yarn web
+        ;;
+
       *)
         usage
         ;;
