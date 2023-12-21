@@ -1,6 +1,7 @@
 import { httpGet } from '@kfs/common/api/webServer';
 import useSysConfig from '@kfs/common/hox/sysConfig';
 import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
+import { NavigationContainer } from '@react-navigation/native';
 import { HoxRoot } from "hox";
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -103,8 +104,10 @@ function ThemeApp() {
 
   return (
     <PaperProvider theme={paperTheme}>
-      <App1 />
-      <Toast />
+      <NavigationContainer>
+        <App1 />
+        <Toast />
+      </NavigationContainer>
     </PaperProvider>
   );
 }

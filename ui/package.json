@@ -10,10 +10,15 @@
     ],
     "nohoist": [
       "**electron**",
-      "**expo**",
+      "mobile/**",
       "**@expo",
       "**@expo/**",
-      "**react-native**"
+      "**react-native",
+      "**react-native/**",
+      "**react-native**",
+      "**react-native**/**",
+      "**@react-navigation",
+      "**@react-navigation/**"
     ]
   }
 }
