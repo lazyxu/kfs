@@ -1,3 +1,4 @@
+import { MMKV } from 'react-native-mmkv';
 import Toast from "react-native-toast-message";
 
 let env = {
@@ -12,17 +13,20 @@ Object.defineProperty(window, 'kfsEnv', {
     writable: false,
 });
 
-let kfsConfig = {
-    webServer: "http://127.0.0.1:1123",
-};
+export const storage = new MMKV();
 
 const KEY_KFS_CONFIG = 'kfs-config';
 Object.defineProperty(window, "kfsConfig", {
     get() {
-        return kfsConfig;
+        const item = storage.getString(KEY_KFS_CONFIG);
+        try {
+            return JSON.parse(item);
+        } catch (_) {
+            return undefined;
+        }
     },
     set(json) {
-        kfsConfig = json;
+        storage.set(KEY_KFS_CONFIG, JSON.stringify(json, undefined, 2));
     },
 });
 
