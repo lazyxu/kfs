@@ -36,7 +36,7 @@ export default function () {
     }, []);
     return (
         <>
-            <Appbar.Header>
+            <Appbar.Header mode="center-aligned">
                 <Appbar.Content title="照片" />
                 <Appbar.Action icon="calendar" onPress={() => { }} />
                 <Appbar.Action icon="magnify" onPress={() => { }} />

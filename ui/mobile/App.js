@@ -5,6 +5,7 @@ import { HoxRoot } from "hox";
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import {
+  Appbar,
   BottomNavigation, MD3LightTheme as DefaultTheme, MD3DarkTheme,
   MD3LightTheme, PaperProvider,
   Text
@@ -14,49 +15,61 @@ import "./global";
 import Photos from './pages/Photos';
 import SystemConfig from './pages/Setting/SystemConfig';
 
-const MusicRoute = () => <Text>Music</Text>;
-
-const AlbumsRoute = () => {
+const Albums = () => {
   let [drivers, setDrivers] = useState([]);
   console.log("drivers", drivers);
   useEffect(() => {
     httpGet("/api/v1/drivers").then(setDrivers);
   }, []);
   return (
-    <View>
-      {drivers.map(driver => (
-        <Text key={driver.name}>{driver.name}</Text>
-      ))}
-    </View>
+    <>
+      <Appbar.Header mode="center-aligned">
+        <Appbar.Content title="相册" />
+      </Appbar.Header>
+      <View style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {drivers.map(driver => (
+          <Text key={driver.name}>{driver.name}</Text>
+        ))}
+      </View>
+    </>
   );
 };
 
-const RecentsRoute = () => <Text>Recents</Text>;
-
-const NotificationsRoute = () => {
-  const { sysConfig, setSysConfig } = useSysConfig();
-  console.log("sysConfig", sysConfig);
+const Footprints = () => {
   return (
-    <View>
-      <Text>{JSON.stringify(sysConfig, undefined, 2)}</Text>
-    </View>
+    <>
+      <Appbar.Header mode="center-aligned">
+        <Appbar.Content title="足迹" />
+      </Appbar.Header>
+      <View style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        TODO
+      </View>
+    </>
   );
 };
 
 function App1() {
   const [index, setIndex] = useState(0);
   const [routes] = useState([
-    { key: 'music', title: '照片', focusedIcon: 'heart', unfocusedIcon: 'heart-outline' },
-    { key: 'albums', title: 'Albums', focusedIcon: 'album' },
-    { key: 'recents', title: 'Recents', focusedIcon: 'history' },
-    { key: 'notifications', title: 'Notifications', focusedIcon: 'bell', unfocusedIcon: 'bell-outline' },
+    { key: 'photos', title: '照片', focusedIcon: 'image', unfocusedIcon: 'image-outline' },
+    { key: 'albums', title: '相册', focusedIcon: 'image-multiple', unfocusedIcon: 'image-multiple-outline' },
+    { key: 'footprints', title: '足迹', focusedIcon: 'image-marker', unfocusedIcon: 'image-marker-outline' },
+    { key: 'me', title: '我', focusedIcon: 'account-settings', unfocusedIcon: 'account-settings-outline' },
   ]);
 
   const renderScene = BottomNavigation.SceneMap({
-    music: Photos,
-    albums: AlbumsRoute,
-    recents: SystemConfig,
-    notifications: NotificationsRoute,
+    photos: Photos,
+    albums: Albums,
+    footprints: Footprints,
+    me: SystemConfig,
   });
 
   return (
