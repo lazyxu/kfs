@@ -1,8 +1,8 @@
 import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useRef, useState } from "react";
-import { Image, Text, View } from 'react-native';
-import { Appbar } from "react-native-paper";
+import { Image, View } from 'react-native';
+import { Appbar, Text } from "react-native-paper";
 
 function calImageWith(gridWith) {
     return gridWith / 10;
