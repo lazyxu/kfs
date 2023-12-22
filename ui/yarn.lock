@@ -7193,7 +7193,7 @@ hosted-git-info@^4.0.1, hosted-git-info@^4.1.0:
   dependencies:
     lru-cache "^6.0.0"
 
-hox@^2.0.0, hox@^2.1.1:
+hox@^2.0.0:
   version "2.1.1"
   resolved "https://registry.npmmirror.com/hox/-/hox-2.1.1.tgz#48713ba875ebd53ecf9124da10ebb22f5698d5c7"
   integrity sha512-POOE+kzaDXGbBVvMvhKnVRADg9R6yI14/FisHA8HyqKDAPCW1Owejyt/6yvQXngQo6s4OG6DLzAznOASPAJRDw==
@@ -10409,7 +10409,7 @@ react-devtools-core@^4.27.2:
     shell-quote "^1.6.1"
     ws "^7"
 
-react-dom@18.2.0, react-dom@^18.2.0:
+react-dom@^18.2.0:
   version "18.2.0"
   resolved "https://registry.npmmirror.com/react-dom/-/react-dom-18.2.0.tgz#22aaf38708db2674ed9ada224ca4aa708d821e3d"
   integrity sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==
@@ -10578,7 +10578,7 @@ react-use-websocket@^4.3.1:
   resolved "https://registry.npmmirror.com/react-use-websocket/-/react-use-websocket-4.5.0.tgz#8e3a18c51328522876bfea28661521292d6f210a"
   integrity sha512-oxYVLWM3Lv0InCfjW7hG/Hk0hkE0P1SiLd5/I3d5x0W4riAnDUkD4VEu7qNVAqxNjBF3nU7k0jLMOetLXpwfsA==
 
-react@18.2.0, react@^18.2.0:
+react@^18.2.0:
   version "18.2.0"
   resolved "https://registry.npmmirror.com/react/-/react-18.2.0.tgz#555bd98592883255fa00de14f1151a917b5d77d5"
   integrity sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ==

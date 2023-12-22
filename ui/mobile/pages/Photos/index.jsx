@@ -7,7 +7,7 @@ const Stack = createNativeStackNavigator();
 
 export default function ({ navigation }) {
     return (
-        <Stack.Navigator>
+        <Stack.Navigator initialRouteName="Photos" screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Photos" component={Photos} />
             <Stack.Screen name="Viewer" component={Viewer} />
         </Stack.Navigator>

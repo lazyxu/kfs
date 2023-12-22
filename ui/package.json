@@ -9,16 +9,7 @@
       "packages/**"
     ],
     "nohoist": [
-      "**electron**",
-      "mobile/**",
-      "**@expo",
-      "**@expo/**",
-      "**react-native",
-      "**react-native/**",
-      "**react-native**",
-      "**react-native**/**",
-      "**@react-navigation",
-      "**@react-navigation/**"
+      "**electron**"
     ]
   }
 }
