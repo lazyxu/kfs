@@ -2,8 +2,7 @@ import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useRef, useState } from "react";
 import { Image, TouchableHighlight, View } from 'react-native';
-import { Appbar, Text } from "react-native-paper";
-import Viewer from './Viewer';
+import { Appbar, Surface, Text } from "react-native-paper";
 
 function calImageWith(gridWith) {
     return gridWith / 10;
@@ -13,7 +12,6 @@ export default function ({ navigation }) {
     const [metadataYearList, setMetadataYearList] = useState([]);
     const ref = useRef(null);
     const [width, setWidth] = useState(0);
-    const [openViewer, setOpenViewer] = useState();
     const refersh = () => {
         listDCIMMetadataTime().then(l => {
             let year = -1;
@@ -49,9 +47,9 @@ export default function ({ navigation }) {
                 overflow: "scroll",
             }} ref={ref}>
                 {metadataYearList.map(metadataYear =>
-                    <View key={metadataYear.year}>
+                    <Surface key={metadataYear.year}>
                         <Text>{metadataYear.year === 1970 ? "未知时间" : metadataYear.year}</Text>
-                        <View key={metadataYear.year} style={{
+                        <View style={{
                             display: "flex",
                             backgroundColor: '#fff',
                             width: "100%",
@@ -68,10 +66,9 @@ export default function ({ navigation }) {
                                 </TouchableHighlight>
                             )}
                         </View>
-                    </View>
+                    </Surface>
                 )}
             </View>
-            {openViewer && <Viewer hash={openViewer} onClose={() => { setOpenViewer(); }} />}
         </>
     );
 }

@@ -51,7 +51,7 @@ const Footprints = () => {
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        TODO
+        <Text >TODO</Text>
       </View>
     </>
   );
