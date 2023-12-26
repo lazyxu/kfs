@@ -2,7 +2,9 @@ import { httpGet } from '@kfs/common/api/webServer';
 import useSysConfig from '@kfs/common/hox/sysConfig';
 import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
 import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HoxRoot } from "hox";
+import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import {
@@ -15,6 +17,7 @@ import Toast from 'react-native-toast-message';
 import "./global";
 import Photos from './pages/Photos';
 import SystemConfig from './pages/Setting/SystemConfig';
+import Viewer from './pages/Windows/Viewer';
 
 const Albums = () => {
   let [drivers, setDrivers] = useState([]);
@@ -57,7 +60,8 @@ const Footprints = () => {
   );
 };
 
-function App1() {
+function App1({ navigation }) {
+  console.log("navigation", navigation)
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: 'photos', title: '照片', focusedIcon: 'image', unfocusedIcon: 'image-outline' },
@@ -67,7 +71,7 @@ function App1() {
   ]);
 
   const renderScene = BottomNavigation.SceneMap({
-    photos: Photos,
+    photos: (props) => <Photos {...props} navigation={navigation} />,
     albums: Albums,
     footprints: Footprints,
     me: SystemConfig,
@@ -93,6 +97,8 @@ const theme = {
   },
 };
 
+const Stack = createNativeStackNavigator();
+
 function ThemeApp() {
   const { sysConfig } = useSysConfig();
   const { theme } = useMaterial3Theme();
@@ -105,7 +111,10 @@ function ThemeApp() {
   return (
     <PaperProvider theme={paperTheme}>
       <NavigationContainer>
-        <App1 />
+        <Stack.Navigator initialRouteName="App1" screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="App1" component={App1} />
+          <Stack.Screen name="Viewer" component={Viewer} />
+        </Stack.Navigator>
         <Toast />
       </NavigationContainer>
     </PaperProvider>
