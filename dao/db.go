@@ -78,7 +78,8 @@ type Database interface {
 	InsertVideoMetadata(ctx context.Context, hash string, m VideoMetadata) (exist bool, err error)
 
 	InsertDCIMMetadataTime(ctx context.Context, hash string, t int64) (exist bool, err error)
-	GetEarliestCrated(ctx context.Context, hash string) int64
+	UpsertDCIMMetadataTime(ctx context.Context, hash string, t int64) error
+	GetEarliestCrated(ctx context.Context, hash string) (t int64, err error)
 	ListMetadataTime(ctx context.Context) (list []Metadata, err error)
 
 	InsertNullExif(ctx context.Context, hash string) (exist bool, err error)

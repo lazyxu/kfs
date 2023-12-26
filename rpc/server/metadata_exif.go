@@ -96,9 +96,13 @@ func insertImageTime(ctx context.Context, kfsCore *core.KFS, hash string, e dao.
 		t = tt.UnixNano()
 	}
 	if t == 0 {
-		t = kfsCore.Db.GetEarliestCrated(ctx, hash)
+		var err error
+		t, err = kfsCore.Db.GetEarliestCrated(ctx, hash)
+		if err != nil {
+			return err
+		}
 	}
-	_, err := kfsCore.Db.InsertDCIMMetadataTime(ctx, hash, t)
+	err := kfsCore.Db.UpsertDCIMMetadataTime(ctx, hash, t)
 	if err != nil {
 		return err
 	}
@@ -111,9 +115,13 @@ func insertVideoTime(ctx context.Context, kfsCore *core.KFS, hash string, m dao.
 		t = m.Modified
 	}
 	if t == 0 {
-		t = kfsCore.Db.GetEarliestCrated(ctx, hash)
+		var err error
+		t, err = kfsCore.Db.GetEarliestCrated(ctx, hash)
+		if err != nil {
+			return err
+		}
 	}
-	_, err := kfsCore.Db.InsertDCIMMetadataTime(ctx, hash, t)
+	err := kfsCore.Db.UpsertDCIMMetadataTime(ctx, hash, t)
 	if err != nil {
 		return err
 	}

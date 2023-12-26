@@ -10,7 +10,11 @@ func (db *DB) InsertDCIMMetadataTime(ctx context.Context, hash string, t int64) 
 	return dbBase.InsertDCIMMetadataTime(ctx, db.db, db, hash, t)
 }
 
-func (db *DB) GetEarliestCrated(ctx context.Context, hash string) int64 {
+func (db *DB) UpsertDCIMMetadataTime(ctx context.Context, hash string, t int64) error {
+	return dbBase.UpsertDCIMMetadataTime(ctx, db.db, hash, t)
+}
+
+func (db *DB) GetEarliestCrated(ctx context.Context, hash string) (t int64, err error) {
 	return dbBase.GetEarliestCrated(ctx, db.db, db, hash)
 }
 
