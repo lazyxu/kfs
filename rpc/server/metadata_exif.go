@@ -60,24 +60,40 @@ func getImageHeightWidth(kfsCore *core.KFS, hash string) (hw dao.HeightWidth, er
 	}, nil
 }
 
+const defaultOffset = "+08:00"
+
 func insertImageTime(ctx context.Context, kfsCore *core.KFS, hash string, e dao.Exif) error {
 	var t int64
 	if e.DateTime != "" {
-		//loc:=time.Local.String()
-		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTime+" "+e.OffsetTime)
-		if err == nil {
-			t = tt.UnixNano()
+		offset := e.OffsetTime
+		if offset == "" {
+			offset = defaultOffset
 		}
+		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTime+" "+offset)
+		if err != nil {
+			return err
+		}
+		t = tt.UnixNano()
 	} else if e.DateTimeOriginal != "" {
-		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeOriginal+" "+e.OffsetTimeOriginal)
-		if err == nil {
-			t = tt.UnixNano()
+		offset := e.OffsetTime
+		if offset == "" {
+			offset = defaultOffset
 		}
+		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeOriginal+" "+offset)
+		if err != nil {
+			return err
+		}
+		t = tt.UnixNano()
 	} else if e.DateTimeDigitized != "" {
-		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeDigitized+" "+e.OffsetTimeDigitized)
-		if err == nil {
-			t = tt.UnixNano()
+		offset := e.OffsetTime
+		if offset == "" {
+			offset = defaultOffset
 		}
+		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeDigitized+" "+offset)
+		if err != nil {
+			return err
+		}
+		t = tt.UnixNano()
 	}
 	if t == 0 {
 		t = kfsCore.Db.GetEarliestCrated(ctx, hash)
