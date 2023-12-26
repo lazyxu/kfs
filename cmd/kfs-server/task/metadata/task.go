@@ -159,23 +159,10 @@ func analyze(ctx context.Context, kfsCore *core.KFS) error {
 	}
 	setTaskTotal(len(hashList))
 	for _, hash := range hashList {
-		select {
-		case <-ctx.Done():
-			return context.Canceled
-		default:
+		err = server.AnalyzeIfNoFileType(ctx, kfsCore, hash)
+		if errors.Is(err, context.Canceled) {
+			return err
 		}
-		// TODO: get file type from db.
-		ft, err := server.AnalyzeFileType(kfsCore, hash)
-		if err != nil {
-			addTaskError(err)
-			continue
-		}
-		err = server.InsertExif(context.TODO(), kfsCore, hash, ft)
-		if err != nil {
-			addTaskError(err)
-			continue
-		}
-		err = server.InsertFileType(context.TODO(), kfsCore, hash, ft)
 		if err != nil {
 			addTaskError(err)
 			continue

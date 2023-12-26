@@ -3,9 +3,10 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"log"
 	"sync"
+
+	"github.com/labstack/echo/v4"
 )
 
 type EventClient[T any] interface {
@@ -73,7 +74,7 @@ func (s *EventServer[T]) Handle(c echo.Context, kfsCore *KFS) error {
 			c.Response().Flush()
 
 		case <-c.Request().Context().Done():
-			fmt.Println("Connection closed")
+			fmt.Println("Connection canceled")
 			return nil
 		}
 	}

@@ -5,15 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/lazyxu/kfs/cmd/kfs-electron/backup"
-	"github.com/lazyxu/kfs/core"
-	"github.com/lazyxu/kfs/rpc/client"
 	"log"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/lazyxu/kfs/cmd/kfs-electron/backup"
+	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/rpc/client"
 )
 
 var taskDetailClients = make(map[string]map[echo.Context]*Client)
@@ -76,7 +77,7 @@ func apiEventBackupTaskDetail(c echo.Context) error {
 			c.Response().Flush()
 
 		case <-c.Request().Context().Done():
-			fmt.Println("Connection closed")
+			fmt.Println("Connection canceled")
 			return nil
 		}
 	}

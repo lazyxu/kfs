@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/lazyxu/kfs/rpc/server"
 	"log"
 	"net/http"
 	"os"
@@ -14,8 +15,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/db/dbBase"
-	"github.com/lazyxu/kfs/rpc/server"
 )
 
 type Response struct {
@@ -69,9 +68,9 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 	packetSize := 1
 	for _, file := range files {
 		if !os.FileMode(file.Mode).IsDir() {
-			err = TryAnalyze(c.Request().Context(), kfsCore, file.Hash)
+			err = server.AnalyzeIfNoFileType(c.Request().Context(), kfsCore, file.Hash)
 			if errors.Is(err, context.Canceled) {
-				fmt.Println("Connection closed")
+				fmt.Println("Connection canceled")
 				return nil
 			}
 			if err != nil {
@@ -93,28 +92,6 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 	}
 	if len(curFiles) != 0 {
 		send(c, Response{Files: curFiles, N: n})
-	}
-	return nil
-}
-
-func TryAnalyze(ctx context.Context, kfsCore *core.KFS, hash string) error {
-	ft, err := kfsCore.Db.GetFileType(ctx, hash)
-	if errors.Is(err, dbBase.ErrNoRecords) {
-		ft, err = server.AnalyzeFileType(kfsCore, hash)
-		if err != nil {
-			return err
-		}
-		err = server.InsertExif(ctx, kfsCore, hash, ft)
-		if err != nil {
-			return err
-		}
-		_, err = kfsCore.Db.InsertFileType(ctx, hash, ft)
-		if err != nil {
-			return err
-		}
-	}
-	if err != nil {
-		return err
 	}
 	return nil
 }

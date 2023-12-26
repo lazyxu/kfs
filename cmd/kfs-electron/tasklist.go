@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lazyxu/kfs/cmd/kfs-electron/backup"
-	"github.com/lazyxu/kfs/cmd/kfs-electron/db/gosqlite"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/lazyxu/kfs/cmd/kfs-electron/backup"
+	"github.com/lazyxu/kfs/cmd/kfs-electron/db/gosqlite"
 
 	"github.com/labstack/echo/v4"
 )
@@ -79,7 +80,7 @@ func apiEventBackupTask(c echo.Context) error {
 			c.Response().Flush()
 
 		case <-c.Request().Context().Done():
-			fmt.Println("Connection closed")
+			fmt.Println("Connection canceled")
 			return nil
 		}
 	}
