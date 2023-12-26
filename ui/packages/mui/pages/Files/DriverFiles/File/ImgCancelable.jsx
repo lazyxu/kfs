@@ -38,7 +38,7 @@ export default ({ src, inView, onClick, title }) => {
     }, [inView]);
     if (url) {
         return (
-            <img title={title} src={url} loading="lazy" onClick={onClick} width="100%" height="100%" />
+            <img title={title} src={url} loading="lazy" onClick={onClick} />
         );
     } else {
         return (
