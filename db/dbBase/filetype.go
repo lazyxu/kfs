@@ -41,6 +41,26 @@ func ListExpectFileType(ctx context.Context, conn *sql.DB) (hashList []string, e
 	return
 }
 
+func ListFileHash(ctx context.Context, conn *sql.DB) (hashList []string, err error) {
+	rows, err := conn.QueryContext(ctx, `
+	SELECT hash FROM _file;
+	`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	hashList = []string{}
+	for rows.Next() {
+		var hash string
+		err = rows.Scan(&hash)
+		if err != nil {
+			return
+		}
+		hashList = append(hashList, hash)
+	}
+	return
+}
+
 func GetFileType(ctx context.Context, conn *sql.DB, hash string) (fileType dao.FileType, err error) {
 	rows, err := conn.QueryContext(ctx, `
 	SELECT 

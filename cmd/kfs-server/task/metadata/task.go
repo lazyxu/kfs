@@ -120,7 +120,7 @@ func addTaskError(err error) {
 	s.SendAll()
 }
 
-func StartOrStop(kfsCore *core.KFS, start bool) {
+func StartOrStop(kfsCore *core.KFS, start bool, force bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	if !start {
@@ -138,7 +138,7 @@ func StartOrStop(kfsCore *core.KFS, start bool) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	taskInfo.cancel = cancel
 	go func() {
-		err := analyze(ctx, kfsCore)
+		err := analyze(ctx, kfsCore, force)
 		if err == nil {
 			setTaskStatus(StatusFinished)
 			return
@@ -151,15 +151,24 @@ func StartOrStop(kfsCore *core.KFS, start bool) {
 	}()
 }
 
-func analyze(ctx context.Context, kfsCore *core.KFS) error {
+func analyze(ctx context.Context, kfsCore *core.KFS, force bool) (err error) {
 	setTaskStatus(StatusRunningCollect)
-	hashList, err := kfsCore.Db.ListExpectFileType(ctx)
+	var hashList []string
+	if force {
+		hashList, err = kfsCore.Db.ListFileHash(ctx)
+	} else {
+		hashList, err = kfsCore.Db.ListExpectFileType(ctx)
+	}
 	if err != nil {
 		return err
 	}
 	setTaskTotal(len(hashList))
 	for _, hash := range hashList {
-		err = server.AnalyzeIfNoFileType(ctx, kfsCore, hash)
+		if force {
+			err = server.Analyze(ctx, kfsCore, hash)
+		} else {
+			err = server.AnalyzeIfNoFileType(ctx, kfsCore, hash)
+		}
 		if errors.Is(err, context.Canceled) {
 			return err
 		}

@@ -3,7 +3,7 @@ import { analyzeMetadata } from "@kfs/mui/api/exif";
 import { noteError, noteWarning } from "@kfs/mui/components/Notification";
 import { TitleBar, Window, WorkingArea } from "@kfs/mui/components/Window/Window";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
-import { HourglassDisabled, HourglassTop, PlayArrow, Stop } from "@mui/icons-material";
+import { HourglassDisabled, HourglassTop, PlayArrow, Replay, Stop } from "@mui/icons-material";
 import { Box, IconButton } from "@mui/material";
 import moment from "moment";
 import { useEffect, useState } from "react";
@@ -89,7 +89,16 @@ export default function ({ id }) {
                         taskInfo?.status === StatusFinished ||
                         taskInfo?.status === StatusCanceled ||
                         taskInfo?.status === StatusError) &&
-                        <IconButton onClick={e => analyzeMetadata(true).catch(e => noteError(e.message))}>
+                        <IconButton onClick={e => analyzeMetadata(true, true).catch(e => noteError(e.message))}>
+                            <Replay />
+                        </IconButton>
+                    }
+                    {(taskInfo?.status === undefined ||
+                        taskInfo?.status === StatusIdle ||
+                        taskInfo?.status === StatusFinished ||
+                        taskInfo?.status === StatusCanceled ||
+                        taskInfo?.status === StatusError) &&
+                        <IconButton onClick={e => analyzeMetadata(true, false).catch(e => noteError(e.message))}>
                             <PlayArrow />
                         </IconButton>
                     }
