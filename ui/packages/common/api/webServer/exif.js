@@ -32,6 +32,17 @@ export async function listExif() {
     }
 }
 
+export async function getMetadata(hash) {
+    try {
+        console.log('web.getMetadata', hash);
+        return await httpGet("/api/v1/metadata", {
+            hash,
+        });
+    } catch (e) {
+        window.noteError("获取文件元数据失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
 
 export async function listDCIMMetadataTime() {
     try {

@@ -83,7 +83,8 @@ export default function ({ navigation, route }) {
             <Appbar.Header>
                 <Appbar.BackAction onPress={() => navigation.pop()} />
                 <Appbar.Action icon="export-variant" onPress={shareImage} />
-                <Appbar.Action icon="download" onPress={downloadImage} />
+                <Appbar.Action icon="download-outline" onPress={downloadImage} />
+                <Appbar.Action icon="information-outline" onPress={() => navigation.navigate("Info", { hash })} />
             </Appbar.Header>
             <ViewShot ref={ref} style={{
                 padding: "0",

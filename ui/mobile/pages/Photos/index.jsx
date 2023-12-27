@@ -58,7 +58,7 @@ export default function ({ navigation }) {
                             alignContent: "flex-start"
                         }}>
                             {metadataYear.list.map(hash =>
-                                <TouchableHighlight key={hash} onPress={() => { navigation.navigate("Viewer", { hash }); }}  >
+                                <TouchableHighlight key={hash} onPress={() => navigation.navigate("Viewer", { hash })}  >
                                     <Image style={{
                                         width: width,
                                         height: width,

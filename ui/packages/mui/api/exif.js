@@ -1,5 +1,5 @@
 import { httpPost as localHttpPost } from "@kfs/common/api/localServer";
-import { httpGet, httpPost } from "@kfs/common/api/webServer";
+import { httpPost } from "@kfs/common/api/webServer";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { noteError } from "@kfs/mui/components/Notification";
 
@@ -43,18 +43,6 @@ export async function startDriverLocalFileFilter(start, driverId, srcPath, ignor
         });
     } catch (e) {
         noteError("测试过滤规则设置失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
-        throw e;
-    }
-}
-
-export async function getMetadata(hash) {
-    try {
-        console.log('web.getMetadata', hash);
-        return await httpGet("/api/v1/metadata", {
-            hash,
-        });
-    } catch (e) {
-        noteError("获取文件元数据失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
 }

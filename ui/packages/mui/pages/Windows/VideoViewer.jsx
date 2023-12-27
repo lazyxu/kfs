@@ -1,5 +1,5 @@
+import { getMetadata } from "@kfs/common/api/webServer/exif";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { getMetadata } from "@kfs/mui/api/exif";
 import { downloadByHash, listDriverFileByHash } from "@kfs/mui/api/fs";
 import { TitleBar, Window, WorkingArea } from "@kfs/mui/components/Window/Window";
 import FileAttribute from "@kfs/mui/pages/Files/DriverFiles/FileAttribute";
