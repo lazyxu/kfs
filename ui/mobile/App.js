@@ -47,7 +47,7 @@ const Footprints = () => {
   return (
     <>
       <Appbar.Header mode="center-aligned">
-        <Appbar.Content title="足迹" />
+        <Appbar.Content title="搜索" />
       </Appbar.Header>
       <View style={{
         flex: 1,
@@ -66,7 +66,7 @@ function App1({ navigation }) {
   const [routes] = useState([
     { key: 'photos', title: '照片', focusedIcon: 'image', unfocusedIcon: 'image-outline' },
     { key: 'albums', title: '相册', focusedIcon: 'image-multiple', unfocusedIcon: 'image-multiple-outline' },
-    { key: 'footprints', title: '足迹', focusedIcon: 'image-marker', unfocusedIcon: 'image-marker-outline' },
+    { key: 'footprints', title: '搜索', focusedIcon: 'image-search', unfocusedIcon: 'image-search-outline' },
     { key: 'me', title: '我', focusedIcon: 'account-settings', unfocusedIcon: 'account-settings-outline' },
   ]);
 

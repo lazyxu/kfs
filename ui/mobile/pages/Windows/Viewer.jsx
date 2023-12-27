@@ -1,7 +1,9 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { useEffect, useState } from "react";
-import { Image, View } from 'react-native';
+import * as Sharing from 'expo-sharing';
+import React, { useEffect, useRef, useState } from 'react';
+import { Image, Platform } from 'react-native';
 import { Appbar } from "react-native-paper";
+import ViewShot from 'react-native-view-shot';
 
 export default function ({ navigation, route }) {
     const { hash } = route.params;
@@ -13,6 +15,45 @@ export default function ({ navigation, route }) {
     const [openSameFiles, setOpenSameFiles] = useState(false);
     const [openAttribute, setOpenAttribute] = useState(false);
     const sysConfig = getSysConfig();
+    const ref = useRef();
+    const src = `${sysConfig.webServer}/api/v1/image?hash=${hash}`;
+
+    const [blob, setBlob] = useState();
+    const [url, setUrl] = useState();
+    const controller = useRef(new AbortController());
+    useEffect(() => {
+        fetch(src, {
+            method: 'get',
+            signal: controller.current.signal,
+        }).then(response => {
+            return response.blob();
+        }).then(b => {
+            setBlob(b);
+            const objectURL = URL.createObjectURL(b);
+            console.log(b, objectURL);
+            setUrl(objectURL);
+        });
+    }, []);
+
+    const shareImage = async () => {
+        try {
+            console.log('uri', blob);
+            if (Platform.OS === "web") {
+                const b = new Blob([blob], { type: "image/png" });
+                console.log(b);
+                navigator.clipboard.write([
+                    new ClipboardItem({
+                        [b.type]: b
+                    })
+                ]);
+                window.noteInfo(`拷贝图片成功：${hash}`);
+                return
+            }
+            await Sharing.shareAsync({ url: url });
+        } catch (e) {
+            console.log(e);
+        }
+    };
     useEffect(() => {
         // getMetadata(hash).then(setMetadata);
         // listDriverFileByHash(hash).then(sf => {
@@ -24,10 +65,10 @@ export default function ({ navigation, route }) {
         <>
             <Appbar.Header>
                 <Appbar.BackAction onPress={() => navigation.pop()} />
-                <Appbar.Action icon="calendar" onPress={() => { }} />
+                <Appbar.Action icon="monitor-share" onPress={shareImage} />
                 <Appbar.Action icon="magnify" onPress={() => { }} />
             </Appbar.Header>
-            <View style={{
+            <ViewShot ref={ref} style={{
                 padding: "0",
                 width: "100%",
                 height: "100%",
@@ -39,8 +80,8 @@ export default function ({ navigation, route }) {
                     maxWidth: "100%", maxHeight: "100%",
                     width: "100%",
                     height: "100%",
-                }} source={`${sysConfig.webServer}/api/v1/image?hash=${hash}`} />
-            </View>
+                }} source={url} />
+            </ViewShot>
         </>
     );
 }
