@@ -1,3 +1,4 @@
+import { downloadURI } from "@kfs/common/api/web";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import * as Sharing from 'expo-sharing';
 import React, { useEffect, useRef, useState } from 'react';
@@ -37,7 +38,7 @@ export default function ({ navigation, route }) {
 
     const shareImage = async () => {
         try {
-            console.log('uri', blob);
+            console.log('shareImage', blob);
             if (Platform.OS === "web") {
                 const b = new Blob([blob], { type: "image/png" });
                 console.log(b);
@@ -47,6 +48,22 @@ export default function ({ navigation, route }) {
                     })
                 ]);
                 window.noteInfo(`拷贝图片成功：${hash}`);
+                return
+            }
+            await Sharing.shareAsync({ url: url });
+        } catch (e) {
+            console.log(e);
+        }
+    };
+
+    const downloadImage = async () => {
+        try {
+            console.log('downloadImage', blob);
+            if (Platform.OS === "web") {
+                const b = new Blob([blob], { type: "image/png" });
+                downloadURI(url, `${hash}.png`);
+                window.URL.revokeObjectURL(url);
+                window.noteInfo(`下载图片成功：${hash}`);
                 return
             }
             await Sharing.shareAsync({ url: url });
@@ -65,8 +82,8 @@ export default function ({ navigation, route }) {
         <>
             <Appbar.Header>
                 <Appbar.BackAction onPress={() => navigation.pop()} />
-                <Appbar.Action icon="monitor-share" onPress={shareImage} />
-                <Appbar.Action icon="magnify" onPress={() => { }} />
+                <Appbar.Action icon="export-variant" onPress={shareImage} />
+                <Appbar.Action icon="download" onPress={downloadImage} />
             </Appbar.Header>
             <ViewShot ref={ref} style={{
                 padding: "0",

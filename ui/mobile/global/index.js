@@ -41,7 +41,6 @@ window.noteError = (msg) => {
 window.noteInfo = (msg) => {
     Toast.show({
         type: 'info',
-        text1: msg,
-        text2: msg
+        text1: msg
     });
 }

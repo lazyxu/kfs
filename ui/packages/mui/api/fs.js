@@ -1,3 +1,4 @@
+import { downloadURI } from "@kfs/common/api/web";
 import { httpGet } from "@kfs/common/api/webServer";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { noteError } from "@kfs/mui/components/Notification";
@@ -21,13 +22,6 @@ export async function openFile(driverId, filePath) {
         noteError("加载文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
-}
-
-function downloadURI(uri, name) {
-    let link = document.createElement("a");
-    link.download = name;
-    link.href = uri;
-    link.click();
 }
 
 function downloader(data, name) {
