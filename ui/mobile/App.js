@@ -62,7 +62,7 @@ const Footprints = () => {
 };
 
 function App1({ navigation }) {
-  console.log("navigation", navigation)
+  window.kfsNavigation = navigation;
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: 'photos', title: '照片', focusedIcon: 'image', unfocusedIcon: 'image-outline' },
@@ -72,7 +72,7 @@ function App1({ navigation }) {
   ]);
 
   const renderScene = BottomNavigation.SceneMap({
-    photos: (props) => <Photos {...props} navigation={navigation} />,
+    photos: Photos,
     albums: Albums,
     footprints: Footprints,
     me: SystemConfig,

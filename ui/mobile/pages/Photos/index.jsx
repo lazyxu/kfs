@@ -8,7 +8,8 @@ function calImageWith(gridWith) {
     return gridWith / 10;
 }
 
-export default function ({ navigation }) {
+export default function () {
+    const navigation = window.kfsNavigation;
     const [metadataYearList, setMetadataYearList] = useState([]);
     const ref = useRef(null);
     const [width, setWidth] = useState(0);
@@ -31,8 +32,12 @@ export default function ({ navigation }) {
         });
     }
     useEffect(() => {
+        console.log("Photos useEffect");
         refersh();
         setWidth(calImageWith(ref.current.offsetWidth));
+        return () => {
+            console.log("Photos useEffect.unload");
+        }
     }, []);
     return (
         <View style={{
