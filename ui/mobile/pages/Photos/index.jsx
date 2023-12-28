@@ -35,23 +35,25 @@ export default function ({ navigation }) {
         setWidth(calImageWith(ref.current.offsetWidth));
     }, []);
     return (
-        <>
+        <View style={{
+            height: "100%",
+            width: "100%",
+            flexDirection: 'column',
+        }}>
             <Appbar.Header mode="center-aligned">
                 <Appbar.Content title="照片" />
                 <Appbar.Action icon="calendar" onPress={() => { }} />
                 <Appbar.Action icon="magnify" onPress={() => { }} />
             </Appbar.Header>
             <View style={{
-                width: "100%",
-                height: "100%",
+                flex: 1,
                 overflow: "scroll",
             }} ref={ref}>
                 {metadataYearList.map(metadataYear =>
                     <Surface key={metadataYear.year}>
                         <Text>{metadataYear.year === 1970 ? "未知时间" : metadataYear.year}</Text>
-                        <View style={{
+                        <Surface style={{
                             display: "flex",
-                            backgroundColor: '#fff',
                             width: "100%",
                             flexDirection: 'row',
                             flexWrap: "wrap",
@@ -65,10 +67,10 @@ export default function ({ navigation }) {
                                     }} source={{ uri: `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}` }} />
                                 </TouchableHighlight>
                             )}
-                        </View>
+                        </Surface>
                     </Surface>
                 )}
             </View>
-        </>
+        </View>
     );
 }
