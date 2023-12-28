@@ -41,7 +41,7 @@ export default function ({ navigation, route }) {
         //     setSameFiles(sf);
         // });
     }, []);
-    console.log("Viewer", hash, metadata);
+    console.log("Info", hash, metadata);
     return (
         <>
             <Appbar.Header mode="center-aligned">
