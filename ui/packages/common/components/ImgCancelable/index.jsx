@@ -1,4 +1,3 @@
-import { Skeleton } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const useGetState = (initiateState) => {
@@ -9,7 +8,7 @@ const useGetState = (initiateState) => {
     return [state, setState, getState];
 };
 
-export default ({ src, inView, onClick, title }) => {
+export default ({ src, inView, renderImg, renderSkeleton }) => {
     const [url, setUrl] = useState();
     const [loaded, setLoaded, getLoaded] = useGetState(0);
     const controller = useRef(new AbortController());
@@ -37,12 +36,8 @@ export default ({ src, inView, onClick, title }) => {
         }
     }, [inView]);
     if (url) {
-        return (
-            <img title={title} src={url} loading="lazy" onClick={onClick} />
-        );
+        return renderImg(url);
     } else {
-        return (
-            <Skeleton title={title} variant="rectangular" animation={false} width="100%" height="100%" />
-        )
+        return renderSkeleton();
     }
 };

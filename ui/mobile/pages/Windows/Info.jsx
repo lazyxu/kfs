@@ -2,7 +2,7 @@ import { parseShotEquipment } from "@kfs/common/api/utils";
 import { getMetadata } from "@kfs/common/api/webServer/exif";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useState } from 'react';
-import { TouchableHighlight, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Appbar, Text } from "react-native-paper";
 
 function formatTime(DateTime, SubsecTime, OffsetTime) {
@@ -46,9 +46,9 @@ export default function ({ navigation, route }) {
         <>
             <Appbar.Header mode="center-aligned">
                 <Appbar.Content title="信息" />
-                <TouchableHighlight key={hash} onPress={() => navigation.pop()}  >
+                <Pressable key={hash} onPress={() => navigation.pop()}  >
                     <Text>完成</Text>
-                </TouchableHighlight>
+                </Pressable>
             </Appbar.Header>
             {!metadata ?
                 <View style={{

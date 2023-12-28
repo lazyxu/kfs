@@ -1,8 +1,8 @@
 import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
-import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useRef, useState } from "react";
-import { Image, TouchableHighlight, View } from 'react-native';
+import { View } from 'react-native';
 import { Appbar, Surface, Text } from "react-native-paper";
+import Thumbnail from './Thumbnail';
 
 function calImageWith(gridWith) {
     return gridWith / 10;
@@ -60,12 +60,7 @@ export default function ({ navigation }) {
                             alignContent: "flex-start"
                         }}>
                             {metadataYear.list.map(hash =>
-                                <TouchableHighlight key={hash} onPress={() => navigation.navigate("Viewer", { hash })}  >
-                                    <Image style={{
-                                        width: width,
-                                        height: width,
-                                    }} source={{ uri: `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}` }} />
-                                </TouchableHighlight>
+                                <Thumbnail key={hash} hash={hash} width={width} navigation={navigation} />
                             )}
                         </Surface>
                     </Surface>
