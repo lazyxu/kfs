@@ -1,6 +1,6 @@
 import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RefreshControl, ScrollView, View } from 'react-native';
+import { FlatList, RefreshControl, View } from 'react-native';
 import { Appbar, Surface, Text } from "react-native-paper";
 import Thumbnail from './Thumbnail';
 
@@ -17,36 +17,38 @@ export default function () {
     const refersh = async () => {
         const l = await listDCIMMetadataTime();
         let year = -1;
-        let yearList = [];
-        let list;
+        let yearHashList = [];
+        let hashList;
         for (const m of l) {
             if (year !== m.year) {
                 year = m.year;
-                list = { year, list: [m.hash] }
-                yearList.push(list);
+                hashList = [m.hash];
+                yearHashList.push(year);
+                yearHashList.push(hashList);
             } else {
-                list.list.push(m.hash);
+                hashList.push(m.hash);
             }
             // console.log(year, yearList, list, m)
         }
-        setMetadataYearList(yearList);
+        setMetadataYearList(yearHashList);
     }
     const onRefresh = useCallback(() => {
-      setRefreshing(true);
-      refersh().then(() => {
-        setRefreshing(false);
-      });
+        setRefreshing(true);
+        refersh().then(() => {
+            setRefreshing(false);
+        });
     }, []);
     useEffect(() => {
         console.log("Photos useEffect");
-        refersh();
         setWidth(calImageWith(ref.current.offsetWidth));
+        refersh();
         return () => {
             console.log("Photos useEffect.unload");
         }
     }, []);
+    // console.log("render", width, navigation);
     return (
-        <View style={{
+        <View ref={ref} style={{
             height: "100%",
             width: "100%",
             flexDirection: 'column',
@@ -56,18 +58,18 @@ export default function () {
                 <Appbar.Action icon="calendar" onPress={() => { }} />
                 <Appbar.Action icon="magnify" onPress={() => { }} />
             </Appbar.Header>
-            <ScrollView
+            <FlatList
                 showsVerticalScrollIndicator={true}
                 style={{ flex: 1 }}
-                stickyHeaderIndices={metadataYearList.map((_, i) => i * 2)}
+                stickyHeaderIndices={metadataYearList.filter((_, i) => i & 1 === 0).map((_, i) => i)}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
-                ref={ref}
-            >
-                {metadataYearList.map(metadataYear =>
-                    [
-                        <Surface><Text>{metadataYear.year === 1970 ? "未知时间" : metadataYear.year}</Text></Surface>,
+                data={metadataYearList}
+                extraData={width}
+                renderItem={({ index, item }) => {
+                    // console.log("render", index, index & 1 === 1, width, navigation, item);
+                    return index & 1 === 1 ?
                         <Surface style={{
                             display: "flex",
                             width: "100%",
@@ -75,13 +77,13 @@ export default function () {
                             flexWrap: "wrap",
                             alignContent: "flex-start"
                         }}>
-                            {metadataYear.list.map(hash =>
-                                <Thumbnail key={hash} hash={hash} width={width} navigation={navigation} />
+                            {item.map((hash, i) =>
+                                <Thumbnail key={i} hash={hash} width={width} navigation={navigation} />
                             )}
-                        </Surface>
-                    ]
-                )}
-            </ScrollView>
-        </View>
+                        </Surface> :
+                        <Surface><Text>{item === 1970 ? "未知时间" : item}</Text></Surface>
+                }}
+            />
+        </View >
     );
 }
