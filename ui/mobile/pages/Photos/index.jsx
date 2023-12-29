@@ -1,6 +1,6 @@
 import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
-import { useEffect, useRef, useState } from "react";
-import { ScrollView, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { RefreshControl, ScrollView, View } from 'react-native';
 import { Appbar, Surface, Text } from "react-native-paper";
 import Thumbnail from './Thumbnail';
 
@@ -13,24 +13,30 @@ export default function () {
     const [metadataYearList, setMetadataYearList] = useState([]);
     const ref = useRef(null);
     const [width, setWidth] = useState(0);
-    const refersh = () => {
-        listDCIMMetadataTime().then(l => {
-            let year = -1;
-            let yearList = [];
-            let list;
-            for (const m of l) {
-                if (year !== m.year) {
-                    year = m.year;
-                    list = { year, list: [m.hash] }
-                    yearList.push(list);
-                } else {
-                    list.list.push(m.hash);
-                }
-                // console.log(year, yearList, list, m)
+    const [refreshing, setRefreshing] = useState(false);
+    const refersh = async () => {
+        const l = await listDCIMMetadataTime();
+        let year = -1;
+        let yearList = [];
+        let list;
+        for (const m of l) {
+            if (year !== m.year) {
+                year = m.year;
+                list = { year, list: [m.hash] }
+                yearList.push(list);
+            } else {
+                list.list.push(m.hash);
             }
-            setMetadataYearList(yearList);
-        });
+            // console.log(year, yearList, list, m)
+        }
+        setMetadataYearList(yearList);
     }
+    const onRefresh = useCallback(() => {
+      setRefreshing(true);
+      refersh().then(() => {
+        setRefreshing(false);
+      });
+    }, []);
     useEffect(() => {
         console.log("Photos useEffect");
         refersh();
@@ -54,6 +60,9 @@ export default function () {
                 showsVerticalScrollIndicator={true}
                 style={{ flex: 1 }}
                 stickyHeaderIndices={metadataYearList.map((_, i) => i * 2)}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
                 ref={ref}
             >
                 {metadataYearList.map(metadataYear =>
