@@ -54,6 +54,11 @@ export default function () {
         }
     }, []);
     // console.log("render", width, navigation);
+    let indices = [];
+    for (let i = 0; i < metadataYearList.length/2; i++) {
+        indices.push(i*2);
+    }
+    // console.log(metadataYearList, indices)
     return (
         <View ref={ref} style={{
             height: "100%",
@@ -66,9 +71,9 @@ export default function () {
                 <Appbar.Action icon="magnify" onPress={() => { }} />
             </Appbar.Header>
             <FlatList
-                showsVerticalScrollIndicator={true}
+                showsVerticalScrollIndicator={false}
                 style={{ flex: 1 }}
-                stickyHeaderIndices={metadataYearList.filter((_, i) => i & 1 === 0).map((_, i) => i)}
+                stickyHeaderIndices={indices}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
