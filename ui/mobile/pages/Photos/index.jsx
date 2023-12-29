@@ -1,6 +1,6 @@
 import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
 import { useEffect, useRef, useState } from "react";
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Appbar, Surface, Text } from "react-native-paper";
 import Thumbnail from './Thumbnail';
 
@@ -50,13 +50,15 @@ export default function () {
                 <Appbar.Action icon="calendar" onPress={() => { }} />
                 <Appbar.Action icon="magnify" onPress={() => { }} />
             </Appbar.Header>
-            <View style={{
-                flex: 1,
-                overflow: "scroll",
-            }} ref={ref}>
+            <ScrollView
+                showsVerticalScrollIndicator={true}
+                style={{ flex: 1 }}
+                stickyHeaderIndices={metadataYearList.map((_, i) => i * 2)}
+                ref={ref}
+            >
                 {metadataYearList.map(metadataYear =>
-                    <Surface key={metadataYear.year}>
-                        <Text>{metadataYear.year === 1970 ? "未知时间" : metadataYear.year}</Text>
+                    [
+                        <Surface><Text>{metadataYear.year === 1970 ? "未知时间" : metadataYear.year}</Text></Surface>,
                         <Surface style={{
                             display: "flex",
                             width: "100%",
@@ -68,9 +70,9 @@ export default function () {
                                 <Thumbnail key={hash} hash={hash} width={width} navigation={navigation} />
                             )}
                         </Surface>
-                    </Surface>
+                    ]
                 )}
-            </View>
+            </ScrollView>
         </View>
     );
 }
