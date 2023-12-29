@@ -25,11 +25,18 @@ export default function () {
                 hashList = [m.hash];
                 yearHashList.push(year);
                 yearHashList.push(hashList);
+                // for (let i = 0; i < 1000; i++) {
+                //     hashList.push(m.hash);
+                // }
             } else {
                 hashList.push(m.hash);
+                // for (let i = 0; i < 1000; i++) {
+                //     hashList.push(m.hash);
+                // }
             }
             // console.log(year, yearList, list, m)
         }
+        console.log("setMetadataYearList");
         setMetadataYearList(yearHashList);
     }
     const onRefresh = useCallback(() => {
