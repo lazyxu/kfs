@@ -4,11 +4,11 @@ import { useInView } from "react-intersection-observer";
 import { Pressable, View } from 'react-native';
 import FastImage from './FastImage';
 
-export default function ({ hash, width, navigation }) {
+export default function ({ hash, width, navigation, index, list }) {
     const { ref, inView } = useInView({ threshold: 0 });
     const src = `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`;
     return (
-        <Pressable ref={ref} onPress={() => navigation.navigate("Viewer", { hash })}  >
+        <Pressable ref={ref} onPress={() => navigation.navigate("Viewer", { hash, index, list })}  >
             <ImgCancelable inView={inView}
                 src={src}
                 renderImg={(url) => <FastImage style={{

@@ -1,4 +1,5 @@
 import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
+import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, RefreshControl, View } from 'react-native';
 import { Appbar, Surface, Text } from "react-native-paper";
@@ -11,48 +12,57 @@ function calImageWith(gridWith) {
 export default function () {
     const navigation = window.kfsNavigation;
     const [metadataYearList, setMetadataYearList] = useState([]);
+    const sysConfig = getSysConfig();
     const ref = useRef(null);
     const [width, setWidth] = useState(0);
     const [initialNumToRender, setInitialNumToRender] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
+    const [list, setList] = useState([]);
     const refersh = async () => {
         const l = await listDCIMMetadataTime();
         let year = -1;
         let yearHashList = [];
         let hashList;
-        for (const m of l) {
+        const allHashList = [];
+        for (let index = 0; index < l.length; index++) {
+            console.log(index);
+            const m = l[index];
+            allHashList.push({url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}`});
             if (year !== m.year) {
                 year = m.year;
                 yearHashList.push(year);
-                hashList = [m.hash];
+                hashList = [{ index, hash: m.hash }];
                 yearHashList.push(hashList);
-                for (let i = 0; i < 100; i++) {
-                    if (hashList.length == 10) {
-                        hashList = [m.hash];
-                        yearHashList.push(hashList);
-                    } else {
-                        hashList.push(m.hash);
-                    }
-                }
+                // for (let i = 0; i < 100; i++) {
+                //     allHashList.push({url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}`});
+                //     if (hashList.length == 10) {
+                //         hashList = [{ index, hash: m.hash }];
+                //         yearHashList.push(hashList);
+                //     } else {
+                //         hashList.push({ index, hash: m.hash });
+                //     }
+                // }
             } else {
                 if (hashList.length == 10) {
-                    hashList = [m.hash];
+                    hashList = [{ index, hash: m.hash }];
                     yearHashList.push(hashList);
                 } else {
-                    hashList.push(m.hash);
+                    hashList.push({ index, hash: m.hash });
                 }
-                for (let i = 0; i < 100; i++) {
-                    if (hashList.length == 10) {
-                        hashList = [m.hash];
-                        yearHashList.push(hashList);
-                    } else {
-                        hashList.push(m.hash);
-                    }
-                }
+                // for (let i = 0; i < 100; i++) {
+                //     allHashList.push({url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}`});
+                //     if (hashList.length == 10) {
+                //         hashList = [{ index, hash: m.hash }];
+                //         yearHashList.push(hashList);
+                //     } else {
+                //         hashList.push({ index, hash: m.hash });
+                //     }
+                // }
             }
             // console.log(yearHashList)
         }
         console.log("setMetadataYearList");
+        setList(allHashList);
         setMetadataYearList(yearHashList);
     }
     const onRefresh = useCallback(() => {
@@ -78,7 +88,7 @@ export default function () {
             indices.push(i);
         }
     }
-    console.log(metadataYearList, indices, initialNumToRender)
+    console.log(metadataYearList, indices, initialNumToRender, list)
     const renderItem = ({ index, item }) => {
         // console.log("render", index, index & 1 === 1, width, navigation, item);
         return typeof item === 'object' ?
@@ -89,8 +99,8 @@ export default function () {
                 flexWrap: "wrap",
                 alignContent: "flex-start"
             }}>
-                {item.map((hash, i) =>
-                    <Thumbnail key={i} hash={hash} width={width} navigation={navigation} />
+                {item.map(({ hash, index }) =>
+                    <Thumbnail key={index} hash={hash} width={width} navigation={navigation} list={list} index={index}/>
                 )}
             </View> :
             <Surface><Text>{item === 1970 ? "未知时间" : item}</Text></Surface>
@@ -120,7 +130,7 @@ export default function () {
                 data={metadataYearList}
                 extraData={width}
                 renderItem={renderItem}
-                // getItemLayout
+            // getItemLayout
             />
         </View >
     );

@@ -11,8 +11,9 @@ const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
 
 export default function ({ navigation, route }) {
-    const { hash } = route.params;
-    console.log("Viewer", hash);
+    const { hash: hash1, index, list } = route.params;
+    const [hash, setHash] = useState();
+    // console.log("Viewer", hash);
     const [downloadName, setDownloadName] = useState();
     const [metadata, setMetadata] = useState();
     const [openMetadata, setOpenMetadata] = useState(false);
@@ -24,12 +25,15 @@ export default function ({ navigation, route }) {
 
     const sysConfig = getSysConfig();
     const ref = useRef();
-    const src = `${sysConfig.webServer}/api/v1/image?hash=${hash}`;
+    const src = `${sysConfig.webServer}/api/v1/image?hash=${hash1}`;
 
     const [blob, setBlob] = useState();
     const [url, setUrl] = useState();
     const controller = useRef(new AbortController());
+    // console.log(hash, url);
     useEffect(() => {
+        // if (!hash)
+        //     return;
         fetch(src, {
             method: 'get',
             signal: controller.current.signal,
@@ -41,7 +45,7 @@ export default function ({ navigation, route }) {
             console.log(b, objectURL);
             setUrl(objectURL);
         });
-    }, []);
+    }, [hash]);
 
     const shareImage = async () => {
         try {
@@ -95,39 +99,79 @@ export default function ({ navigation, route }) {
                 justifyContent: "center",
                 alignItems: "center"
             }}>
-                {url && <View style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}><ImageViewer
-                    imageUrls={[{ url }]} // 照片路径
-                    enableImageZoom={true} // 是否开启手势缩放
-                    saveToLocalByLongPress={true} //是否开启长按保存
-                    index={0} // 初始显示第几张
-                    // failImageSource={} // 加载失败图片
-                    backgroundColor={hideHeaderFooter ? null : theme.colors.surface}
-                    renderHeader={i => {
-                        return !hideHeaderFooter && <Surface style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: "space-between",
-                            paddingHorizontal: 4,
-                            position: "fixed", left: 0, top: 0, right: 0,
-                            zIndex: 1,
-                        }}>
-                            <IconButton
-                                // size={size}
-                                onPress={() => navigation.pop()}
-                                // iconColor={actionIconColor}
-                                icon="chevron-left"
-                            // disabled={disabled}
-                            // rippleColor={rippleColor}
-                            />
-                            <View style={{
+                {url && <View style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}>
+                    <ImageViewer
+                        imageUrls={list} // 照片路径
+                        enableImageZoom={true} // 是否开启手势缩放
+                        // saveToLocalByLongPress={true} //是否开启长按保存
+                        index={index} // 初始显示第几张
+                        // failImageSource={} // 加载失败图片
+                        backgroundColor={hideHeaderFooter ? null : theme.colors.surface}
+                        renderIndicator={(currentIndex, allSize) =>
+                            <></>
+                        }
+                        renderHeader={i => {
+                            return !hideHeaderFooter && <Surface style={{
                                 flexDirection: 'row',
                                 alignItems: 'center',
+                                justifyContent: "space-between",
+                                paddingHorizontal: 4,
+                                position: "fixed", left: 0, top: 0, right: 0,
+                                zIndex: 1,
                             }}>
                                 <IconButton
                                     // size={size}
-                                    onPress={downloadImage}
+                                    onPress={() => navigation.pop()}
                                     // iconColor={actionIconColor}
-                                    icon="download-outline"
+                                    icon="chevron-left"
+                                // disabled={disabled}
+                                // rippleColor={rippleColor}
+                                />
+                                <View style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                }}>
+                                    <IconButton
+                                        // size={size}
+                                        onPress={downloadImage}
+                                        // iconColor={actionIconColor}
+                                        icon="download-outline"
+                                    // disabled={disabled}
+                                    // rippleColor={rippleColor}
+                                    />
+                                    <IconButton
+                                        // size={size}
+                                        // onPress={downloadImage}
+                                        // iconColor={actionIconColor}
+                                        icon="dots-vertical"
+                                    // disabled={disabled}
+                                    // rippleColor={rippleColor}
+                                    />
+                                </View>
+                            </Surface>
+                        }}
+                        renderFooter={i => {
+                            return !hideHeaderFooter && <Surface style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: "space-around",
+                                paddingHorizontal: 4,
+                                position: "fixed", left: 0, bottom: 0, right: 0,
+                                zIndex: 1,
+                            }}>
+                                <IconButton
+                                    // size={size}
+                                    onPress={shareImage}
+                                    // iconColor={actionIconColor}
+                                    icon="export-variant"
+                                // disabled={disabled}
+                                // rippleColor={rippleColor}
+                                />
+                                <IconButton
+                                    // size={size}
+                                    onPress={() => navigation.navigate("Info", { hash })}
+                                    // iconColor={actionIconColor}
+                                    icon="information-outline"
                                 // disabled={disabled}
                                 // rippleColor={rippleColor}
                                 />
@@ -135,59 +179,23 @@ export default function ({ navigation, route }) {
                                     // size={size}
                                     // onPress={downloadImage}
                                     // iconColor={actionIconColor}
-                                    icon="dots-vertical"
+                                    icon="trash-can-outline"
                                 // disabled={disabled}
                                 // rippleColor={rippleColor}
                                 />
+                            </Surface>
+                        }}
+                        loadingRender={() => {
+                            return <View style={{ marginTop: (screenHeight / 2) - 20 }}>
+                                <ActivityIndicator animating={true} size="large" />
                             </View>
-                        </Surface>
-                    }}
-                    renderFooter={i => {
-                        return !hideHeaderFooter && <Surface style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: "space-around",
-                            paddingHorizontal: 4,
-                            position: "fixed", left: 0, bottom: 0, right: 0,
-                            zIndex: 1,
-                        }}>
-                            <IconButton
-                                // size={size}
-                                onPress={shareImage}
-                                // iconColor={actionIconColor}
-                                icon="export-variant"
-                            // disabled={disabled}
-                            // rippleColor={rippleColor}
-                            />
-                            <IconButton
-                                // size={size}
-                                onPress={() => navigation.navigate("Info", { hash })}
-                                // iconColor={actionIconColor}
-                                icon="information-outline"
-                            // disabled={disabled}
-                            // rippleColor={rippleColor}
-                            />
-                            <IconButton
-                                // size={size}
-                                // onPress={downloadImage}
-                                // iconColor={actionIconColor}
-                                icon="trash-can-outline"
-                            // disabled={disabled}
-                            // rippleColor={rippleColor}
-                            />
-                        </Surface>
-                    }}
-                    loadingRender={() => {
-                        return <View style={{ marginTop: (screenHeight / 2) - 20 }}>
-                            <ActivityIndicator animating={true} size="large" />
-                        </View>
-                    }}
-                    enableSwipeDown={false}
-                    menuContext={{ "saveToLocal": "保存图片", "cancel": "取消" }}
-                    onChange={(index) => { }} // 图片切换时触发
-                    onClick={() => { setHideHeaderFooter(prev => !prev) }}
-                    onSave={(url) => { this.savePhoto(url) }}
-                />
+                        }}
+                        enableSwipeDown={false}
+                        menuContext={{ "saveToLocal": "保存图片", "cancel": "取消" }}
+                        onChange={(index) => { }} // 图片切换时触发
+                        onClick={() => { setHideHeaderFooter(prev => !prev) }}
+                        onSave={(url) => { this.savePhoto(url) }}
+                    />
                 </View>}
             </ViewShot >
         </>
