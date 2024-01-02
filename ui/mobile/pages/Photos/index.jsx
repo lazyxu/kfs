@@ -22,19 +22,34 @@ export default function () {
         for (const m of l) {
             if (year !== m.year) {
                 year = m.year;
-                hashList = [m.hash];
                 yearHashList.push(year);
+                hashList = [m.hash];
                 yearHashList.push(hashList);
-                // for (let i = 0; i < 1000; i++) {
-                //     hashList.push(m.hash);
-                // }
+                for (let i = 0; i < 100; i++) {
+                    if (hashList.length == 10) {
+                        hashList = [m.hash];
+                        yearHashList.push(hashList);
+                    } else {
+                        hashList.push(m.hash);
+                    }
+                }
             } else {
-                hashList.push(m.hash);
-                // for (let i = 0; i < 1000; i++) {
-                //     hashList.push(m.hash);
-                // }
+                if (hashList.length == 10) {
+                    hashList = [m.hash];
+                    yearHashList.push(hashList);
+                } else {
+                    hashList.push(m.hash);
+                }
+                for (let i = 0; i < 100; i++) {
+                    if (hashList.length == 10) {
+                        hashList = [m.hash];
+                        yearHashList.push(hashList);
+                    } else {
+                        hashList.push(m.hash);
+                    }
+                }
             }
-            // console.log(year, yearList, list, m)
+            // console.log(yearHashList)
         }
         console.log("setMetadataYearList");
         setMetadataYearList(yearHashList);
@@ -55,10 +70,28 @@ export default function () {
     }, []);
     // console.log("render", width, navigation);
     let indices = [];
-    for (let i = 0; i < metadataYearList.length/2; i++) {
-        indices.push(i*2);
+    for (let i = 0; i < metadataYearList.length; i++) {
+        if (typeof metadataYearList[i] !== 'object') {
+            indices.push(i);
+        }
     }
-    // console.log(metadataYearList, indices)
+    console.log(metadataYearList, indices)
+    const renderItem = ({ index, item }) => {
+        // console.log("render", index, index & 1 === 1, width, navigation, item);
+        return typeof item === 'object' ?
+            <View style={{
+                display: "flex",
+                width: "100%",
+                flexDirection: 'row',
+                flexWrap: "wrap",
+                alignContent: "flex-start"
+            }}>
+                {item.map((hash, i) =>
+                    <Thumbnail key={i} hash={hash} width={width} navigation={navigation} />
+                )}
+            </View> :
+            <Surface><Text>{item === 1970 ? "未知时间" : item}</Text></Surface>
+    };
     return (
         <View ref={ref} style={{
             height: "100%",
@@ -71,30 +104,18 @@ export default function () {
                 <Appbar.Action icon="magnify" onPress={() => { }} />
             </Appbar.Header>
             <FlatList
-                showsVerticalScrollIndicator={false}
+                // showsVerticalScrollIndicator={false}
                 style={{ flex: 1 }}
                 stickyHeaderIndices={indices}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
+                initialNumToRender={10} // default 10
+                maxToRenderPerBatch={1000} // default 10
+                updateCellsBatchingPeriod={50} // default 50ms
                 data={metadataYearList}
                 extraData={width}
-                renderItem={({ index, item }) => {
-                    // console.log("render", index, index & 1 === 1, width, navigation, item);
-                    return index & 1 === 1 ?
-                        <Surface style={{
-                            display: "flex",
-                            width: "100%",
-                            flexDirection: 'row',
-                            flexWrap: "wrap",
-                            alignContent: "flex-start"
-                        }}>
-                            {item.map((hash, i) =>
-                                <Thumbnail key={i} hash={hash} width={width} navigation={navigation} />
-                            )}
-                        </Surface> :
-                        <Surface><Text>{item === 1970 ? "未知时间" : item}</Text></Surface>
-                }}
+                renderItem={renderItem}
             />
         </View >
     );
