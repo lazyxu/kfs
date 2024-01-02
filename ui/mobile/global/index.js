@@ -1,4 +1,4 @@
-import { MMKV } from 'react-native-mmkv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from "react-native-toast-message";
 
 let env = {
@@ -13,22 +13,24 @@ Object.defineProperty(window, 'kfsEnv', {
     writable: false,
 });
 
-export const storage = new MMKV();
-
 const KEY_KFS_CONFIG = 'kfs-config';
-Object.defineProperty(window, "kfsConfig", {
-    get() {
-        const item = storage.getString(KEY_KFS_CONFIG);
-        try {
-            return JSON.parse(item);
-        } catch (_) {
-            return undefined;
-        }
-    },
-    set(json) {
-        storage.set(KEY_KFS_CONFIG, JSON.stringify(json, undefined, 2));
-    },
-});
+
+window.getKfsConfig = async () => {
+    try {
+        const item = await AsyncStorage.getItem(KEY_KFS_CONFIG);
+        return JSON.parse(item);
+    } catch (_) {
+        return undefined;
+    }
+};
+
+window.setKfsConfig = async (json) => {
+    try {
+        await AsyncStorage.setItem(KEY_KFS_CONFIG, JSON.stringify(json, undefined, 2));
+    } catch (e) {
+        noteError(e.message);
+    }
+};
 
 window.noteError = (msg) => {
     Toast.show({

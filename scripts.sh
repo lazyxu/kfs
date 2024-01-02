@@ -59,6 +59,11 @@ cliTest () {
 case $1 in
   start)
     case $2 in
+      emu)
+        cd /c/Users/isxul/AppData/Local/Android/Sdk/emulator
+        ./emulator -avd Pixel_3a_API_34_extension_level_7_x86_64
+        ;;
+
       web)
         cd $root/ui/web
         VITE_APP_PLATFORM=web yarn dev

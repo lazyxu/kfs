@@ -11,15 +11,18 @@ const defaultConfig = {
 };
 
 function useFunc() {
-  const [sysConfig, setSysConfig] = useState(() => {
-    const c = window.kfsConfig || defaultConfig;
-    if (window.kfsEnv.VITE_APP_PLATFORM === 'web' && window.kfsEnv.MODE === 'production') {
-      c.webServer = location.origin;
-    }
-    return c;
-  });
+  const [sysConfig, setSysConfig] = useState();
   useEffect(() => {
-    window.kfsConfig = sysConfig;
+    (async () => {
+      const c = (await window.getKfsConfig()) || defaultConfig;
+      if (window.kfsEnv.VITE_APP_PLATFORM === 'web' && window.kfsEnv.MODE === 'production') {
+        c.webServer = location.origin;
+      }
+      setSysConfig(c);
+    })();
+  }, []);
+  useEffect(() => {
+    window.setKfsConfig(sysConfig);
   }, [sysConfig]);
   return {
     sysConfig,

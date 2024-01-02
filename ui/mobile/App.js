@@ -123,10 +123,26 @@ function ThemeApp() {
   );
 }
 
+function LoadingApp() {
+  const { sysConfig } = useSysConfig();
+  if (sysConfig) {
+    return <ThemeApp />
+  }
+  return (
+    <View style={{
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <Text >Loading...</Text>
+    </View>
+  );
+}
+
 export default function App() {
   return (
     <HoxRoot>
-      <ThemeApp />
+      <LoadingApp />
     </HoxRoot>
   );
 }

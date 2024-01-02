@@ -25,7 +25,7 @@ export default function () {
         let hashList;
         const allHashList = [];
         for (let index = 0; index < l.length; index++) {
-            console.log(index);
+            // console.log(index);
             const m = l[index];
             allHashList.push({url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}`});
             if (year !== m.year) {
