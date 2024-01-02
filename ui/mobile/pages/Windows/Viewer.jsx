@@ -34,17 +34,17 @@ export default function ({ navigation, route }) {
     useEffect(() => {
         // if (!hash)
         //     return;
-        fetch(src, {
-            method: 'get',
-            signal: controller.current.signal,
-        }).then(response => {
-            return response.blob();
-        }).then(b => {
-            setBlob(b);
-            const objectURL = URL.createObjectURL(b);
-            console.log(b, objectURL);
-            setUrl(objectURL);
-        });
+        // fetch(src, {
+        //     method: 'get',
+        //     signal: controller.current.signal,
+        // }).then(response => {
+        //     return response.blob();
+        // }).then(b => {
+        //     setBlob(b);
+        //     const objectURL = URL.createObjectURL(b);
+        //     console.log(b, objectURL);
+        //     setUrl(objectURL);
+        // });
     }, [hash]);
 
     const shareImage = async () => {

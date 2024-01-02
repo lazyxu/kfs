@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Platform } from 'react-native';
 
 const useGetState = (initiateState) => {
     const [state, setState] = useState(initiateState);
@@ -25,7 +26,16 @@ export default ({ src, inView, renderImg, renderSkeleton }) => {
                 setLoaded(2);
                 return response.blob();
             }).then(blob => {
-                setUrl(URL.createObjectURL(blob));
+                if (Platform.OS === "web") {
+                    setUrl(URL.createObjectURL(blob));
+                } else {
+                    const fileReaderInstance = new FileReader();
+                    fileReaderInstance.readAsDataURL(blob);
+                    fileReaderInstance.onload = () => {
+                        base64data = fileReaderInstance.result;
+                        setUrl(base64data);
+                    }
+                }
             });
         }
         if (!inView && l === 1) {

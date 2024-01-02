@@ -8428,7 +8428,7 @@ lodash.uniq@^4.5.0:
   resolved "https://registry.npmmirror.com/lodash.uniq/-/lodash.uniq-4.5.0.tgz#d0225373aeb652adc1bc82e4945339a842754773"
   integrity sha512-xfBaXQd9ryd9dlSDvnvI0lvxfLJlYAZzXomUYzLKtUeOQvOP5piqAWuGtrhWeqaXK9hhoM/iyJc5AV+XfsX3HQ==
 
-lodash@^4.17.11, lodash@^4.17.13, lodash@^4.17.15, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.17.4:
+lodash@^4.0.0, lodash@^4.17.11, lodash@^4.17.13, lodash@^4.17.15, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.17.4:
   version "4.17.21"
   resolved "https://registry.npmmirror.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -10509,6 +10509,13 @@ react-native-image-zoom-viewer@^3.0.1:
   integrity sha512-la6s5DNSuq4GCRLsi5CZ29FPjgTpdCuGIRdO5T9rUrAtxrlpBPhhSnHrbmPVxsdtOUvxHacTh2Gfa9+RraMZQA==
   dependencies:
     react-native-image-pan-zoom "^2.1.12"
+
+react-native-intersection-observer@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.npmmirror.com/react-native-intersection-observer/-/react-native-intersection-observer-0.2.0.tgz#15a07cf2adbab6cd9821986168d5484405674ad9"
+  integrity sha512-h48i7AjYl1BLkfTupiJqv7dLUdLmxBIf4AxlrzvUvy5PLr3bnEFGTAMjaeUUcQklkdKSHRqIXP8wz1ex49my4g==
+  dependencies:
+    lodash "^4.0.0"
 
 react-native-paper@^5.11.4:
   version "5.11.4"

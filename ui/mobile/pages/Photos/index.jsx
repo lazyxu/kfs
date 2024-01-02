@@ -1,13 +1,9 @@
 import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FlatList, RefreshControl, View } from 'react-native';
+import { FlatList, Platform, RefreshControl, View } from 'react-native';
 import { Appbar, Surface, Text } from "react-native-paper";
 import Thumbnail from './Thumbnail';
-
-function calImageWith(gridWith) {
-    return gridWith / 10;
-}
 
 export default function () {
     const navigation = window.kfsNavigation;
@@ -19,15 +15,16 @@ export default function () {
     const [refreshing, setRefreshing] = useState(false);
     const [list, setList] = useState([]);
     const refersh = async () => {
-        const l = await listDCIMMetadataTime();
+        let l = await listDCIMMetadataTime();
         let year = -1;
         let yearHashList = [];
         let hashList;
         const allHashList = [];
+        l = l.slice(0, 100);
         for (let index = 0; index < l.length; index++) {
             // console.log(index);
             const m = l[index];
-            allHashList.push({url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}`});
+            allHashList.push({ url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}` });
             if (year !== m.year) {
                 year = m.year;
                 yearHashList.push(year);
@@ -73,9 +70,11 @@ export default function () {
     }, []);
     useEffect(() => {
         console.log("Photos useEffect");
-        const w = ref.current.offsetWidth / 10;
-        setWidth(w);
-        setInitialNumToRender(Math.ceil(ref.current.offsetHeight / w));
+        if (Platform.OS === "web") {
+            const w = ref.current.offsetWidth / 10;
+            setWidth(w);
+            setInitialNumToRender(Math.ceil(ref.current.offsetHeight / w));
+        }
         refersh();
         return () => {
             console.log("Photos useEffect.unload");
@@ -89,8 +88,10 @@ export default function () {
         }
     }
     console.log(metadataYearList, indices, initialNumToRender, list)
+    console.log("width", width)
+    console.log("initialNumToRender", initialNumToRender)
     const renderItem = ({ index, item }) => {
-        // console.log("render", index, index & 1 === 1, width, navigation, item);
+        // console.log("render", index, item, width);
         return typeof item === 'object' ?
             <View style={{
                 display: "flex",
@@ -100,7 +101,7 @@ export default function () {
                 alignContent: "flex-start"
             }}>
                 {item.map(({ hash, index }) =>
-                    <Thumbnail key={index} hash={hash} width={width} navigation={navigation} list={list} index={index}/>
+                    <Thumbnail key={index} hash={hash} width={width} navigation={navigation} list={list} index={index} />
                 )}
             </View> :
             <Surface><Text>{item === 1970 ? "未知时间" : item}</Text></Surface>
@@ -110,6 +111,11 @@ export default function () {
             height: "100%",
             width: "100%",
             flexDirection: 'column',
+        }} onLayout={e => {
+            const { layout } = e.nativeEvent;
+            const w = layout.width / 10;
+            setWidth(w);
+            setInitialNumToRender(Math.ceil(layout.height / w));
         }}>
             <Appbar.Header mode="center-aligned">
                 <Appbar.Content title="照片" />
@@ -119,7 +125,7 @@ export default function () {
             <FlatList
                 // showsVerticalScrollIndicator={false}
                 style={{ flex: 1 }}
-                stickyHeaderIndices={indices}
+                // stickyHeaderIndices={indices}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
