@@ -13,6 +13,7 @@ export default function () {
     const [metadataYearList, setMetadataYearList] = useState([]);
     const ref = useRef(null);
     const [width, setWidth] = useState(0);
+    const [initialNumToRender, setInitialNumToRender] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
     const refersh = async () => {
         const l = await listDCIMMetadataTime();
@@ -62,7 +63,9 @@ export default function () {
     }, []);
     useEffect(() => {
         console.log("Photos useEffect");
-        setWidth(calImageWith(ref.current.offsetWidth));
+        const w = ref.current.offsetWidth / 10;
+        setWidth(w);
+        setInitialNumToRender(Math.ceil(ref.current.offsetHeight / w));
         refersh();
         return () => {
             console.log("Photos useEffect.unload");
@@ -75,7 +78,7 @@ export default function () {
             indices.push(i);
         }
     }
-    console.log(metadataYearList, indices)
+    console.log(metadataYearList, indices, initialNumToRender)
     const renderItem = ({ index, item }) => {
         // console.log("render", index, index & 1 === 1, width, navigation, item);
         return typeof item === 'object' ?
@@ -110,12 +113,14 @@ export default function () {
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
-                initialNumToRender={10} // default 10
+                // renderScrollComponent
+                initialNumToRender={initialNumToRender} // default 10
                 maxToRenderPerBatch={1000} // default 10
                 updateCellsBatchingPeriod={50} // default 50ms
                 data={metadataYearList}
                 extraData={width}
                 renderItem={renderItem}
+                // getItemLayout
             />
         </View >
     );
