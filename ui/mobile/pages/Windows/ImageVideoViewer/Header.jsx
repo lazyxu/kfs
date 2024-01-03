@@ -8,7 +8,7 @@ export default function ({ navigation, hash }) {
             alignItems: 'center',
             justifyContent: "space-between",
             paddingHorizontal: 4,
-            position: "fixed", left: 0, top: 0, right: 0,
+            position: "absolute", left: 0, top: 0, right: 0,
             zIndex: 1,
         }}>
             <IconButton
