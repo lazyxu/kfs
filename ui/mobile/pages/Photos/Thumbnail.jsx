@@ -15,7 +15,7 @@ export default function ({ hash, width, navigation, index, list }) {
     return (
         <Pressable onPress={() => navigation.navigate("Viewer", { hash, index, list })}>
             {/* <InView onChange={(inView) => { setInView(inView); }}> */}
-                <ImgCancelable inView={inView}
+                <ImgCancelable isNative={true} inView={inView}
                     src={src}
                     renderImg={(url) => <Image style={{
                         width: width,

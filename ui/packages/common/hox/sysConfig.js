@@ -14,15 +14,30 @@ function useFunc() {
   const [sysConfig, setSysConfig] = useState();
   useEffect(() => {
     (async () => {
-      const c = (await window.getKfsConfig()) || defaultConfig;
+      let c;
+      if (window.getKfsConfig) {
+        c = await window.getKfsConfig();
+      } else if (window.kfsConfig) {
+        c = window.kfsConfig;
+      } else {
+        c = defaultConfig;
+      }
       if (window.kfsEnv.VITE_APP_PLATFORM === 'web' && window.kfsEnv.MODE === 'production') {
         c.webServer = location.origin;
       }
+      console.log(c)
       setSysConfig(c);
     })();
   }, []);
   useEffect(() => {
-    window.setKfsConfig(sysConfig);
+    if (!sysConfig) {
+      return;
+    }
+    if (window.setKfsConfig) {
+      window.setKfsConfig(sysConfig);
+    } else {
+      window.kfsConfig = sysConfig;
+    }
   }, [sysConfig]);
   return {
     sysConfig,

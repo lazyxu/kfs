@@ -8,13 +8,30 @@ import './reset.scss';
 import reportWebVitals from './reportWebVitals';
 import ThemeApp from "./ThemeApp";
 
+import useSysConfig from "@kfs/common/hox/sysConfig";
 import "./global";
+
+function LoadingApp() {
+    const { sysConfig } = useSysConfig();
+    if (sysConfig) {
+        return <ThemeApp />
+    }
+    return (
+        <div style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center'
+        }}>
+            <span >Loading...</span>
+        </div>
+    );
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     // <React.StrictMode>
     <HoxRoot>
-        <ThemeApp />
+        <LoadingApp />
     </HoxRoot>
     // </React.StrictMode>,
 );

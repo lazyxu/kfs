@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Platform } from 'react-native';
 
 const useGetState = (initiateState) => {
     const [state, setState] = useState(initiateState);
@@ -9,7 +8,7 @@ const useGetState = (initiateState) => {
     return [state, setState, getState];
 };
 
-export default ({ src, inView, renderImg, renderSkeleton }) => {
+export default ({ isNative, src, inView, renderImg, renderSkeleton }) => {
     const [url, setUrl] = useState();
     const [loaded, setLoaded, getLoaded] = useGetState(0);
     const controller = useRef(new AbortController());
@@ -26,15 +25,15 @@ export default ({ src, inView, renderImg, renderSkeleton }) => {
                 setLoaded(2);
                 return response.blob();
             }).then(blob => {
-                if (Platform.OS === "web") {
-                    setUrl(URL.createObjectURL(blob));
-                } else {
+                if (isNative) {
                     const fileReaderInstance = new FileReader();
                     fileReaderInstance.readAsDataURL(blob);
                     fileReaderInstance.onload = () => {
                         base64data = fileReaderInstance.result;
                         setUrl(base64data);
                     }
+                } else {
+                    setUrl(URL.createObjectURL(blob));
                 }
             });
         }
