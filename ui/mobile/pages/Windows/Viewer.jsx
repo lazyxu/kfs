@@ -1,8 +1,5 @@
-import { downloadURI } from "@kfs/common/api/web";
-import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import * as Sharing from 'expo-sharing';
-import { default as React, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, Platform, View } from 'react-native';
+import { default as React, useState } from 'react';
+import { ActivityIndicator, Dimensions, View } from 'react-native';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import { IconButton, Surface, useTheme } from "react-native-paper";
 import ViewShot from 'react-native-view-shot';
@@ -11,87 +8,14 @@ const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
 
 export default function ({ navigation, route }) {
-    const { hash: hash1, index, list } = route.params;
-    const [hash, setHash] = useState();
-    // console.log("Viewer", hash);
-    const [downloadName, setDownloadName] = useState();
-    const [metadata, setMetadata] = useState();
-    const [openMetadata, setOpenMetadata] = useState(false);
-    const [sameFiles, setSameFiles] = useState([]);
-    const [openSameFiles, setOpenSameFiles] = useState(false);
-    const [openAttribute, setOpenAttribute] = useState(false);
+    const { index, list } = route.params;
+    console.log("Viewer", index, list);
     const [hideHeaderFooter, setHideHeaderFooter] = useState(false);
     const theme = useTheme();
 
-    const sysConfig = getSysConfig();
-    const ref = useRef();
-    const src = `${sysConfig.webServer}/api/v1/image?hash=${hash1}`;
-
-    const [blob, setBlob] = useState();
-    const [url, setUrl] = useState();
-    const controller = useRef(new AbortController());
-    // console.log(hash, url);
-    useEffect(() => {
-        // if (!hash)
-        //     return;
-        // fetch(src, {
-        //     method: 'get',
-        //     signal: controller.current.signal,
-        // }).then(response => {
-        //     return response.blob();
-        // }).then(b => {
-        //     setBlob(b);
-        //     const objectURL = URL.createObjectURL(b);
-        //     console.log(b, objectURL);
-        //     setUrl(objectURL);
-        // });
-    }, [hash]);
-
-    const shareImage = async () => {
-        try {
-            console.log('shareImage', blob);
-            if (Platform.OS === "web") {
-                const b = new Blob([blob], { type: "image/png" });
-                console.log(b);
-                navigator.clipboard.write([
-                    new ClipboardItem({
-                        [b.type]: b
-                    })
-                ]);
-                window.noteInfo(`拷贝图片成功：${hash}`);
-                return
-            }
-            await Sharing.shareAsync({ url: url });
-        } catch (e) {
-            console.log(e);
-        }
-    };
-
-    const downloadImage = async () => {
-        try {
-            console.log('downloadImage', blob);
-            if (Platform.OS === "web") {
-                const b = new Blob([blob], { type: "image/png" });
-                downloadURI(url, `${hash}.png`);
-                window.URL.revokeObjectURL(url);
-                window.noteInfo(`下载图片成功：${hash}`);
-                return
-            }
-            await Sharing.shareAsync({ url: url });
-        } catch (e) {
-            console.log(e);
-        }
-    };
-    useEffect(() => {
-        // getMetadata(hash).then(setMetadata);
-        // listDriverFileByHash(hash).then(sf => {
-        //     setSameFiles(sf);
-        //     setDownloadName(sf[0].name);
-        // });
-    }, []);
     return (
         <>
-            <ViewShot ref={ref} style={{
+            <ViewShot style={{
                 padding: "0",
                 width: "100%",
                 height: "100%",
@@ -99,7 +23,7 @@ export default function ({ navigation, route }) {
                 justifyContent: "center",
                 alignItems: "center"
             }}>
-                {url && <View style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}>
+                <View style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}>
                     <ImageViewer
                         imageUrls={list} // 照片路径
                         enableImageZoom={true} // 是否开启手势缩放
@@ -133,7 +57,7 @@ export default function ({ navigation, route }) {
                                 }}>
                                     <IconButton
                                         // size={size}
-                                        onPress={downloadImage}
+                                        // onPress={downloadImage}
                                         // iconColor={actionIconColor}
                                         icon="download-outline"
                                     // disabled={disabled}
@@ -161,7 +85,7 @@ export default function ({ navigation, route }) {
                             }}>
                                 <IconButton
                                     // size={size}
-                                    onPress={shareImage}
+                                    // onPress={shareImage}
                                     // iconColor={actionIconColor}
                                     icon="export-variant"
                                 // disabled={disabled}
@@ -194,9 +118,9 @@ export default function ({ navigation, route }) {
                         menuContext={{ "saveToLocal": "保存图片", "cancel": "取消" }}
                         onChange={(index) => { }} // 图片切换时触发
                         onClick={() => { setHideHeaderFooter(prev => !prev) }}
-                        onSave={(url) => { this.savePhoto(url) }}
+                        // onSave={(url) => { this.savePhoto(url) }}
                     />
-                </View>}
+                </View>
             </ViewShot >
         </>
     );

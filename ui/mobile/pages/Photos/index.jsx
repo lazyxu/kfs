@@ -1,7 +1,7 @@
 import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FlatList, Platform, RefreshControl, View } from 'react-native';
+import { FlatList, RefreshControl, View } from 'react-native';
 import { Appbar, Surface, Text } from "react-native-paper";
 import Thumbnail from './Thumbnail';
 
@@ -69,16 +69,7 @@ export default function () {
         });
     }, []);
     useEffect(() => {
-        console.log("Photos useEffect");
-        if (Platform.OS === "web") {
-            const w = ref.current.offsetWidth / 10;
-            setWidth(w);
-            setInitialNumToRender(Math.ceil(ref.current.offsetHeight / w));
-        }
         refersh();
-        return () => {
-            console.log("Photos useEffect.unload");
-        }
     }, []);
     // console.log("render", width, navigation);
     let indices = [];
@@ -113,9 +104,12 @@ export default function () {
             flexDirection: 'column',
         }} onLayout={e => {
             const { layout } = e.nativeEvent;
-            const w = layout.width / 10;
-            setWidth(w);
-            setInitialNumToRender(Math.ceil(layout.height / w));
+            // console.log("onLayout", layout);
+            if (layout.width) {
+                const w = layout.width / 10;
+                setWidth(w);
+                setInitialNumToRender(Math.ceil(layout.height / w));
+            }
         }}>
             <Appbar.Header mode="center-aligned">
                 <Appbar.Content title="照片" />
