@@ -8,7 +8,7 @@ const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
 
 export default function ({ navigation, route }) {
-    const { index, list } = route.params;
+    const { hash, index, list } = route.params;
     console.log("Viewer", index, list);
     const [hideHeaderFooter, setHideHeaderFooter] = useState(false);
     const theme = useTheme();

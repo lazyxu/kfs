@@ -34,7 +34,7 @@ function useFunc() {
       return;
     }
     if (window.setKfsConfig) {
-      window.setKfsConfig(sysConfig);
+      window.setKfsConfig(sysConfig); // async?
     } else {
       window.kfsConfig = sysConfig;
     }

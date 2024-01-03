@@ -2,8 +2,8 @@ import { parseShotEquipment } from "@kfs/common/api/utils";
 import { getMetadata } from "@kfs/common/api/webServer/exif";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
-import { Appbar, Text } from "react-native-paper";
+import { Pressable } from 'react-native';
+import { Appbar, Surface, Text } from "react-native-paper";
 
 function formatTime(DateTime, SubsecTime, OffsetTime) {
     let t = "";
@@ -51,13 +51,16 @@ export default function ({ navigation, route }) {
                 </Pressable>
             </Appbar.Header>
             {!metadata ?
-                <View style={{
+                <Surface style={{
                     flex: 1,
                     alignItems: 'center',
                     justifyContent: 'center'
                 }}>
                     <Text >TODO</Text>
-                </View> : <>
+                </Surface>
+                : <Surface style={{
+                    flex: 1
+                }}>
                     <Text>哈希值：{hash}</Text>
                     {metadata.exif && <>
                         <Text>原始时间：{formatTime(metadata.exif.DateTimeOriginal, metadata.exif.SubsecTimeOriginal, metadata.exif.OffsetTimeOriginal)}</Text>
@@ -67,7 +70,7 @@ export default function ({ navigation, route }) {
                         <Text>相机信息：{parseShotEquipment(metadata)}</Text>
                         <Text>位置：{parseLocation(metadata)}</Text>
                     </>}
-                </>}
+                </Surface>}
         </>
     );
 }
