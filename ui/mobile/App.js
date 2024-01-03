@@ -17,8 +17,8 @@ import Toast from 'react-native-toast-message';
 import "./global";
 import Photos from './pages/Photos';
 import SystemConfig from './pages/Setting/SystemConfig';
+import ImageVideoViewer from './pages/Windows/ImageVideoViewer';
 import Info from './pages/Windows/Info';
-import Viewer from './pages/Windows/Viewer';
 
 const Albums = () => {
   let [drivers, setDrivers] = useState([]);
@@ -114,7 +114,7 @@ function ThemeApp() {
       <NavigationContainer>
         <Stack.Navigator initialRouteName="App1" screenOptions={{ headerShown: false, animation: 'slide_from_bottom' }}>
           <Stack.Screen name="App1" component={App1} />
-          <Stack.Screen name="Viewer" component={Viewer} />
+          <Stack.Screen name="Viewer" component={ImageVideoViewer} />
           <Stack.Screen name="Info" component={Info} />
         </Stack.Navigator>
         <Toast />
