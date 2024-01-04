@@ -1,9 +1,10 @@
 import { listDriverFileByHash } from "@kfs/common/api/webServer/driverfile";
+import * as MediaLibrary from 'expo-media-library';
 import { useEffect, useState } from "react";
 import { View } from 'react-native';
 import { Badge, IconButton, Surface, Text } from "react-native-paper";
 
-export default function ({ navigation, hash, index, total }) {
+export default function ({ navigation, hash, uri, index, total }) {
     const [sameFiles, setSameFiles] = useState([]);
     const [downloadName, setDownloadName] = useState();
     useEffect(() => {
@@ -45,12 +46,23 @@ export default function ({ navigation, hash, index, total }) {
                     </Badge>
                 </View>
                 <IconButton
-                    // size={size}
-                    // onPress={downloadImage}
-                    // iconColor={actionIconColor}
+                    style={{ borderRadius: 0, backgroundColor: null, transition: null }}
+                    onPress={async () => {
+                        await MediaLibrary.requestPermissionsAsync(false);
+                        const asset = await MediaLibrary.createAssetAsync(uri);
+                        window.noteInfo("下载照片成功");
+                        // const albumName = "考拉云盘";
+                        // let album = await MediaLibrary.getAlbumAsync(albumName);
+                        // if (album) {
+                        //     MediaLibrary.addAssetsToAlbumAsync(asset, album, true); // saveToLibraryAsync?
+                        //     window.noteInfo("添加当前照片到相册<考拉云盘>");
+                        // } else {
+                        //     MediaLibrary.createAlbumAsync(albumName, asset, true);
+                        //     window.noteInfo("创建新相册<考拉云盘>，并添加当前照片");
+                        // }
+                    }}
                     icon="download-outline"
-                // disabled={disabled}
-                // rippleColor={rippleColor}
+                    disabled={!downloadName}
                 />
                 <IconButton
                     // size={size}
