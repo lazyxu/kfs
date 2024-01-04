@@ -35,8 +35,14 @@ window.setKfsConfig = async (json) => {
 window.noteError = (msg) => {
     Toast.show({
         type: 'error',
-        text1: msg,
-        text2: msg
+        text1: msg
+    });
+}
+
+window.noteWarning = (msg) => {
+    Toast.show({
+        type: 'warning',
+        text1: msg
     });
 }
 

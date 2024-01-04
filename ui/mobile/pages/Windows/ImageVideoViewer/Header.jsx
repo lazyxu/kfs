@@ -48,18 +48,27 @@ export default function ({ navigation, hash, uri, index, total }) {
                 <IconButton
                     style={{ borderRadius: 0, backgroundColor: null, transition: null }}
                     onPress={async () => {
-                        await MediaLibrary.requestPermissionsAsync(false);
+                        const writeOnly = false;
+                        let perm = await MediaLibrary.getPermissionsAsync(writeOnly);
+                        console.log("getPermissionsAsync", perm);
+                        if (!perm.granted) {
+                            console.log("requestPermissionsAsync");
+                            perm = await MediaLibrary.requestPermissionsAsync(writeOnly);
+                            console.log("requestPermissionsAsync", perm);
+                        }
+                        if (!perm.granted) {
+                            window.noteWarning("保存失败，无权限");
+                            return;
+                        }
                         const asset = await MediaLibrary.createAssetAsync(uri);
-                        window.noteInfo("下载照片成功");
-                        // const albumName = "考拉云盘";
-                        // let album = await MediaLibrary.getAlbumAsync(albumName);
-                        // if (album) {
-                        //     MediaLibrary.addAssetsToAlbumAsync(asset, album, true); // saveToLibraryAsync?
-                        //     window.noteInfo("添加当前照片到相册<考拉云盘>");
-                        // } else {
-                        //     MediaLibrary.createAlbumAsync(albumName, asset, true);
-                        //     window.noteInfo("创建新相册<考拉云盘>，并添加当前照片");
-                        // }
+                        const albumName = "考拉云盘";
+                        let album = await MediaLibrary.getAlbumAsync(albumName);
+                        if (album) {
+                            await MediaLibrary.addAssetsToAlbumAsync(asset, album, true);
+                        } else {
+                            await MediaLibrary.createAlbumAsync(albumName, asset, true);
+                        }
+                        window.noteInfo("保存成功");
                     }}
                     icon="download-outline"
                     disabled={!downloadName}
