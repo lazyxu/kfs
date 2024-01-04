@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, PanResponder, Platform, View } from 'react-native';
+import { Animated, Easing, Image, PanResponder, Platform, View } from 'react-native';
 import { CacheManager } from "react-native-expo-image-cache";
 import {
     ActivityIndicator,
@@ -66,7 +66,7 @@ export default function ({ navigation, route }) {
             Image.getSize(uri, (width, height) => {
                 origin.width = width;
                 origin.height = height;
-                setImage({ origin, uri, x: 0, ...resize(origin, screenLayout.current) });
+                setImage({ origin, uri, x: 0, ...resize(origin, screenLayout.current), layout: screenLayout.current });
             }, err => {
                 console.error(err);
                 window.noteError("获取图片大小失败");
@@ -74,8 +74,34 @@ export default function ({ navigation, route }) {
         })()
     }, [curIndex]);
 
+    const fadeAnim = useRef(new Animated.Value(1)).current;
+    const [doubleTapGs, setDoubleTapGs] = useState();
+    const isZoom = useRef(false);
     const onTap = () => setHideHeaderFooter(prev => !prev);
-    const onDoubleTap = () => { console.log("doubleTap"); };
+    useEffect(()=> {
+        if (!doubleTapGs) {
+            return;
+        }
+        console.log("useEffect.doubleTapGs", isZoom.current);
+        if (!isZoom.current) {
+            Animated.timing(fadeAnim, {
+                toValue: 2,
+                duration: 500,
+                useNativeDriver: false,
+            }).start();
+        } else {
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 500,
+                useNativeDriver: false,
+            }).start();
+        }
+        isZoom.current = !isZoom.current;
+    }, [doubleTapGs]);
+    const onDoubleTap = (gs) => {
+        setDoubleTapGs({...gs});
+        console.log("doubleTap", gs.x0, gs.y0);
+    };
     const onNext = () => {
         if (getCurIndex() === list.length - 1) {
             setImage(img => ({ ...img, x: 0 }));
@@ -114,7 +140,7 @@ export default function ({ navigation, route }) {
                 if (isDoubleTap(prevTouchInfo.current, i)) {
                     clearTimeout(timer.current);
                     prevent.current = true;
-                    onDoubleTap();
+                    onDoubleTap(gs);
                 } else {
                     prevent.current = false;
                     timer.current = setTimeout(function () {
@@ -129,7 +155,8 @@ export default function ({ navigation, route }) {
         }
     }));
 
-    // console.log("image", image);
+    console.log("image", image);
+    console.log("doubleTapGs", doubleTapGs);
     return (
         <>
             {!hideHeaderFooter && <Header navigation={navigation} hash={hash} />}
@@ -137,8 +164,9 @@ export default function ({ navigation, route }) {
                 position: "absolute", left: 0, top: 0, right: 0, bottom: 0,
             }} onLayout={e => {
                 const { layout } = e.nativeEvent;
+                console.log("layout", layout)
                 if (image) {
-                    setImage(img => ({ ...img, ...resize(img.origin, layout) }));
+                    setImage(img => ({ ...img, ...resize(img.origin, layout), layout }));
                 }
                 screenLayout.current = layout;
             }} {...panResponder.current.panHandlers}>
@@ -146,16 +174,36 @@ export default function ({ navigation, route }) {
                     position: "absolute", left: image?.x,
                     width: "100%",
                     height: "100%",
+                    overflow: 'hidden',
                     display: "flex",
                     flexDirection: "row",
                     justifyContent: "center",
                     alignItems: "center"
                 }}>
-                    {image ? <Image style={{
-                        width: image.width,
-                        height: image.height,
-                    }} source={{ uri: image.uri }}
-                    /> : <ActivityIndicator animating={true} size="large" />}
+                    {image ? <Animated.View
+                        style={doubleTapGs && {
+                            transform: [{
+                                scale: fadeAnim,
+                            }, {
+                                translateX: fadeAnim.interpolate({
+                                    inputRange: [1, 2],
+                                    outputRange: [0, (image.layout.width/2-doubleTapGs.x0)/2],
+                                }),
+                            }, {
+                                translateY: fadeAnim.interpolate({
+                                    inputRange: [1, 2],
+                                    outputRange: [0, (image.layout.height/2-doubleTapGs.y0)/2],
+                                    easing: Easing.linear,
+                                })
+                            }]
+                        }}>
+                        <Image style={{
+                            width: image.width,
+                            height: image.height,
+                        }} source={{ uri: image.uri }}
+                        />
+                    </Animated.View>
+                        : <ActivityIndicator animating={true} size="large" />}
                 </View>
             </Surface>
             {!hideHeaderFooter && <Footer navigation={navigation} hash={hash} />}
