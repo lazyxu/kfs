@@ -62,13 +62,6 @@ export async function downloadByHash(hash, name) {
 }
 
 
-export async function listDriverFileByHash(hash) {
-    console.log('api.listDriverFileByHash', hash);
-    return await httpGet("/api/v1/listDriverFileByHash", {
-        hash
-    });
-}
-
 export async function getDriverFile(driverId, filePath) {
     console.log('api.getDriverFile', driverId, filePath);
     return await httpGet("/api/v1/driverFile", {

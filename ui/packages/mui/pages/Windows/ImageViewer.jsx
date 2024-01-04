@@ -1,6 +1,7 @@
+import { listDriverFileByHash } from "@kfs/common/api/webServer/driverfile";
 import { getMetadata } from "@kfs/common/api/webServer/exif";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { downloadByHash, listDriverFileByHash } from "@kfs/mui/api/fs";
+import { downloadByHash } from "@kfs/mui/api/fs";
 import { TitleBar, Window, WorkingArea } from "@kfs/mui/components/Window/Window";
 import FileAttribute from "@kfs/mui/pages/Files/DriverFiles/FileAttribute";
 import { AllInbox, Download, Info, PrivacyTip } from "@mui/icons-material";

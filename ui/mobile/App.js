@@ -18,7 +18,8 @@ import "./global";
 import Photos from './pages/Photos';
 import SystemConfig from './pages/Setting/SystemConfig';
 import ImageVideoViewer from './pages/Windows/ImageVideoViewer';
-import Info from './pages/Windows/Info';
+import Info from './pages/Windows/ImageVideoViewer/Info';
+import SameFile from './pages/Windows/ImageVideoViewer/SameFile';
 
 const Albums = () => {
   let [drivers, setDrivers] = useState([]);
@@ -116,6 +117,7 @@ function ThemeApp() {
           <Stack.Screen name="App1" component={App1} />
           <Stack.Screen name="Viewer" component={ImageVideoViewer} />
           <Stack.Screen name="Info" component={Info} />
+          <Stack.Screen name="SameFile" component={SameFile} />
         </Stack.Navigator>
         <Toast />
       </NavigationContainer>

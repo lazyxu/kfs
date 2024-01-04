@@ -46,7 +46,7 @@ export default function ({ navigation, route }) {
         <>
             <Appbar.Header mode="center-aligned">
                 <Appbar.Content title="信息" />
-                <Pressable key={hash} onPress={() => navigation.pop()}  >
+                <Pressable onPress={() => navigation.pop()}  >
                     <Text>完成</Text>
                 </Pressable>
             </Appbar.Header>
