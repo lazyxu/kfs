@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { Image, PanResponder, Platform } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Image, PanResponder, Platform, View } from 'react-native';
 import { CacheManager } from "react-native-expo-image-cache";
 import {
-    Surface,
-    Text
+    ActivityIndicator,
+    Surface
 } from 'react-native-paper';
 import Footer from './Footer';
 import Header from './Header';
@@ -27,17 +27,26 @@ function resize(origin, layout) {
     return { width, height };
 }
 
+const useGetState = (initiateState) => {
+    const [state, setState] = useState(initiateState);
+    const stateRef = useRef(state);
+    stateRef.current = state;
+    const getState = useCallback(() => stateRef.current, []);
+    return [state, setState, getState];
+};
+
 export default function ({ navigation, route }) {
     const { hash, index, list } = route.params;
     const [hideHeaderFooter, setHideHeaderFooter] = useState(false);
 
     const [image, setImage] = useState();
-    const [curIndex, setCurIndex] = useState(index);
+    const [curIndex, setCurIndex, getCurIndex] = useGetState(index);
     const screenLayout = useRef();
     console.log("ImageVideoViewer", curIndex, list);
 
     useEffect(() => {
         (async () => {
+            setImage();
             const origin = {};
             let uri = list[curIndex].url;
             origin.uri = uri;
@@ -48,9 +57,10 @@ export default function ({ navigation, route }) {
             Image.getSize(uri, (width, height) => {
                 origin.width = width;
                 origin.height = height;
-                setImage({ origin, uri, ...resize(origin, screenLayout.current) });
+                setImage({ origin, uri, x: 0, ...resize(origin, screenLayout.current) });
             }, err => {
-                window.noteError(err.message);
+                console.error(err);
+                window.noteError("获取图片大小失败");
             });
         })()
     }, [curIndex]);
@@ -62,13 +72,22 @@ export default function ({ navigation, route }) {
             // console.log('开始移动：');
         },
         onPanResponderMove: (evt, gs) => {
-            // console.log('正在移动：X轴：' + gs.dx + '，Y轴：' + gs.dy);
+            console.log('正在移动：X轴：' + gs.dx + '，Y轴：' + gs.dy);
+            setImage(img => ({ ...img, x: gs.dx }));
         },
         onPanResponderRelease: (evt, gs) => {
             if (gs.dx > 50) {
-                setCurIndex(i => i === 0 ? i : i - 1);
+                if (getCurIndex() === 0) {
+                    setImage(img => ({ ...img, x: 0 }));
+                } else {
+                    setCurIndex(i => i - 1);
+                }
             } else if (gs.dx < -50) {
-                setCurIndex(i => i === list.length - 1 ? i : i + 1);
+                if (getCurIndex() === list.length - 1) {
+                    setImage(img => ({ ...img, x: 0 }));
+                } else {
+                    setCurIndex(i => i + 1);
+                }
             } else {
                 setHideHeaderFooter(prev => !prev);
             }
@@ -81,10 +100,6 @@ export default function ({ navigation, route }) {
             {!hideHeaderFooter && <Header navigation={navigation} hash={hash} />}
             <Surface style={{
                 position: "absolute", left: 0, top: 0, right: 0, bottom: 0,
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center"
             }} onLayout={e => {
                 const { layout } = e.nativeEvent;
                 if (image) {
@@ -92,11 +107,21 @@ export default function ({ navigation, route }) {
                 }
                 screenLayout.current = layout;
             }} {...panResponder.current.panHandlers}>
-                {image ? <Image style={{
-                    width: image.width,
-                    height: image.height,
-                }} source={{ uri: image.uri }}
-                /> : <Text>加载中...</Text>}
+                <View style={{
+                    position: "absolute", left: image?.x,
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center"
+                }}>
+                    {image ? <Image style={{
+                        width: image.width,
+                        height: image.height,
+                    }} source={{ uri: image.uri }}
+                    /> : <ActivityIndicator animating={true} size="large" />}
+                </View>
             </Surface>
             {!hideHeaderFooter && <Footer navigation={navigation} hash={hash} />}
         </>
