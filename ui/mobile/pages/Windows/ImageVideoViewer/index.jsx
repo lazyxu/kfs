@@ -35,6 +35,15 @@ const useGetState = (initiateState) => {
     return [state, setState, getState];
 };
 
+const DOUBLE_TAP_DELAY = 300; // milliseconds
+const DOUBLE_TAP_RADIUS = 20;
+function distance(x0, y0, x1, y1) {
+    return Math.sqrt(Math.pow((x1 - x0), 2) + Math.pow((y1 - y0), 2));
+}
+function isDoubleTap(prev, cur) {
+    return (cur.t - prev.t < DOUBLE_TAP_DELAY && distance(prev.x, prev.y, cur.x, cur.y) < DOUBLE_TAP_RADIUS);
+}
+
 export default function ({ navigation, route }) {
     const { hash, index, list } = route.params;
     const [hideHeaderFooter, setHideHeaderFooter] = useState(false);
@@ -42,7 +51,7 @@ export default function ({ navigation, route }) {
     const [image, setImage] = useState();
     const [curIndex, setCurIndex, getCurIndex] = useGetState(index);
     const screenLayout = useRef();
-    console.log("ImageVideoViewer", curIndex, list);
+    // console.log("ImageVideoViewer", curIndex, list);
 
     useEffect(() => {
         (async () => {
@@ -65,6 +74,26 @@ export default function ({ navigation, route }) {
         })()
     }, [curIndex]);
 
+    const onTap = () => setHideHeaderFooter(prev => !prev);
+    const onDoubleTap = () => { console.log("doubleTap"); };
+    const onNext = () => {
+        if (getCurIndex() === list.length - 1) {
+            setImage(img => ({ ...img, x: 0 }));
+        } else {
+            setCurIndex(i => i + 1);
+        }
+    }
+    const onBack = () => {
+        if (getCurIndex() === 0) {
+            setImage(img => ({ ...img, x: 0 }));
+        } else {
+            setCurIndex(i => i - 1);
+        }
+    }
+
+    const timer = useRef({});
+    const prevent = useRef({});
+    const prevTouchInfo = useRef({});
     const panResponder = useRef(PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
@@ -72,29 +101,35 @@ export default function ({ navigation, route }) {
             // console.log('开始移动：');
         },
         onPanResponderMove: (evt, gs) => {
-            console.log('正在移动：X轴：' + gs.dx + '，Y轴：' + gs.dy);
+            // console.log('正在移动：X轴：' + gs.dx + '，Y轴：' + gs.dy);
             setImage(img => ({ ...img, x: gs.dx }));
         },
         onPanResponderRelease: (evt, gs) => {
             if (gs.dx > 50) {
-                if (getCurIndex() === 0) {
-                    setImage(img => ({ ...img, x: 0 }));
-                } else {
-                    setCurIndex(i => i - 1);
-                }
+                onBack();
             } else if (gs.dx < -50) {
-                if (getCurIndex() === list.length - 1) {
-                    setImage(img => ({ ...img, x: 0 }));
-                } else {
-                    setCurIndex(i => i + 1);
-                }
+                onNext();
             } else {
-                setHideHeaderFooter(prev => !prev);
+                let i = { x: gs.x0, y: gs.y0, t: Date.now() };
+                if (isDoubleTap(prevTouchInfo.current, i)) {
+                    clearTimeout(timer.current);
+                    prevent.current = true;
+                    onDoubleTap();
+                } else {
+                    prevent.current = false;
+                    timer.current = setTimeout(function () {
+                        if (!prevent.current) {
+                            onTap();
+                        }
+                        prevent.current = false;
+                    }, DOUBLE_TAP_DELAY);
+                    prevTouchInfo.current = i;
+                }
             }
         }
     }));
 
-    console.log("image", image);
+    // console.log("image", image);
     return (
         <>
             {!hideHeaderFooter && <Header navigation={navigation} hash={hash} />}
