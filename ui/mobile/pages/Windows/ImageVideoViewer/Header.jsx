@@ -1,9 +1,9 @@
 import { listDriverFileByHash } from "@kfs/common/api/webServer/driverfile";
 import { useEffect, useState } from "react";
 import { View } from 'react-native';
-import { Badge, IconButton, Surface } from "react-native-paper";
+import { Badge, IconButton, Surface, Text } from "react-native-paper";
 
-export default function ({ navigation, hash }) {
+export default function ({ navigation, hash, index, total }) {
     const [sameFiles, setSameFiles] = useState([]);
     const [downloadName, setDownloadName] = useState();
     useEffect(() => {
@@ -29,6 +29,7 @@ export default function ({ navigation, hash }) {
             // disabled={disabled}
             // rippleColor={rippleColor}
             />
+            <Text>{index}/{total}</Text>
             <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',

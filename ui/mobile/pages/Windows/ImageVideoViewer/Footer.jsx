@@ -1,6 +1,16 @@
+import { shareAsync } from 'expo-sharing';
+import { Platform } from 'react-native';
 import { IconButton, Surface } from "react-native-paper";
 
-export default function ({ navigation, hash }) {
+export default function ({ navigation, hash, uri }) {
+    const shareImage = async () => {
+        try {
+            console.log('shareImage', Platform.OS, uri);
+            await shareAsync(uri);
+        } catch (e) {
+            console.log(e);
+        }
+    };
     return (
         <Surface style={{
             flexDirection: 'row',
@@ -11,28 +21,19 @@ export default function ({ navigation, hash }) {
             zIndex: 1,
         }}>
             <IconButton
-                // size={size}
-                // onPress={shareImage}
-                // iconColor={actionIconColor}
+                style={{ borderRadius: 0, backgroundColor: null, transition: null }}
+                onPress={shareImage}
                 icon="export-variant"
-            // disabled={disabled}
-            // rippleColor={rippleColor}
+                disabled={!uri}
             />
             <IconButton
-                // size={size}
+                style={{ borderRadius: 0, backgroundColor: null, transition: null }}
                 onPress={() => navigation.navigate("Info", { hash })}
-                // iconColor={actionIconColor}
                 icon="information-outline"
-            // disabled={disabled}
-            // rippleColor={rippleColor}
             />
             <IconButton
-                // size={size}
-                // onPress={downloadImage}
-                // iconColor={actionIconColor}
                 icon="trash-can-outline"
-            // disabled={disabled}
-            // rippleColor={rippleColor}
+                disabled={true}
             />
         </Surface>
     );

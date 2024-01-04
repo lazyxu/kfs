@@ -159,7 +159,7 @@ export default function ({ navigation, route }) {
     console.log("doubleTapGs", doubleTapGs);
     return (
         <>
-            {!hideHeaderFooter && <Header navigation={navigation} hash={hash} />}
+            {!hideHeaderFooter && <Header navigation={navigation} hash={hash} index={curIndex} total={list.length}/>}
             <Surface style={{
                 position: "absolute", left: 0, top: 0, right: 0, bottom: 0,
             }} onLayout={e => {
@@ -206,7 +206,7 @@ export default function ({ navigation, route }) {
                         : <ActivityIndicator animating={true} size="large" />}
                 </View>
             </Surface>
-            {!hideHeaderFooter && <Footer navigation={navigation} hash={hash} />}
+            {!hideHeaderFooter && <Footer navigation={navigation} hash={hash} uri={image?.uri}/>}
         </>
     );
 }
