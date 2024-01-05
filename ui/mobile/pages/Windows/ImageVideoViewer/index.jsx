@@ -48,7 +48,7 @@ export default function ({ navigation, route }) {
     const { hash, index, list } = route.params;
     const [hideHeaderFooter, setHideHeaderFooter] = useState(false);
 
-    const [image, setImage] = useState();
+    const [image, setImage, getImage] = useGetState();
     const [curIndex, setCurIndex, getCurIndex] = useGetState(index);
     const screenLayout = useRef();
     // console.log("ImageVideoViewer", curIndex, list);
@@ -74,33 +74,38 @@ export default function ({ navigation, route }) {
         })()
     }, [curIndex]);
 
-    const fadeAnim = useRef(new Animated.Value(1)).current;
-    const [doubleTapGs, setDoubleTapGs] = useState();
+    const fadeAnim = useRef(new Animated.ValueXY(0, 0)).current;
+    const [center, setCenter] = useState();
     const isZoom = useRef(false);
     const onTap = () => setHideHeaderFooter(prev => !prev);
-    useEffect(()=> {
-        if (!doubleTapGs) {
+    useEffect(() => {
+        if (!center) {
             return;
         }
-        console.log("useEffect.doubleTapGs", isZoom.current);
+        console.log("useEffect.center", isZoom.current);
+        console.log("layout", image.layout);
+        console.log("center", center);
+        Animated.timing(fadeAnim, {
+            toValue: center,
+            duration: 500,
+            useNativeDriver: false,
+            easing: Easing.linear,
+        }).start();
+    }, [center]);
+    const onDoubleTap = (gs) => {
+        console.log("doubleTap", gs.x0, gs.y0);
         if (!isZoom.current) {
-            Animated.timing(fadeAnim, {
-                toValue: 2,
-                duration: 500,
-                useNativeDriver: false,
-            }).start();
+            const layout = getImage().layout;
+            setCenter({ x: (layout.width / 2 - gs.x0) / 2, y: (layout.height / 2 - gs.y0) / 2 });
         } else {
             Animated.timing(fadeAnim, {
-                toValue: 1,
+                toValue: { x: 0, y: 0 },
                 duration: 500,
                 useNativeDriver: false,
+                easing: Easing.linear,
             }).start();
         }
         isZoom.current = !isZoom.current;
-    }, [doubleTapGs]);
-    const onDoubleTap = (gs) => {
-        setDoubleTapGs({...gs});
-        console.log("doubleTap", gs.x0, gs.y0);
     };
     const onNext = () => {
         if (getCurIndex() === list.length - 1) {
@@ -156,10 +161,10 @@ export default function ({ navigation, route }) {
     }));
 
     console.log("image", image);
-    console.log("doubleTapGs", doubleTapGs);
+    console.log("center", center);
     return (
         <>
-            {!hideHeaderFooter && <Header navigation={navigation} hash={hash} uri={image?.uri} index={curIndex} total={list.length}/>}
+            {!hideHeaderFooter && <Header navigation={navigation} hash={hash} uri={image?.uri} index={curIndex} total={list.length} />}
             <Surface style={{
                 position: "absolute", left: 0, top: 0, right: 0, bottom: 0,
             }} onLayout={e => {
@@ -181,20 +186,22 @@ export default function ({ navigation, route }) {
                     alignItems: "center"
                 }}>
                     {image ? <Animated.View
-                        style={doubleTapGs && {
+                        style={center && {
                             transform: [{
-                                scale: fadeAnim,
-                            }, {
-                                translateX: fadeAnim.interpolate({
-                                    inputRange: [1, 2],
-                                    outputRange: [0, (image.layout.width/2-doubleTapGs.x0)/2],
+                                scale: fadeAnim.x.interpolate({
+                                    inputRange: [0, Math.abs(center.x)],
+                                    outputRange: [1, 2],
+                                    easing: n => {
+                                        // n: [0, -1]
+                                        console.log(n, Math.pow(n, 2));
+                                        // return [0, 1]
+                                        return Math.abs(n);
+                                    }
                                 }),
                             }, {
-                                translateY: fadeAnim.interpolate({
-                                    inputRange: [1, 2],
-                                    outputRange: [0, (image.layout.height/2-doubleTapGs.y0)/2],
-                                    easing: Easing.linear,
-                                })
+                                translateX: fadeAnim.x,
+                            }, {
+                                translateY: fadeAnim.y
                             }]
                         }}>
                         <Image style={{
@@ -206,7 +213,7 @@ export default function ({ navigation, route }) {
                         : <ActivityIndicator animating={true} size="large" />}
                 </View>
             </Surface>
-            {!hideHeaderFooter && <Footer navigation={navigation} hash={hash} uri={image?.uri}/>}
+            {!hideHeaderFooter && <Footer navigation={navigation} hash={hash} uri={image?.uri} />}
         </>
     );
 }
