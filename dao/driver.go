@@ -22,6 +22,16 @@ type Driver struct {
 	Encoder  string `json:"encoder"`
 }
 
+type DCIMDriver struct {
+	Id          uint64 `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Typ         string `json:"type"`
+
+	// DCIM
+	MetadataList []Metadata `json:"metadataList"`
+}
+
 type DirCalculatedInfo struct {
 	FileSize          uint64 `json:"fileSize"`
 	FileCount         uint64 `json:"fileCount"`

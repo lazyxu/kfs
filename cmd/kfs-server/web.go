@@ -80,6 +80,8 @@ func webServer(webPortString string) {
 	e.POST("/api/v1/analysisExif", apiAnalysisExif)
 	e.GET("/api/v1/exif", apiListMetadata)
 	e.GET("/api/v1/DCIMMetadataTime", apiListMetadataTime)
+	e.GET("/api/v1/listDCIMDriver", apiListDCIMDriver)
+
 	e.GET("/api/v1/metadata", apiGetMetadata)
 	e.GET("/api/v1/diskUsage", apiDiskUsage)
 

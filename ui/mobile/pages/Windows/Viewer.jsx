@@ -1,4 +1,4 @@
-import { default as React, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Dimensions, View } from 'react-native';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import { IconButton, Surface, useTheme } from "react-native-paper";

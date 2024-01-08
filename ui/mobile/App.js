@@ -1,11 +1,9 @@
-import { httpGet } from '@kfs/common/api/webServer';
 import useSysConfig from '@kfs/common/hox/sysConfig';
 import { useMaterial3Theme } from '@pchmn/expo-material3-theme';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HoxRoot } from "hox";
-import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 import {
   Appbar,
@@ -15,35 +13,12 @@ import {
 } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 import "./global";
+import Albums from './pages/Albums';
 import Photos from './pages/Photos';
 import SystemConfig from './pages/Setting/SystemConfig';
 import ImageVideoViewer from './pages/Windows/ImageVideoViewer';
 import Info from './pages/Windows/ImageVideoViewer/Info';
 import SameFile from './pages/Windows/ImageVideoViewer/SameFile';
-
-const Albums = () => {
-  let [drivers, setDrivers] = useState([]);
-  console.log("drivers", drivers);
-  useEffect(() => {
-    httpGet("/api/v1/drivers").then(setDrivers);
-  }, []);
-  return (
-    <>
-      <Appbar.Header mode="center-aligned">
-        <Appbar.Content title="相册" />
-      </Appbar.Header>
-      <View style={{
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        {drivers.map(driver => (
-          <Text key={driver.name}>{driver.name}</Text>
-        ))}
-      </View>
-    </>
-  );
-};
 
 const Footprints = () => {
   return (
