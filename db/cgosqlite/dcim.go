@@ -11,3 +11,9 @@ func (db *DB) ListDCIMDriver(ctx context.Context) (drivers []dao.DCIMDriver, err
 	defer db.putConn(conn)
 	return dbBase.ListDCIMDriver(ctx, conn)
 }
+
+func (db *DB) ListDCIMMediaType(ctx context.Context) (m map[string][]dao.Metadata, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListDCIMMediaType(ctx, conn)
+}

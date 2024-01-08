@@ -2,6 +2,7 @@ package dbBase
 
 import (
 	"context"
+	"database/sql"
 	"github.com/lazyxu/kfs/dao"
 )
 
@@ -61,6 +62,38 @@ func ListDCIMDriver(ctx context.Context, txOrDb TxOrDb) (drivers []dao.DCIMDrive
 		if err != nil {
 			return nil, err
 		}
+	}
+	return
+}
+
+func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Metadata, err error) {
+	m = make(map[string][]dao.Metadata)
+	m["video"] = make([]dao.Metadata, 0)
+	var rows *sql.Rows
+	rows, err = conn.QueryContext(ctx, `
+		SELECT 
+			_file_type.hash,
+			_file_type.Type,
+			_file_type.SubType,
+			_file_type.Extension,
+			time,
+			year,
+			month,
+			day
+		FROM _dcim_metadata_time LEFT JOIN _file_type WHERE _dcim_metadata_time.hash=_file_type.hash AND _file_type.Type="video" ORDER BY time DESC;
+		`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		md := dao.Metadata{FileType: &dao.FileType{}}
+		err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
+			&md.Time, &md.Year, &md.Month, &md.Day)
+		if err != nil {
+			return
+		}
+		m["video"] = append(m["video"], md)
 	}
 	return
 }

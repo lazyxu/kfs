@@ -1,7 +1,15 @@
+import { httpGet } from '@kfs/common/api/webServer';
+import { useEffect, useState } from "react";
 import { Appbar, Surface, Text } from "react-native-paper";
 import Drivers from './Drivers';
 
+
 export default function () {
+    let [mediaTypes, setMediaTypes] = useState();
+    console.log("mediaTypes", mediaTypes);
+    useEffect(() => {
+        httpGet("/api/v1/listDCIMMediaType").then(setMediaTypes);
+    }, []);
     return (
       <>
         <Appbar.Header mode="center-aligned">
@@ -16,7 +24,7 @@ export default function () {
         <Surface><Text>地点</Text></Surface>
 
         <Surface><Text>媒体类型</Text></Surface>
-        <Surface><Text>视频</Text></Surface>
+        <Surface><Text>视频 {mediaTypes?mediaTypes.video.length:0}</Text></Surface>
         <Surface><Text>自拍</Text></Surface>
         <Surface><Text>实况</Text></Surface>
         <Surface><Text>人像</Text></Surface>
