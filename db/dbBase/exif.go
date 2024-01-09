@@ -8,18 +8,19 @@ import (
 	"github.com/lazyxu/kfs/dao"
 )
 
-func InsertHeightWidth(ctx context.Context, conn *sql.DB, db DbImpl, hash string, hw dao.HeightWidth) (exist bool, err error) {
-	_, err = conn.ExecContext(ctx, `
+func InsertHeightWidth(ctx context.Context, conn *sql.DB, db DbImpl, hash string, hw dao.HeightWidth) error {
+	_, err := conn.ExecContext(ctx, `
 	INSERT INTO _height_width (
 		hash,
 		height,
 		width
-	) VALUES (?, ?, ?)`, hash, hw.Height, hw.Width)
-	if db.IsUniqueConstraintError(err) {
-		exist = true
-		err = nil
+	) VALUES (?, ?, ?) ON CONFLICT(hash) DO UPDATE SET
+	    height=?,
+	    width=?`, hash, hw.Height, hw.Width, hw.Height, hw.Width)
+	if err != nil {
+		return err
 	}
-	return
+	return nil
 }
 
 func InsertNullVideoMetadata(ctx context.Context, conn *sql.DB, db DbImpl, hash string) (exist bool, err error) {
@@ -282,37 +283,6 @@ func ListMetadata(ctx context.Context, conn *sql.DB) (list []dao.Metadata, err e
 				Exif:     &e,
 			})
 		}
-	}
-	return
-}
-
-func ListMetadataTime(ctx context.Context, conn *sql.DB) (list []dao.Metadata, err error) {
-	list = make([]dao.Metadata, 0)
-	var rows *sql.Rows
-	rows, err = conn.QueryContext(ctx, `
-		SELECT 
-			_file_type.hash,
-			_file_type.Type,
-			_file_type.SubType,
-			_file_type.Extension,
-			time,
-			year,
-			month,
-			day
-		FROM _dcim_metadata_time LEFT JOIN _file_type WHERE _dcim_metadata_time.hash=_file_type.hash ORDER BY time DESC;
-		`)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		m := dao.Metadata{FileType: &dao.FileType{}}
-		err = rows.Scan(&m.Hash, &m.FileType.Type, &m.FileType.SubType, &m.FileType.Extension,
-			&m.Time, &m.Year, &m.Month, &m.Day)
-		if err != nil {
-			return
-		}
-		list = append(list, m)
 	}
 	return
 }

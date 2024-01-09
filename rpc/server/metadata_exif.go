@@ -137,19 +137,30 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType da
 		if err != nil {
 			return err
 		}
-		_, err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
-		// TODO: what if exist
-		if err != nil {
-			return err
-		}
 		e, err := GetExifData(kfsCore, hash)
 		if err != nil {
+			err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+			// TODO: what if exist
+			if err != nil {
+				return err
+			}
 			_, err = kfsCore.Db.InsertNullExif(ctx, hash)
 			// TODO: what if exist
 			if err != nil {
 				return err
 			}
 			return nil
+		}
+		if e.Orientation > 4 {
+			hw = dao.HeightWidth{
+				Width:  hw.Height,
+				Height: hw.Width,
+			}
+		}
+		err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+		// TODO: what if exist
+		if err != nil {
+			return err
 		}
 		err = insertImageTime(ctx, kfsCore, hash, e)
 		// TODO: what if exist
@@ -165,7 +176,7 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType da
 	} else if fileType.Type == "video" {
 		m, hw, err := GetVideoMetadata(kfsCore, hash)
 		if err != nil {
-			_, err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+			err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
 			// TODO: what if exist
 			if err != nil {
 				return err
@@ -177,7 +188,7 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType da
 			}
 			return nil
 		}
-		_, err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+		err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
 		// TODO: what if exist
 		if err != nil {
 			return err

@@ -6,7 +6,7 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
-func (db *DB) InsertHeightWidth(ctx context.Context, hash string, hw dao.HeightWidth) (exist bool, err error) {
+func (db *DB) InsertHeightWidth(ctx context.Context, hash string, hw dao.HeightWidth) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.InsertHeightWidth(ctx, conn, db, hash, hw)

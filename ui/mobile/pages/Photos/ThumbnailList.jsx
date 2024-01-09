@@ -28,7 +28,13 @@ export default function ({ listDCIMMetadataTime, metadataList }) {
         for (let index = 0; index < l.length; index++) {
             // console.log(index);
             const m = l[index];
-            allHashList.push({ url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}` });
+            allHashList.push({
+                url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}`,
+                hash: m.hash,
+                type: m.fileType.type,
+                height: m.heightWidth.height,
+                width: m.heightWidth.width,
+            });
             if (year !== m.year) {
                 year = m.year;
                 yearHashList.push(year);

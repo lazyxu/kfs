@@ -30,7 +30,7 @@ export default function ({ navigation, hash, uri, index, total }) {
             // disabled={disabled}
             // rippleColor={rippleColor}
             />
-            <Text>{index}/{total}</Text>
+            <Text>{index+1}/{total}</Text>
             <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',

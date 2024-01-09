@@ -6,6 +6,42 @@ import (
 	"github.com/lazyxu/kfs/dao"
 )
 
+func ListMetadataTime(ctx context.Context, conn *sql.DB) (list []dao.Metadata, err error) {
+	list = make([]dao.Metadata, 0)
+	var rows *sql.Rows
+	rows, err = conn.QueryContext(ctx, `
+		SELECT 
+			_file_type.hash,
+			_file_type.Type,
+			_file_type.SubType,
+			_file_type.Extension,
+			_height_width.height,
+			_height_width.width,
+			time,
+			year,
+			month,
+			day
+		FROM _dcim_metadata_time INNER JOIN _height_width LEFT JOIN _file_type
+		WHERE _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
+		ORDER BY time DESC;
+		`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		md := dao.Metadata{FileType: &dao.FileType{}, HeightWidth: &dao.HeightWidth{}}
+		err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
+			&md.HeightWidth.Height, &md.HeightWidth.Width,
+			&md.Time, &md.Year, &md.Month, &md.Day)
+		if err != nil {
+			return
+		}
+		list = append(list, md)
+	}
+	return
+}
+
 func ListDCIMDriverMetadata(ctx context.Context, txOrDb TxOrDb, driver *dao.DCIMDriver) error {
 	rows, err := txOrDb.QueryContext(ctx, `
 		SELECT 
@@ -13,6 +49,8 @@ func ListDCIMDriverMetadata(ctx context.Context, txOrDb TxOrDb, driver *dao.DCIM
 			_file_type.Type,
 			_file_type.SubType,
 			_file_type.Extension,
+			_height_width.height,
+			_height_width.width,
 			time,
 			year,
 			month,
@@ -21,7 +59,9 @@ func ListDCIMDriverMetadata(ctx context.Context, txOrDb TxOrDb, driver *dao.DCIM
 		    SELECT
 		        DISTINCT hash
 		    FROM _driver_file WHERE driverId = ? AND mode < 2147483648
-		) AS table1 LEFT JOIN _dcim_metadata_time LEFT JOIN _file_type WHERE table1.hash=_dcim_metadata_time.hash AND _dcim_metadata_time.hash=_file_type.hash ORDER BY time DESC;
+		) AS table1 INNER JOIN _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type
+		WHERE table1.hash=_dcim_metadata_time.hash AND _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
+		ORDER BY time DESC;
 	`, driver.Id)
 	if err != nil {
 		return err
@@ -29,13 +69,14 @@ func ListDCIMDriverMetadata(ctx context.Context, txOrDb TxOrDb, driver *dao.DCIM
 	defer rows.Close()
 	driver.MetadataList = make([]dao.Metadata, 0)
 	for rows.Next() {
-		m := dao.Metadata{FileType: &dao.FileType{}}
-		err = rows.Scan(&m.Hash, &m.FileType.Type, &m.FileType.SubType, &m.FileType.Extension,
-			&m.Time, &m.Year, &m.Month, &m.Day)
+		md := dao.Metadata{FileType: &dao.FileType{}, HeightWidth: &dao.HeightWidth{}}
+		err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
+			&md.HeightWidth.Height, &md.HeightWidth.Width,
+			&md.Time, &md.Year, &md.Month, &md.Day)
 		if err != nil {
 			return err
 		}
-		driver.MetadataList = append(driver.MetadataList, m)
+		driver.MetadataList = append(driver.MetadataList, md)
 	}
 	return nil
 }
@@ -77,18 +118,23 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 			_file_type.Type,
 			_file_type.SubType,
 			_file_type.Extension,
+			_height_width.height,
+			_height_width.width,
 			time,
 			year,
 			month,
 			day
-		FROM _dcim_metadata_time LEFT JOIN _file_type WHERE _dcim_metadata_time.hash=_file_type.hash AND _file_type.Type="video" ORDER BY time DESC;
+		FROM _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type
+		WHERE _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash AND _file_type.Type="video"
+		ORDER BY time DESC;
 		`)
 		if err != nil {
 			return
 		}
 		for rows.Next() {
-			md := dao.Metadata{FileType: &dao.FileType{}}
+			md := dao.Metadata{FileType: &dao.FileType{}, HeightWidth: &dao.HeightWidth{}}
 			err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
+				&md.HeightWidth.Height, &md.HeightWidth.Width,
 				&md.Time, &md.Year, &md.Month, &md.Day)
 			if err != nil {
 				return
@@ -107,18 +153,24 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 			_file_type.Type,
 			_file_type.SubType,
 			_file_type.Extension,
+			_height_width.height,
+			_height_width.width,
 			time,
 			year,
 			month,
 			day
-		FROM _exif LEFT JOIN _dcim_metadata_time LEFT JOIN _file_type WHERE ( _exif.Orientation=2 OR _exif.Orientation=4 OR _exif.Orientation=5 OR _exif.Orientation=7) AND _exif.hash=_dcim_metadata_time.hash AND _dcim_metadata_time.hash=_file_type.hash ORDER BY time DESC;
+		FROM _exif INNER JOIN _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type
+		WHERE ( _exif.Orientation=2 OR _exif.Orientation=4 OR _exif.Orientation=5 OR _exif.Orientation=7)
+		  AND _exif.hash=_dcim_metadata_time.hash AND _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
+		ORDER BY time DESC;
 		`)
 		if err != nil {
 			return
 		}
 		for rows.Next() {
-			md := dao.Metadata{FileType: &dao.FileType{}}
+			md := dao.Metadata{FileType: &dao.FileType{}, HeightWidth: &dao.HeightWidth{}}
 			err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
+				&md.HeightWidth.Height, &md.HeightWidth.Width,
 				&md.Time, &md.Year, &md.Month, &md.Day)
 			if err != nil {
 				return

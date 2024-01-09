@@ -3,7 +3,7 @@ package dao
 type Exif struct {
 	ExifVersion         string
 	ImageDescription    string
-	Orientation         uint16 // 方向
+	Orientation         uint16 // 方向 https://developer.qiniu.com/dora/kb/1560/information-about-photo-exif-rotation-parameters-in-the-understanding-of-orientation?category=kb
 	DateTime            string // 修改时间 YYYY:MM:DD HH:MM:SS
 	DateTimeOriginal    string // 拍摄时间
 	DateTimeDigitized   string // 写入时间
@@ -42,8 +42,8 @@ type VideoMetadataFfmpeg struct {
 }
 
 type HeightWidth struct {
-	Width  uint64
-	Height uint64
+	Width  uint64 `json:"width"`
+	Height uint64 `json:"height"`
 }
 
 type Metadata struct {

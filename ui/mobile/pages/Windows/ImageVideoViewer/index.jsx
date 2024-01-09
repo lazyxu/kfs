@@ -1,3 +1,4 @@
+import { getSysConfig } from '@kfs/common/hox/sysConfig';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, PanResponder, Platform, View } from 'react-native';
 import { CacheManager } from "react-native-expo-image-cache";
@@ -57,20 +58,18 @@ export default function ({ navigation, route }) {
         (async () => {
             setImage();
             const origin = {};
-            let uri = list[curIndex].url;
+            const hash = list[curIndex].hash;
+            const type = list[curIndex].type;
+            origin.height = list[curIndex].height;
+            origin.width = list[curIndex].width;
+            let uri = `${getSysConfig().webServer}/api/v1/image?hash=${hash}`;
             origin.uri = uri;
+            console.log("origin", origin);
             if (Platform.OS !== 'web') {
                 uri = await CacheManager.get(uri).getPath();
-                console.log("Cached", uri);
+                console.log("Cached", origin, uri);
             }
-            Image.getSize(uri, (width, height) => {
-                origin.width = width;
-                origin.height = height;
-                setImage({ origin, uri, x: 0, ...resize(origin, screenLayout.current), layout: screenLayout.current });
-            }, err => {
-                console.error(err);
-                window.noteError("获取图片大小失败");
-            });
+            setImage({ origin, hash, type, uri, x: 0, ...resize(origin, screenLayout.current), layout: screenLayout.current });
         })()
     }, [curIndex]);
 
@@ -170,7 +169,7 @@ export default function ({ navigation, route }) {
             }} onLayout={e => {
                 const { layout } = e.nativeEvent;
                 console.log("layout", layout)
-                if (image) {
+                if (getImage()) {
                     setImage(img => ({ ...img, ...resize(img.origin, layout), layout }));
                 }
                 screenLayout.current = layout;
@@ -204,11 +203,17 @@ export default function ({ navigation, route }) {
                                 translateY: fadeAnim.y
                             }]
                         }}>
-                        <Image style={{
+                        {image.type === "image" && <Image style={{
                             width: image.width,
                             height: image.height,
                         }} source={{ uri: image.uri }}
-                        />
+                        />}
+                        {image.type === "video" && <Surface style={{
+                            width: image.width,
+                            height: image.height,
+                            backgroundColor: "yellow",
+                        }} source={{ uri: image.uri }}
+                        />}
                     </Animated.View>
                         : <ActivityIndicator animating={true} size="large" />}
                 </View>
