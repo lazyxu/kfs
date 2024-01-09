@@ -8,6 +8,7 @@ import {
 } from 'react-native-paper';
 import Footer from './Footer';
 import Header from './Header';
+import Video from './Video';
 
 function resize(origin, layout) {
     if (!layout) {
@@ -208,12 +209,7 @@ export default function ({ navigation, route }) {
                             height: image.height,
                         }} source={{ uri: image.uri }}
                         />}
-                        {image.type === "video" && <Surface style={{
-                            width: image.width,
-                            height: image.height,
-                            backgroundColor: "yellow",
-                        }} source={{ uri: image.uri }}
-                        />}
+                        {image.type === "video" && <Video width={image.width} height={image.height} source={image.uri} />}
                     </Animated.View>
                         : <ActivityIndicator animating={true} size="large" />}
                 </View>
