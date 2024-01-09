@@ -15,6 +15,7 @@ import Toast from 'react-native-toast-message';
 import "./global";
 import Albums from './pages/Albums';
 import Driver from './pages/Albums/Driver';
+import Selfie from './pages/Albums/Selfie';
 import Video from './pages/Albums/Video';
 import Photos from './pages/Photos';
 import SystemConfig from './pages/Setting/SystemConfig';
@@ -97,6 +98,7 @@ function ThemeApp() {
           <Stack.Screen name="SameFile" component={SameFile} />
           <Stack.Screen name="AlbumsDriver" component={Driver} />
           <Stack.Screen name="AlbumsVideo" component={Video} />
+          <Stack.Screen name="AlbumsSelfie" component={Selfie} />
         </Stack.Navigator>
         <Toast />
       </NavigationContainer>

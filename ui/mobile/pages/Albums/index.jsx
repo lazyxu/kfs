@@ -26,10 +26,24 @@ export default function () {
             <Surface><Text>地点</Text></Surface>
 
             <Surface><Text>媒体类型</Text></Surface>
-            <Surface><Pressable disabled={!mediaTypes} onPress={() => navigation.navigate("AlbumsVideo", { list: mediaTypes.video })}>
-                <Text>视频 {mediaTypes ? mediaTypes.video.length : 0}</Text>
-            </Pressable></Surface>
-            <Surface><Text>自拍</Text></Surface>
+            <Pressable disabled={!mediaTypes} onPress={() => navigation.navigate("AlbumsVideo", { list: mediaTypes.video })}>
+                <Surface style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                }}>
+                    <Text>视频</Text>
+                    <Text>{mediaTypes ? mediaTypes.video.length : 0}</Text>
+                </Surface>
+            </Pressable>
+            <Pressable disabled={!mediaTypes} onPress={() => navigation.navigate("AlbumsSelfie", { list: mediaTypes.selfie })}>
+                <Surface style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                }}>
+                    <Text>自拍</Text>
+                    <Text>{mediaTypes ? mediaTypes.selfie.length : 0}</Text>
+                </Surface>
+            </Pressable>
             <Surface><Text>实况</Text></Surface>
             <Surface><Text>人像</Text></Surface>
             <Surface><Text>全景</Text></Surface>
