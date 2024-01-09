@@ -1,16 +1,17 @@
-import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
 import { Appbar } from "react-native-paper";
-import ThumbnailList from './ThumbnailList';
+import ThumbnailList from '../Photos/ThumbnailList';
 
-export default function () {
+export default function ({ navigation, route }) {
+    const { list } = route.params;
     return (
         <>
             <Appbar.Header mode="center-aligned">
-                <Appbar.Content title="照片" />
+                <Appbar.BackAction onPress={() => navigation.pop()} />
+                <Appbar.Content title="视频" />
                 <Appbar.Action icon="calendar" onPress={() => { }} />
                 <Appbar.Action icon="magnify" onPress={() => { }} />
             </Appbar.Header>
-            <ThumbnailList listDCIMMetadataTime={listDCIMMetadataTime}/>
+            <ThumbnailList metadataList={list} />
         </>
     );
 }

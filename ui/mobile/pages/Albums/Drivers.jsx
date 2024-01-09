@@ -5,6 +5,7 @@ import { Image, Pressable, View } from 'react-native';
 import { Text } from "react-native-paper";
 
 export default function () {
+    const navigation = window.kfsNavigation;
     let [drivers, setDrivers] = useState([]);
     console.log("drivers", drivers);
     useEffect(() => {
@@ -20,7 +21,7 @@ export default function () {
                     margin: 10,
                     marginRight: 0,
                 }}>
-                    <Pressable >
+                <Pressable onPress={() => navigation.navigate("AlbumsDriver", { driver })}>
                         {driver.metadataList.length > 0 ? <Image style={{
                             height: 128,
                             width: 128,

@@ -14,6 +14,8 @@ import {
 import Toast from 'react-native-toast-message';
 import "./global";
 import Albums from './pages/Albums';
+import Driver from './pages/Albums/Driver';
+import Video from './pages/Albums/Video';
 import Photos from './pages/Photos';
 import SystemConfig from './pages/Setting/SystemConfig';
 import ImageVideoViewer from './pages/Windows/ImageVideoViewer';
@@ -93,6 +95,8 @@ function ThemeApp() {
           <Stack.Screen name="Viewer" component={ImageVideoViewer} />
           <Stack.Screen name="Info" component={Info} />
           <Stack.Screen name="SameFile" component={SameFile} />
+          <Stack.Screen name="AlbumsDriver" component={Driver} />
+          <Stack.Screen name="AlbumsVideo" component={Video} />
         </Stack.Navigator>
         <Toast />
       </NavigationContainer>

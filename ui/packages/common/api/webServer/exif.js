@@ -53,3 +53,14 @@ export async function listDCIMMetadataTime() {
         throw e;
     }
 }
+
+
+export async function listDCIMMediaType() {
+    try {
+        console.log('api.listDCIMMediaType');
+        return await httpGet("/api/v1/listDCIMMediaType");
+    } catch (e) {
+        window.noteError("获取媒体类型失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
