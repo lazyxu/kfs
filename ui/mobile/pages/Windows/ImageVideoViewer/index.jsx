@@ -1,7 +1,6 @@
 import { getSysConfig } from '@kfs/common/hox/sysConfig';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, PanResponder, Platform, View } from 'react-native';
-import { CacheManager } from "react-native-expo-image-cache";
+import { Animated, Easing, Image, PanResponder, View } from 'react-native';
 import {
     ActivityIndicator,
     Surface
@@ -66,10 +65,10 @@ export default function ({ navigation, route }) {
             let uri = `${getSysConfig().webServer}/api/v1/image?hash=${hash}`;
             origin.uri = uri;
             console.log("origin", origin);
-            if (Platform.OS !== 'web') {
-                uri = await CacheManager.get(uri).getPath();
-                console.log("Cached", origin, uri);
-            }
+            // if (Platform.OS !== 'web') {
+            //     uri = await CacheManager.get(uri).getPath();
+            //     console.log("Cached", origin, uri);
+            // }
             setImage({ origin, hash, type, uri, x: 0, ...resize(origin, screenLayout.current), layout: screenLayout.current });
         })()
     }, [curIndex]);
@@ -209,7 +208,7 @@ export default function ({ navigation, route }) {
                             height: image.height,
                         }} source={{ uri: image.uri }}
                         />}
-                        {image.type === "video" && <Video width={image.width} height={image.height} source={image.uri} />}
+                        {image.type === "video" && <Video width={image.width} height={image.height} uri={image.uri} />}
                     </Animated.View>
                         : <ActivityIndicator animating={true} size="large" />}
                 </View>

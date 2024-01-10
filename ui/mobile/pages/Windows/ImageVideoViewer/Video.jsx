@@ -1,8 +1,9 @@
 import Video from 'react-native-video';
 
-export default function ({ width, height, source }) {
+export default function ({ width, height, uri }) {
+    console.log("Video", width, height, uri)
     return (
-        <Video style={{width, height }} source={ source }
+        <Video style={{ width, height }} source={{ uri }}
         />
     );
 }
