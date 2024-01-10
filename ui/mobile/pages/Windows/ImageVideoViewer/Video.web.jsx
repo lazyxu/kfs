@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 
 export default function ({ width, height, source }) {
     const ref = useRef();
-    useEffect(() => {    
+    useEffect(() => {
+        // TODO: load 2 times.
         ref.current?.load();
     }, [source]);
     return (

@@ -273,8 +273,8 @@ func apiImage(c echo.Context) error {
 		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".mp4")
 		f, err := os.Open(thumbnailFilePath)
 		if os.IsNotExist(err) {
-			err = ffmpeg_go.Input(src).
-				Output(thumbnailFilePath, ffmpeg_go.KwArgs{"qscale": "0"}).
+			err = ffmpeg_go.Input(src, ffmpeg_go.KwArgs{"noautorotate": ""}).
+				Output(thumbnailFilePath, ffmpeg_go.KwArgs{"qscale": "0", "vcodec": "libx264"}).
 				OverWriteOutput().ErrorToStdOut().Run()
 			if err != nil {
 				return err

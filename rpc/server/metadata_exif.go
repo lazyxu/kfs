@@ -10,7 +10,10 @@ import (
 	jpegimage "github.com/dsoprea/go-jpeg-image-structure/v2"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
+	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 	"image"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -208,6 +211,66 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType da
 	return nil
 }
 
+func getValueFor(s string, key string) (string, error) {
+	reg, err := regexp.Compile("\n" + key + "=([^\r\n]+)\r?\n")
+	if err != nil {
+		return "", err
+	}
+	subMatch := reg.FindStringSubmatch(s)
+	if subMatch == nil {
+		return "", errors.New("no value for key")
+	}
+	return subMatch[1], nil
+}
+
+func getUint64ValueFor(s string, key string) (uint64, error) {
+	v, err := getValueFor(s, key)
+	if err != nil {
+		return 0, err
+	}
+	n, err := strconv.ParseUint(v, 10, 0)
+	if err != nil {
+		return 0, err
+	}
+	return n, nil
+}
+
+func getInt64ValueFor(s string, key string) (int64, error) {
+	v, err := getValueFor(s, key)
+	if err != nil {
+		return 0, err
+	}
+	n, err := strconv.ParseInt(v, 10, 0)
+	if err != nil {
+		return 0, err
+	}
+	return n, nil
+}
+
+func GetVideoMetadataByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, height uint64, err error) {
+	s, err := ffmpeg_go.Probe(kfsCore.S.GetFilePath(hash), ffmpeg_go.KwArgs{"v": "error", "select_streams": "v", "show_entries": "stream=width,height", "of": "default=noprint_wrappers=1"})
+	if err != nil {
+		return
+	}
+	width, err = getUint64ValueFor(s, "width")
+	if err != nil {
+		return
+	}
+	height, err = getUint64ValueFor(s, "height")
+	if err != nil {
+		return
+	}
+	rotation, err := getInt64ValueFor(s, "rotation")
+	if err != nil {
+		return width, height, nil
+	}
+	// TODO: other rotation
+	if rotation == -90 {
+		width, height = height, width
+	}
+	return
+}
+
 func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, hw dao.HeightWidth, err error) {
 	rc, err := kfsCore.S.ReadWithSize(hash)
 	if err != nil {
@@ -229,13 +292,13 @@ func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, hw d
 		Modified: fileInfo.Movie.Modified.UnixNano(),
 		Duration: fileInfo.Movie.Duration,
 	}
-	for _, track := range fileInfo.Movie.Tracks {
-		if track.Height != 0 && track.Width != 0 {
-			hw = dao.HeightWidth{
-				Width:  uint64(track.Width),
-				Height: uint64(track.Height),
-			}
-		}
+	width, height, err := GetVideoMetadataByFfmpeg(kfsCore, hash)
+	if err != nil {
+		return
+	}
+	hw = dao.HeightWidth{
+		Width:  width,
+		Height: height,
 	}
 	return
 }
