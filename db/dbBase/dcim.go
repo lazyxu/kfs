@@ -20,8 +20,10 @@ func ListMetadataTime(ctx context.Context, conn *sql.DB) (list []dao.Metadata, e
 			time,
 			year,
 			month,
-			day
-		FROM _dcim_metadata_time INNER JOIN _height_width LEFT JOIN _file_type
+			day,
+			IFNULL(_video_metadata.duration, -1)
+		FROM _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type LEFT JOIN _video_metadata
+		ON _dcim_metadata_time.hash=_video_metadata.hash
 		WHERE _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
 		ORDER BY time DESC;
 		`)
@@ -33,7 +35,7 @@ func ListMetadataTime(ctx context.Context, conn *sql.DB) (list []dao.Metadata, e
 		md := dao.Metadata{FileType: &dao.FileType{}, HeightWidth: &dao.HeightWidth{}}
 		err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
 			&md.HeightWidth.Height, &md.HeightWidth.Width,
-			&md.Time, &md.Year, &md.Month, &md.Day)
+			&md.Time, &md.Year, &md.Month, &md.Day, &md.Duration)
 		if err != nil {
 			return
 		}
@@ -54,12 +56,14 @@ func ListDCIMDriverMetadata(ctx context.Context, txOrDb TxOrDb, driver *dao.DCIM
 			time,
 			year,
 			month,
-			day
+			day,
+			IFNULL(_video_metadata.duration, -1)
 		FROM (
 		    SELECT
 		        DISTINCT hash
 		    FROM _driver_file WHERE driverId = ? AND mode < 2147483648
-		) AS table1 INNER JOIN _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type
+		) AS table1 INNER JOIN _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type LEFT JOIN _video_metadata
+		ON _dcim_metadata_time.hash=_video_metadata.hash
 		WHERE table1.hash=_dcim_metadata_time.hash AND _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
 		ORDER BY time DESC;
 	`, driver.Id)
@@ -72,7 +76,7 @@ func ListDCIMDriverMetadata(ctx context.Context, txOrDb TxOrDb, driver *dao.DCIM
 		md := dao.Metadata{FileType: &dao.FileType{}, HeightWidth: &dao.HeightWidth{}}
 		err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
 			&md.HeightWidth.Height, &md.HeightWidth.Width,
-			&md.Time, &md.Year, &md.Month, &md.Day)
+			&md.Time, &md.Year, &md.Month, &md.Day, &md.Duration)
 		if err != nil {
 			return err
 		}
@@ -123,8 +127,10 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 			time,
 			year,
 			month,
-			day
-		FROM _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type
+			day,
+			IFNULL(_video_metadata.duration, -1)
+		FROM _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type LEFT JOIN _video_metadata
+		ON _dcim_metadata_time.hash=_video_metadata.hash
 		WHERE _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash AND _file_type.Type="video"
 		ORDER BY time DESC;
 		`)
@@ -135,7 +141,7 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 			md := dao.Metadata{FileType: &dao.FileType{}, HeightWidth: &dao.HeightWidth{}}
 			err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
 				&md.HeightWidth.Height, &md.HeightWidth.Width,
-				&md.Time, &md.Year, &md.Month, &md.Day)
+				&md.Time, &md.Year, &md.Month, &md.Day, &md.Duration)
 			if err != nil {
 				return
 			}
@@ -158,8 +164,10 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 			time,
 			year,
 			month,
-			day
-		FROM _exif INNER JOIN _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type
+			day,
+			IFNULL(_video_metadata.duration, -1)
+		FROM _exif INNER JOIN _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type LEFT JOIN _video_metadata
+		ON _dcim_metadata_time.hash=_video_metadata.hash
 		WHERE ( _exif.Orientation=2 OR _exif.Orientation=4 OR _exif.Orientation=5 OR _exif.Orientation=7)
 		  AND _exif.hash=_dcim_metadata_time.hash AND _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
 		ORDER BY time DESC;
@@ -171,7 +179,7 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 			md := dao.Metadata{FileType: &dao.FileType{}, HeightWidth: &dao.HeightWidth{}}
 			err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
 				&md.HeightWidth.Height, &md.HeightWidth.Width,
-				&md.Time, &md.Year, &md.Month, &md.Day)
+				&md.Time, &md.Year, &md.Month, &md.Day, &md.Duration)
 			if err != nil {
 				return
 			}

@@ -32,6 +32,7 @@ export default function ({ listDCIMMetadataTime, metadataList }) {
                 url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}`,
                 hash: m.hash,
                 type: m.fileType.type,
+                duration: m.duration,
                 height: m.heightWidth.height,
                 width: m.heightWidth.width,
             });
@@ -102,7 +103,7 @@ export default function ({ listDCIMMetadataTime, metadataList }) {
                 alignContent: "flex-start"
             }}>
                 {item.map(({ hash, index }) =>
-                    <Thumbnail key={index} hash={hash} width={width} navigation={navigation} list={list} index={index} />
+                    <Thumbnail key={index} width={width} navigation={navigation} list={list} index={index} />
                 )}
             </View> :
             <Surface><Text>{item === 1970 ? "未知时间" : item}</Text></Surface>

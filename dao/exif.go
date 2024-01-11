@@ -53,6 +53,7 @@ type Metadata struct {
 	Year          int64          `json:"year"`
 	Month         int64          `json:"month"`
 	Day           int64          `json:"day"`
+	Duration      string         `json:"duration"`
 	HeightWidth   *HeightWidth   `json:"heightWidth"`
 	Exif          *Exif          `json:"exif"`
 	VideoMetadata *VideoMetadata `json:"videoMetadata"`

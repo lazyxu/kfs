@@ -46,7 +46,7 @@ function isDoubleTap(prev, cur) {
 }
 
 export default function ({ navigation, route }) {
-    const { hash, index, list } = route.params;
+    const { list, index } = route.params;
     const [hideHeaderFooter, setHideHeaderFooter] = useState(false);
 
     const [image, setImage, getImage] = useGetState();
@@ -163,7 +163,7 @@ export default function ({ navigation, route }) {
     console.log("center", center);
     return (
         <>
-            {!hideHeaderFooter && <Header navigation={navigation} hash={hash} uri={image?.uri} index={curIndex} total={list.length} />}
+            {!hideHeaderFooter && <Header navigation={navigation} hash={list[curIndex].hash} uri={image?.uri} index={curIndex} total={list.length} />}
             <Surface style={{
                 position: "absolute", left: 0, top: 0, right: 0, bottom: 0,
             }} onLayout={e => {
@@ -213,7 +213,7 @@ export default function ({ navigation, route }) {
                         : <ActivityIndicator animating={true} size="large" />}
                 </View>
             </Surface>
-            {!hideHeaderFooter && <Footer navigation={navigation} hash={hash} uri={image?.uri} />}
+            {!hideHeaderFooter && <Footer navigation={navigation} hash={list[curIndex].hash} uri={image?.uri} />}
         </>
     );
 }

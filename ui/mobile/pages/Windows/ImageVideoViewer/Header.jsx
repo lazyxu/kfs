@@ -12,7 +12,7 @@ export default function ({ navigation, hash, uri, index, total }) {
             setSameFiles(sf);
             setDownloadName(sf[0].name);
         });
-    }, []);
+    }, [hash]);
     return (
         <Surface style={{
             flexDirection: 'row',
