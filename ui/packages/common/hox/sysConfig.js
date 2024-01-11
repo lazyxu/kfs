@@ -19,7 +19,8 @@ function useFunc() {
         c = await window.getKfsConfig();
       } else if (window.kfsConfig) {
         c = window.kfsConfig;
-      } else {
+      }
+      if (!c) {
         c = defaultConfig;
       }
       if (window.kfsEnv.VITE_APP_PLATFORM === 'web' && window.kfsEnv.MODE === 'production') {
