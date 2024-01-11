@@ -190,3 +190,44 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 	}
 	return
 }
+
+func ListDCIMLocation(ctx context.Context, conn *sql.DB) (list []dao.Metadata, err error) {
+	list = make([]dao.Metadata, 0)
+	var rows *sql.Rows
+	rows, err = conn.QueryContext(ctx, `
+		SELECT 
+			_file_type.hash,
+			_file_type.Type,
+			_file_type.SubType,
+			_file_type.Extension,
+			_height_width.height,
+			_height_width.width,
+			time,
+			year,
+			month,
+			day,
+			_exif.GPSLatitudeRef,
+			_exif.GPSLatitude,
+			_exif.GPSLongitudeRef,
+			_exif.GPSLongitude
+		FROM _exif INNER JOIN _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type
+		WHERE _exif.GPSLatitudeRef IS NOT NULL AND _exif.hash=_dcim_metadata_time.hash AND _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
+		ORDER BY time DESC;
+		`)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		md := dao.Metadata{FileType: &dao.FileType{}, HeightWidth: &dao.HeightWidth{}}
+		err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
+			&md.HeightWidth.Height, &md.HeightWidth.Width,
+			&md.Time, &md.Year, &md.Month, &md.Day,
+			&md.GPSLatitudeRef, &md.GPSLatitude, &md.GPSLongitudeRef, &md.GPSLongitude)
+		if err != nil {
+			return
+		}
+		list = append(list, md)
+	}
+	rows.Close()
+	return
+}

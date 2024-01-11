@@ -83,6 +83,7 @@ type Database interface {
 	ListMetadataTime(ctx context.Context) (list []Metadata, err error)
 	ListDCIMDriver(ctx context.Context) (drivers []DCIMDriver, err error)
 	ListDCIMMediaType(ctx context.Context) (m map[string][]Metadata, err error)
+	ListDCIMLocation(ctx context.Context) (list []Metadata, err error)
 
 	InsertNullExif(ctx context.Context, hash string) (exist bool, err error)
 	InsertExif(ctx context.Context, hash string, e Exif) (exist bool, err error)

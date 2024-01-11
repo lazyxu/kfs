@@ -19,3 +19,12 @@ func apiListDCIMMediaType(c echo.Context) error {
 	}
 	return ok(c, drivers)
 }
+
+func apiListDCIMLocation(c echo.Context) error {
+	drivers, err := kfsCore.Db.ListDCIMLocation(c.Request().Context())
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, drivers)
+}

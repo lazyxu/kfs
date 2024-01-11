@@ -8,9 +8,12 @@ import Drivers from './Drivers';
 export default function () {
     const navigation = window.kfsNavigation;
     let [mediaTypes, setMediaTypes] = useState();
+    let [locations, setLocations] = useState();
     console.log("mediaTypes", mediaTypes);
+    console.log("locations", locations);
     useEffect(() => {
         httpGet("/api/v1/listDCIMMediaType").then(setMediaTypes);
+        httpGet("/api/v1/listDCIMLocation").then(setLocations);
     }, []);
     return (
         <>
@@ -23,7 +26,15 @@ export default function () {
 
             <Surface><Text>人物</Text></Surface>
 
-            <Surface><Text>地点</Text></Surface>
+            <Pressable onPress={() => navigation.navigate("AlbumsLocation", { list: locations })}>
+                <Surface style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                }}>
+                    <Text>地点</Text>
+                    <Text>{locations ? locations.length : "?"}</Text>
+                </Surface>
+            </Pressable>
 
             <Surface><Text>媒体类型</Text></Surface>
             <Pressable disabled={!mediaTypes} onPress={() => navigation.navigate("AlbumsVideo", { list: mediaTypes.video })}>
@@ -32,7 +43,7 @@ export default function () {
                     justifyContent: "space-between",
                 }}>
                     <Text>视频</Text>
-                    <Text>{mediaTypes ? mediaTypes.video.length : 0}</Text>
+                    <Text>{mediaTypes ? mediaTypes.video.length : "?"}</Text>
                 </Surface>
             </Pressable>
             <Pressable disabled={!mediaTypes} onPress={() => navigation.navigate("AlbumsSelfie", { list: mediaTypes.selfie })}>
@@ -41,7 +52,7 @@ export default function () {
                     justifyContent: "space-between",
                 }}>
                     <Text>自拍</Text>
-                    <Text>{mediaTypes ? mediaTypes.selfie.length : 0}</Text>
+                    <Text>{mediaTypes ? mediaTypes.selfie.length : "?"}</Text>
                 </Surface>
             </Pressable>
             <Surface><Text>实况</Text></Surface>

@@ -47,14 +47,18 @@ type HeightWidth struct {
 }
 
 type Metadata struct {
-	Hash          string         `json:"hash"`
-	FileType      *FileType      `json:"fileType"`
-	Time          int64          `json:"time"`
-	Year          int64          `json:"year"`
-	Month         int64          `json:"month"`
-	Day           int64          `json:"day"`
-	Duration      string         `json:"duration"`
-	HeightWidth   *HeightWidth   `json:"heightWidth"`
-	Exif          *Exif          `json:"exif"`
-	VideoMetadata *VideoMetadata `json:"videoMetadata"`
+	Hash            string         `json:"hash"`
+	FileType        *FileType      `json:"fileType"`
+	Time            int64          `json:"time"`
+	Year            int64          `json:"year"`
+	Month           int64          `json:"month"`
+	Day             int64          `json:"day"`
+	Duration        string         `json:"duration"`
+	HeightWidth     *HeightWidth   `json:"heightWidth"`
+	GPSLatitudeRef  string         `json:"GPSLatitudeRef"`
+	GPSLatitude     float64        `json:"GPSLatitude"` // 纬度
+	GPSLongitudeRef string         `json:"GPSLongitudeRef"`
+	GPSLongitude    float64        `json:"GPSLongitude"` // 经度
+	Exif            *Exif          `json:"exif"`
+	VideoMetadata   *VideoMetadata `json:"videoMetadata"`
 }
