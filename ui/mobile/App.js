@@ -19,6 +19,8 @@ import Selfie from './pages/Albums/Selfie';
 import Video from './pages/Albums/Video';
 import Photos from './pages/Photos';
 import Search from './pages/Search';
+import Suffix from './pages/Search/Suffix';
+import Type from './pages/Search/Type';
 import SystemConfig from './pages/Setting/SystemConfig';
 import ImageVideoViewer from './pages/Windows/ImageVideoViewer';
 import Info from './pages/Windows/ImageVideoViewer/Info';
@@ -84,6 +86,8 @@ function ThemeApp() {
           <Stack.Screen name="AlbumsVideo" component={Video} />
           <Stack.Screen name="AlbumsSelfie" component={Selfie} />
           <Stack.Screen name="AlbumsLocation" component={Location} />
+          <Stack.Screen name="SearchType" component={Type} />
+          <Stack.Screen name="SearchSuffix" component={Suffix} />
         </Stack.Navigator>
         <Toast />
       </NavigationContainer>
