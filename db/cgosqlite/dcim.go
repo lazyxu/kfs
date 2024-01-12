@@ -23,3 +23,15 @@ func (db *DB) ListDCIMLocation(ctx context.Context) (list []dao.Metadata, err er
 	defer db.putConn(conn)
 	return dbBase.ListDCIMLocation(ctx, conn)
 }
+
+func (db *DB) ListDCIMSearchType(ctx context.Context) (list []dao.DCIMSearchType, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListDCIMSearchType(ctx, conn)
+}
+
+func (db *DB) ListDCIMSearchSuffix(ctx context.Context) (list []dao.DCIMSearchSuffix, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListDCIMSearchSuffix(ctx, conn)
+}

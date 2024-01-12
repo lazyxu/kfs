@@ -4,7 +4,6 @@ import { Pressable } from "react-native";
 import { Appbar, Surface, Text } from "react-native-paper";
 import Drivers from './Drivers';
 
-
 export default function () {
     const navigation = window.kfsNavigation;
     let [mediaTypes, setMediaTypes] = useState();

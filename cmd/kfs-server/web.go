@@ -83,6 +83,8 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/listDCIMDriver", apiListDCIMDriver)
 	e.GET("/api/v1/listDCIMMediaType", apiListDCIMMediaType)
 	e.GET("/api/v1/listDCIMLocation", apiListDCIMLocation)
+	e.GET("/api/v1/listDCIMSearchType", apiListDCIMSearchType)
+	e.GET("/api/v1/listDCIMSearchSuffix", apiListDCIMSearchSuffix)
 
 	e.GET("/api/v1/metadata", apiGetMetadata)
 	e.GET("/api/v1/diskUsage", apiDiskUsage)

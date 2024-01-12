@@ -28,3 +28,21 @@ func apiListDCIMLocation(c echo.Context) error {
 	}
 	return ok(c, drivers)
 }
+
+func apiListDCIMSearchType(c echo.Context) error {
+	drivers, err := kfsCore.Db.ListDCIMSearchType(c.Request().Context())
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, drivers)
+}
+
+func apiListDCIMSearchSuffix(c echo.Context) error {
+	drivers, err := kfsCore.Db.ListDCIMSearchSuffix(c.Request().Context())
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, drivers)
+}

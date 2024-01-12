@@ -62,3 +62,14 @@ type Metadata struct {
 	Exif            *Exif          `json:"exif"`
 	VideoMetadata   *VideoMetadata `json:"videoMetadata"`
 }
+
+type DCIMSearchType struct {
+	Type    string `json:"type"`
+	SubType string `json:"subType"`
+	Count   uint64 `json:"count"`
+}
+
+type DCIMSearchSuffix struct {
+	Suffix string `json:"suffix"`
+	Count  uint64 `json:"count"`
+}

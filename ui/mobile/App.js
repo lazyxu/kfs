@@ -6,7 +6,6 @@ import { HoxRoot } from "hox";
 import { useState } from 'react';
 import { View } from 'react-native';
 import {
-  Appbar,
   BottomNavigation, MD3LightTheme as DefaultTheme, MD3DarkTheme,
   MD3LightTheme, PaperProvider,
   Text
@@ -19,27 +18,11 @@ import Location from './pages/Albums/Location';
 import Selfie from './pages/Albums/Selfie';
 import Video from './pages/Albums/Video';
 import Photos from './pages/Photos';
+import Search from './pages/Search';
 import SystemConfig from './pages/Setting/SystemConfig';
 import ImageVideoViewer from './pages/Windows/ImageVideoViewer';
 import Info from './pages/Windows/ImageVideoViewer/Info';
 import SameFile from './pages/Windows/ImageVideoViewer/SameFile';
-
-const Footprints = () => {
-  return (
-    <>
-      <Appbar.Header mode="center-aligned">
-        <Appbar.Content title="搜索" />
-      </Appbar.Header>
-      <View style={{
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <Text >TODO</Text>
-      </View>
-    </>
-  );
-};
 
 function App1({ navigation }) {
   window.kfsNavigation = navigation;
@@ -47,14 +30,14 @@ function App1({ navigation }) {
   const [routes] = useState([
     { key: 'photos', title: '照片', focusedIcon: 'image', unfocusedIcon: 'image-outline' },
     { key: 'albums', title: '相册', focusedIcon: 'image-multiple', unfocusedIcon: 'image-multiple-outline' },
-    { key: 'footprints', title: '搜索', focusedIcon: 'image-search', unfocusedIcon: 'image-search-outline' },
+    { key: 'search', title: '搜索', focusedIcon: 'image-search', unfocusedIcon: 'image-search-outline' },
     { key: 'me', title: '我', focusedIcon: 'account-settings', unfocusedIcon: 'account-settings-outline' },
   ]);
 
   const renderScene = BottomNavigation.SceneMap({
     photos: Photos,
     albums: Albums,
-    footprints: Footprints,
+    search: Search,
     me: SystemConfig,
   });
 

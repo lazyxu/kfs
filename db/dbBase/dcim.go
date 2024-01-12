@@ -143,6 +143,7 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 				&md.HeightWidth.Height, &md.HeightWidth.Width,
 				&md.Time, &md.Year, &md.Month, &md.Day, &md.Duration)
 			if err != nil {
+				rows.Close()
 				return
 			}
 			list = append(list, md)
@@ -181,6 +182,7 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 				&md.HeightWidth.Height, &md.HeightWidth.Width,
 				&md.Time, &md.Year, &md.Month, &md.Day, &md.Duration)
 			if err != nil {
+				rows.Close()
 				return
 			}
 			list = append(list, md)
@@ -217,6 +219,7 @@ func ListDCIMLocation(ctx context.Context, conn *sql.DB) (list []dao.Metadata, e
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		md := dao.Metadata{FileType: &dao.FileType{}, HeightWidth: &dao.HeightWidth{}}
 		err = rows.Scan(&md.Hash, &md.FileType.Type, &md.FileType.SubType, &md.FileType.Extension,
@@ -228,6 +231,53 @@ func ListDCIMLocation(ctx context.Context, conn *sql.DB) (list []dao.Metadata, e
 		}
 		list = append(list, md)
 	}
-	rows.Close()
+	return
+}
+
+func ListDCIMSearchType(ctx context.Context, conn *sql.DB) (list []dao.DCIMSearchType, err error) {
+	list = make([]dao.DCIMSearchType, 0)
+	rows, err := conn.QueryContext(ctx, `
+		SELECT
+		    Type, SubType,
+		    count(1)
+		FROM (SELECT Type, SubType FROM _file_type WHERE Type='image' OR Type='video') GROUP BY Type, SubType ORDER BY Type, SubType;
+		`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var i dao.DCIMSearchType
+		err = rows.Scan(&i.Type, &i.SubType, &i.Count)
+		if err != nil {
+			return
+		}
+		list = append(list, i)
+	}
+	return
+}
+
+func ListDCIMSearchSuffix(ctx context.Context, conn *sql.DB) (list []dao.DCIMSearchSuffix, err error) {
+	list = make([]dao.DCIMSearchSuffix, 0)
+	rows, err := conn.QueryContext(ctx, `
+		SELECT
+		    ext,
+		    count(1)
+		FROM (SELECT
+			case when _driver_file.name like '%.%' then lower(replace(_driver_file.name, rtrim(_driver_file.name, replace(_driver_file.name, '.', '' ) ), '')) else '' end AS ext
+		FROM (SELECT hash FROM _file_type WHERE Type='image' OR Type='video') AS t0 INNER JOIN _driver_file WHERE t0.hash=_driver_file.hash) GROUP BY ext ORDER BY ext;
+		`)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var i dao.DCIMSearchSuffix
+		err = rows.Scan(&i.Suffix, &i.Count)
+		if err != nil {
+			return
+		}
+		list = append(list, i)
+	}
 	return
 }
