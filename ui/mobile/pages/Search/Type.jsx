@@ -1,6 +1,6 @@
 import { httpGet } from '@kfs/common/api/webServer';
 import { useEffect, useState } from "react";
-import { Appbar, Checkbox, List } from 'react-native-paper';
+import { Appbar, Checkbox, List, Surface } from 'react-native-paper';
 import { useCheckedType } from '../../hox/checked';
 
 export default function ({ navigation, route }) {
@@ -30,7 +30,7 @@ export default function ({ navigation, route }) {
     }
 
     return (
-        <>
+        <Surface style={{ height: "100%" }}>
             <Appbar.Header mode="center-aligned">
                 <Appbar.BackAction onPress={() => navigation.pop()} />
                 <Appbar.Content title="文件类型" />
@@ -42,6 +42,6 @@ export default function ({ navigation, route }) {
                 }}>
                     <Text >Loading...</Text>
                 </View>}
-        </>
+        </Surface>
     );
 };

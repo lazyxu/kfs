@@ -1,9 +1,9 @@
-import { Appbar, List } from 'react-native-paper';
+import { Appbar, List, Surface } from 'react-native-paper';
 
 export default function () {
     const navigation = window.kfsNavigation;
     return (
-        <>
+        <Surface>
             <Appbar.Header mode="center-aligned">
                 <Appbar.Content title="搜索" />
             </Appbar.Header>
@@ -24,6 +24,6 @@ export default function () {
                     right={() => <></>} onPress={() => navigation.navigate("SearchSuffix")}
                 />
             </List.Section>
-        </>
+        </Surface>
     );
 }
