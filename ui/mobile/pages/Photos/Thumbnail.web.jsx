@@ -9,7 +9,6 @@ function formatDuration(seconds) {
     const s = seconds % 60;
     const m = Math.floor(seconds / 60) % 60;
     const h = Math.floor(seconds / 3600) % 60;
-    console.log("seconds", seconds, h, m, s)
     if (h > 0) {
         return "" + h + ":" + (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
     }
