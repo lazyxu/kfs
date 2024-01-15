@@ -1,29 +1,39 @@
-import { Appbar, List, Surface } from 'react-native-paper';
+import { View } from 'react-native';
+import { Appbar, Button } from 'react-native-paper';
+
+const ItemStyle = { justifyContent: 'flex-start' };
 
 export default function () {
     const navigation = window.kfsNavigation;
     return (
-        <Surface>
+        <View style={{ height: "100%" }}>
             <Appbar.Header mode="center-aligned">
                 <Appbar.Content title="搜索" />
             </Appbar.Header>
-            <List.Section>
-                <List.Accordion style={{ padding: 0, margin: 0 }}  title="位置" />
-                <List.Accordion style={{ padding: 0, margin: 0 }}  title="文件类型"
-                    left={props => <List.Icon {...props} icon="file-image" />}
-                    right={() => <></>} onPress={() => navigation.navigate("SearchType")}
-                />
-                <List.Accordion style={{ padding: 0, margin: 0 }}  title="人物识别" />
-                <List.Accordion style={{ padding: 0, margin: 0 }}  title="文本识别" />
-                <List.Accordion style={{ padding: 0, margin: 0 }}  title="物体识别" />
+            <View style={{ flex: 1, overflowY: "scroll" }}>
+                <Button contentStyle={ItemStyle} icon="calendar-search" disabled={true}>
+                    时间
+                </Button>
+                <Button contentStyle={ItemStyle} icon="map-search-outline" disabled={true}>
+                    地点
+                </Button>
+                <Button contentStyle={ItemStyle} icon="file-image-outline" onPress={() => navigation.navigate("SearchType")}>
+                    文件类型
+                </Button>
+                <Button contentStyle={ItemStyle} icon="text-recognition" disabled={true}>
+                    文本识别
+                </Button>
 
-                <List.Accordion style={{ padding: 0, margin: 0 }}  title="拍摄设备" />
-                <List.Accordion style={{ padding: 0, margin: 0 }}  title="文件大小" />
-                <List.Accordion style={{ padding: 0, margin: 0 }}  title="文件后缀"
-                    left={props => <List.Icon {...props} icon="file-jpg-box" />}
-                    right={() => <></>} onPress={() => navigation.navigate("SearchSuffix")}
-                />
-            </List.Section>
-        </Surface>
+                <Button contentStyle={ItemStyle} icon="camera-outline" disabled={true}>
+                    拍摄设备
+                </Button>
+                <Button contentStyle={ItemStyle} icon="numeric" disabled={true}>
+                    文件大小
+                </Button>
+                <Button contentStyle={ItemStyle} icon="file-jpg-box" onPress={() => navigation.navigate("SearchSuffix")}>
+                    文件后缀
+                </Button>
+            </View>
+        </View>
     );
 }

@@ -2,8 +2,7 @@ import { getSysConfig } from '@kfs/common/hox/sysConfig';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, PanResponder, View } from 'react-native';
 import {
-    ActivityIndicator,
-    Surface
+    ActivityIndicator
 } from 'react-native-paper';
 import Footer from './Footer';
 import Header from './Header';
@@ -164,7 +163,7 @@ export default function ({ navigation, route }) {
     return (
         <>
             {!hideHeaderFooter && <Header navigation={navigation} hash={list[curIndex].hash} uri={image?.uri} index={curIndex} total={list.length} />}
-            <Surface style={{
+            <View style={{
                 position: "absolute", left: 0, top: 0, right: 0, bottom: 0,
             }} onLayout={e => {
                 const { layout } = e.nativeEvent;
@@ -212,7 +211,7 @@ export default function ({ navigation, route }) {
                     </Animated.View>
                         : <ActivityIndicator animating={true} size="large" />}
                 </View>
-            </Surface>
+            </View>
             {!hideHeaderFooter && <Footer navigation={navigation} hash={list[curIndex].hash} uri={image?.uri} />}
         </>
     );

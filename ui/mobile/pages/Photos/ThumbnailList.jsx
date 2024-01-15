@@ -1,7 +1,7 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, RefreshControl, View } from 'react-native';
-import { Surface, Text } from "react-native-paper";
+import { Text } from "react-native-paper";
 import Thumbnail from './Thumbnail';
 
 export default function ({ listDCIMMetadataTime, metadataList }) {
@@ -106,7 +106,7 @@ export default function ({ listDCIMMetadataTime, metadataList }) {
                     <Thumbnail key={index} width={width} navigation={navigation} list={list} index={index} />
                 )}
             </View> :
-            <Surface><Text>{item === 1970 ? "未知时间" : item}</Text></Surface>
+            <View style={{ margin: 6 }}><Text style={{ fontSize: 16 }}>{item === 1970 ? "未知时间" : item + " 年"}</Text></View>
     };
     return (
         <FlatList

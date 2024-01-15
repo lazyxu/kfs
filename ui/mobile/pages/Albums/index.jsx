@@ -1,8 +1,16 @@
 import { httpGet } from '@kfs/common/api/webServer';
 import { useEffect, useState } from "react";
-import { Pressable } from "react-native";
-import { Appbar, Surface, Text } from "react-native-paper";
+import { View } from "react-native";
+import { Appbar, Button, Divider, Text } from "react-native-paper";
 import Drivers from './Drivers';
+
+const contentStyle = { justifyContent: 'flex-start' };
+const labelStyle = {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+}
 
 export default function () {
     const navigation = window.kfsNavigation;
@@ -15,56 +23,76 @@ export default function () {
         httpGet("/api/v1/listDCIMLocation").then(setLocations);
     }, []);
     return (
-        <>
+        <View style={{ height: "100%" }}>
             <Appbar.Header mode="center-aligned">
                 <Appbar.Content title="相册" />
             </Appbar.Header>
 
-            <Surface><Text>我的云盘</Text></Surface>
-            <Drivers />
+            <View style={{ flex: 1, overflowY: "scroll" }}>
+                <Divider />
+                <Text style={{ margin: 12, fontSize: 24, fontWeight: 400 }}>我的云盘</Text>
+                <Drivers />
 
-            <Surface><Text>人物</Text></Surface>
-
-            <Pressable onPress={() => navigation.navigate("AlbumsLocation", { list: locations })}>
-                <Surface style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                }}>
+                <Divider />
+                <Text style={{ margin: 12, fontSize: 24, fontWeight: 400 }}>地点</Text>
+                <Button contentStyle={contentStyle} labelStyle={labelStyle} icon="map-outline" onPress={() => navigation.navigate("AlbumsLocation", { list: locations })}>
                     <Text>地点</Text>
                     <Text>{locations ? locations.length : "?"}</Text>
-                </Surface>
-            </Pressable>
+                </Button>
 
-            <Surface><Text>媒体类型</Text></Surface>
-            <Pressable disabled={!mediaTypes} onPress={() => navigation.navigate("AlbumsVideo", { list: mediaTypes.video })}>
-                <Surface style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                }}>
+                <Divider />
+                <Text style={{ margin: 12, fontSize: 24, fontWeight: 400 }}>人像</Text>
+                <Button contentStyle={contentStyle} icon="face-recognition" disabled={true}>
+                    人像
+                </Button>
+
+                <Divider />
+                <Text style={{ margin: 12, fontSize: 24, fontWeight: 400 }}>物体</Text>
+                <Button contentStyle={contentStyle} icon="flower-outline" disabled={true}>
+                    物体
+                </Button>
+
+                <Divider />
+                <Text style={{ margin: 12, fontSize: 24, fontWeight: 400 }}>媒体类型</Text>
+                <Button contentStyle={contentStyle} labelStyle={labelStyle} icon="video-outline" onPress={() => navigation.navigate("AlbumsVideo", { list: mediaTypes.video })}>
                     <Text>视频</Text>
                     <Text>{mediaTypes ? mediaTypes.video.length : "?"}</Text>
-                </Surface>
-            </Pressable>
-            <Pressable disabled={!mediaTypes} onPress={() => navigation.navigate("AlbumsSelfie", { list: mediaTypes.selfie })}>
-                <Surface style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                }}>
+                </Button>
+                <Button contentStyle={contentStyle} labelStyle={labelStyle} icon="account-box-outline" onPress={() => navigation.navigate("AlbumsSelfie", { list: mediaTypes.selfie })}>
                     <Text>自拍</Text>
                     <Text>{mediaTypes ? mediaTypes.selfie.length : "?"}</Text>
-                </Surface>
-            </Pressable>
-            <Surface><Text>实况</Text></Surface>
-            <Surface><Text>人像</Text></Surface>
-            <Surface><Text>全景</Text></Surface>
-            <Surface><Text>延时摄影</Text></Surface>
-            <Surface><Text>慢动作</Text></Surface>
-            <Surface><Text>电影效果</Text></Surface>
-            <Surface><Text>截屏</Text></Surface>
-            <Surface><Text>录屏</Text></Surface>
-            <Surface><Text>动图</Text></Surface>
+                </Button>
+                <Button contentStyle={contentStyle} icon="flower" disabled={true}>
+                    实况
+                </Button>
+                <Button contentStyle={contentStyle} icon="panorama-horizontal-outline" disabled={true}>
+                    全景
+                </Button>
+                <Button contentStyle={contentStyle} icon="timelapse" disabled={true}>
+                    延时摄影
+                </Button>
+                <Button contentStyle={contentStyle} icon="motion-outline" disabled={true}>
+                    慢动作
+                </Button>
+                <Button contentStyle={contentStyle} icon="movie-open-outline" disabled={true}>
+                    电影效果
+                </Button>
+                <Button contentStyle={contentStyle} icon="cellphone-screenshot" disabled={true}>
+                    截屏
+                </Button>
+                <Button contentStyle={contentStyle} icon="record-circle-outline" disabled={true}>
+                    录屏
+                </Button>
+                <Button contentStyle={contentStyle} icon="motion-play-outline" disabled={true}>
+                    动图
+                </Button>
 
-            <Surface><Text>重复项目</Text></Surface>
-        </>
+                <Divider />
+                <Text style={{ margin: 12, fontSize: 24, fontWeight: 400 }}>更多项目</Text>
+                <Button contentStyle={contentStyle} icon="pound" disabled={true}>
+                    重复项目
+                </Button>
+            </View>
+        </View>
     );
 }

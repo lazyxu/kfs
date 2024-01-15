@@ -2,7 +2,7 @@ import { httpGet } from '@kfs/common/api/webServer';
 import { getSysConfig } from '@kfs/common/hox/sysConfig';
 import { useEffect, useState } from "react";
 import { Image, Pressable, View } from 'react-native';
-import { Text } from "react-native-paper";
+import { Surface, Text } from "react-native-paper";
 
 export default function () {
     const navigation = window.kfsNavigation;
@@ -27,7 +27,7 @@ export default function () {
                             width: 128,
                             borderRadius: 10,
                         }} source={{ uri: `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${driver.metadataList[0].hash}` }} />
-                            : <View style={{
+                            : <Surface style={{
                                 height: 128,
                                 width: 128,
                                 borderRadius: 10,
