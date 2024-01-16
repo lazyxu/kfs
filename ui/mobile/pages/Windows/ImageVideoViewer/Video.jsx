@@ -1,9 +1,15 @@
-import Video from 'react-native-video';
+import { ResizeMode, Video } from 'expo-av';
+import * as React from 'react';
 
-export default function ({ width, height, uri }) {
-    console.log("Video", width, height, uri)
+export default function App({ width, height, uri }) {
+    const video = React.useRef(null);
     return (
-        <Video style={{ width, height }} source={{ uri }}
+        <Video
+            ref={video}
+            style={{ width, height }}
+            source={{ uri }}
+            useNativeControls
+            resizeMode={ResizeMode.CONTAIN}
         />
     );
 }
