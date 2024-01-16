@@ -86,6 +86,7 @@ type Database interface {
 	ListDCIMLocation(ctx context.Context) (list []Metadata, err error)
 	ListDCIMSearchType(ctx context.Context) (list []DCIMSearchType, err error)
 	ListDCIMSearchSuffix(ctx context.Context) (list []DCIMSearchSuffix, err error)
+	SearchDCIM(ctx context.Context, typeList []string, suffixList []string) (list []Metadata, err error)
 
 	InsertNullExif(ctx context.Context, hash string) (exist bool, err error)
 	InsertExif(ctx context.Context, hash string, e Exif) (exist bool, err error)

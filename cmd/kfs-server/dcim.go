@@ -46,3 +46,20 @@ func apiListDCIMSearchSuffix(c echo.Context) error {
 	}
 	return ok(c, drivers)
 }
+
+func apiSearchDCIM(c echo.Context) error {
+	typeList := c.QueryParams()["typeList[]"]
+	if typeList == nil {
+		typeList = []string{}
+	}
+	suffixList := c.QueryParams()["suffixList[]"]
+	if suffixList == nil {
+		suffixList = []string{}
+	}
+	drivers, err := kfsCore.Db.SearchDCIM(c.Request().Context(), typeList, suffixList)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return ok(c, drivers)
+}

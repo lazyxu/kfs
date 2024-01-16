@@ -7,7 +7,7 @@ import CheckItem from './CheckItem';
 
 export default function ({ navigation, route }) {
     // const { checked, setChecked } = route.params;
-    const { checked, setChecked } = useCheckedType();
+    const [checked, setChecked] = useCheckedType();
 
     const [list, setList] = useState([]);
 
@@ -23,7 +23,13 @@ export default function ({ navigation, route }) {
                 onPress={() => {
                     console.log(route.params, checked, checked[key], checked[key] ? 0 : 1)
                     setChecked(m => {
-                        return { ...m, [key]: m[key] ? 0 : 1 };
+                        const ret = { ...m};
+                        if (m[key]) {
+                            delete ret[key];
+                        } else {
+                            ret[key] = 1;
+                        }
+                        return ret;
                     })
                 }}
             />
@@ -34,7 +40,7 @@ export default function ({ navigation, route }) {
         <Surface style={{ height: "100%" }}>
             <Appbar.Header mode="center-aligned">
                 <Appbar.BackAction onPress={() => navigation.pop()} />
-                <Appbar.Content title="文件类型1" />
+                <Appbar.Content title="文件类型" />
             </Appbar.Header>
             <View style={{ flex: 1, overflowY: "scroll" }}>
                 {list ? list.map((item, i) => <Item key={i} item={item} />) :

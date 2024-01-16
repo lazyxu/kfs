@@ -7,7 +7,7 @@ import CheckItem from './CheckItem';
 
 export default function ({ navigation, route }) {
     // const { checked, setChecked } = route.params;
-    const { checked, setChecked } = useCheckedSuffix();
+    const [checked, setChecked] = useCheckedSuffix();
 
     const [list, setList] = useState([]);
 
@@ -23,7 +23,13 @@ export default function ({ navigation, route }) {
                 onPress={() => {
                     console.log(route.params, checked, checked[key], checked[key] ? 0 : 1)
                     setChecked(m => {
-                        return { ...m, [key]: m[key] ? 0 : 1 };
+                        const ret = { ...m};
+                        if (m[key]) {
+                            delete ret[key];
+                        } else {
+                            ret[key] = 1;
+                        }
+                        return ret;
                     })
                 }}
             />

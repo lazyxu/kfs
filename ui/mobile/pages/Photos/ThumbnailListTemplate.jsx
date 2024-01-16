@@ -6,12 +6,16 @@ export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsP
     const [metadataTagList, setMetadataTagList] = useState([]);
     const sysConfig = getSysConfig();
     const [list, setList] = useState([]);
+    // useEffect(() => {
+    //     refresh();
+    // }, [metadataList]);
     const refresh = async () => {
+        console.log("refresh")
         let originlist;
-        if (listDCIMMetadataTime) {
-            originlist = await listDCIMMetadataTime();
-        } else {
+        if (metadataList) {
             originlist = metadataList;
+        } else {
+            originlist = await listDCIMMetadataTime();
         }
         let tag = "";
         let mtList = [];
