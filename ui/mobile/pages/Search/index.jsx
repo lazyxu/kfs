@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View } from 'react-native';
 import { Appbar, Button, SegmentedButtons } from 'react-native-paper';
-import ThumbnailList from "../Photos/ThumbnailList";
+import ThumbnailListAll from "../Photos/ThumbnailListAll";
 
 const ItemStyle = { justifyContent: 'flex-start' };
 
@@ -52,7 +52,7 @@ export default function () {
                     文件后缀
                 </Button>
             </View>}
-            {value === "search" && <ThumbnailList metadataList={list} />}
+            {value === "search" && <ThumbnailListAll metadataList={list} />}
         </View>
     );
 }

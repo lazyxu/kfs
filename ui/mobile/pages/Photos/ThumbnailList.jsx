@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { FlatList, RefreshControl, View } from 'react-native';
 import { Text } from "react-native-paper";
 import Thumbnail from './Thumbnail';
 
-export default function ({ metadataTagList, elementsPerLine = 5, list, refresh = () => { } }) {
+export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }) {
     const navigation = window.kfsNavigation;
     const [width, setWidth] = useState(0);
     const [initialNumToRender, setInitialNumToRender] = useState(0);
@@ -13,9 +13,6 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh =
         refresh().then(() => {
             setRefreshing(false);
         });
-    }, []);
-    useEffect(() => {
-        refresh();
     }, []);
     // console.log("render", width, navigation);
     let indices = [];
@@ -57,7 +54,7 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh =
             // showsVerticalScrollIndicator={false}
             style={{ flex: 1, width: "100%" }}
             // stickyHeaderIndices={indices}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            refreshControl={refresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined}
             // renderScrollComponent
             initialNumToRender={initialNumToRender} // default 10
             maxToRenderPerBatch={1000} // default 10

@@ -1,5 +1,5 @@
 import { Appbar, Surface } from "react-native-paper";
-import ThumbnailList from '../Photos/ThumbnailList';
+import ThumbnailListAll from "../Photos/ThumbnailListAll";
 
 export default function ({ navigation, route }) {
     const { list } = route.params;
@@ -11,7 +11,7 @@ export default function ({ navigation, route }) {
                 <Appbar.Action icon="calendar" onPress={() => { }} />
                 <Appbar.Action icon="magnify" onPress={() => { }} />
             </Appbar.Header>
-            <ThumbnailList metadataList={list} />
+            <ThumbnailListAll metadataList={list} />
         </Surface>
     );
 }
