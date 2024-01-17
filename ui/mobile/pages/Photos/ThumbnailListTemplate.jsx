@@ -1,6 +1,6 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useState } from "react";
-import ThumbnailList from "./ThumbnailList";
+import ListTest from "./ListTest";
 
 export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsPerLine }) {
     const [metadataTagList, setMetadataTagList] = useState([]);
@@ -54,6 +54,7 @@ export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsP
         refresh();
     }, []);
     return (
-        <ThumbnailList metadataTagList={metadataTagList} list={list} refresh={listDCIMMetadataTime ? refresh : undefined} elementsPerLine={elementsPerLine} />
+        // <ThumbnailList metadataTagList={metadataTagList} list={list} refresh={listDCIMMetadataTime ? refresh : undefined} elementsPerLine={elementsPerLine} />
+        <ListTest metadataTagList={metadataTagList} list={list} refresh={listDCIMMetadataTime ? refresh : undefined} elementsPerLine={elementsPerLine} />
     );
 }
