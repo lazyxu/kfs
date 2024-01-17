@@ -21,7 +21,7 @@ export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsP
         let mtList = [];
         let lineList;
         const l = [];
-        originlist = originlist.slice(0, 100);
+        // originlist = originlist.slice(0, 100);
         for (let index = 0; index < originlist.length; index++) {
             const m = originlist[index];
             l.push({

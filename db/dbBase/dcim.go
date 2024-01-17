@@ -25,6 +25,7 @@ func ListMetadataTime(ctx context.Context, conn *sql.DB) (list []dao.Metadata, e
 		FROM _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type LEFT JOIN _video_metadata
 		ON _dcim_metadata_time.hash=_video_metadata.hash
 		WHERE _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
+			AND (_file_type.Type='image' OR _file_type.Type='video')
 		ORDER BY time DESC;
 		`)
 	if err != nil {
@@ -65,6 +66,7 @@ func ListDCIMDriverMetadata(ctx context.Context, txOrDb TxOrDb, driver *dao.DCIM
 		) AS table1 INNER JOIN _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type LEFT JOIN _video_metadata
 		ON _dcim_metadata_time.hash=_video_metadata.hash
 		WHERE table1.hash=_dcim_metadata_time.hash AND _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
+			AND (_file_type.Type='image' OR _file_type.Type='video')
 		ORDER BY time DESC;
 	`, driver.Id)
 	if err != nil {
@@ -131,7 +133,8 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 			IFNULL(_video_metadata.duration, -1)
 		FROM _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type LEFT JOIN _video_metadata
 		ON _dcim_metadata_time.hash=_video_metadata.hash
-		WHERE _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash AND _file_type.Type="video"
+		WHERE _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
+		    AND _file_type.Type="video"
 		ORDER BY time DESC;
 		`)
 		if err != nil {
@@ -171,6 +174,7 @@ func ListDCIMMediaType(ctx context.Context, conn *sql.DB) (m map[string][]dao.Me
 		ON _dcim_metadata_time.hash=_video_metadata.hash
 		WHERE ( _exif.Orientation=2 OR _exif.Orientation=4 OR _exif.Orientation=5 OR _exif.Orientation=7)
 		  AND _exif.hash=_dcim_metadata_time.hash AND _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
+			AND _file_type.Type='image'
 		ORDER BY time DESC;
 		`)
 		if err != nil {
@@ -214,6 +218,7 @@ func ListDCIMLocation(ctx context.Context, conn *sql.DB) (list []dao.Metadata, e
 			_exif.GPSLongitude
 		FROM _exif INNER JOIN _dcim_metadata_time INNER JOIN _height_width INNER JOIN _file_type
 		WHERE _exif.GPSLatitudeRef IS NOT NULL AND _exif.hash=_dcim_metadata_time.hash AND _dcim_metadata_time.hash=_height_width.hash AND _dcim_metadata_time.hash=_file_type.hash
+			AND _file_type.Type='image'
 		ORDER BY time DESC;
 		`)
 	if err != nil {

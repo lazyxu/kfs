@@ -4,8 +4,8 @@
  */
 import React, { useEffect, useState } from "react";
 import { Dimensions, Text, View } from "react-native";
-import { DataProvider, LayoutProvider, RecyclerListView } from "recyclerlistview/web";
 import Thumbnail from "./Thumbnail";
+import { DataProvider, LayoutProvider, RecyclerListView } from "./recyclerlistview";
 
 const ViewTypes = {
     FULL: 0,
