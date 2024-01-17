@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"fmt"
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
@@ -26,14 +25,6 @@ func AnalyzeFileType(kfsCore *core.KFS, hash string) (ft dao.FileType, err error
 	}
 	fmt.Printf("%s %+v\n", hash, fileType)
 	ft = NewFileType(fileType)
-	return
-}
-
-func InsertFileType(ctx context.Context, kfsCore *core.KFS, hash string, ft dao.FileType) (err error) {
-	_, err = kfsCore.Db.InsertFileType(ctx, hash, ft)
-	if err != nil {
-		return
-	}
 	return
 }
 

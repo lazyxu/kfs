@@ -31,11 +31,11 @@ func Analyze(ctx context.Context, kfsCore *core.KFS, hash string) error {
 	if err != nil {
 		return err
 	}
-	err = InsertExif(ctx, kfsCore, hash, ft)
+	err = InsertExif(ctx, kfsCore, hash, &ft)
 	if err != nil {
 		return err
 	}
-	_, err = kfsCore.Db.InsertFileType(ctx, hash, ft)
+	err = kfsCore.Db.UpsertFileType(ctx, hash, ft)
 	if err != nil {
 		return err
 	}

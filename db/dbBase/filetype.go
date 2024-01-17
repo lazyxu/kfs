@@ -21,6 +21,23 @@ func InsertFileType(ctx context.Context, conn *sql.DB, db DbImpl, hash string, t
 	return
 }
 
+func UpsertFileType(ctx context.Context, conn *sql.DB, hash string, t dao.FileType) error {
+	_, err := conn.ExecContext(ctx, `
+	INSERT INTO _file_type (
+		hash,
+		Type,
+		SubType,
+		Extension
+	) VALUES (?, ?, ?, ?) ON CONFLICT(hash) DO UPDATE SET
+	    Type=?,
+	    SubType=?,
+	    Extension=?`, hash, t.Type, t.SubType, t.Extension, t.Type, t.SubType, t.Extension)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func ListExpectFileType(ctx context.Context, conn *sql.DB) (hashList []string, err error) {
 	rows, err := conn.QueryContext(ctx, `
 	SELECT hash FROM _file EXCEPT SELECT hash FROM _file_type;

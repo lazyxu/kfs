@@ -10,6 +10,10 @@ func (db *DB) InsertFileType(ctx context.Context, hash string, t dao.FileType) (
 	return dbBase.InsertFileType(ctx, db.db, db, hash, t)
 }
 
+func (db *DB) UpsertFileType(ctx context.Context, hash string, t dao.FileType) error {
+	return dbBase.UpsertFileType(ctx, db.db, hash, t)
+}
+
 func (db *DB) ListExpectFileType(ctx context.Context) (hashList []string, err error) {
 	return dbBase.ListExpectFileType(ctx, db.db)
 }

@@ -131,7 +131,7 @@ func insertVideoTime(ctx context.Context, kfsCore *core.KFS, hash string, m dao.
 	return nil
 }
 
-func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType dao.FileType) error {
+func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType *dao.FileType) error {
 	if fileType.Type == "image" {
 		//if fileType.SubType == matchers.TypeJpeg.MIME.Subtype {
 		//	GetJpegExifData(kfsCore, hash)
@@ -179,10 +179,9 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType da
 	} else if fileType.Type == "video" {
 		m, hw, err := GetVideoMetadata(kfsCore, hash)
 		if err != nil {
-			err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
-			// TODO: what if exist
-			if err != nil {
-				return err
+			// https://stackoverflow.com/questions/9412384/m4a-mp4-file-format-whats-the-difference-or-are-they-the-same
+			if fileType.SubType == "mp4" && err == NO_VALUE_FOR_KEY {
+				fileType.Type = "audio"
 			}
 			_, err = kfsCore.Db.InsertNullVideoMetadata(ctx, hash)
 			// TODO: what if exist
@@ -211,6 +210,8 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType da
 	return nil
 }
 
+var NO_VALUE_FOR_KEY = errors.New("no value for key")
+
 func getValueFor(s string, key string) (string, error) {
 	reg, err := regexp.Compile("\n" + key + "=([^\r\n]+)\r?\n")
 	if err != nil {
@@ -218,7 +219,7 @@ func getValueFor(s string, key string) (string, error) {
 	}
 	subMatch := reg.FindStringSubmatch(s)
 	if subMatch == nil {
-		return "", errors.New("no value for key")
+		return "", NO_VALUE_FOR_KEY
 	}
 	return subMatch[1], nil
 }

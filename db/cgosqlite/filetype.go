@@ -12,6 +12,12 @@ func (db *DB) InsertFileType(ctx context.Context, hash string, t dao.FileType) (
 	return dbBase.InsertFileType(ctx, conn, db, hash, t)
 }
 
+func (db *DB) UpsertFileType(ctx context.Context, hash string, t dao.FileType) error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.UpsertFileType(ctx, conn, hash, t)
+}
+
 func (db *DB) ListExpectFileType(ctx context.Context) (hashList []string, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)

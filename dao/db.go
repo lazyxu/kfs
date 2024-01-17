@@ -99,6 +99,7 @@ type Database interface {
 	ListFile(ctx context.Context) (hashList []string, err error)
 
 	InsertFileType(ctx context.Context, hash string, t FileType) (exist bool, err error)
+	UpsertFileType(ctx context.Context, hash string, t FileType) error
 	ListExpectFileType(ctx context.Context) (hashList []string, err error)
 	ListFileHash(ctx context.Context) (hashList []string, err error)
 	GetFileType(ctx context.Context, hash string) (fileType FileType, err error)
