@@ -2,6 +2,7 @@ import { memo, useState } from "react";
 import { ScrollView, View } from "react-native";
 
 export default memo(({ renderItem, itemHeightList, dataList }) => {
+    const t0 = Date.now();
     const [curRect, setCurRect] = useState({ top: 0, bottom: 0 });
     const itemRects = [];
     for (let i = 0; i < itemHeightList.length; i++) {
@@ -31,7 +32,8 @@ export default memo(({ renderItem, itemHeightList, dataList }) => {
             inViewItems.push({ top: itemRects[i].top, key: i, elm: renderItem(dataList, i) });
         }
     }
-    // console.log("inView", itemRects, curRect, start, end, inViewItems);
+    console.log("inView", itemRects.length, start, end);
+    console.log("LongList.1", Date.now() - t0);
     return (
         <ScrollView style={{ height: "100%", width: "100%" }} scrollEventThrottle={0} onScroll={e => {
             setCurRect({

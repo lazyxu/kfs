@@ -7,7 +7,7 @@ import { Surface, Text } from "react-native-paper";
 export default function () {
     const navigation = window.kfsNavigation;
     let [drivers, setDrivers] = useState([]);
-    console.log("drivers", drivers);
+    // console.log("drivers", drivers);
     useEffect(() => {
         httpGet("/api/v1/listDCIMDriver").then(setDrivers);
     }, []);

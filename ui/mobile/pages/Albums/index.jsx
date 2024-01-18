@@ -16,8 +16,8 @@ export default function () {
     const navigation = window.kfsNavigation;
     let [mediaTypes, setMediaTypes] = useState();
     let [locations, setLocations] = useState();
-    console.log("mediaTypes", mediaTypes);
-    console.log("locations", locations);
+    // console.log("mediaTypes", mediaTypes);
+    // console.log("locations", locations);
     useEffect(() => {
         httpGet("/api/v1/listDCIMMediaType").then(setMediaTypes);
         httpGet("/api/v1/listDCIMLocation").then(setLocations);

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text, } from "react-native-paper";
 import LongList from "./LongList";
 import Thumbnail from "./Thumbnail";
 
 export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }) {
+    const t0 = Date.now();
     const navigation = window.kfsNavigation;
     const [widthThumbnail, setWidthThumbnail] = useState(0);
 
@@ -34,6 +36,7 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
             <View style={{ margin: 6 }}><Text style={{ fontSize: 16 }}>{data}</Text></View>
     }
 
+    console.log("LongListTest.1", Date.now() - t0);
     return <View
         style={{ flex: 1 }}
         onLayout={e => {

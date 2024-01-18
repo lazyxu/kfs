@@ -3,7 +3,8 @@
  A scrollable list with different item type
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Dimensions, Text, View } from "react-native";
+import { Dimensions, View } from "react-native";
+import { Text, } from "react-native-paper";
 import Thumbnail from "./Thumbnail";
 import { DataProvider, LayoutProvider, RecyclerListView } from "./recyclerlistview";
 
