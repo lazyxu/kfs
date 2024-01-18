@@ -1,6 +1,6 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useState } from "react";
-import ListTest from "./ListTest";
+import LongListTest from "./LongListTest";
 
 export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsPerLine }) {
     const [metadataTagList, setMetadataTagList] = useState([]);
@@ -21,6 +21,13 @@ export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsP
         let mtList = [];
         let lineList;
         const l = [];
+        // let backList = originlist;
+        // originlist = [];
+        // for (let i = 0; i < backList.length; i++) {
+        //     for (let j = 0; j < 100000; j++) {
+        //         originlist.push(backList[i]);
+        //     }
+        // }
         // originlist = originlist.slice(0, 100);
         for (let index = 0; index < originlist.length; index++) {
             const m = originlist[index];
@@ -55,6 +62,6 @@ export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsP
     }, []);
     return (
         // <ThumbnailList metadataTagList={metadataTagList} list={list} refresh={listDCIMMetadataTime ? refresh : undefined} elementsPerLine={elementsPerLine} />
-        <ListTest metadataTagList={metadataTagList} list={list} refresh={listDCIMMetadataTime ? refresh : undefined} elementsPerLine={elementsPerLine} />
+        <LongListTest metadataTagList={metadataTagList} list={list} refresh={listDCIMMetadataTime ? refresh : undefined} elementsPerLine={elementsPerLine} />
     );
 }
