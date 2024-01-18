@@ -1,6 +1,5 @@
 import ImgCancelable from '@kfs/common/components/ImgCancelable';
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { useInView } from "react-intersection-observer";
 import { Image, Pressable, View } from 'react-native';
 import { Text } from 'react-native-paper';
 
@@ -18,11 +17,10 @@ function formatDuration(seconds) {
     return "0:" + (s < 10 ? "0" + s : s);
 }
 
-export default function ({ width, navigation, list, index }) {
-    const { ref, inView } = useInView({ threshold: 0 });
+export default function ({ width, navigation, inView, list, index }) {
     const src = `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${list[index].hash}`;
     return (
-        <Pressable ref={ref} onPress={() => navigation.navigate("Viewer", { list, index })}>
+        <Pressable onPress={() => navigation.navigate("Viewer", { list, index })}>
             <ImgCancelable inView={inView}
                 src={src}
                 renderImg={(url) => <Image style={{

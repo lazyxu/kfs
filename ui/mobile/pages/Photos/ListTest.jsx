@@ -2,7 +2,7 @@
  Use this component inside your React Native Application.
  A scrollable list with different item type
  */
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Dimensions, Text, View } from "react-native";
 import Thumbnail from "./Thumbnail";
 import { DataProvider, LayoutProvider, RecyclerListView } from "./recyclerlistview";
@@ -37,10 +37,19 @@ const provoder = new DataProvider((r1, r2) => {
     return r1 !== r2;
 })
 
+const useGetState = (initiateState) => {
+    const [state, setState] = useState(initiateState);
+    const stateRef = useRef(state);
+    stateRef.current = state;
+    const getState = useCallback(() => stateRef.current, []);
+    return [state, setState, getState];
+};
+
 export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }) {
     const navigation = window.kfsNavigation;
     let { width } = Dimensions.get("window");
     const [widthThumbnail, setWidthThumbnail] = useState(0);
+    const [inViewIndexs, setInViewIndexs, getInViewIndexs] = useGetState([]);
 
     //Create the data provider and provide method which takes in two rows of data and return if those two are different or not.
     //THIS IS VERY IMPORTANT, FORGET PERFORMANCE IF THIS IS MESSED UP
@@ -50,7 +59,7 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
         setDataProvider(provoder.cloneWithRows(metadataTagList.length === 0 ? ["无数据"] : metadataTagList));
     }, [metadataTagList]);
 
-    console.log(dataProvider, _generateArray(300), metadataTagList)
+    // console.log(dataProvider, _generateArray(300), metadataTagList)
     //Create the layout provider
     //First method: Given an index return the type of item e.g ListItemType1, ListItemType2 in case you have variety of items in your list/grid
     //Second: Given a type and object set the exact height and width for that type on given object, if you're using non deterministic rendering provide close estimates
@@ -68,13 +77,16 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
                 dim.height = widthThumbnail;
             } else {
                 dim.width = width;
-                dim.height = 16*2;
+                dim.height = 16 * 2;
             }
         }
     );
 
+
     //Given type and data return the view component
-    const _rowRenderer = (type, data) => {
+    const rowRenderer = (type, data, index) => {
+        const inView = inViewIndexs.includes(index);
+        console.log(type, data, index, inViewIndexs, inView);
         return typeof data === 'object' ?
             <View style={{
                 display: "flex",
@@ -84,11 +96,16 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
                 alignContent: "flex-start"
             }}>
                 {data.map(({ hash, index }) =>
-                    <Thumbnail key={index} width={widthThumbnail} navigation={navigation} list={list} index={index} />
+                    <Thumbnail key={index} width={widthThumbnail} navigation={navigation} list={list} index={index} inView={inView} />
                 )}
             </View> :
             <View style={{ margin: 6 }}><Text style={{ fontSize: 16 }}>{data}</Text></View>
     }
+    const onVisibleIndicesChanged = (all, now, notNow) => {
+        setInViewIndexs(all);
+        console.log("all,now, notNow", all, now, notNow);
+    }
+    console.log("inViewIndexs", inViewIndexs);
 
     return <View
         style={{ flex: 1 }}
@@ -104,7 +121,9 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
         <RecyclerListView
             layoutProvider={_layoutProvider}
             dataProvider={dataProvider}
-            rowRenderer={_rowRenderer}
+            rowRenderer={rowRenderer}
+            // extendedState={inViewIndexs}
+            onVisibleIndicesChanged={onVisibleIndicesChanged}
         />
     </View>;
 }
