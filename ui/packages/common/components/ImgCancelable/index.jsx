@@ -8,16 +8,22 @@ const useGetState = (initiateState) => {
     return [state, setState, getState];
 };
 
-export default ({ isNative, src, inView, renderImg, renderSkeleton }) => {
-    const [url, setUrl] = useState();
+export default ({ isNative, src, inView = true, renderImg, renderSkeleton }) => {
+    const [url, setUrl, getUrl] = useGetState();
     const [loaded, setLoaded, getLoaded] = useGetState(0);
     const controller = useRef(new AbortController());
+    useEffect(() => {
+        return () => {
+            // console.log("unmount", src);
+            controller.current.abort();
+        }
+    }, []);
     useEffect(() => {
         const l = getLoaded();
         // console.log(src, inView, l);
         if (inView && l === 0) {
             setLoaded(1);
-            // console.log(src, "fetch");
+            // console.log("mount", src);
             fetch(src, {
                 method: 'get',
                 signal: controller.current.signal,
