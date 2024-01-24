@@ -8,7 +8,7 @@ const useGetState = (initiateState) => {
     return [state, setState, getState];
 };
 
-export default ({ isNative, src, inView = true, renderImg, renderSkeleton }) => {
+export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoaded }) => {
     const [url, setUrl, getUrl] = useGetState();
     const [loaded, setLoaded, getLoaded] = useGetState(0);
     const controller = useRef(new AbortController());
@@ -41,6 +41,7 @@ export default ({ isNative, src, inView = true, renderImg, renderSkeleton }) => 
                 } else {
                     setUrl(URL.createObjectURL(blob));
                 }
+                onLoaded?.();
             });
         }
         if (!inView && l === 1) {

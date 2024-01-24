@@ -17,12 +17,12 @@ function formatDuration(seconds) {
     return "0:" + (s < 10 ? "0" + s : s);
 }
 
-export default function ({ width, navigation, inView, list, index }) {
+export default function ({ width, navigation, list, index, onLoaded }) {
     const src = `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${list[index].hash}`;
     return (
         <Pressable onPress={() => navigation.navigate("Viewer", { list, index })}>
-            <ImgCancelable inView={inView}
-                src={src}
+            <ImgCancelable
+                src={src} onLoaded={onLoaded}
                 renderImg={(url) => <Image style={{
                     width: width,
                     height: width,
