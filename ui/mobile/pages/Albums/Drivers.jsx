@@ -1,7 +1,7 @@
 import { httpGet } from '@kfs/common/api/webServer';
 import { getSysConfig } from '@kfs/common/hox/sysConfig';
 import { useEffect, useState } from "react";
-import { Image, Pressable, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
 import { Surface, Text } from "react-native-paper";
 
 export default function () {
@@ -12,9 +12,8 @@ export default function () {
         httpGet("/api/v1/listDCIMDriver").then(setDrivers);
     }, []);
     return (
-        <View style={{
+        <ScrollView horizontal={true} contentContainerStyle={{
             flexDirection: 'row',
-            overflow: "scroll",
         }}>
             {drivers.map(driver => (
                 <View key={driver.name} style={{
@@ -37,6 +36,6 @@ export default function () {
                     </Pressable>
                 </View>
             ))}
-        </View>
+        </ScrollView>
     );
 }

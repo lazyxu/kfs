@@ -1,6 +1,6 @@
 import { httpGet } from "@kfs/common/api/webServer";
 import { useEffect, useState } from "react";
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Appbar, Button, SegmentedButtons, Text } from 'react-native-paper';
 import { useCheckedSuffix, useCheckedType } from "../../hox/checked";
 import ThumbnailListAll from "../Photos/ThumbnailListAll";
@@ -58,7 +58,7 @@ export default function () {
                     },
                 ]}
             />
-            {value === "filter" && <View style={{ flex: 1, overflowY: "scroll" }}>
+            {value === "filter" && <ScrollView style={{ flex: 1 }}>
                 <Button contentStyle={contentStyle} labelStyle={labelStyle} icon="calendar-search" disabled={true}>
                     时间
                 </Button>
@@ -83,7 +83,7 @@ export default function () {
                     <Text>文件后缀</Text>
                     <Text>{Object.keys(checkedSuffix).length > 0 && `${Object.keys(checkedSuffix).length} 个条件`}</Text>
                 </Button>
-            </View>}
+            </ScrollView>}
             {value === "search" && (list ?
                 <ThumbnailListAll metadataList={list} /> :
                 <View style={{

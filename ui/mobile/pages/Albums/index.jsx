@@ -1,6 +1,6 @@
 import { httpGet } from '@kfs/common/api/webServer';
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { Appbar, Button, Divider, Text } from "react-native-paper";
 import Drivers from './Drivers';
 
@@ -28,7 +28,7 @@ export default function () {
                 <Appbar.Content title="相册" />
             </Appbar.Header>
 
-            <View style={{ flex: 1, overflowY: "scroll" }}>
+            <ScrollView style={{ flex: 1 }}>
                 <Divider />
                 <Text style={{ margin: 12, fontSize: 24, fontWeight: 400 }}>我的云盘</Text>
                 <Drivers />
@@ -92,7 +92,7 @@ export default function () {
                 <Button contentStyle={contentStyle} icon="pound" disabled={true}>
                     重复项目
                 </Button>
-            </View>
+            </ScrollView>
         </View>
     );
 }

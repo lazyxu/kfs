@@ -1,6 +1,6 @@
 import { httpGet } from '@kfs/common/api/webServer';
 import { useEffect, useState } from "react";
-import { View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Appbar, Surface } from 'react-native-paper';
 import { useCheckedSuffix } from '../../hox/checked';
 import CheckItem from './CheckItem';
@@ -42,7 +42,7 @@ export default function ({ navigation, route }) {
                 <Appbar.BackAction onPress={() => navigation.pop()} />
                 <Appbar.Content title="文件后缀" />
             </Appbar.Header>
-            <View style={{ flex: 1, overflowY: "scroll" }}>
+            <ScrollView style={{ flex: 1 }}>
                 {list ? list.map((item, i) => <ListItem key={i} item={item} />) :
                     <View style={{
                         alignItems: 'center',
@@ -50,7 +50,7 @@ export default function ({ navigation, route }) {
                     }}>
                         <Text >Loading...</Text>
                     </View>}
-            </View>
+            </ScrollView>
         </Surface>
     );
 };
