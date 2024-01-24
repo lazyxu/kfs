@@ -43,15 +43,9 @@ export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsP
             if (tag !== curTag) {
                 tag = curTag;
                 mtList.push(tag);
-                lineList = [{ index, hash: m.hash }];
-                mtList.push(lineList);
+                mtList.push({ index, hash: m.hash });
             } else {
-                if (lineList.length == elementsPerLine) {
-                    lineList = [{ index, hash: m.hash }];
-                    mtList.push(lineList);
-                } else {
-                    lineList.push({ index, hash: m.hash });
-                }
+                mtList.push({ index, hash: m.hash });
             }
         }
         setList(l);

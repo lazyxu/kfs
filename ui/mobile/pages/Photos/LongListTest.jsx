@@ -7,32 +7,23 @@ import Thumbnail from "./Thumbnail";
 export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }) {
     const t0 = Date.now();
     const navigation = window.kfsNavigation;
-    const [widthThumbnail, setWidthThumbnail] = useState(0);
-
-    const itemHeightList = [];
+    const [width, setWidth] = useState(0);
+    // console.log("metadataTagList", metadataTagList, width)
+    const elementWidth = (width - 1) / elementsPerLine;
+    const itemHeightWidthList = [];
     for (let i = 0; i < metadataTagList.length; i++) {
         const data = metadataTagList[i];
         if (typeof data === 'object') {
-            itemHeightList[i] = widthThumbnail;
+            itemHeightWidthList[i] = { height: elementWidth, width: elementWidth };
         } else {
-            itemHeightList[i] = 16 * 2;
+            itemHeightWidthList[i] = { height: 16 * 2, width: width };
         }
     }
 
-    const rowRenderer = (_, index) => {
+    const renderItem = function (_, index) {
         const data = metadataTagList[index];
         return typeof data === 'object' ?
-            <View style={{
-                display: "flex",
-                width: "100%",
-                flexDirection: 'row',
-                flexWrap: "wrap",
-                alignContent: "flex-start"
-            }}>
-                {data.map(({ hash, index }) =>
-                    <Thumbnail key={index} width={widthThumbnail} navigation={navigation} list={list} index={index} inView={true} />
-                )}
-            </View> :
+            <Thumbnail key={data.index} width={elementWidth} navigation={navigation} list={list} index={data.index} inView={true} /> :
             <View style={{ margin: 6 }}><Text style={{ fontSize: 16 }}>{data}</Text></View>
     }
 
@@ -42,14 +33,14 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
         onLayout={e => {
             const { layout } = e.nativeEvent;
             if (layout.width) {
-                const w = layout.width / elementsPerLine;
-                setWidthThumbnail(w);
+                setWidth(layout.width);
             }
         }}>
         <LongList
-            itemHeightList={itemHeightList}
+            itemHeightWidthList={itemHeightWidthList}
+            width={width}
             dataList={metadataTagList}
-            renderItem={rowRenderer}
+            renderItem={renderItem}
         />
     </View>;
 }
