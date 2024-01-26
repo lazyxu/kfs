@@ -1,0 +1,34 @@
+FROM centos:centos7
+
+RUN yum upgrade -y && yum update -y
+RUN yum install -y wget zip
+RUN yum install -y vim
+
+RUN wget https://dl.google.com/go/go1.21.6.linux-armv6l.tar.gz \
+    && tar -xf go1.21.6.linux-armv6l.tar.gz \
+    && mv go /root/lib/
+RUN echo -e "\n\
+export PATH=/root/lib/go/bin:$PATH\n\
+export GOPROXY=https://proxy.golang.com.cn,direct\n\
+export GOROOT=/root/lib/go\n\
+" >> ~/.bashrc
+
+# RUN curl https://hosts.gitcdn.top/hosts.txt >> /etc/hosts
+
+# RUN wget https://github.com/protocolbuffers/protobuf/releases/download/v25.2/protobuf-25.2.tar.gz \
+#     && tar -xf protobuf-25.2.tar.gz \
+#     && mv protobuf-25.2 /root/lib/
+# RUN echo -e "\n\
+# export PATH=/root/lib/protobuf-25.2/bin:$PATH\n\
+# " >> ~/.bashrc
+RUN yum install -y protobuf-c-compiler.armv7hl
+
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+
+RUN cd /root/code/kfs && ./scripts.sh build server
+
+#while creating a container this cmd will run & whiel creang docker image this will not run 
+CMD ["echo", "HelloWorld...! form my first docker image"]
+
+EXPOSE 1123

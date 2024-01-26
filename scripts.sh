@@ -93,6 +93,16 @@ case $1 in
 
   build)
     case $2 in
+      server:binary)
+        cd $root/cmd/kfs-server
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        if [[ $GOOS != '' && $GOARCH != '' ]]; then
+          CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
+        else
+          CGO_ENABLED=1 go build -o kfs-server
+        fi
+        ;;
+
       server)
         cd $root/ui/web
         yarn
