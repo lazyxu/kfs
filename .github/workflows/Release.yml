@@ -17,28 +17,27 @@ jobs:
             arch: amd64
           - os: linux
             arch: amd64
+          - os: linux
+            arch: arm64
+          - os: linux
+            arch: arm
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set up Go 1.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: ^1.19
+          go-version: ^1.21
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
       - name: Build
-        env:
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
         run: |
           bash scripts.sh build server
-          bash scripts.sh build cli
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+        # if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            cmd/kfs-cli/kfs-cli-${{ matrix.os }}-${{ matrix.arch }}
             cmd/kfs-server/kfs-server-${{ matrix.os }}-${{ matrix.arch }}
 
   Release-electron:
@@ -47,19 +46,16 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
-
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set up Go 1.x
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: ^1.19
+          go-version: ^1.21
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
       - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
-        with:
-          node-version: 16
+        uses: actions/setup-node@v4
       - name: Build
         env:
           GH_TOKEN: ${{ secrets.github_token }}
