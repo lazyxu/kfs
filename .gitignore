@@ -3,6 +3,7 @@
 *.db-journal
 tmp
 supervisord.*
+.kfs
 
 # IDE
 .vscode
