@@ -15,6 +15,7 @@ import (
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/list"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/metadata"
 
+	"github.com/adrium/goheif"
 	"github.com/disintegration/imaging"
 	"github.com/h2non/filetype/matchers"
 	"github.com/lazyxu/kfs/dao"
@@ -247,20 +248,27 @@ func apiImage(c echo.Context) error {
 	}
 	fileType := m.FileType
 	if fileType.Extension == matchers.TypeHeif.Extension {
-		src := kfsCore.S.GetFilePath(hash)
 		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".jpg")
-		f, err := os.Open(thumbnailFilePath)
-		if os.IsNotExist(err) {
-			err = ffmpeg_go.Input(src, ffmpeg_go.KwArgs{"noautorotate": ""}).
-				Output(thumbnailFilePath, ffmpeg_go.KwArgs{"qscale": "0"}).
-				OverWriteOutput().ErrorToStdOut().Run()
+		f, err2 := os.Open(thumbnailFilePath)
+		if os.IsNotExist(err2) {
+			rc, err := kfsCore.S.ReadWithSize(hash)
 			if err != nil {
 				return err
 			}
-			f, err = os.Open(thumbnailFilePath)
+			defer rc.Close()
+			img, err := goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
+			if err != nil {
+				return err
+			}
+			img = orientation(img, m.Exif)
+			err = imaging.Save(img, thumbnailFilePath)
+			if err != nil {
+				return err
+			}
+			f, err2 = os.Open(thumbnailFilePath)
 		}
-		if err != nil {
-			return err
+		if err2 != nil {
+			return err2
 		}
 		defer f.Close()
 		c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
@@ -393,23 +401,16 @@ func apiThumbnail(c echo.Context) error {
 			<-thumbnailTaskChan
 		}()
 		if fileType.Extension == matchers.TypeHeif.Extension {
-			originFilePath := filepath.Join(kfsCore.ThumbnailDir(), filename+".origin.jpg")
-			src := kfsCore.S.GetFilePath(hash)
-			err := ffmpeg_go.Input(src).
-				Output(originFilePath, ffmpeg_go.KwArgs{"vframes": 1}).
-				OverWriteOutput().ErrorToStdOut().Run()
+			rc, err := kfsCore.S.ReadWithSize(hash)
 			if err != nil {
 				return err
 			}
-			f, err := os.Open(originFilePath)
+			defer rc.Close()
+			img, err := goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
 			if err != nil {
 				return err
 			}
-			defer f.Close()
-			img, err := imaging.Decode(f)
-			if err != nil {
-				return err
-			}
+			img = orientation(img, m.Exif)
 			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
 			if err != nil {
 				return err

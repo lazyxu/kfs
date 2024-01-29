@@ -16,6 +16,7 @@ require (
 	github.com/Xhofe/rateg v0.0.0-20230728072201-251a4e1adad4 // indirect
 	github.com/Xhofe/wopan-sdk-go v0.1.1 // indirect
 	github.com/abbot/go-http-auth v0.4.0 // indirect
+	github.com/adrium/goheif v0.0.0-20230113233934-ca402e77a786 // indirect
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.7+incompatible // indirect
 	github.com/andreburgaud/crypt2go v1.2.0 // indirect
