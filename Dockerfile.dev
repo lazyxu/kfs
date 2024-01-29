@@ -45,12 +45,12 @@ chown -R root:root ~/.ssh\n\
 
 # ssh
 RUN apt-get install -y supervisor openssh-server
-RUN echo "root:root" | chpasswd
-RUN sed -i "s/#PermitRootLogin no/PermitRootLogin yes/g" /etc/ssh/sshd_config
+RUN /usr/bin/echo "root:root" | chpasswd
+RUN /usr/bin/echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
 RUN mkdir /var/run/sshd
 EXPOSE 22
 
-RUN echo -e "\n\
+RUN /usr/bin/echo -e "\n\
 [supervisord]\n\
 \n\
 nodaemon=true\n\

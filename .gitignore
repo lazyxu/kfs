@@ -2,6 +2,7 @@
 *.db
 *.db-journal
 tmp
+supervisord.*
 
 # IDE
 .vscode
