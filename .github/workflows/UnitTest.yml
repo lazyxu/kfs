@@ -1,8 +1,8 @@
 name: UnitTest
 
-# on:
+on:
 #   push:
-#   pull_request:
+  pull_request:
 
 jobs:
 

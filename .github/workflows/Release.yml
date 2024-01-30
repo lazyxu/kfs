@@ -2,20 +2,12 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*.*.*"
+    # tags:
+    #   - "v*.*.*"
 
 jobs:
   Release-cli:
-    strategy:
-      matrix:
-        include:
-          - os: [windows-latest, self-hosted, x64]
-          - os: [macos-latest, self-hosted, x64]
-          - os: [ubuntu-latest, self-hosted, x64]
-          - os: [ubuntu-latest, self-hosted, ARM64]
-          - os: [ubuntu-latest, self-hosted, ARM32]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,15 +17,30 @@ jobs:
           go-version: ^1.21
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
-      - name: Build
-        run: |
-          bash scripts.sh build server
+      # - name: Build server:except-go
+      #   run: |
+      #     bash scripts.sh build server:except-go
+      - name: Build go files
+        uses: crazy-max/ghaction-xgo@v3
+        with:
+          xgo_version: latest
+          go_version: 1.21
+          pkg: /home/runner/work/kfs/cmd/kfs-server
+          dest: build
+          prefix: kfs-server
+          targets: windows/amd64,linux/amd64,linux/arm64,linux/arm,darwin/arm64,darwin/amd64
+          v: true
+          x: true
+          race: false
+          ldflags: -s -w
+          buildmode: default
+          trimpath: true
       - name: Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            cmd/kfs-server/kfs-server-${{ matrix.os }}-${{ matrix.arch }}
+            cmd/kfs-server/kfs-server*
 
   Release-electron:
     runs-on: ${{ matrix.os }}
