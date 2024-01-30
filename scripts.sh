@@ -4,6 +4,8 @@ set -e
 
 root=$(cd "$(dirname "$0")"; pwd)
 
+echo "root: "$root
+
 is_command_exist () {
   which $1 >/dev/null 2>&1
 }
@@ -120,6 +122,22 @@ case $1 in
         fi
         echo "GOOS=$GOOS GOARCH=$GOARCH"
         CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
+        ;;
+
+      server:except-go)
+        cd $root/ui/web
+        yarn
+        yarn build
+        cd $root/cmd/kfs-server
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        if [[ $GOOS == '' ]]; then
+          GOOS=`go env GOOS`
+        fi
+        if [[ $GOARCH == '' ]]; then
+          GOARCH=`go env GOARCH`
+        fi
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        # CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
         ;;
 
       cli)
