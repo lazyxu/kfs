@@ -110,7 +110,7 @@ case $1 in
 
       server)
         cd $root/ui/web
-        yarn
+        yarn install --check-files --network-timeout 1000000
         yarn build
         cd $root/cmd/kfs-server
         echo "GOOS=$GOOS GOARCH=$GOARCH"
