@@ -2,12 +2,25 @@ name: Release
 
 on:
   push:
-    # tags:
-    #   - "v*.*.*"
+    tags:
+      - "v*.*.*"
 
 jobs:
   Release-cli:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: darwin
+            arch: amd64
+          - os: windows
+            arch: amd64
+          - os: linux
+            arch: amd64
+          - os: linux
+            arch: arm64
+          - os: linux
+            arch: arm
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,17 +30,23 @@ jobs:
           go-version: ^1.21
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
+      - name: Build
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          bash scripts.sh build server
       # - name: Build server:except-go
       #   run: |
       #     bash scripts.sh build server:except-go
-      - name: Generate build files
-        uses: thatisuday/go-cross-build@v1
-        with:
-            platforms: 'windows/amd64,linux/amd64,linux/arm64,linux/arm,darwin/arm64,darwin/amd64'
-            package: 'cmd/kfs-server'
-            name: 'kfs-server'
-            compress: 'true'
-            dest: 'cmd/kfs-server'
+      # - name: Generate build files
+      #   uses: thatisuday/go-cross-build@v1
+      #   with:
+      #       platforms: 'windows/amd64,linux/amd64,linux/arm64,linux/arm,darwin/arm64,darwin/amd64'
+      #       package: 'cmd/kfs-server'
+      #       name: 'kfs-server'
+      #       compress: 'true'
+      #       dest: 'cmd/kfs-server'
       # - name: Build go files
       #   uses: crazy-max/ghaction-xgo@v3
       #   with:
