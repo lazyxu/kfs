@@ -9,7 +9,7 @@ export default function () {
     const navigation = window.kfsNavigation;
     let [mediaTypes, setMediaTypes] = useState();
     let [locations, setLocations] = useState();
-    const theme = useTheme();
+    const { colors } = useTheme();
     // console.log("mediaTypes", mediaTypes);
     // console.log("locations", locations);
     useEffect(() => {
@@ -30,8 +30,8 @@ export default function () {
                 <Divider />
                 <Text style={{ margin: 12, fontSize: 24, fontWeight: 400 }}>地点</Text>
                 <Button icon="map-outline" onPress={() => navigation.navigate("AlbumsLocation", { list: locations })} >
-                    <Text theme={theme}>地点</Text>
-                    <Text>{locations ? locations.length : "?"}</Text>
+                    <Text style={{ color: colors.primary }}>地点</Text>
+                    <Text style={{ color: colors.onSurfaceDisabled }}>{locations ? locations.length : "?"}</Text>
                 </Button>
 
                 <Divider />
@@ -50,12 +50,12 @@ export default function () {
                 <Divider />
                 <Text style={{ margin: 12, fontSize: 24, fontWeight: 400 }}>媒体类型</Text>
                 <Button icon="video-outline" onPress={() => navigation.navigate("AlbumsVideo", { list: mediaTypes.video })}>
-                    <Text>视频</Text>
-                    <Text>{mediaTypes ? mediaTypes.video.length : "?"}</Text>
+                    <Text style={{ color: colors.primary }}>视频</Text>
+                    <Text style={{ color: colors.onSurfaceDisabled }}>{mediaTypes ? mediaTypes.video.length : "?"}</Text>
                 </Button>
                 <Button icon="account-box-outline" onPress={() => navigation.navigate("AlbumsSelfie", { list: mediaTypes.selfie })}>
-                    <Text>自拍</Text>
-                    <Text>{mediaTypes ? mediaTypes.selfie.length : "?"}</Text>
+                    <Text style={{ color: colors.primary }}>自拍</Text>
+                    <Text style={{ color: colors.onSurfaceDisabled }}>{mediaTypes ? mediaTypes.selfie.length : "?"}</Text>
                 </Button>
                 <Button icon="flower" disabled={true}>
                     实况

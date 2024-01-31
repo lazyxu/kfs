@@ -2,11 +2,12 @@ import { httpGet } from '@kfs/common/api/webServer';
 import { getSysConfig } from '@kfs/common/hox/sysConfig';
 import { useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, View } from 'react-native';
-import { Surface, Text } from "react-native-paper";
+import { Surface, Text, useTheme } from "react-native-paper";
 
 export default function () {
     const navigation = window.kfsNavigation;
     let [drivers, setDrivers] = useState([]);
+    const { colors } = useTheme();
     // console.log("drivers", drivers);
     useEffect(() => {
         httpGet("/api/v1/listDCIMDriver").then(setDrivers);
@@ -20,7 +21,7 @@ export default function () {
                     margin: 10,
                     marginRight: 0,
                 }}>
-                <Pressable onPress={() => navigation.navigate("AlbumsDriver", { driver })}>
+                    <Pressable onPress={() => navigation.navigate("AlbumsDriver", { driver })} style={{ width: 128 }}>
                         {driver.metadataList.length > 0 ? <Image style={{
                             height: 128,
                             width: 128,
@@ -32,7 +33,7 @@ export default function () {
                                 borderRadius: 10,
                             }} />}
                         <Text>{driver.name}</Text>
-                        <Text>{driver.metadataList.length}</Text>
+                        <Text style={{ color: colors.onSurfaceDisabled }}>{driver.metadataList.length}</Text>
                     </Pressable>
                 </View>
             ))}
