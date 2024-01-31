@@ -17,12 +17,9 @@ export default function ({ metadataList, listDCIMMetadataTime }) {
             {value === "日" && <ThumbnailListDay metadataList={metadataList} listDCIMMetadataTime={listDCIMMetadataTime} />}
             <View style={{
                 position: "absolute", bottom: 16, display: "flex", alignItems: "center", width: "100%", flexDirection: "row", justifyContent: "center",
-                "div:first-child": {
-                    borderRadius: 0,
-                }
             }} >
                 {list.map((name, i) => (
-                    <Button onPress={() => setValue(name)}
+                    <Button key={i} onPress={() => setValue(name)}
                         mode={value === name ? "contained" : "elevated"}
                         style={i === 0 ? { borderTopRightRadius: 0, borderBottomRightRadius: 0 } :
                             i === list.length - 1 ? { borderTopLeftRadius: 0, borderBottomLeftRadius: 0 } :

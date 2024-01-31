@@ -50,7 +50,7 @@ export default memo(({ renderItem, dataList, itemHeightWidthList, width }) => {
     if (end == -1) {
         end = _itemRects.length - 1;
     }
-    const inViewItems = { ...cacheIndexes.current };
+    const inViewItems = {};
     if (_itemRects.length !== 0) {
         // console.log("cacheIndexes", cacheIndexes.current);
         for (const i of cacheIndexes.current) {
@@ -62,14 +62,15 @@ export default memo(({ renderItem, dataList, itemHeightWidthList, width }) => {
             }
             inViewItems[i] = {
                 top: _itemRects[i].top, left: _itemRects[i].left, key: i, elm: renderItem(dataList, i, () => {
-                    console.log("cacheIndex", i);
+                    // console.log("cacheIndex", i);
                     cacheIndexes.current.push(i);
                 })
             };
         }
     }
     console.log("inView", _itemRects.length, _curRect, start, end);
-    // console.log("inViewItems", inViewItems)
+    console.log("cacheIndexes", cacheIndexes.current.length);
+    console.log("inViewItems", inViewItems.length);
     console.log("LongList.1", Date.now() - t0);
     return (
         <ScrollView style={{ height: "100%", width: "100%" }} scrollEventThrottle={0} contentInsetAdjustmentBehavior="never"
