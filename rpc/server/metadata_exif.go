@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/adrium/goheif"
 	"github.com/dsoprea/go-exif/v3"
 	exifcommon "github.com/dsoprea/go-exif/v3/common"
 	exifundefined "github.com/dsoprea/go-exif/v3/undefined"
@@ -55,7 +56,15 @@ func getImageHeightWidth(kfsCore *core.KFS, hash string) (hw dao.HeightWidth, er
 	defer rc.Close()
 	conf, _, err := image.DecodeConfig(rc)
 	if err != nil {
-		return
+		var img image.Image
+		img, err = goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
+		if err != nil {
+			return
+		}
+		return dao.HeightWidth{
+			Width:  uint64(img.Bounds().Dx()),
+			Height: uint64(img.Bounds().Dy()),
+		}, nil
 	}
 	return dao.HeightWidth{
 		Width:  uint64(conf.Width),

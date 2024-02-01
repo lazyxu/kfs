@@ -352,7 +352,7 @@ func orientation(img image.Image, exif *dao.Exif) image.Image {
 	return img
 }
 
-var thumbnailTaskChan = make(chan struct{}, 5)
+var thumbnailTaskChan = make(chan struct{}, 1)
 
 func apiThumbnail(c echo.Context) error {
 	hash := c.QueryParam("hash")
