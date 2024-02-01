@@ -98,14 +98,11 @@ case $1 in
       server:binary)
         cd $root/cmd/kfs-server
         echo "GOOS=$GOOS GOARCH=$GOARCH"
-        if [[ $GOOS == '' ]]; then
-          GOOS=`go env GOOS`
+        if [[ $GOOS != '' && $GOARCH != '' ]]; then
+          GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
+        else
+          go build -o kfs-server
         fi
-        if [[ $GOARCH == '' ]]; then
-          GOARCH=`go env GOARCH`
-        fi
-        echo "GOOS=$GOOS GOARCH=$GOARCH"
-        CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
         ;;
 
       server)
@@ -114,14 +111,11 @@ case $1 in
         yarn build
         cd $root/cmd/kfs-server
         echo "GOOS=$GOOS GOARCH=$GOARCH"
-        if [[ $GOOS == '' ]]; then
-          GOOS=`go env GOOS`
+        if [[ $GOOS != '' && $GOARCH != '' ]]; then
+          GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
+        else
+          go build -o kfs-server
         fi
-        if [[ $GOARCH == '' ]]; then
-          GOARCH=`go env GOARCH`
-        fi
-        echo "GOOS=$GOOS GOARCH=$GOARCH"
-        CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
         ;;
 
       server:except-go)
@@ -130,27 +124,17 @@ case $1 in
         yarn build
         cd $root/cmd/kfs-server
         echo "GOOS=$GOOS GOARCH=$GOARCH"
-        if [[ $GOOS == '' ]]; then
-          GOOS=`go env GOOS`
-        fi
-        if [[ $GOARCH == '' ]]; then
-          GOARCH=`go env GOARCH`
-        fi
-        echo "GOOS=$GOOS GOARCH=$GOARCH"
         # CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-server-$GOOS-$GOARCH
         ;;
 
       cli)
         cd $root/cmd/kfs-cli
         echo "GOOS=$GOOS GOARCH=$GOARCH"
-        if [[ $GOOS == '' ]]; then
-          GOOS=`go env GOOS`
+        if [[ $GOOS != '' && $GOARCH != '' ]]; then
+          GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-cli-$GOOS-$GOARCH
+        else
+          go build -o kfs-cli
         fi
-        if [[ $GOARCH == '' ]]; then
-          GOARCH=`go env GOARCH`
-        fi
-        echo "GOOS=$GOOS GOARCH=$GOARCH"
-        CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-cli-$GOOS-$GOARCH
         ;;
 
       electron)

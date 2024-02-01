@@ -434,7 +434,7 @@ func apiThumbnail(c echo.Context) error {
 			originFilePath := filepath.Join(kfsCore.ThumbnailDir(), filename+".origin.jpg")
 			src := kfsCore.S.GetFilePath(hash)
 			err := ffmpeg_go.Input(src).
-				Output(originFilePath, ffmpeg_go.KwArgs{"vframes": 1}).
+				Output(originFilePath, ffmpeg_go.KwArgs{"frames:v": 1, "loglevel": "error"}).
 				OverWriteOutput().ErrorToStdOut().Run()
 			if err != nil {
 				return err
