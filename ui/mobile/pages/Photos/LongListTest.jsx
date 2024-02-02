@@ -13,7 +13,7 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
     const itemHeightWidthList = [];
     let elementWidth = 0;
     if (width !== 0) {
-        elementWidth = (width - 1) / elementsPerLine;
+        elementWidth = width / elementsPerLine;
         for (let i = 0; i < metadataTagList.length; i++) {
             const obj = metadataTagList[i];
             if (obj.hash) {
@@ -35,6 +35,7 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
+            justifyContent: "space-between",
         }}>
             <Text style={{ color: colors.primary, fontWeight: 500, lineHeight: 20 }}>{obj.tag}</Text>
             <Text style={{ color: colors.onSurfaceDisabled, marginLeft: 4, lineHeight: 20 }}>{obj.end - obj.start + 1}</Text>
@@ -44,12 +45,7 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
     console.log("LongListTest.1", Date.now() - t0);
     return <View
         style={{ flex: 1 }}
-        onLayout={e => {
-            const { layout } = e.nativeEvent;
-            if (layout.width) {
-                setWidth(layout.width);
-            }
-        }}>
+        >
         {metadataTagList.length === 0 && <View style={{
             height: "100%", width: "100%",
             display: "flex",
@@ -61,7 +57,7 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
         </View>}
         <LongList
             itemHeightWidthList={itemHeightWidthList}
-            width={width}
+            onWidth={setWidth}
             renderItem={renderItem}
         />
     </View>;
