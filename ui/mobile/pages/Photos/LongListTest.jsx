@@ -1,35 +1,44 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { Text, } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import LongList from "./LongList";
 import Thumbnail from "./Thumbnail";
 
 export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }) {
+    const { colors } = useTheme();
     const t0 = Date.now();
     const navigation = window.kfsNavigation;
     const [width, setWidth] = useState(0);
-    // console.log("metadataTagList", metadataTagList, width)
+    console.log("metadataTagList", metadataTagList, width)
     const itemHeightWidthList = [];
     let elementWidth = 0;
     if (width !== 0) {
         elementWidth = (width - 1) / elementsPerLine;
         for (let i = 0; i < metadataTagList.length; i++) {
-            const data = metadataTagList[i];
-            if (typeof data === 'object') {
+            const obj = metadataTagList[i];
+            if (obj.hash) {
                 itemHeightWidthList[i] = { height: elementWidth, width: elementWidth };
             } else {
-                itemHeightWidthList[i] = { height: 16 * 2, width: width };
+                itemHeightWidthList[i] = { height: 20, width: width };
             }
         }
     }
 
-    const renderItem = function (_, index, cacheItem) {
-        const data = metadataTagList[index];
-        if (typeof data !== 'object') {
-            cacheItem?.();
-            return <View style={{ margin: 6 }}><Text style={{ fontSize: 16 }}>{data}</Text></View>
+    const renderItem = function (index, cacheItem) {
+        const obj = metadataTagList[index];
+        if (obj.hash) {
+            return <Thumbnail key={obj.index} width={elementWidth} navigation={navigation} list={list} index={obj.index} inView={true} onLoaded={cacheItem} />;
         }
-        return <Thumbnail key={data.index} width={elementWidth} navigation={navigation} list={list} index={data.index} inView={true} onLoaded={cacheItem} />
+        cacheItem?.();
+        return <View style={{
+            height: "100%", width: "100%",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+        }}>
+            <Text style={{ color: colors.primary, fontWeight: 500, lineHeight: 20 }}>{obj.tag}</Text>
+            <Text style={{ color: colors.onSurfaceDisabled, marginLeft: 4, lineHeight: 20 }}>{obj.end - obj.start + 1}</Text>
+        </View>;
     }
 
     console.log("LongListTest.1", Date.now() - t0);
@@ -41,10 +50,18 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
                 setWidth(layout.width);
             }
         }}>
+        {metadataTagList.length === 0 && <View style={{
+            height: "100%", width: "100%",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: 'center'
+        }}>
+            <Text style={{ color: colors.primary, fontWeight: 500, lineHeight: 20 }}>空空如也</Text>
+        </View>}
         <LongList
             itemHeightWidthList={itemHeightWidthList}
             width={width}
-            dataList={metadataTagList}
             renderItem={renderItem}
         />
     </View>;

@@ -9,7 +9,7 @@ const useGetState = (initiateState) => {
     return [state, setState, getState];
 };
 
-export default memo(({ renderItem, dataList, itemHeightWidthList, width }) => {
+export default memo(({ renderItem, itemHeightWidthList, width }) => {
     const t0 = Date.now();
     const [curRect, setCurRect, getCurRect] = useGetState({ top: 0, bottom: 0 });
     const [itemRects, setItemRects, getItemRects] = useGetState([]);
@@ -54,14 +54,14 @@ export default memo(({ renderItem, dataList, itemHeightWidthList, width }) => {
     if (_itemRects.length !== 0) {
         // console.log("cacheIndexes", cacheIndexes.current);
         for (const i of cacheIndexes.current) {
-            inViewItems[i] = { top: _itemRects[i].top, left: _itemRects[i].left, key: i, elm: renderItem(dataList, i) };
+            inViewItems[i] = { top: _itemRects[i].top, left: _itemRects[i].left, key: i, elm: renderItem(i) };
         }
         for (let i = start; i <= end; i++) {
             if (inViewItems.hasOwnProperty(i)) {
                 continue;
             }
             inViewItems[i] = {
-                top: _itemRects[i].top, left: _itemRects[i].left, key: i, elm: renderItem(dataList, i, () => {
+                top: _itemRects[i].top, left: _itemRects[i].left, key: i, elm: renderItem(i, () => {
                     // console.log("cacheIndex", i);
                     cacheIndexes.current.push(i);
                 })

@@ -17,18 +17,9 @@ export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsP
         } else {
             originlist = await listDCIMMetadataTime();
         }
-        let tag = "";
         let mtList = [];
-        let lineList;
         const l = [];
-        // let backList = originlist;
-        // originlist = [];
-        // for (let i = 0; i < backList.length; i++) {
-        //     for (let j = 0; j < 100000; j++) {
-        //         originlist.push(backList[i]);
-        //     }
-        // }
-        // originlist = originlist.slice(0, 100);
+        let tagObj = {};
         for (let index = 0; index < originlist.length; index++) {
             const m = originlist[index];
             l.push({
@@ -39,15 +30,17 @@ export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsP
                 height: m.heightWidth.height,
                 width: m.heightWidth.width,
             });
-            const curTag = getTag(m);
-            if (tag !== curTag) {
-                tag = curTag;
-                mtList.push(tag);
+            const tag = getTag(m);
+            if (tagObj.tag !== tag) {
+                tagObj.end = index - 1;
+                tagObj = { tag, start: index };
+                mtList.push(tagObj);
                 mtList.push({ index, hash: m.hash });
             } else {
                 mtList.push({ index, hash: m.hash });
             }
         }
+        tagObj.end = originlist.length - 1;
         setList(l);
         setMetadataTagList(mtList);
     }
