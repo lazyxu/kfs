@@ -42,6 +42,10 @@ export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoa
                     setUrl(URL.createObjectURL(blob));
                 }
                 onLoaded?.();
+            }).catch(e => {
+                if (e.name !== 'AbortError') {
+                    window.noteError("下载文件缩略图失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+                }
             });
         }
         if (!inView && l === 1) {
