@@ -43,13 +43,14 @@ export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoa
                 }
                 onLoaded?.();
             }).catch(e => {
-                if (e.name !== 'AbortError') {
+                if (!controller.current.signal.aborted) {
+                    console.log("下载文件缩略图失败", src);
                     window.noteError("下载文件缩略图失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
                 }
             });
         }
         if (!inView && l === 1) {
-            // console.log(src, "abort", controller.current);
+            console.log("abort", src);
             controller.current.abort();
             controller.current = new AbortController();
             setLoaded(0);

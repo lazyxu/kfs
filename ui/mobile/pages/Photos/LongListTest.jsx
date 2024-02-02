@@ -9,7 +9,7 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
     const t0 = Date.now();
     const navigation = window.kfsNavigation;
     const [width, setWidth] = useState(0);
-    console.log("metadataTagList", metadataTagList, width)
+    // console.log("metadataTagList", metadataTagList, width)
     const itemHeightWidthList = [];
     let elementWidth = 0;
     if (width !== 0) {
