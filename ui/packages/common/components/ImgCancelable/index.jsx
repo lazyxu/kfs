@@ -8,18 +8,19 @@ const useGetState = (initiateState) => {
     return [state, setState, getState];
 };
 
-export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoaded }) => {
+export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoaded, tag }) => {
     const [url, setUrl, getUrl] = useGetState();
     const [loaded, setLoaded, getLoaded] = useGetState(0);
     const controller = useRef(new AbortController());
     useEffect(() => {
         return () => {
-            // console.log("unmount", src);
+            console.log("ImgCancelable.unmount", tag);
             controller.current.abort();
         }
     }, []);
     useEffect(() => {
         const l = getLoaded();
+        console.log("ImgCancelable.update", inView, l, tag);
         // console.log(src, inView, l);
         if (inView && l === 0) {
             setLoaded(1);

@@ -31,6 +31,7 @@ export default function ({ width, navigation, list, index, onLoaded }) {
                     width: width,
                     height: width,
                 }} />}
+                tag={"mobile."+index}
             />
             {list[index].type === "video" &&
                 <View style={{

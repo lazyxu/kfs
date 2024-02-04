@@ -10209,10 +10209,10 @@ react-native-intersection-observer@^0.2.0:
   dependencies:
     lodash "^4.0.0"
 
-react-native-paper@^5.11.4:
-  version "5.11.4"
-  resolved "https://registry.npmmirror.com/react-native-paper/-/react-native-paper-5.11.4.tgz#db4c69ebd25324acb21258bbbe472dd1670ce3e6"
-  integrity sha512-pi48Qp1KLsU1dtnup3NsbZmpp9RrPGZIMeTK0o6KukK1YdBcmBQyMb1/sYHt1dE4pccXLQXbSVZjzNZfmxUGyQ==
+react-native-paper@^5.12.3:
+  version "5.12.3"
+  resolved "https://registry.npmmirror.com/react-native-paper/-/react-native-paper-5.12.3.tgz#d583119722ebbfbb7fe40400181d63748cca3683"
+  integrity sha512-nH1e1pGPE/aOE5YR2GRX7CfMHFA9cAfrAfgCtwL4amJPDZCoVjc5yt2VDiUE1rT+JUfk0qdICMP3UggxvjMgug==
   dependencies:
     "@callstack/react-theme-provider" "^3.0.9"
     color "^3.1.2"

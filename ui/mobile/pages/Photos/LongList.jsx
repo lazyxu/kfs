@@ -11,7 +11,8 @@ const useGetState = (initiateState) => {
 
 export default memo(({ renderItem, itemHeightWidthList, onWidth }) => {
     const t0 = Date.now();
-    const [curRect, setCurRect, getCurRect] = useGetState({ top: 0, bottom: 0, width: 0 });
+    const [contentSize, setContentSize, getContentSize] = useGetState({ w: 0, h: 0 });
+    const [curRect, setCurRect, getCurRect] = useGetState({ top: 0, bottom: 0 });
     const [itemRects, setItemRects, getItemRects] = useGetState([]);
     const cacheIndexes = useRef([]);
     useEffect(() => {
@@ -20,7 +21,7 @@ export default memo(({ renderItem, itemHeightWidthList, onWidth }) => {
         for (let i = 0; i < itemHeightWidthList.length; i++) {
             const hw = itemHeightWidthList[i];
             let top, left;
-            if (rect.right + hw.width > getCurRect().width) {
+            if (rect.right + hw.width > getContentSize().w) {
                 top = rect.bottom;
                 left = 0;
             } else {
@@ -63,6 +64,7 @@ export default memo(({ renderItem, itemHeightWidthList, onWidth }) => {
             if (inViewItems.hasOwnProperty(i)) {
                 continue;
             }
+            // console.log("inViewItems", i);
             inViewItems[i] = {
                 top: _itemRects[i].top, left: _itemRects[i].left, right: _itemRects[i].right, bottom: _itemRects[i].bottom,
                 key: i, elm: renderItem(i, () => {
@@ -74,7 +76,7 @@ export default memo(({ renderItem, itemHeightWidthList, onWidth }) => {
     }
     console.log("inView", _itemRects.length, _curRect, start, end);
     console.log("cacheIndexes", cacheIndexes.current.length);
-    console.log("inViewItems", inViewItems.length);
+    console.log("inViewItems", Object.keys(inViewItems).length);
     console.log("LongList.1", Date.now() - t0);
     return (
         <ScrollView scrollEventThrottle={0} contentInsetAdjustmentBehavior="never"
@@ -86,24 +88,19 @@ export default memo(({ renderItem, itemHeightWidthList, onWidth }) => {
                 });
                 // console.log(itemRects, e.nativeEvent, e.nativeEvent.contentOffset.y)
             }}
-            // onLayout={e => {
-            //     const { layout } = e.nativeEvent;
-            //     if (layout.height) {
-            //         setCurRect(prev => ({
-            //             top: prev.top,
-            //             bottom: prev.top + layout.height,
-            //             width: layout.width,
-            //         }));
-            //         onWidth(layout.width);
-            //     }
-            // }}
+            onLayout={e => {
+                const { layout } = e.nativeEvent;
+                if (layout.height) {
+                    console.log("onLayout", layout);
+                    setCurRect(prev => ({
+                        top: prev.top,
+                        bottom: prev.top + layout.height,
+                    }));
+                }
+            }}
             onContentSizeChange={(w, h) => {
                 console.log("onContentSizeChange", w, h)
-                setCurRect(prev => ({
-                    top: prev.top,
-                    bottom: prev.top + h,
-                    width: w,
-                }));
+                setContentSize({w, h});
                 onWidth(w);
             }}
             >
