@@ -77,7 +77,7 @@ case $1 in
         VITE_APP_PLATFORM=$(go env GOOS) yarn dev
         ;;
 
-      mobile)
+      mobile) # REACT_NATIVE_PACKAGER_HOSTNAME=192.168.137.1 ./scripts.sh start mobile
         cd $root/ui
         yarn
         cd $root/ui/mobile

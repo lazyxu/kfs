@@ -9,7 +9,7 @@ const useGetState = (initiateState) => {
     return [state, setState, getState];
 };
 
-export default memo(({ renderItem, itemHeightWidthList, onWidth }) => {
+export default memo(({ renderItem, itemHeightWidthList, onWidth, refresh }) => {
     const t0 = Date.now();
     const [contentSize, setContentSize, getContentSize] = useGetState({ w: 0, h: 0 });
     const [curRect, setCurRect, getCurRect] = useGetState({ top: 0, bottom: 0 });
@@ -82,10 +82,14 @@ export default memo(({ renderItem, itemHeightWidthList, onWidth }) => {
         <ScrollView scrollEventThrottle={0} contentInsetAdjustmentBehavior="never"
             // contentContainerStyle={{ paddingRight: 14 }}
             onScroll={e => {
-                setCurRect({
-                    top: e.nativeEvent.contentOffset.y,
-                    bottom: e.nativeEvent.contentOffset.y + e.nativeEvent.layoutMeasurement.height,
-                });
+                if (e.nativeEvent.contentOffset.y < 0) {
+                    refresh?.();
+                } else {
+                    setCurRect({
+                        top: e.nativeEvent.contentOffset.y,
+                        bottom: e.nativeEvent.contentOffset.y + e.nativeEvent.layoutMeasurement.height,
+                    });
+                }
                 // console.log(itemRects, e.nativeEvent, e.nativeEvent.contentOffset.y)
             }}
             onLayout={e => {

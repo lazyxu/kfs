@@ -59,6 +59,7 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
             itemHeightWidthList={itemHeightWidthList}
             onWidth={setWidth}
             renderItem={renderItem}
+            refresh={refresh}
         />
     </View>;
 }

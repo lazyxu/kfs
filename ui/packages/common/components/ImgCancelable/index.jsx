@@ -45,7 +45,7 @@ export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoa
                 onLoaded?.();
             }).catch(e => {
                 if (!controller.current.signal.aborted) {
-                    console.log("下载文件缩略图失败", src);
+                    console.log("下载文件缩略图失败", tag, src, typeof e.response?.data === 'string' ? e.response?.data : e.message);
                     window.noteError("下载文件缩略图失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
                 }
             });
