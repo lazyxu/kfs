@@ -1,6 +1,10 @@
 {
   "name": "kfs",
   "private": true,
+  "scripts": {
+    "genpatch": "npx patch-package @expo/dev-server/raw-body --use-yarn",
+    "postinstall": "npx patch-package --use-yarn"
+  },
   "workspaces": {
     "packages":[
       "web",

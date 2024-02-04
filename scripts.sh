@@ -78,11 +78,15 @@ case $1 in
         ;;
 
       mobile)
+        cd $root/ui
+        yarn
         cd $root/ui/mobile
         EXPO_USE_METRO_WORKSPACE_ROOT=1 VITE_APP_PLATFORM=mobile yarn start
         ;;
 
       mobile:web)
+        cd $root/ui
+        yarn
         cd $root/ui/mobile
         EXPO_USE_METRO_WORKSPACE_ROOT=1 VITE_APP_PLATFORM=mobile yarn web
         ;;
