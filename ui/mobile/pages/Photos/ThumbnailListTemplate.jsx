@@ -10,39 +10,45 @@ export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsP
     //     refresh();
     // }, [metadataList]);
     const refresh = async () => {
-        console.log("refresh")
-        let originlist;
-        if (metadataList) {
-            originlist = metadataList;
-        } else {
-            originlist = await listDCIMMetadataTime();
-        }
-        let mtList = [];
-        const l = [];
-        let tagObj = {};
-        for (let index = 0; index < originlist.length; index++) {
-            const m = originlist[index];
-            l.push({
-                url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}`,
-                hash: m.hash,
-                type: m.fileType.type,
-                duration: m.duration,
-                height: m.heightWidth.height,
-                width: m.heightWidth.width,
-            });
-            const tag = getTag(m);
-            if (tagObj.tag !== tag) {
-                tagObj.end = index - 1;
-                tagObj = { tag, start: index };
-                mtList.push(tagObj);
-                mtList.push({ index, hash: m.hash });
+        try {
+            window.noteInfo("开始刷新照片...");
+            console.log("refresh")
+            let originlist;
+            if (metadataList) {
+                originlist = metadataList;
             } else {
-                mtList.push({ index, hash: m.hash });
+                originlist = await listDCIMMetadataTime();
             }
+            let mtList = [];
+            const l = [];
+            let tagObj = {};
+            for (let index = 0; index < originlist.length; index++) {
+                const m = originlist[index];
+                l.push({
+                    url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}`,
+                    hash: m.hash,
+                    type: m.fileType.type,
+                    duration: m.duration,
+                    height: m.heightWidth.height,
+                    width: m.heightWidth.width,
+                });
+                const tag = getTag(m);
+                if (tagObj.tag !== tag) {
+                    tagObj.end = index - 1;
+                    tagObj = { tag, start: index };
+                    mtList.push(tagObj);
+                    mtList.push({ index, hash: m.hash });
+                } else {
+                    mtList.push({ index, hash: m.hash });
+                }
+            }
+            tagObj.end = originlist.length - 1;
+            setList(l);
+            setMetadataTagList(mtList);
+            window.noteInfo("刷新照片成功");
+        } catch (e) {
+            window.noteError("刷新照片失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         }
-        tagObj.end = originlist.length - 1;
-        setList(l);
-        setMetadataTagList(mtList);
     }
     useEffect(() => {
         refresh();
