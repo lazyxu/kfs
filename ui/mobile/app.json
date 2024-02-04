@@ -52,6 +52,12 @@
         "projectId": "a8bb7ece-0622-44cc-9ec0-916fa4fd56f1"
       }
     },
-    "owner": "ricardo.xu"
+    "owner": "ricardo.xu",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a8bb7ece-0622-44cc-9ec0-916fa4fd56f1"
+    }
   }
 }
