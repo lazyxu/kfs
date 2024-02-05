@@ -12,6 +12,7 @@ export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoa
     const [url, setUrl, getUrl] = useGetState();
     const [loaded, setLoaded, getLoaded] = useGetState(0);
     const controller = useRef(new AbortController());
+    const aborted = useRef(false);
     useEffect(() => {
         return () => {
             console.log("ImgCancelable.unmount", tag);
@@ -25,6 +26,7 @@ export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoa
         if (inView && l === 0) {
             setLoaded(1);
             // console.log("mount", src);
+            aborted.current = false;
             fetch(src, {
                 method: 'get',
                 signal: controller.current.signal,
@@ -44,7 +46,7 @@ export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoa
                 }
                 onLoaded?.();
             }).catch(e => {
-                if (!controller.current.signal.aborted) {
+                if (!aborted.current) {
                     console.log("下载文件缩略图失败", tag, src, typeof e.response?.data === 'string' ? e.response?.data : e.message);
                     window.noteError("下载文件缩略图失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
                 }
@@ -53,6 +55,7 @@ export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoa
         if (!inView && l === 1) {
             console.log("abort", src);
             controller.current.abort();
+            aborted.current = true;
             controller.current = new AbortController();
             setLoaded(0);
         }
