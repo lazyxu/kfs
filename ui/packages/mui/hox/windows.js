@@ -46,7 +46,7 @@ const appExtensions = {
   APP_TEXT_VIEWER: [".txt", ".md", ".log",
     ".go", ".js", ".jsx", ".java", ".c", ".h", ".c++", ".cpp"
   ],
-  APP_IMAGE_VIEWER: [".jpg", ".jpeg", ".png", ".heic"],
+  APP_IMAGE_VIEWER: [".jpg", ".jpeg", ".png", ".heic", ".livp"],
   APP_VIDEO_VIEWER: [".mp4", ".mov"],
 }
 

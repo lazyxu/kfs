@@ -1,13 +1,17 @@
 package main
 
 import (
+	"archive/zip"
 	"context"
 	"errors"
+	"fmt"
 	"image"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -240,6 +244,59 @@ func apiListDriverFileByHash(c echo.Context) error {
 	return ok(c, list)
 }
 
+func Unzip(src, dest string) (files []string, err error) {
+	r, err := zip.OpenReader(src)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	os.MkdirAll(dest, 0755)
+
+	// Closure to address file descriptors issue with all the deferred .Close() methods
+	extractAndWriteFile := func(f *zip.File) error {
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+		defer rc.Close()
+
+		path := filepath.Join(dest, f.Name)
+
+		// Check for ZipSlip (Directory traversal)
+		if !strings.HasPrefix(path, filepath.Clean(dest)+string(os.PathSeparator)) {
+			return fmt.Errorf("illegal file path: %s", path)
+		}
+
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(path, f.Mode())
+		} else {
+			os.MkdirAll(filepath.Dir(path), f.Mode())
+			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			_, err = io.Copy(f, rc)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	for _, f := range r.File {
+		err = extractAndWriteFile(f)
+		if err != nil {
+			return
+		}
+		files = append(files, filepath.Join(dest, f.Name))
+	}
+
+	return
+}
+
 func apiImage(c echo.Context) error {
 	hash := c.QueryParam("hash")
 	m, err1 := kfsCore.Db.GetMetadata(c.Request().Context(), hash)
@@ -247,6 +304,50 @@ func apiImage(c echo.Context) error {
 		return err1
 	}
 	fileType := m.FileType
+	if fileType.Extension == "zip" {
+		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".jpg")
+		f, err2 := os.Open(thumbnailFilePath)
+		if os.IsNotExist(err2) {
+			src := kfsCore.S.GetFilePath(hash)
+			dst := os.TempDir()
+			println("unzip livp to", dst)
+			files, err := Unzip(src, os.TempDir())
+			if err != nil {
+				return err
+			}
+			var heicFilePath string
+			for _, file := range files {
+				if strings.HasSuffix(file, ".heic") {
+					heicFilePath = file
+					break
+				}
+			}
+			if heicFilePath == "" {
+				return errors.New("invalid livp format")
+			}
+			rc, err := os.Open(heicFilePath)
+			if err != nil {
+				return err
+			}
+			defer rc.Close()
+			img, err := goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
+			if err != nil {
+				return err
+			}
+			img = orientation(img, m.Exif)
+			err = imaging.Save(img, thumbnailFilePath)
+			if err != nil {
+				return err
+			}
+			f, err2 = os.Open(thumbnailFilePath)
+		}
+		if err2 != nil {
+			return err2
+		}
+		defer f.Close()
+		c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
+		return c.Stream(http.StatusOK, "", f)
+	}
 	if fileType.Extension == matchers.TypeHeif.Extension {
 		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".jpg")
 		f, err2 := os.Open(thumbnailFilePath)
@@ -400,7 +501,40 @@ func apiThumbnail(c echo.Context) error {
 		defer func() {
 			<-thumbnailTaskChan
 		}()
-		if fileType.Extension == matchers.TypeHeif.Extension {
+
+		if fileType.Extension == "zip" {
+			src := kfsCore.S.GetFilePath(hash)
+			dst := os.TempDir()
+			println("unzip livp to", dst)
+			files, err := Unzip(src, os.TempDir())
+			if err != nil {
+				return err
+			}
+			var heicFilePath string
+			for _, file := range files {
+				if strings.HasSuffix(file, ".heic") {
+					heicFilePath = file
+					break
+				}
+			}
+			if heicFilePath == "" {
+				return errors.New("invalid livp format")
+			}
+			rc, err := os.Open(heicFilePath)
+			if err != nil {
+				return err
+			}
+			defer rc.Close()
+			img, err := goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
+			if err != nil {
+				return err
+			}
+			img = orientation(img, m.Exif)
+			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
+			if err != nil {
+				return err
+			}
+		} else if fileType.Extension == matchers.TypeHeif.Extension {
 			rc, err := kfsCore.S.ReadWithSize(hash)
 			if err != nil {
 				return err
