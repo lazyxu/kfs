@@ -45,10 +45,14 @@ type DriverBaiduPhoto struct {
 	taskInfo     TaskInfo
 }
 
+// 目前一刻相册导入相关限制如下：
+// 1)大小限制：图片大于50M和视频大于100M的，不支持导入；
+// 2)时间限制：图片缺少拍摄时间信息的不支持导入；
+// 3)位置限制：仅支持【来自：手机型号】文件夹（如果用户需要导入其他文件夹，可以在网盘里把文件夹移至该里）。
 var client = resty.New().
 	SetHeader("user-agent", UserAgent).
 	SetRetryCount(3).
-	SetTimeout(DefaultTimeout).
+	SetTimeout(100 * time.Second). // (100M) / (1M/s) = 100s
 	SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
 func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, name, description, code string) (bool, error) {
