@@ -207,7 +207,7 @@ func (d *DriverBaiduPhoto) Analyze(ctx context.Context) error {
 			return false
 		}
 		for i, f := range list {
-			fmt.Printf("[%d/%d] handle %s\n", i, len(list), f.Path)
+			fmt.Printf("[%d/%d] handle %s\n", i+1, len(list), f.Path)
 			select {
 			case <-ctx.Done():
 				err1 = context.Canceled

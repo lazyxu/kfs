@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 )
 
 type TokenErrResp struct {
@@ -70,13 +71,28 @@ func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, name, descri
 	return exist, nil
 }
 
-func (d *DriverBaiduPhoto) Get(ctx context.Context, furl string, callback func(req *resty.Request), resp interface{}) (*resty.Response, error) {
-	return d.Request(ctx, furl, http.MethodGet, callback, resp)
+func (d *DriverBaiduPhoto) Get(ctx context.Context, furl string, callback func(req *resty.Request), resp interface{}) error {
+	return d.Request(ctx, furl, http.MethodGet, callback, resp, "")
 }
 
-func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method string, callback func(req *resty.Request), resp interface{}) (*resty.Response, error) {
+func (d *DriverBaiduPhoto) WGet(ctx context.Context, furl string, output string) error {
+	return d.Request(ctx, furl, http.MethodGet, nil, nil, output)
+}
+
+func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method string, callback func(req *resty.Request), resp interface{}, output string) (err error) {
 	req := client.R()
+	t := time.Now()
+	defer func() {
+		if err != nil {
+			fmt.Printf("%+v %+v\n", err, time.Now().Sub(t).Seconds())
+		} else {
+			fmt.Printf("%+v\n", time.Now().Sub(t).Seconds())
+		}
+	}()
 	req.SetContext(ctx).SetQueryParam("access_token", d.AccessToken)
+	if output != "" {
+		req.SetOutput(output)
+	}
 	if callback != nil {
 		callback(req)
 	}
@@ -85,7 +101,7 @@ func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method stri
 	}
 	res, err := req.Execute(method, furl)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	erron := json.ConfigCompatibleWithStandardLibrary.Get(res.Body(), "errno").ToInt()
@@ -93,22 +109,22 @@ func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method stri
 	case 0:
 		break
 	case 50805:
-		return nil, fmt.Errorf("you have joined album")
+		return fmt.Errorf("you have joined album")
 	case 50820:
-		return nil, fmt.Errorf("no shared albums found")
+		return fmt.Errorf("no shared albums found")
 	case 50100:
-		return nil, fmt.Errorf("illegal title, only supports 50 characters")
+		return fmt.Errorf("illegal title, only supports 50 characters")
 	case -6:
 		d.AccessToken, d.RefreshToken, err = refreshToken(ctx, client, d.AppKey, d.SecretKey, d.RefreshToken)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		// TODO: save accessToken and refreshToken to db.
 		// Do not need to goto execute since we have set SetRetryCount to 3.
 	default:
-		return nil, fmt.Errorf("errno: %d, refer to https://photo.baidu.com/union/doc", erron)
+		return fmt.Errorf("errno: %d, refer to https://photo.baidu.com/union/doc", erron)
 	}
-	return res, nil
+	return nil
 }
 
 func getHash(f *os.File) (string, error) {
@@ -146,13 +162,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, hash string)
 		if err != nil {
 			return err
 		}
-		req := client.R()
-		tempDirPath, err := os.MkdirTemp("", "fsid")
-		if err != nil {
-			return err
-		}
-		tempFilePath := filepath.Join(tempDirPath, name)
-		_, err = req.SetContext(ctx).SetOutput(tempFilePath).Get(downloadPath)
+		tempFilePath, err := d.DownloadFile(ctx, name, downloadPath)
 		if err != nil {
 			return err
 		}
@@ -215,7 +225,7 @@ func (d *DriverBaiduPhoto) GetDownloadPath(ctx context.Context, fsid int64) (str
 	var downloadUrl struct {
 		Dlink string `json:"dlink"`
 	}
-	_, err := d.Get(ctx, FILE_API_URL_V2+"/download", func(r *resty.Request) {
+	err := d.Get(ctx, FILE_API_URL_V2+"/download", func(r *resty.Request) {
 		r.SetQueryParams(map[string]string{
 			"fsid": fmt.Sprint(fsid),
 		})
@@ -224,6 +234,19 @@ func (d *DriverBaiduPhoto) GetDownloadPath(ctx context.Context, fsid int64) (str
 		return "", err
 	}
 	return downloadUrl.Dlink, nil
+}
+
+func (d *DriverBaiduPhoto) DownloadFile(ctx context.Context, name string, downloadPath string) (string, error) {
+	tempDirPath, err := os.MkdirTemp("", "fsid")
+	if err != nil {
+		return "", err
+	}
+	tempFilePath := filepath.Join(tempDirPath, name)
+	err = d.WGet(ctx, downloadPath, tempFilePath)
+	if err != nil {
+		return "", err
+	}
+	return tempFilePath, nil
 }
 
 type Page struct {
@@ -259,7 +282,7 @@ func (d *DriverBaiduPhoto) GetAllFile(ctx context.Context, cb func([]File) bool)
 	var cursor string
 	for {
 		var resp FileListResp
-		_, err := d.Get(ctx, FILE_API_URL_V1+"/list", func(r *resty.Request) {
+		err := d.Get(ctx, FILE_API_URL_V1+"/list", func(r *resty.Request) {
 			r.SetQueryParams(map[string]string{
 				"need_thumbnail":     "0",
 				"need_filter_hidden": "0",
