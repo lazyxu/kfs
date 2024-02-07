@@ -14,27 +14,38 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
-func UpsertLivePhoto(kfsCore *core.KFS, movHash string, driverId uint64, dirPath []string, movName string) error {
-	ext := filepath.Ext(movName)
-	// TODO: check .livp in baidu photo.
-	if ext == ".MOV" {
-		name := strings.TrimSuffix(movName, ext)
-		heicPath := append(dirPath, name+".HEIC")
-		heicFile, err := kfsCore.Db.GetDriverFile(context.TODO(), driverId, heicPath)
-		if err != nil {
-			if !errors.Is(err, dbBase.ErrNoSuchFileOrDir) {
-				return err
-			}
-		} else {
-		}
-		jpgPath := append(dirPath, name+".JPG")
-		jpgFile, err := kfsCore.Db.GetDriverFile(context.TODO(), driverId, jpgPath)
-		if err != nil {
-			if !errors.Is(err, dbBase.ErrNoSuchFileOrDir) {
-				return err
+func UpsertLivePhoto(ctx context.Context, kfsCore *core.KFS, hash string, driverId uint64, dirPath []string, name string) error {
+	ext := strings.ToLower(filepath.Ext(name))
+	if ext == ".mov" {
+		prefix := strings.TrimSuffix(name, ext)
+		heicPath := append(dirPath, prefix+".HEIC")
+		heicFile, err1 := kfsCore.Db.GetDriverFile(ctx, driverId, heicPath)
+		if err1 != nil {
+			if !errors.Is(err1, dbBase.ErrNoSuchFileOrDir) {
+				return err1
 			}
 		}
-		err = kfsCore.Db.UpsertLivePhoto(context.TODO(), movHash, heicFile.Hash, jpgFile.Hash, "")
+		jpgPath := append(dirPath, prefix+".JPG")
+		jpgFile, err2 := kfsCore.Db.GetDriverFile(ctx, driverId, jpgPath)
+		if err2 != nil {
+			if !errors.Is(err1, dbBase.ErrNoSuchFileOrDir) {
+				return err2
+			}
+		}
+
+		if errors.Is(err1, dbBase.ErrNoSuchFileOrDir) && errors.Is(err2, dbBase.ErrNoSuchFileOrDir) {
+			return nil
+		}
+		err := kfsCore.Db.UpsertLivePhoto(context.TODO(), hash, heicFile.Hash, jpgFile.Hash, "")
+		if err != nil {
+			return err
+		}
+	} else if ext == ".heic" {
+
+	} else if ext == ".jpg" {
+
+	} else if ext == ".livp" {
+		err := UnzipLivp(ctx, kfsCore, hash)
 		if err != nil {
 			return err
 		}

@@ -202,7 +202,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, hash string)
 	if err != nil {
 		return err
 	}
-	err = d.kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
+	err = d.kfsCore.Db.UpsertDriverFile(ctx, dao.DriverFile{
 		DriverId:   d.driverId,
 		DirPath:    dirPath,
 		Name:       name,
@@ -218,7 +218,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, hash string)
 	if err != nil {
 		return err
 	}
-	err = server.UpsertLivePhoto(d.kfsCore, hash, d.driverId, dirPath, name)
+	err = server.UpsertLivePhoto(ctx, d.kfsCore, hash, d.driverId, dirPath, name)
 	if err != nil {
 		return err
 	}
