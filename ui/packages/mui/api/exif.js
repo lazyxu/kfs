@@ -10,6 +10,13 @@ export async function analyzeMetadata(start, force) {
     });
 }
 
+export async function startLivePhotoAnalysisTask(start, force) {
+    console.log('web.startLivePhotoAnalysisTask', start, force);
+    return await httpPost("/api/v1/startLivePhotoAnalysisTask", {
+        start, force,
+    });
+}
+
 export async function startBaiduPhotoTask(start, driverId) {
     try {
         console.log('web.startBaiduPhotoTask', start, driverId);

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/livp"
 	"image"
 	"io"
 	"net/http"
@@ -98,6 +99,10 @@ func webServer(webPortString string) {
 	e.POST("/api/v1/startMetadataAnalysisTask", apiStartMetadataAnalysisTask)
 	e.GET("/api/v1/event/metadataAnalysisTask", func(c echo.Context) error {
 		return metadata.ApiEvent(c, kfsCore)
+	})
+	e.POST("/api/v1/startLivePhotoAnalysisTask", apiStartLivePhotoAnalysisTask)
+	e.GET("/api/v1/event/livePhotoAnalysisTask", func(c echo.Context) error {
+		return livp.ApiEvent(c, kfsCore)
 	})
 	e.POST("/api/v1/startBaiduPhotoTask", apiStartBaiduPhotoTask)
 	e.GET("/api/v1/event/baiduPhotoTask/:driverId", func(c echo.Context) error {
@@ -608,6 +613,18 @@ func apiStartMetadataAnalysisTask(c echo.Context) error {
 	forceStr := c.QueryParam("force")
 	force, _ := strconv.ParseBool(forceStr)
 	metadata.StartOrStop(kfsCore, start, force)
+	return c.String(http.StatusOK, "")
+}
+
+func apiStartLivePhotoAnalysisTask(c echo.Context) error {
+	startStr := c.QueryParam("start")
+	start, err := strconv.ParseBool(startStr)
+	if err != nil {
+		return err
+	}
+	forceStr := c.QueryParam("force")
+	force, _ := strconv.ParseBool(forceStr)
+	livp.StartOrStop(kfsCore, start, force)
 	return c.String(http.StatusOK, "")
 }
 

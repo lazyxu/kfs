@@ -150,9 +150,11 @@ func (db *DB) Create() error {
 		movHash                CHAR(64)     NOT NULL PRIMARY KEY,
 		heicHash               CHAR(64)     DEFAULT NULL,
 		jpgHash                CHAR(64)     DEFAULT NULL,
+		livpHash               CHAR(64)     DEFAULT NULL,
 		FOREIGN KEY (movHash)  REFERENCES   _file(hash),
 		FOREIGN KEY (heicHash) REFERENCES   _file(hash),
-		FOREIGN KEY (jpgHash)  REFERENCES   _file(hash)
+		FOREIGN KEY (jpgHash)  REFERENCES   _file(hash),
+		FOREIGN KEY (livpHash)  REFERENCES   _file(hash)
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver (

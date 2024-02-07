@@ -37,6 +37,7 @@ export function closeWindow(setWindows, id) {
 }
 
 export const APP_METADATA_MANAGER = "APP_METADATA_MANAGER";
+export const APP_LIVP_UNZIP = "APP_LIVP_UNZIP";
 
 export const APP_IMAGE_VIEWER = "APP_IMAGE_VIEWER";
 export const APP_VIDEO_VIEWER = "APP_VIDEO_VIEWER";

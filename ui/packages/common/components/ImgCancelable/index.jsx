@@ -17,6 +17,7 @@ export default ({ isNative, src, inView = true, renderImg, renderSkeleton, onLoa
         return () => {
             console.log("ImgCancelable.unmount", tag);
             controller.current.abort();
+            aborted.current = true;
         }
     }, []);
     useEffect(() => {

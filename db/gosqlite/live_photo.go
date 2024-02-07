@@ -5,8 +5,20 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
-func (db *DB) UpsertLivePhoto(ctx context.Context, movHash string, heicHash string, jpgHash string) error {
+func (db *DB) UpsertLivePhoto(ctx context.Context, movHash string, heicHash string, jpgHash string, livpHash string) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.UpsertLivePhoto(ctx, conn, movHash, heicHash, jpgHash)
+	return dbBase.UpsertLivePhoto(ctx, conn, movHash, heicHash, jpgHash, livpHash)
+}
+
+func (db *DB) ListLivePhotoNew(ctx context.Context) (hashList []string, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListLivePhotoNew(ctx, conn)
+}
+
+func (db *DB) ListLivePhotoAll(ctx context.Context) (hashList []string, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.ListLivePhotoAll(ctx, conn)
 }

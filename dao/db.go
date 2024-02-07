@@ -104,7 +104,9 @@ type Database interface {
 	ListFileHash(ctx context.Context) (hashList []string, err error)
 	GetFileType(ctx context.Context, hash string) (fileType FileType, err error)
 
-	UpsertLivePhoto(ctx context.Context, movHash string, heicHash string, jpgHash string) error
+	ListLivePhotoAll(ctx context.Context) (hashList []string, err error)
+	ListLivePhotoNew(ctx context.Context) (hashList []string, err error)
+	UpsertLivePhoto(ctx context.Context, movHash string, heicHash string, jpgHash string, livpHash string) error
 }
 
 func DatabaseNewFunc(dataSourceName string, newDB func(dataSourceName string) (Database, error)) func() (Database, error) {
