@@ -1,18 +1,16 @@
 package main
 
 import (
-	"archive/zip"
 	"context"
 	"errors"
-	"fmt"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/livp"
+	"github.com/lazyxu/kfs/db/dbBase"
+	"github.com/lazyxu/kfs/rpc/server"
 	"image"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 
 	"go.uber.org/zap"
 
@@ -249,59 +247,6 @@ func apiListDriverFileByHash(c echo.Context) error {
 	return ok(c, list)
 }
 
-func Unzip(src, dest string) (files []string, err error) {
-	r, err := zip.OpenReader(src)
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	os.MkdirAll(dest, 0755)
-
-	// Closure to address file descriptors issue with all the deferred .Close() methods
-	extractAndWriteFile := func(f *zip.File) error {
-		rc, err := f.Open()
-		if err != nil {
-			return err
-		}
-		defer rc.Close()
-
-		path := filepath.Join(dest, f.Name)
-
-		// Check for ZipSlip (Directory traversal)
-		if !strings.HasPrefix(path, filepath.Clean(dest)+string(os.PathSeparator)) {
-			return fmt.Errorf("illegal file path: %s", path)
-		}
-
-		if f.FileInfo().IsDir() {
-			os.MkdirAll(path, f.Mode())
-		} else {
-			os.MkdirAll(filepath.Dir(path), f.Mode())
-			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
-			_, err = io.Copy(f, rc)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-
-	for _, f := range r.File {
-		err = extractAndWriteFile(f)
-		if err != nil {
-			return
-		}
-		files = append(files, filepath.Join(dest, f.Name))
-	}
-
-	return
-}
-
 func apiImage(c echo.Context) error {
 	hash := c.QueryParam("hash")
 	m, err1 := kfsCore.Db.GetMetadata(c.Request().Context(), hash)
@@ -313,24 +258,18 @@ func apiImage(c echo.Context) error {
 		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".jpg")
 		f, err2 := os.Open(thumbnailFilePath)
 		if os.IsNotExist(err2) {
-			src := kfsCore.S.GetFilePath(hash)
-			dst := os.TempDir()
-			println("unzip livp to", dst)
-			files, err := Unzip(src, os.TempDir())
-			if err != nil {
-				return err
-			}
-			var heicFilePath string
-			for _, file := range files {
-				if strings.HasSuffix(file, ".heic") {
-					heicFilePath = file
-					break
+			_, heicHash, err := kfsCore.Db.GetLivePhotoByLivp(c.Request().Context(), hash)
+			if errors.Is(err, dbBase.ErrNoRecords) {
+				err = server.UnzipLivp(c.Request().Context(), kfsCore, hash)
+				if err != nil {
+					return err
+				}
+				_, heicHash, err = kfsCore.Db.GetLivePhotoByLivp(c.Request().Context(), hash)
+				if err != nil {
+					return err
 				}
 			}
-			if heicFilePath == "" {
-				return errors.New("invalid livp format")
-			}
-			rc, err := os.Open(heicFilePath)
+			rc, err := kfsCore.S.ReadWithSize(heicHash)
 			if err != nil {
 				return err
 			}
@@ -508,24 +447,18 @@ func apiThumbnail(c echo.Context) error {
 		}()
 
 		if fileType.Extension == "zip" {
-			src := kfsCore.S.GetFilePath(hash)
-			dst := os.TempDir()
-			println("unzip livp to", dst)
-			files, err := Unzip(src, os.TempDir())
-			if err != nil {
-				return err
-			}
-			var heicFilePath string
-			for _, file := range files {
-				if strings.HasSuffix(file, ".heic") {
-					heicFilePath = file
-					break
+			_, heicHash, err := kfsCore.Db.GetLivePhotoByLivp(c.Request().Context(), hash)
+			if errors.Is(err, dbBase.ErrNoRecords) {
+				err = server.UnzipLivp(c.Request().Context(), kfsCore, hash)
+				if err != nil {
+					return err
+				}
+				_, heicHash, err = kfsCore.Db.GetLivePhotoByLivp(c.Request().Context(), hash)
+				if err != nil {
+					return err
 				}
 			}
-			if heicFilePath == "" {
-				return errors.New("invalid livp format")
-			}
-			rc, err := os.Open(heicFilePath)
+			rc, err := kfsCore.S.ReadWithSize(heicHash)
 			if err != nil {
 				return err
 			}

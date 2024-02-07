@@ -99,3 +99,25 @@ func ListLivePhotoAll(ctx context.Context, conn *sql.DB) (hashList []string, err
 	}
 	return
 }
+
+func GetLivePhotoByLivp(ctx context.Context, conn *sql.DB, livpHash string) (movHash string, heicHash string, err error) {
+	rows, err := conn.QueryContext(ctx, `
+	SELECT
+		movHash,
+		heicHash
+	FROM _live_photo WHERE _live_photo.livpHash=?
+	`, livpHash)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	if rows.Next() {
+		err = rows.Scan(&movHash, &heicHash)
+		if err != nil {
+			return
+		}
+	} else {
+		err = ErrNoRecords
+	}
+	return
+}

@@ -16,3 +16,7 @@ func (db *DB) ListLivePhotoNew(ctx context.Context) (hashList []string, err erro
 func (db *DB) ListLivePhotoAll(ctx context.Context) (hashList []string, err error) {
 	return dbBase.ListLivePhotoAll(ctx, db.db)
 }
+
+func (db *DB) GetLivePhotoByLivp(ctx context.Context, livpHash string) (movHash string, heicHash string, err error) {
+	return dbBase.GetLivePhotoByLivp(ctx, db.db, livpHash)
+}

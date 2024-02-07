@@ -22,3 +22,9 @@ func (db *DB) ListLivePhotoAll(ctx context.Context) (hashList []string, err erro
 	defer db.putConn(conn)
 	return dbBase.ListLivePhotoAll(ctx, conn)
 }
+
+func (db *DB) GetLivePhotoByLivp(ctx context.Context, livpHash string) (movHash string, heicHash string, err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.GetLivePhotoByLivp(ctx, conn, livpHash)
+}
