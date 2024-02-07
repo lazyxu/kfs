@@ -5,6 +5,10 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
+func (db *DB) UpdateLivePhotoForDriverFile(ctx context.Context) error {
+	return dbBase.UpdateLivePhotoForDriverFile(ctx, db.db)
+}
+
 func (db *DB) UpsertLivePhoto(ctx context.Context, movHash string, heicHash string, jpgHash string, livpHash string) error {
 	return dbBase.UpsertLivePhoto(ctx, db.db, movHash, heicHash, jpgHash, livpHash)
 }

@@ -106,6 +106,7 @@ type Database interface {
 
 	ListLivePhotoAll(ctx context.Context) (hashList []string, err error)
 	ListLivePhotoNew(ctx context.Context) (hashList []string, err error)
+	UpdateLivePhotoForDriverFile(ctx context.Context) error
 	UpsertLivePhoto(ctx context.Context, movHash string, heicHash string, jpgHash string, livpHash string) error
 	GetLivePhotoByLivp(ctx context.Context, livpHash string) (string, string, error)
 }

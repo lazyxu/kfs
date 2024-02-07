@@ -5,6 +5,12 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
+func (db *DB) UpdateLivePhotoForDriverFile(ctx context.Context) error {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.UpdateLivePhotoForDriverFile(ctx, conn)
+}
+
 func (db *DB) UpsertLivePhoto(ctx context.Context, movHash string, heicHash string, jpgHash string, livpHash string) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
