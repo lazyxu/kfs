@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/livp"
-	"github.com/lazyxu/kfs/db/dbBase"
 	"github.com/lazyxu/kfs/rpc/server"
 	"image"
 	"net/http"
@@ -258,16 +257,9 @@ func apiImage(c echo.Context) error {
 		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".jpg")
 		f, err2 := os.Open(thumbnailFilePath)
 		if os.IsNotExist(err2) {
-			_, heicHash, err := kfsCore.Db.GetLivePhotoByLivp(c.Request().Context(), hash)
-			if errors.Is(err, dbBase.ErrNoRecords) {
-				err = server.UnzipLivp(c.Request().Context(), kfsCore, hash)
-				if err != nil {
-					return err
-				}
-				_, heicHash, err = kfsCore.Db.GetLivePhotoByLivp(c.Request().Context(), hash)
-				if err != nil {
-					return err
-				}
+			_, heicHash, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, hash)
+			if err != nil {
+				return err
 			}
 			rc, err := kfsCore.S.ReadWithSize(heicHash)
 			if err != nil {
@@ -447,16 +439,9 @@ func apiThumbnail(c echo.Context) error {
 		}()
 
 		if fileType.Extension == "zip" {
-			_, heicHash, err := kfsCore.Db.GetLivePhotoByLivp(c.Request().Context(), hash)
-			if errors.Is(err, dbBase.ErrNoRecords) {
-				err = server.UnzipLivp(c.Request().Context(), kfsCore, hash)
-				if err != nil {
-					return err
-				}
-				_, heicHash, err = kfsCore.Db.GetLivePhotoByLivp(c.Request().Context(), hash)
-				if err != nil {
-					return err
-				}
+			_, heicHash, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, hash)
+			if err != nil {
+				return err
 			}
 			rc, err := kfsCore.S.ReadWithSize(heicHash)
 			if err != nil {

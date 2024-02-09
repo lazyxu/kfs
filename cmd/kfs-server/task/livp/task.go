@@ -164,7 +164,11 @@ func analyze(ctx context.Context, kfsCore *core.KFS, force bool) (err error) {
 	}
 	setTaskTotal(len(hashList))
 	for _, hash := range hashList {
-		err = server.UnzipLivp(ctx, kfsCore, hash)
+		if force {
+			_, _, err = server.UnzipLivp(ctx, kfsCore, hash)
+		} else {
+			_, _, err = server.UnzipIfLivp(ctx, kfsCore, hash)
+		}
 		if errors.Is(err, context.Canceled) {
 			return err
 		}

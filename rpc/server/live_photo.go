@@ -45,7 +45,7 @@ func UpsertLivePhoto(ctx context.Context, kfsCore *core.KFS, hash string, driver
 	} else if ext == ".jpg" {
 
 	} else if ext == ".livp" {
-		err := UnzipLivp(ctx, kfsCore, hash)
+		_, _, err := UnzipIfLivp(ctx, kfsCore, hash)
 		if err != nil {
 			return err
 		}
@@ -67,17 +67,30 @@ func getHash(f *zip.File) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func UnzipLivp(ctx context.Context, kfsCore *core.KFS, hash string) error {
+func UnzipIfLivp(ctx context.Context, kfsCore *core.KFS, hash string) (movHash string, heicHash string, err error) {
+	_, heicHash, err = kfsCore.Db.GetLivePhotoByLivp(ctx, hash)
+	if err == nil {
+		return
+	}
+	if !errors.Is(err, dbBase.ErrNoRecords) {
+		return
+	}
+	return UnzipLivp(ctx, kfsCore, hash)
+}
+
+func UnzipLivp(ctx context.Context, kfsCore *core.KFS, hash string) (movHash string, heicHash string, err error) {
 	select {
 	case <-ctx.Done():
-		return context.Canceled
+		err = context.Canceled
+		return
 	default:
 	}
+
 	src := kfsCore.S.GetFilePath(hash)
 
 	r, err := zip.OpenReader(src)
 	if err != nil {
-		return err
+		return
 	}
 	defer r.Close()
 
@@ -99,27 +112,32 @@ func UnzipLivp(ctx context.Context, kfsCore *core.KFS, hash string) error {
 		})
 		return itemHash, nil
 	}
-	var heicHash string
-	var movHash string
 	for _, f := range r.File {
-		itemHash, err := extractAndWriteFile(f)
+		var itemHash string
+		itemHash, err = extractAndWriteFile(f)
 		if err != nil {
-			return err
+			return
 		}
 		if strings.HasSuffix(f.Name, ".heic") {
 			heicHash = itemHash
 		} else if strings.HasSuffix(f.Name, ".mov") {
 			movHash = itemHash
 		} else {
-			return errors.New("invalid livp format")
+			err = errors.New("invalid livp format, there are files other than .heic and .mov")
+			return
 		}
 	}
-	if heicHash == "" || movHash == "" {
-		return errors.New("invalid livp format")
+	if heicHash == "" {
+		err = errors.New("invalid livp format, missing .heic file")
+		return
+	}
+	if movHash == "" {
+		err = errors.New("invalid livp format, missing .mov file")
+		return
 	}
 	err = kfsCore.Db.UpsertLivePhoto(context.TODO(), movHash, heicHash, "", hash)
 	if err != nil {
-		return err
+		return
 	}
-	return nil
+	return
 }
