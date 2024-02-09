@@ -106,7 +106,9 @@ type Database interface {
 
 	ListLivePhotoAll(ctx context.Context) (hashList []string, err error)
 	ListLivePhotoNew(ctx context.Context) (hashList []string, err error)
-	UpdateLivePhotoForDriverFile(ctx context.Context) error
+	SetLivpForMovAndHeicOrJpgInDirPath(ctx context.Context, driverId uint64, filePath []string) (err error)
+	SetLivpForMovAndHeicOrJpgInDriver(ctx context.Context, driverId uint64) (err error)
+	SetLivpForMovAndHeicOrJpgAll(ctx context.Context) error
 	UpsertLivePhoto(ctx context.Context, movHash string, heicHash string, jpgHash string, livpHash string) error
 	GetLivePhotoByLivp(ctx context.Context, livpHash string) (string, string, error)
 }

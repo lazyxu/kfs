@@ -259,7 +259,7 @@ func GetDriverLocalFile(ctx context.Context, txOrDb TxOrDb, driverId uint64) (dr
 	return
 }
 
-func GetDriverDirCalculatedInfo(ctx context.Context, txOrDb TxOrDb, driverId uint64, filePath []string) (info dao.DirCalculatedInfo, err error) {
+func dirPathToLike(filePath []string) string {
 	var like string
 	if len(filePath) != 0 {
 		data, err := json.Marshal(filePath)
@@ -271,6 +271,11 @@ func GetDriverDirCalculatedInfo(ctx context.Context, txOrDb TxOrDb, driverId uin
 	} else {
 		like = "%"
 	}
+	return like
+}
+
+func GetDriverDirCalculatedInfo(ctx context.Context, txOrDb TxOrDb, driverId uint64, filePath []string) (info dao.DirCalculatedInfo, err error) {
+	like := dirPathToLike(filePath)
 	var rows *sql.Rows
 	{
 		rows, err = txOrDb.QueryContext(ctx, `

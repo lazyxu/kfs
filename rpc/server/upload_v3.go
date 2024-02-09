@@ -82,7 +82,7 @@ func handleUploadV3Dir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 			return err
 		}
 		// TODO: analyze file type.
-		err = UpsertLivePhoto(context.TODO(), kfsCore, item.Hash, req.DriverId, req.DirPath, item.Name)
+		err = PluginUnzipIfLivp(context.TODO(), kfsCore, item.Hash, item.Name)
 		if err != nil {
 			return err
 		}

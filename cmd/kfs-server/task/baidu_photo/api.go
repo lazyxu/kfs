@@ -218,7 +218,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, hash string)
 	if err != nil {
 		return err
 	}
-	err = server.UpsertLivePhoto(ctx, d.kfsCore, hash, d.driverId, dirPath, name)
+	err = server.PluginUnzipIfLivp(ctx, d.kfsCore, hash, name)
 	if err != nil {
 		return err
 	}

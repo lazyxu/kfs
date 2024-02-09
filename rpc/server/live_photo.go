@@ -14,41 +14,14 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
-func UpsertLivePhoto(ctx context.Context, kfsCore *core.KFS, hash string, driverId uint64, dirPath []string, name string) error {
+func PluginUnzipIfLivp(ctx context.Context, kfsCore *core.KFS, hash string, name string) error {
 	ext := strings.ToLower(filepath.Ext(name))
-	if ext == ".mov" {
-		prefix := strings.TrimSuffix(name, ext)
-		heicPath := append(dirPath, prefix+".HEIC")
-		heicFile, err1 := kfsCore.Db.GetDriverFile(ctx, driverId, heicPath)
-		if err1 != nil {
-			if !errors.Is(err1, dbBase.ErrNoSuchFileOrDir) {
-				return err1
-			}
-		}
-		jpgPath := append(dirPath, prefix+".JPG")
-		jpgFile, err2 := kfsCore.Db.GetDriverFile(ctx, driverId, jpgPath)
-		if err2 != nil {
-			if !errors.Is(err1, dbBase.ErrNoSuchFileOrDir) {
-				return err2
-			}
-		}
-
-		if errors.Is(err1, dbBase.ErrNoSuchFileOrDir) && errors.Is(err2, dbBase.ErrNoSuchFileOrDir) {
-			return nil
-		}
-		err := kfsCore.Db.UpsertLivePhoto(context.TODO(), hash, heicFile.Hash, jpgFile.Hash, "")
-		if err != nil {
-			return err
-		}
-	} else if ext == ".heic" {
-
-	} else if ext == ".jpg" {
-
-	} else if ext == ".livp" {
-		_, _, err := UnzipIfLivp(ctx, kfsCore, hash)
-		if err != nil {
-			return err
-		}
+	if ext != ".livp" {
+		return nil
+	}
+	_, _, err := UnzipIfLivp(ctx, kfsCore, hash)
+	if err != nil {
+		return err
 	}
 	return nil
 }

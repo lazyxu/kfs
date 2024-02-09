@@ -2,13 +2,14 @@ package cgosqlite
 
 import (
 	"context"
+
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
-func (db *DB) UpdateLivePhotoForDriverFile(ctx context.Context) error {
+func (db *DB) SetLivpForMovAndHeicOrJpgAll(ctx context.Context) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.UpdateLivePhotoForDriverFile(ctx, conn)
+	return dbBase.SetLivpForMovAndHeicOrJpgAll(ctx, conn)
 }
 
 func (db *DB) UpsertLivePhoto(ctx context.Context, movHash string, heicHash string, jpgHash string, livpHash string) error {
@@ -21,6 +22,18 @@ func (db *DB) ListLivePhotoNew(ctx context.Context) (hashList []string, err erro
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.ListLivePhotoNew(ctx, conn)
+}
+
+func (db *DB) SetLivpForMovAndHeicOrJpgInDirPath(ctx context.Context, driverId uint64, filePath []string) (err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.SetLivpForMovAndHeicOrJpgInDirPath(ctx, conn, driverId, filePath)
+}
+
+func (db *DB) SetLivpForMovAndHeicOrJpgInDriver(ctx context.Context, driverId uint64) (err error) {
+	conn := db.getConn()
+	defer db.putConn(conn)
+	return dbBase.SetLivpForMovAndHeicOrJpgInDriver(ctx, conn, driverId)
 }
 
 func (db *DB) ListLivePhotoAll(ctx context.Context) (hashList []string, err error) {
