@@ -196,10 +196,16 @@ func toStringSlice(s []File) []string {
 	return c
 }
 
-func (d *DriverBaiduPhoto) Analyze(ctx context.Context) error {
+func (d *DriverBaiduPhoto) Analyze(ctx context.Context) (err error) {
 	d.setTaskStatus(StatusRunning)
+	defer func() {
+		if err != nil {
+			return
+		}
+		err = d.kfsCore.Db.SetLivpForMovAndHeicOrJpgInDriver(ctx, d.driverId)
+	}()
 	var err1 error
-	err := d.GetAllFile(ctx, func(list []File) bool {
+	err = d.GetAllFile(ctx, func(list []File) bool {
 		d.addTaskTotal(len(list))
 		var m map[string]string
 		m, err1 = d.kfsCore.Db.ListFileMd5(ctx, toStringSlice(list))
@@ -223,10 +229,11 @@ func (d *DriverBaiduPhoto) Analyze(ctx context.Context) error {
 		return true
 	})
 	if err != nil {
-		return err
+		return
 	}
 	if err1 != nil {
-		return err1
+		err = err1
+		return
 	}
-	return nil
+	return
 }

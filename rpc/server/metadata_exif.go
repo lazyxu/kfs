@@ -145,9 +145,13 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType *d
 		//if fileType.SubType == matchers.TypeJpeg.MIME.Subtype {
 		//	GetJpegExifData(kfsCore, hash)
 		//}
-		hw, err := getImageHeightWidth(kfsCore, hash)
+		width, height, err := getImageHeightWidthByFfmpeg(kfsCore, hash)
 		if err != nil {
 			return err
+		}
+		hw := dao.HeightWidth{
+			Width:  width,
+			Height: height,
 		}
 		e, err := GetExifData(kfsCore, hash)
 		if err != nil {
@@ -186,7 +190,15 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType *d
 		}
 		return nil
 	} else if fileType.Type == "video" {
-		m, hw, err := GetVideoMetadata(kfsCore, hash)
+		width, height, err := GetVideoMetadataByFfmpeg(kfsCore, hash)
+		if err != nil {
+			return err
+		}
+		hw := dao.HeightWidth{
+			Width:  width,
+			Height: height,
+		}
+		m, err := GetVideoMetadata(kfsCore, hash)
 		if err != nil {
 			// https://stackoverflow.com/questions/9412384/m4a-mp4-file-format-whats-the-difference-or-are-they-the-same
 			if fileType.SubType == "mp4" && err == NO_VALUE_FOR_KEY {
@@ -257,6 +269,30 @@ func getInt64ValueFor(s string, key string) (int64, error) {
 	return n, nil
 }
 
+func getImageHeightWidthByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, height uint64, err error) {
+	s, err := ffmpeg_go.Probe(kfsCore.S.GetFilePath(hash), ffmpeg_go.KwArgs{"v": "error", "select_streams": "v", "show_entries": "stream=width,height", "of": "default=noprint_wrappers=1"})
+	if err != nil {
+		return
+	}
+	width, err = getUint64ValueFor(s, "width")
+	if err != nil {
+		return
+	}
+	height, err = getUint64ValueFor(s, "height")
+	if err != nil {
+		return
+	}
+	rotation, err := getInt64ValueFor(s, "rotation")
+	if err != nil {
+		return width, height, nil
+	}
+	// TODO: other rotation
+	if rotation == -90 {
+		width, height = height, width
+	}
+	return
+}
+
 func GetVideoMetadataByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, height uint64, err error) {
 	s, err := ffmpeg_go.Probe(kfsCore.S.GetFilePath(hash), ffmpeg_go.KwArgs{"v": "error", "select_streams": "v", "show_entries": "stream=width,height", "of": "default=noprint_wrappers=1"})
 	if err != nil {
@@ -281,7 +317,7 @@ func GetVideoMetadataByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, hei
 	return
 }
 
-func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, hw dao.HeightWidth, err error) {
+func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, err error) {
 	rc, err := kfsCore.S.ReadWithSize(hash)
 	if err != nil {
 		return
@@ -301,14 +337,6 @@ func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, hw d
 		Created:  fileInfo.Movie.Created.UnixNano(),
 		Modified: fileInfo.Movie.Modified.UnixNano(),
 		Duration: fileInfo.Movie.Duration,
-	}
-	width, height, err := GetVideoMetadataByFfmpeg(kfsCore, hash)
-	if err != nil {
-		return
-	}
-	hw = dao.HeightWidth{
-		Width:  width,
-		Height: height,
 	}
 	return
 }

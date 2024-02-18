@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -81,11 +82,21 @@ func handleUploadV3Dir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 			fmt.Println("Upload error", err.Error())
 			return err
 		}
-		// TODO: analyze file type.
-		err = PluginUnzipIfLivp(context.TODO(), kfsCore, item.Hash, item.Name)
-		if err != nil {
-			return err
+		if !os.FileMode(item.Mode).IsDir() {
+			err = AnalyzeIfNoFileType(context.TODO(), kfsCore, item.Hash)
+			if err != nil {
+				return err
+			}
+			err = PluginUnzipIfLivp(context.TODO(), kfsCore, item.Hash, item.Name)
+			if err != nil {
+				return err
+			}
 		}
+	}
+	err = kfsCore.Db.SetLivpForMovAndHeicOrJpgInDirPath(context.TODO(), req.DriverId, req.DirPath)
+	if err != nil {
+		fmt.Println("Upload.SetLivpForMovAndHeicOrJpgInDriver error", err.Error())
+		return err
 	}
 	// println(conn.RemoteAddr().String(), "UploadDir.NEW", req.DriverId, "/"+strings.Join(req.DirPath, "/"))
 	// files := make([]dao.DriverFile, len(req.UploadReqDirItemV3))
