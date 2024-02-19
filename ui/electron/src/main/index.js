@@ -12,25 +12,33 @@ if (!app.isPackaged) {
   reloader(module)
 }
 
+let child;
+
 if (app.isPackaged) {
   let configFilename = 'kfs-config.json'
-  let configPath = path.join(process.resourcesPath, configFilename)
+  const userData = app.getPath('userData');
+  console.log('userData', userData);
+  let configPath = path.join(userData, configFilename)
   let cwd = path.join(__dirname, '../../resources')
   console.log('spawn kfs-electron', __dirname, cwd)
-  let child = spawn(".\\kfs-electron.exe", ['-p', '11234'], {
+  child = spawn(".\\kfs-electron.exe", ['-p', '11234'], {
     cwd,
     shell: true
   })
-  let regex = new RegExp(/^Websocket server listening at: .+:(\d+)\n$/)
+  let regex = new RegExp(/KFS electron web server listening at: .+:(\d+)\n/)
   child.stdout.on('data', function (chunk) {
     let stdout = iconvLite.decode(chunk, 'cp936')
     console.log('kfs-electron stdout', stdout)
     let results = regex.exec(stdout)
+    console.log('kfs-electron results', results)
     if (results && results[1]) {
       const port = results[1]
       console.log('port', results[1])
-      const config = fs.readFileSync(configPath).toString()
-      const json = JSON.parse(config)
+      let json = {}
+      if (fs.existsSync(configPath)) {
+        const config = fs.readFileSync(configPath).toString()
+        json = JSON.parse(config)
+      }
       json.port = port
       fs.writeFileSync(configPath, JSON.stringify(json, undefined, 2), { flag: 'w+' })
     }
@@ -182,6 +190,11 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
+  if (child) {
+    console.log('close child')
+    child.stdin.pause();
+    child.kill();
+  }
   getProcesses().forEach((p) => p.kill())
   app.quit()
 })

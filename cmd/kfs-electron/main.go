@@ -34,12 +34,7 @@ func rootCmd() *cobra.Command {
 var db *gosqlite.DB
 
 func runRoot(cmd *cobra.Command, args []string) {
-	println("runRoot", args)
-	var err error
-	db, err = gosqlite.NewDb("electron.db")
-	if err != nil {
-		panic(err)
-	}
+	fmt.Printf("runRoot: %+v\n", args)
 
 	portStr := cmd.Flag(PortStr).Value.String()
 	println("portStr", portStr)

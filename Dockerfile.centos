@@ -9,7 +9,7 @@ RUN wget https://dl.google.com/go/go1.21.6.linux-armv6l.tar.gz \
     && mv go /root/lib/
 RUN echo -e "\n\
 export PATH=/root/lib/go/bin:$PATH\n\
-export GOPROXY=https://proxy.golang.com.cn,direct\n\
+export GOPROXY=https://goproxy.cn,direct\n\
 export GOROOT=/root/lib/go\n\
 " >> ~/.bashrc
 

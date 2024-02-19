@@ -10,9 +10,12 @@ Object.defineProperty(window, 'kfsEnv', {
 const fs = window.require('fs');
 const path = window.require('path');
 const remote = window.require('@electron/remote');
+const { app } = window.require('@electron/remote');
 
-let configFilename = 'kfs-config.json';
-let configPath = path.join(remote.process.resourcesPath, configFilename);
+const configFilename = 'kfs-config.json';
+const userData = app.getPath('userData');
+console.log('userData', userData);
+const configPath = path.join(userData, configFilename);
 
 console.log(configPath);
 

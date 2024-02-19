@@ -152,6 +152,42 @@ case $1 in
         DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production VITE_APP_PLATFORM=$GOOS BUILD_PATH=electron-production PUBLIC_URL=. yarn build
         ;;
 
+      electron:win)
+        GOOS=windows
+        cd $root/cmd/kfs-electron
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-electron.exe
+        cp kfs-electron.exe $root/ui/electron/resources/
+        cd $root/ui/electron
+        yarn
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production VITE_APP_PLATFORM=$GOOS BUILD_PATH=electron-production PUBLIC_URL=. yarn build:win
+        ;;
+
+      electron:linux)
+        GOOS=linux
+        cd $root/cmd/kfs-electron
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-electron.exe
+        cp kfs-electron.exe $root/ui/electron/resources/
+        cd $root/ui/electron
+        yarn
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production VITE_APP_PLATFORM=$GOOS BUILD_PATH=electron-production PUBLIC_URL=. yarn build:linux
+        ;;
+
+      electron:mac)
+        GOOS=darwin
+        cd $root/cmd/kfs-electron
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-electron.exe
+        cp kfs-electron.exe $root/ui/electron/resources/
+        cd $root/ui/electron
+        yarn
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production VITE_APP_PLATFORM=$GOOS BUILD_PATH=electron-production PUBLIC_URL=. yarn build:mac
+        ;;
+
       *)
         usage
         ;;

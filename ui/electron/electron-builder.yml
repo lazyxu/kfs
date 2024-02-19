@@ -1,6 +1,6 @@
 appId: "com.electron.lazyxu"
 productName: "考拉云盘"
-copyright: "Copyright © 2022 Xu Liang"
+copyright: "Copyright © 2024 Xu Liang"
 files:
   - '!**/.vscode/*'
   - '!src/*'
