@@ -2,6 +2,7 @@ go 1.21
 
 use (
 	./cmd/kfs-cli
+	./cmd/kfs-backup
 	./cmd/kfs-electron
 	./cmd/kfs-server
 	./cmd/kfs-test

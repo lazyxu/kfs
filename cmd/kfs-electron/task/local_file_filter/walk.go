@@ -69,7 +69,7 @@ func (h *filterHandlers) DirHandler(ctx context.Context, filePath string, dirInf
 	return nil
 }
 
-func (d *DriverLocalFile) checkFilter(ctx context.Context, driverId uint64, srcPath, ignores string) error {
+func (d *DriverLocalFile) DoFilter(ctx context.Context, srcPath, ignores string) error {
 	if !filepath.IsAbs(srcPath) {
 		return errors.New("请输入绝对路径")
 	}
@@ -80,7 +80,7 @@ func (d *DriverLocalFile) checkFilter(ctx context.Context, driverId uint64, srcP
 	if !info.IsDir() {
 		return errors.New("源目录不存在")
 	}
-	fmt.Println("filter start", driverId, srcPath, ignores)
+	fmt.Println("filter start", d.driverId, srcPath, ignores)
 	if os.PathSeparator == '\\' {
 		ignores = strings.ReplaceAll(ignores, "\\", "/")
 	}
@@ -88,7 +88,7 @@ func (d *DriverLocalFile) checkFilter(ctx context.Context, driverId uint64, srcP
 	gitIgnore := ignore.CompileIgnoreLines(list...)
 	handlers := &filterHandlers{
 		d:         d,
-		driverId:  driverId,
+		driverId:  d.driverId,
 		srcPath:   srcPath,
 		gitIgnore: gitIgnore,
 	}

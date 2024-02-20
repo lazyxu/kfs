@@ -4,6 +4,7 @@
 tmp
 supervisord.*
 .kfs*
+*.log
 
 # IDE
 .vscode

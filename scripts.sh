@@ -141,6 +141,16 @@ case $1 in
         fi
         ;;
 
+      backup)
+        cd $root/cmd/kfs-backup
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        if [[ $GOOS != '' && $GOARCH != '' ]]; then
+          GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-backup-$GOOS-$GOARCH
+        else
+          go build -o kfs-backup
+        fi
+        ;;
+
       electron)
         cd $root/cmd/kfs-electron
         echo "GOOS=$GOOS GOARCH=$GOARCH"

@@ -225,7 +225,7 @@ func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool, srcPath, 
 	ctx, cancel := context.WithCancel(context.TODO())
 	d.taskInfo.cancel = cancel
 	go func() {
-		err := d.checkFilter(ctx, d.driverId, srcPath, ignores)
+		err := d.DoFilter(ctx, srcPath, ignores)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				d.setTaskStatus(StatusCanceled)
