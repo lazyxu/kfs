@@ -24,12 +24,6 @@ func webServer(lis net.Listener) {
 	}))
 
 	// Routes
-	e.GET("/api/v1/backupTask", apiBackupTask)
-	e.GET("/api/v1/event/backupTask", apiEventBackupTask)
-	e.POST("/api/v1/backupTask", apiNewBackupTask)
-	e.DELETE("/api/v1/backupTask", apiDeleteBackupTask)
-	e.POST("/api/v1/startBackupTask", apiStartBackupTask)
-	e.GET("/api/v1/event/backupTask/:name", apiEventBackupTaskDetail)
 	e.POST("/api/v1/startDriverLocalFile", apiStarDriverLocalFile)
 	e.POST("/api/v1/startDriverLocalFileFilter", apiStarDriverLocalFileFilter)
 	e.POST("/api/v1/startAllLocalFileSync", startAllLocalFileSync)

@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lazyxu/kfs/cmd/kfs-electron/db/gosqlite"
 	"github.com/spf13/cobra"
 	"net"
 	"os"
@@ -30,8 +29,6 @@ func rootCmd() *cobra.Command {
 	cmd.PersistentFlags().StringP(PortStr, "p", "0", "local web server port")
 	return cmd
 }
-
-var db *gosqlite.DB
 
 func runRoot(cmd *cobra.Command, args []string) {
 	fmt.Printf("runRoot: %+v\n", args)
