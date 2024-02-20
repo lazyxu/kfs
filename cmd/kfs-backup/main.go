@@ -20,6 +20,11 @@ var scanOnly bool
 var srcPath string
 var ignores []string
 
+var serverAddr string
+var driverId uint64
+
+const invalidDriverId uint64 = 18446744073709551615
+
 func rootCmd() *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:  "kfs-electron",
@@ -30,9 +35,21 @@ func rootCmd() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&scanOnly, "scan-only", false, "only scan files, not upload")
 	cmd.PersistentFlags().StringVar(&srcPath, "src", "", "src path")
 	cmd.PersistentFlags().StringSliceVar(&ignores, "ignore", []string{}, "ignores")
+
+	cmd.PersistentFlags().StringVar(&serverAddr, "server", "", "server address")
+	cmd.PersistentFlags().Uint64Var(&driverId, "driver", invalidDriverId, "driver id")
 	return cmd
 }
 
 func runRoot(cmd *cobra.Command, args []string) {
-	doScan(cmd.Context(), srcPath, ignores, verbose)
+	ctx := cmd.Context()
+	if scanOnly {
+		doScan(ctx, srcPath, ignores, verbose)
+	} else {
+		if driverId == invalidDriverId {
+			fmt.Printf("请输入正确的云盘ID：%d\n", driverId)
+			return
+		}
+		doUpload(ctx, serverAddr, driverId, srcPath, ignores, verbose)
+	}
 }

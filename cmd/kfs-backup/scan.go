@@ -106,7 +106,7 @@ func doScan(ctx context.Context, srcPath string, ignores []string, verbose bool)
 		return
 	}
 
-	fmt.Printf("扫描完成！耗时 %s，跳过了 %d 个文件或目录，", time.Since(start).String(), handlers.ignoreCount)
+	fmt.Printf("扫描完成！耗时 %s，忽略了 %d 个文件或目录，", time.Since(start).String(), handlers.ignoreCount)
 	if handlers.errCount > 0 {
 		fmt.Printf("扫描时发生 %d 处错误\n", handlers.errCount)
 	} else {

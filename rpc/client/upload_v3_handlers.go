@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"github.com/dustin/go-humanize"
 	"io"
 	"net"
 	"os"
@@ -101,15 +103,21 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 			return context.Canceled
 		default:
 		}
-		if !info.IsDir() && hash == "" {
-			var fileErr error
-			hash, fileErr, err = h.uploadFile(ctx, p, info)
-			if fileErr != nil {
-				h.uploadProcess.OnFileError(p, fileErr)
-				continue
-			}
-			if err != nil {
-				return err
+		if !info.IsDir() {
+			if hash == "" {
+				var fileErr error
+				hash, fileErr, err = h.uploadFile(ctx, p, info)
+				if fileErr != nil {
+					h.uploadProcess.OnFileError(p, fileErr)
+					continue
+				}
+				if err != nil {
+					return err
+				}
+			} else {
+				if h.verbose {
+					fmt.Printf("文件 %s 已存在，跳过\n", info.Name())
+				}
 			}
 		}
 		modifyTime := uint64(info.ModTime().UnixNano())
@@ -151,12 +159,14 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	return nil
 }
 
-func (h *uploadHandlersV3) copyFile(conn net.Conn, f *os.File, size int64) error {
+func (h *uploadHandlersV3) copyFile(conn net.Conn, f *os.File, name string, size int64) error {
 	_, err := f.Seek(0, io.SeekStart)
 	if err != nil {
 		return err
 	}
-	println("CopyStart", size)
+	if h.verbose {
+		fmt.Printf("开始拷贝文件内容 %s，大小为 %s\n", name, humanize.IBytes(uint64(size)))
+	}
 	var n int64
 	if h.encoder == "lz4" {
 		w := lz4.NewWriter(conn)
@@ -171,7 +181,9 @@ func (h *uploadHandlersV3) copyFile(conn net.Conn, f *os.File, size int64) error
 			return err
 		}
 	}
-	println("CopyEnd", n)
+	if h.verbose {
+		fmt.Printf("拷贝文件内容完成 %s，大小为 %s\n", name, humanize.IBytes(uint64(n)))
+	}
 	return nil
 }
 
@@ -204,7 +216,9 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 		return
 	default:
 	}
-	println("uploadFile", filePath, hash)
+	if h.verbose {
+		fmt.Printf("文件 %s 的哈希值为 %s\n", filePath, hash)
+	}
 
 	status, err := ReqRespWithConn(h.conn, rpcutil.CommandUploadV3File, &pb.UploadFileV3{
 		Hash: hash,
@@ -220,13 +234,13 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 			return
 		default:
 		}
-		println("encoder", len(h.encoder), h.encoder)
+		//println("encoder", len(h.encoder), h.encoder)
 		err = rpcutil.WriteString(h.conn, h.encoder)
 		if err != nil {
 			return
 		}
 
-		err = h.copyFile(h.conn, f, info.Size())
+		err = h.copyFile(h.conn, f, info.Name(), info.Size())
 		if err != nil {
 			return
 		}
@@ -236,6 +250,10 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 			return
 		}
 		return
+	} else {
+		if h.verbose {
+			fmt.Printf("文件 %s 已存在，跳过\n", info.Name())
+		}
 	}
 	return
 }
