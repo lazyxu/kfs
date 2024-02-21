@@ -3,7 +3,7 @@ set -e -x
 imeage_name=kfs-dev
 image_tag=`date '+%Y%m%d_%H%M%S'`
 docker build -f Dockerfile.dev -t ${imeage_name}:${image_tag} .
-docker run --privileged=true -p 2223:22 -p 2123:1123 -p 2124:1124 --name ${imeage_name}_${image_tag} \
+docker run --privileged=true -p 2122:22 -p 2123:1123 -p 2124:1124 --name ${imeage_name}_${image_tag} \
     -v ~/code:/root/code -w /root/code/kfs -d \
     ${imeage_name}:${image_tag}
 docker cp ~/.ssh ${imeage_name}_${image_tag}:/root/.ssh
