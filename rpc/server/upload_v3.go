@@ -83,10 +83,6 @@ func handleUploadV3Dir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 			return err
 		}
 		if !os.FileMode(item.Mode).IsDir() {
-			err = AnalyzeIfNoFileType(context.TODO(), kfsCore, item.Hash)
-			if err != nil {
-				return err
-			}
 			err = PluginUnzipIfLivp(context.TODO(), kfsCore, item.Hash, item.Name)
 			if err != nil {
 				return err
@@ -162,6 +158,11 @@ func handleUploadV3File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	err = kfsCore.Db.InsertFile(context.TODO(), req.Hash, req.Size)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "InsertFile", err.Error())
+		return err
+	}
+	err = AnalyzeIfNoFileType(context.TODO(), kfsCore, req.Hash)
+	if err != nil {
+		println(conn.RemoteAddr().String(), "AnalyzeIfNoFileType", req.Hash, err.Error())
 		return err
 	}
 	return nil
