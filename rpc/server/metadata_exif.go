@@ -273,6 +273,23 @@ func getInt64ValueFor(s string, key string) (int64, error) {
 func getImageHeightWidthByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, height uint64, err error) {
 	s, err := ffmpeg_go.Probe(kfsCore.S.GetFilePath(hash), ffmpeg_go.KwArgs{"v": "error", "select_streams": "v", "show_entries": "stream=width,height", "of": "default=noprint_wrappers=1"})
 	if err != nil {
+		if strings.Contains(err.Error(), "moov atom not found") {
+			// https://forum.doom9.org/showthread.php?t=185248
+			var rc dao.SizedReadCloser
+			rc, err = kfsCore.S.ReadWithSize(hash)
+			if err != nil {
+				return
+			}
+			defer rc.Close()
+			var c image.Config
+			c, err = goheif.DecodeConfig(rc)
+			if err != nil {
+				return
+			}
+			height = uint64(c.Height)
+			width = uint64(c.Width)
+			return
+		}
 		return
 	}
 	width, err = getUint64ValueFor(s, "width")
