@@ -190,7 +190,12 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType *d
 		}
 		return nil
 	} else if fileType.Type == "video" {
-		width, height, err := GetVideoMetadataByFfmpeg(kfsCore, hash)
+		width, height, err := GetVideoHeightWidthByFfmpeg(kfsCore, hash)
+		// https://stackoverflow.com/questions/9412384/m4a-mp4-file-format-whats-the-difference-or-are-they-the-same
+		if fileType.SubType == "mp4" && err == NO_VALUE_FOR_KEY {
+			fileType.Type = "audio"
+			return nil
+		}
 		if err != nil {
 			return err
 		}
@@ -200,10 +205,6 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType *d
 		}
 		m, err := GetVideoMetadata(kfsCore, hash)
 		if err != nil {
-			// https://stackoverflow.com/questions/9412384/m4a-mp4-file-format-whats-the-difference-or-are-they-the-same
-			if fileType.SubType == "mp4" && err == NO_VALUE_FOR_KEY {
-				fileType.Type = "audio"
-			}
 			_, err = kfsCore.Db.InsertNullVideoMetadata(ctx, hash)
 			// TODO: what if exist
 			if err != nil {
@@ -293,7 +294,7 @@ func getImageHeightWidthByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, 
 	return
 }
 
-func GetVideoMetadataByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, height uint64, err error) {
+func GetVideoHeightWidthByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, height uint64, err error) {
 	s, err := ffmpeg_go.Probe(kfsCore.S.GetFilePath(hash), ffmpeg_go.KwArgs{"v": "error", "select_streams": "v", "show_entries": "stream=width,height", "of": "default=noprint_wrappers=1"})
 	if err != nil {
 		return
