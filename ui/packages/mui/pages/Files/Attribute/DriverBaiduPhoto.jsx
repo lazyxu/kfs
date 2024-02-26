@@ -77,13 +77,13 @@ export default ({ driver }) => {
         <Grid container spacing={1.5} sx={{ alignItems: "center" }}>
             <Attr k="定时同步">
         {syncAttributes ? <>
-            <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(e.target.checked, syncAttributes.h, syncAttributes.m)} />
-            <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => updateDriverSync(syncAttributes.sync, e.target.value, syncAttributes.m)}>
+            <Switch checked={syncAttributes.sync} onChange={e => updateDriverSync(driver.id, e.target.checked, syncAttributes.h, syncAttributes.m)} />
+            <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.h} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, e.target.value, syncAttributes.m)}>
                 {[...Array(24).keys()].map(value =>
                     <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                 )}
             </Select>时
-            <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => updateDriverSync(syncAttributes.sync, syncAttributes.h, e.target.value)}>
+            <Select variant="standard" size="small" sx={{ marginLeft: "1em" }} value={syncAttributes.m} onChange={e => updateDriverSync(driver.id, syncAttributes.sync, syncAttributes.h, e.target.value)}>
                 {[...Array(60).keys()].map(value =>
                     <MenuItem key={value} value={value}>{value.toString().padStart(2, 0)}</MenuItem>
                 )}
