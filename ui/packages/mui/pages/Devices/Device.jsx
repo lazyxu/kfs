@@ -49,7 +49,7 @@ const StyledMenu = styled((props) => (
 export default ({ device, setDevices }) => {
     const { sysConfig, setSysConfig } = useSysConfig();
     const [anchorEl, setAnchorEl] = useState(null);
-    let deviceIcon="weizhishebei";
+    let deviceIcon = "weizhishebei";
     let os = device.os.toLowerCase();
     if (os.includes("windows")) {
         deviceIcon = "windows";
@@ -65,6 +65,9 @@ export default ({ device, setDevices }) => {
     }
     if (os.includes("iphone")) {
         deviceIcon = "mobileios";
+    }
+    if (device.hostname === "") {
+        deviceIcon = "HTML";
     }
     return (
         <Card sx={{ minWidth: 275 }} variant="outlined">

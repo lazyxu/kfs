@@ -28,11 +28,8 @@ async function newDeviceIfNeeded(sysConfig, setSysConfig) {
     let parserOS = parser.getOS();
     console.log(parserOS);
     let os = parserOS.name + " " + parserOS.version;
-    let hostname = "";
-    if (window.kfsEnv.VITE_APP_PLATFORM !== 'web') {
-        hostname = window.require("os").hostname();
-    }
-    let name = hostname;
+    let hostname = window.require("os").hostname();
+    let name = hostname + "@" + os;
     let id;
     if (sysConfig.hasOwnProperty("deviceId")) {
         id = sysConfig.deviceId;
