@@ -16,7 +16,7 @@ type Driver struct {
 	RefreshToken string `json:"refreshToken"`
 
 	// local file
-	DeviceId uint64 `json:"deviceId"`
+	DeviceId string `json:"deviceId"`
 	SrcPath  string `json:"srcPath"`
 	Ignores  string `json:"ignores"`
 	Encoder  string `json:"encoder"`

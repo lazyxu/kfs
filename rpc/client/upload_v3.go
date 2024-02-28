@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/pb"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -32,6 +34,12 @@ func (fs *RpcFs) UploadDir(ctx context.Context, driverId uint64, dstPath string,
 		dstPath:          dstPath,
 		conn:             conn,
 	}
+	var startResp pb.UploadStartResp
+	_, err = ReqRespWithConn(handlers.conn, rpcutil.CommandUploadStart, &pb.UploadStartReq{}, &startResp)
+	if err != nil {
+		return err
+	}
+	handlers.uploadTime = startResp.UploadTime
 	err = core.WalkDir(ctx, srcPath, handlers)
 	if err != nil {
 		return

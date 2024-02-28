@@ -55,7 +55,7 @@ func InsertDriverBaiduPhoto(ctx context.Context, conn *sql.DB, db DbImpl, driver
 	return
 }
 
-func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, deviceId uint64, srcPath string, ignores string, encoder string) (exist bool, err error) {
+func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverName string, description string, deviceId string, srcPath string, ignores string, encoder string) (exist bool, err error) {
 	res, err := conn.ExecContext(ctx, `
 	INSERT INTO _driver (
 		name,

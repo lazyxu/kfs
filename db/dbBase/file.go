@@ -33,7 +33,6 @@ func GetDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, filePath 
 	file.DriverId = driverId
 	file.DirPath = filePath[:len(filePath)-1]
 	file.Name = filePath[len(filePath)-1]
-	file.Version = 0
 
 	rows, err := conn.QueryContext(ctx, `
 		SELECT hash,
@@ -42,7 +41,9 @@ func GetDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, filePath 
 		createTime,
 		modifyTime,
 		changeTime,
-		accessTime
+		accessTime,
+		uploadDeviceId,
+		uploadTime
 		FROM _driver_file WHERE driverId=? and dirPath=? and name=?
 	`, file.DriverId, arrayToJson(file.DirPath), file.Name)
 	if err != nil {
@@ -60,7 +61,9 @@ func GetDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, filePath 
 		&file.CreateTime,
 		&file.ModifyTime,
 		&file.ChangeTime,
-		&file.AccessTime)
+		&file.AccessTime,
+		&file.UploadDeviceId,
+		&file.UploadTime)
 	return
 }
 
@@ -187,58 +190,32 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 	defer func() {
 		err = CommitAndRollback(tx, err)
 	}()
-	// TODO: check by option.
-	if len(f.DirPath) != 0 {
-		for i := 0; i < len(f.DirPath); i++ {
-			dirPath := f.DirPath[:i]
-			name := f.DirPath[i]
-			hash := ""
-			size := 0
-			mode := uint64(os.ModeDir)
-			time := f.CreateTime
-			_, err = tx.ExecContext(ctx, `
-	INSERT OR IGNORE INTO _driver_file (
-		driverId,
-		dirPath,
-		name,
-	    version,
-		hash,
-		mode,
-		size,
-		createTime,
-		modifyTime,
-		changeTime,
-		accessTime
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-	`, f.DriverId, arrayToJson(dirPath), name, f.Version, hash, mode, size, time, time, time, time)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	_, err = tx.ExecContext(ctx, `
 	INSERT INTO _driver_file (
 		driverId,
 		dirPath,
 		name,
-	    version,
 		hash,
 		mode,
 		size,
 		createTime,
 		modifyTime,
 		changeTime,
-		accessTime
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO UPDATE SET
+		accessTime,
+		uploadDeviceId,
+		uploadTime
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO UPDATE SET
 		hash=?,
 		mode=?,
 		size=?,
 		createTime=?,
 		modifyTime=?,
 		changeTime=?,
-		accessTime=?;
-	`, f.DriverId, arrayToJson(f.DirPath), f.Name, f.Version, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
-		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime)
+		accessTime=?,
+		uploadDeviceId=?,
+		uploadTime=?;
+	`, f.DriverId, arrayToJson(f.DirPath), f.Name, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime, f.UploadDeviceId, f.UploadTime,
+		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime, f.UploadDeviceId, f.UploadTime)
 	if err != nil {
 		return err
 	}

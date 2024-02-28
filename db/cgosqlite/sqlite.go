@@ -190,7 +190,7 @@ func (db *DB) Create() error {
 
 	CREATE TABLE IF NOT EXISTS _driver_local_file (
 		id           INT64          NOT NULL PRIMARY KEY,
-	    deviceId     VARCHAR(64)    NOT NULL DEFAULT 0,
+	    deviceId     CHAR(36)       NOT NULL DEFAULT "",
 		srcPath      VARCHAR(32767) NOT NULL DEFAULT "",
 	    ignores      TEXT           NOT NULL DEFAULT "",
 		encoder      VARCHAR(64)    NOT NULL DEFAULT "",
@@ -199,7 +199,7 @@ func (db *DB) Create() error {
 	);
 
 	CREATE TABLE IF NOT EXISTS _device (
-		id          VARCHAR(64)  NOT NULL PRIMARY KEY,
+		id          CHAR(36)     NOT NULL PRIMARY KEY,
 		name        VARCHAR(256) NOT NULL,
 		os          VARCHAR(256) NOT NULL,
 		userAgent   VARCHAR(256) NOT NULL,
@@ -217,7 +217,7 @@ func (db *DB) Create() error {
 		modifyTime     INT64          NOT NULL,
 		changeTime     INT64          NOT NULL,
 		accessTime     INT64          NOT NULL,
-	    uploadDeviceId VARCHAR(64)    NOT NULL,
+	    uploadDeviceId CHAR(36)       NOT NULL,
 	    uploadTime     INT64          NOT NULL,
 		PRIMARY KEY (driverId, dirPath, name, uploadTime),
 		FOREIGN KEY (driverId)  REFERENCES _driver(id),

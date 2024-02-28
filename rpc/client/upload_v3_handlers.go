@@ -32,6 +32,8 @@ type uploadHandlersV3 struct {
 	srcPath          string
 	dstPath          string
 	conn             net.Conn
+	uploadDeviceId   string
+	uploadTime       uint64
 }
 
 func (h *uploadHandlersV3) FilePathFilter(filePath string) bool {
@@ -59,7 +61,7 @@ func (h *uploadHandlersV3) formatPath(filePath string) ([]string, error) {
 }
 
 func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo, continues []bool) error {
-	dirPath, err := h.formatPath(filePath)
+	dirPath, err := h.formatPath(filepath.Dir(filePath))
 	if err != nil {
 		h.uploadProcess.OnFileError(filePath, err)
 		return nil
@@ -81,18 +83,28 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	default:
 	}
 
-	var respCheck pb.UploadRespV3
-	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3DirCheck, &pb.UploadReqCheckV3{
+	var startResp pb.UploadStartDirResp
+	dirModifyTime := uint64(dirInfo.ModTime().UnixNano())
+	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadStartDir, &pb.UploadStartDirReq{
 		DriverId:                h.driverId,
 		DirPath:                 dirPath,
+		Name:                    dirInfo.Name(),
+		Hash:                    "",
+		Mode:                    uint64(dirInfo.Mode()),
+		Size:                    uint64(dirInfo.Size()),
+		CreateTime:              dirModifyTime,
+		ModifyTime:              dirModifyTime,
+		ChangeTime:              dirModifyTime,
+		AccessTime:              dirModifyTime,
+		UploadDeviceId:          h.uploadDeviceId,
+		UploadTime:              h.uploadTime,
 		UploadReqDirItemCheckV3: uploadReqDirItemCheckV3,
-	}, &respCheck)
+	}, &startResp)
 	if err != nil {
 		return err
 	}
 
-	uploadReqDirItemV3 := []*pb.UploadReqDirItemV3{}
-	for i, hash := range respCheck.Hash {
+	for i, hash := range startResp.Hash {
 		info := infos[i]
 		p := filepath.Join(filePath, info.Name())
 		if !info.IsDir() {
@@ -120,34 +132,22 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 				}
 			}
 		}
-		modifyTime := uint64(info.ModTime().UnixNano())
-		uploadReqDirItemV3 = append(uploadReqDirItemV3, &pb.UploadReqDirItemV3{
-			Name:       info.Name(),
-			Hash:       hash,
-			Mode:       uint64(info.Mode()),
-			Size:       uint64(info.Size()),
-			CreateTime: modifyTime,
-			ModifyTime: modifyTime,
-			ChangeTime: modifyTime,
-			AccessTime: modifyTime,
-		})
 		if !info.IsDir() {
 			h.uploadProcess.EndFile(p, info)
 		}
 	}
 
 	if filePath != h.srcPath {
-		h.uploadProcess.StartDir(filePath, uint64(len(uploadReqDirItemV3)))
+		h.uploadProcess.StartDir(filePath, uint64(len(infos)))
 	}
 	select {
 	case <-ctx.Done():
 		return context.Canceled
 	default:
 	}
-	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadV3Dir, &pb.UploadReqV3{
-		DriverId:           h.driverId,
-		DirPath:            dirPath,
-		UploadReqDirItemV3: uploadReqDirItemV3,
+	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadEndDir, &pb.UploadEndDirReq{
+		DriverId: h.driverId,
+		DirPath:  dirPath,
 	}, nil)
 	if err != nil {
 		return err
@@ -204,7 +204,6 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 	defer func() {
 		f.Close()
 	}()
-	size := uint64(info.Size())
 	hash, fileErr = h.getHash(f)
 	if fileErr != nil {
 		return
@@ -219,10 +218,26 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 	if h.verbose {
 		fmt.Printf("文件 %s 的哈希值为 %s\n", filePath, hash)
 	}
+	dirPath, err := h.formatPath(filepath.Dir(filePath))
+	if err != nil {
+		h.uploadProcess.OnFileError(filePath, err)
+		return
+	}
 
+	modifyTime := uint64(info.ModTime().UnixNano())
 	status, err := ReqRespWithConn(h.conn, rpcutil.CommandUploadV3File, &pb.UploadFileV3{
-		Hash: hash,
-		Size: size,
+		DriverId:       h.driverId,
+		DirPath:        dirPath,
+		Name:           info.Name(),
+		Hash:           hash,
+		Mode:           uint64(info.Mode()),
+		Size:           uint64(info.Size()),
+		CreateTime:     modifyTime,
+		ModifyTime:     modifyTime,
+		ChangeTime:     modifyTime,
+		AccessTime:     modifyTime,
+		UploadDeviceId: h.uploadDeviceId,
+		UploadTime:     h.uploadTime,
 	}, nil)
 	if err != nil {
 		return

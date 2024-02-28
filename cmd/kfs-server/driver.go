@@ -48,11 +48,7 @@ func apiNewDriverBaiduPhoto(c echo.Context) error {
 func apiNewDriverLocalFile(c echo.Context) error {
 	name := c.QueryParam("name")
 	description := c.QueryParam("description")
-	deviceIdStr := c.QueryParam("deviceId")
-	deviceId, err := strconv.ParseUint(deviceIdStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "id should be a number")
-	}
+	deviceId := c.QueryParam("deviceId")
 	srcPath := c.QueryParam("srcPath")
 	ignores := c.QueryParam("ignores")
 	encoder := c.QueryParam("encoder")

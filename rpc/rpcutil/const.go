@@ -17,9 +17,10 @@ const (
 	CommandUploadV2File
 	CommandUploadV2Dir
 
-	CommandUploadV3DirCheck
+	CommandUploadStart
+	CommandUploadStartDir
 	CommandUploadV3File
-	CommandUploadV3Dir
+	CommandUploadEndDir
 
 	CommandDownload
 

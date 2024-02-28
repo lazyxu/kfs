@@ -89,8 +89,7 @@ func ListDriverFileByHash(ctx context.Context, conn *sql.DB, hash string) (files
 		SELECT _driver.id,
 			_driver.name,
 			_driver_file.dirPath,
-			_driver_file.name,
-			_driver_file.version
+			_driver_file.name
 		FROM _driver_file LEFT JOIN _driver WHERE _driver_file.hash=? AND _driver.id = _driver_file.driverId
 	`, hash)
 	if err != nil {
@@ -105,8 +104,7 @@ func ListDriverFileByHash(ctx context.Context, conn *sql.DB, hash string) (files
 			&file.DriverId,
 			&file.DriverName,
 			&dirPathJson,
-			&file.Name,
-			&file.Version)
+			&file.Name)
 		if err != nil {
 			return
 		}

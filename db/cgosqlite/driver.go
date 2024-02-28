@@ -18,7 +18,7 @@ func (db *DB) InsertDriverBaiduPhoto(ctx context.Context, driverName string, des
 	return dbBase.InsertDriverBaiduPhoto(ctx, conn, db, driverName, description, accessToken, refreshToken)
 }
 
-func (db *DB) InsertDriverLocalFile(ctx context.Context, driverName string, description string, deviceId uint64, srcPath string, ignores string, encoder string) (exist bool, err error) {
+func (db *DB) InsertDriverLocalFile(ctx context.Context, driverName string, description string, deviceId string, srcPath string, ignores string, encoder string) (exist bool, err error) {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.InsertDriverLocalFile(ctx, conn, db, driverName, description, deviceId, srcPath, ignores, encoder)

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"strings"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/pierrec/lz4"
@@ -16,14 +16,52 @@ import (
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 )
 
-func handleUploadV3DirCheck(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+func handleUploadStart(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	// read
-	var req pb.UploadReqCheckV3
+	var req pb.UploadStartReq
 	err := rpcutil.ReadProto(conn, &req)
 	if err != nil {
 		return err
 	}
-	println(conn.RemoteAddr().String(), "UploadDirCheck", req.DriverId, "/"+strings.Join(req.DirPath, "/"))
+
+	now := time.Now().UnixNano()
+	// write
+	err = rpcutil.WriteOK(conn)
+	if err != nil {
+		return err
+	}
+	err = rpcutil.WriteProto(conn, &pb.UploadStartResp{
+		UploadTime: uint64(now),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func handleUploadStartDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+	// read
+	var req pb.UploadStartDirReq
+	err := rpcutil.ReadProto(conn, &req)
+	if err != nil {
+		return err
+	}
+	println(conn.RemoteAddr().String(), "UploadStartDir", req.DriverId, "/"+strings.Join(req.DirPath, "/"))
+
+	err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
+		DriverId:       req.DriverId,
+		DirPath:        req.DirPath,
+		Name:           req.Name,
+		Hash:           req.Hash,
+		Mode:           req.Mode,
+		Size:           req.Size,
+		CreateTime:     req.CreateTime,
+		ModifyTime:     req.ModifyTime,
+		ChangeTime:     req.ChangeTime,
+		AccessTime:     req.AccessTime,
+		UploadDeviceId: req.UploadDeviceId,
+		UploadTime:     req.UploadTime,
+	})
 
 	l := len(req.UploadReqDirItemCheckV3)
 	hashList := make([]string, l)
@@ -40,12 +78,16 @@ func handleUploadV3DirCheck(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	if err != nil {
 		return err
 	}
+	if err != nil {
+		println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
+		return err
+	}
 	// write
 	err = rpcutil.WriteOK(conn)
 	if err != nil {
 		return err
 	}
-	err = rpcutil.WriteProto(conn, &pb.UploadRespV3{
+	err = rpcutil.WriteProto(conn, &pb.UploadStartDirResp{
 		Hash: hashList,
 	})
 	if err != nil {
@@ -54,68 +96,19 @@ func handleUploadV3DirCheck(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	return nil
 }
 
-func handleUploadV3Dir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+func handleUploadEndDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	// read
-	var req pb.UploadReqV3
+	var req pb.UploadEndDirReq
 	err := rpcutil.ReadProto(conn, &req)
 	if err != nil {
 		return err
 	}
 	println(conn.RemoteAddr().String(), "UploadDir", req.DriverId, "/"+strings.Join(req.DirPath, "/"))
-	// TODO: insert batch.
-	for _, item := range req.UploadReqDirItemV3 {
-		// TODO: if dir not exist
-		err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
-			DriverId:   req.DriverId,
-			DirPath:    req.DirPath,
-			Name:       item.Name,
-			Version:    0,
-			Hash:       item.Hash,
-			Mode:       item.Mode,
-			Size:       item.Size,
-			CreateTime: item.CreateTime,
-			ModifyTime: item.ModifyTime,
-			ChangeTime: item.ChangeTime,
-			AccessTime: item.AccessTime,
-		})
-		if err != nil {
-			fmt.Println("Upload error", err.Error())
-			return err
-		}
-		if !os.FileMode(item.Mode).IsDir() {
-			err = PluginUnzipIfLivp(context.TODO(), kfsCore, item.Hash, item.Name)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	err = kfsCore.Db.SetLivpForMovAndHeicOrJpgInDirPath(context.TODO(), req.DriverId, req.DirPath)
 	if err != nil {
 		fmt.Println("Upload.SetLivpForMovAndHeicOrJpgInDriver error", err.Error())
 		return err
 	}
-	// println(conn.RemoteAddr().String(), "UploadDir.NEW", req.DriverId, "/"+strings.Join(req.DirPath, "/"))
-	// files := make([]dao.DriverFile, len(req.UploadReqDirItemV3))
-	// for i, item := range req.UploadReqDirItemV3 {
-	// 	files[i] = dao.DriverFile{
-	// 		DriverId:   req.DriverId,
-	// 		DirPath:    req.DirPath,
-	// 		Name:       item.Name,
-	// 		Version:    0,
-	// 		Hash:       item.Hash,
-	// 		Mode:       item.Mode,
-	// 		Size:       item.Size,
-	// 		CreateTime: item.CreateTime,
-	// 		ModifyTime: item.ModifyTime,
-	// 		ChangeTime: item.ChangeTime,
-	// 		AccessTime: item.AccessTime,
-	// 	}
-	// }
-	// err = kfsCore.Db.UpsertDriverFiles(context.TODO(), files)
-	// if err != nil {
-	// 	fmt.Println("Upload error", err.Error())
-	// 	return err
-	// }
 	return nil
 }
 
@@ -160,9 +153,32 @@ func handleUploadV3File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		println(conn.RemoteAddr().String(), "InsertFile", err.Error())
 		return err
 	}
+	err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
+		DriverId:       req.DriverId,
+		DirPath:        req.DirPath,
+		Name:           req.Name,
+		Hash:           req.Hash,
+		Mode:           req.Mode,
+		Size:           req.Size,
+		CreateTime:     req.CreateTime,
+		ModifyTime:     req.ModifyTime,
+		ChangeTime:     req.ChangeTime,
+		AccessTime:     req.AccessTime,
+		UploadDeviceId: req.UploadDeviceId,
+		UploadTime:     req.UploadTime,
+	})
+	if err != nil {
+		println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
+		return err
+	}
 	err = AnalyzeIfNoFileType(context.TODO(), kfsCore, req.Hash)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "AnalyzeIfNoFileType", req.Hash, err.Error())
+		return err
+	}
+	err = PluginUnzipIfLivp(context.TODO(), kfsCore, req.Hash, req.Name)
+	if err != nil {
+		println(conn.RemoteAddr().String(), "PluginUnzipIfLivp", req.Hash, err.Error())
 		return err
 	}
 	return nil
