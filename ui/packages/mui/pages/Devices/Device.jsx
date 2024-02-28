@@ -81,10 +81,16 @@ export default ({ device, setDevices }) => {
                         direction="column"
                         sx={{ flex: 1 }}
                     >
-                        <Box>id：{device.id} {sysConfig.deviceId === device.id && "（当前设备）"}</Box>
                         <Box>名称：{device.name}</Box>
+                        <Box>id：{device.id} {sysConfig.deviceId === device.id && "（当前设备）"}</Box>
                         <Box color="text.secondary" sx={{ flex: 1 }}>
                             系统：{device.os}
+                        </Box>
+                        <Box color="text.secondary" sx={{ flex: 1 }}>
+                            userAgent：{device.userAgent}
+                        </Box>
+                        <Box color="text.secondary" sx={{ flex: 1 }}>
+                            hostname：{device.hostname}
                         </Box>
                     </Stack>
                     <IconButton aria-label="settings" onClick={e => {

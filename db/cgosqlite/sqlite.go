@@ -163,7 +163,7 @@ func (db *DB) Create() error {
 		FOREIGN KEY (movHash)  REFERENCES   _file(hash),
 		FOREIGN KEY (heicHash) REFERENCES   _file(hash),
 		FOREIGN KEY (jpgHash)  REFERENCES   _file(hash),
-		FOREIGN KEY (livpHash)  REFERENCES   _file(hash)
+		FOREIGN KEY (livpHash) REFERENCES   _file(hash)
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver (
@@ -190,33 +190,38 @@ func (db *DB) Create() error {
 
 	CREATE TABLE IF NOT EXISTS _driver_local_file (
 		id           INT64          NOT NULL PRIMARY KEY,
-	    deviceId     INTEGER        NOT NULL DEFAULT 0,
+	    deviceId     VARCHAR(64)    NOT NULL DEFAULT 0,
 		srcPath      VARCHAR(32767) NOT NULL DEFAULT "",
 	    ignores      TEXT           NOT NULL DEFAULT "",
 		encoder      VARCHAR(64)    NOT NULL DEFAULT "",
-	    FOREIGN KEY (id)  REFERENCES   _driver(id)
+	    FOREIGN KEY (id)            REFERENCES   _driver(id),
+	    FOREIGN KEY (deviceId)      REFERENCES   _device(id)
 	);
 
 	CREATE TABLE IF NOT EXISTS _device (
-		id          INTEGER      NOT NULL PRIMARY KEY AUTOINCREMENT,
+		id          VARCHAR(64)  NOT NULL PRIMARY KEY,
 		name        VARCHAR(256) NOT NULL,
-		os          VARCHAR(256) NOT NULL
+		os          VARCHAR(256) NOT NULL,
+		userAgent   VARCHAR(256) NOT NULL,
+		hostname    VARCHAR(256) NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS _driver_file (
-		driverId    INTEGER        NOT NULL,
-		dirPath     VARCHAR(32767) NOT NULL,
-		name        VARCHAR(255)   NOT NULL,
-	    version     INT64          NOT NULL,
-		hash        CHAR(64)       NOT NULL,
-		mode        INT64          NOT NULL,
-		size        INT64          NOT NULL,
-		createTime  INT64          NOT NULL,
-		modifyTime  INT64          NOT NULL,
-		changeTime  INT64          NOT NULL,
-		accessTime  INT64          NOT NULL,
-		PRIMARY KEY (driverId, dirPath, name, version),
-		FOREIGN KEY (driverId)  REFERENCES _driver(id)
+		driverId       INTEGER        NOT NULL,
+		dirPath        VARCHAR(32767) NOT NULL,
+		name           VARCHAR(255)   NOT NULL,
+		hash           CHAR(64)       NOT NULL,
+		mode           INT64          NOT NULL,
+		size           INT64          NOT NULL,
+		createTime     INT64          NOT NULL,
+		modifyTime     INT64          NOT NULL,
+		changeTime     INT64          NOT NULL,
+		accessTime     INT64          NOT NULL,
+	    uploadDeviceId VARCHAR(64)    NOT NULL,
+	    uploadTime     INT64          NOT NULL,
+		PRIMARY KEY (driverId, dirPath, name, uploadTime),
+		FOREIGN KEY (driverId)  REFERENCES _driver(id),
+		FOREIGN KEY (uploadDeviceId)  REFERENCES _device(id)
 	);
 	`) // https://blog.csdn.net/jimmyleeee/article/details/124682486
 	return err

@@ -43,7 +43,7 @@ func GetDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, filePath 
 		modifyTime,
 		changeTime,
 		accessTime
-		FROM _driver_file WHERE driverId=? and dirPath=? and name=? and version=0
+		FROM _driver_file WHERE driverId=? and dirPath=? and name=?
 	`, file.DriverId, arrayToJson(file.DirPath), file.Name)
 	if err != nil {
 		return

@@ -55,7 +55,7 @@ func (db *DB) ListCloudDriverSync(ctx context.Context) (drivers []dao.Driver, er
 	return dbBase.ListCloudDriverSync(ctx, db.db)
 }
 
-func (db *DB) ListLocalFileDriver(ctx context.Context, deviceId uint64) (drivers []dao.Driver, err error) {
+func (db *DB) ListLocalFileDriver(ctx context.Context, deviceId string) (drivers []dao.Driver, err error) {
 	return dbBase.ListLocalFileDriver(ctx, db.db, deviceId)
 }
 

@@ -23,7 +23,8 @@
     "@electron/remote": "^2.1.1",
     "electron-reloader": "^1.2.3",
     "electron-updater": "^6.1.1",
-    "iconv-lite": "^0.6.3"
+    "iconv-lite": "^0.6.3",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^1.0.1",

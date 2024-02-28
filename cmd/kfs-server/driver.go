@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strconv"
+	"sync"
+
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/baidu_photo"
 	"github.com/lazyxu/kfs/db/dbBase"
 	"github.com/robfig/cron/v3"
-	"net/http"
-	"strconv"
-	"sync"
 )
 
 func apiDrivers(c echo.Context) error {
@@ -221,11 +222,7 @@ func apiResetDriver(c echo.Context) error {
 }
 
 func apiListLocalFileDriver(c echo.Context) error {
-	deviceIdStr := c.QueryParam("deviceId")
-	deviceId, err := strconv.ParseUint(deviceIdStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "driverId should be a number")
-	}
+	deviceId := c.QueryParam("deviceId")
 	list, err := kfsCore.Db.ListLocalFileDriver(c.Request().Context(), deviceId)
 	if err != nil {
 		c.Logger().Error(err)

@@ -40,8 +40,8 @@ type Database interface {
 	DirItemCount(ctx context.Context) (int, error)
 	BranchCount(ctx context.Context) (int, error)
 
-	InsertDevice(ctx context.Context, name string, os string) (int64, error)
-	DeleteDevice(ctx context.Context, deviceId uint64) error
+	InsertDevice(ctx context.Context, id string, name string, os string, userAgent string, hostname string) error
+	DeleteDevice(ctx context.Context, deviceId string) error
 	ListDevice(ctx context.Context) (devices []Device, err error)
 
 	InsertDriver(ctx context.Context, driverName string, description string) (exist bool, err error)
@@ -56,7 +56,7 @@ type Database interface {
 	GetDriverToken(ctx context.Context, driverId uint64) (driver Driver, err error)
 	GetDriverSync(ctx context.Context, driverId uint64) (driver Driver, err error)
 	ListCloudDriverSync(ctx context.Context) (drivers []Driver, err error)
-	ListLocalFileDriver(ctx context.Context, deviceId uint64) (drivers []Driver, err error)
+	ListLocalFileDriver(ctx context.Context, deviceId string) (drivers []Driver, err error)
 	GetDriverLocalFile(ctx context.Context, driverId uint64) (driver *Driver, err error)
 
 	GetDriverDirCalculatedInfo(ctx context.Context, driverId uint64, filePath []string) (info DirCalculatedInfo, err error)

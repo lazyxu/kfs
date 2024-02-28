@@ -6,11 +6,11 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
-func (db *DB) InsertDevice(ctx context.Context, name string, os string) (int64, error) {
-	return dbBase.InsertDevice(ctx, db.db, name, os)
+func (db *DB) InsertDevice(ctx context.Context, id string, name string, os string, userAgent string, hostname string) error {
+	return dbBase.InsertDevice(ctx, db.db, id, name, os, userAgent, hostname)
 }
 
-func (db *DB) DeleteDevice(ctx context.Context, deviceId uint64) error {
+func (db *DB) DeleteDevice(ctx context.Context, deviceId string) error {
 	return dbBase.DeleteDevice(ctx, db.db, deviceId)
 }
 

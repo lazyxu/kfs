@@ -6,19 +6,27 @@ import (
 	"github.com/lazyxu/kfs/dao"
 )
 
-func InsertDevice(ctx context.Context, conn *sql.DB, name string, os string) (int64, error) {
-	res, err := conn.ExecContext(ctx, `
+func InsertDevice(ctx context.Context, conn *sql.DB, id string, name string, os string, userAgent string, hostname string) error {
+	_, err := conn.ExecContext(ctx, `
 	INSERT INTO _device (
+		id,
 		name,
-		os
-	) VALUES (?, ?)`, name, os)
+		os,
+		userAgent,
+		hostname
+	) VALUES (?, ?, ?, ?, ?)
+	ON CONFLICT(id) DO UPDATE SET
+		name=?,
+		os=?,
+		userAgent=?,
+		hostname=?`, id, name, os, userAgent, hostname, name, os, userAgent, hostname)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return res.LastInsertId()
+	return nil
 }
 
-func DeleteDevice(ctx context.Context, conn *sql.DB, deviceId uint64) error {
+func DeleteDevice(ctx context.Context, conn *sql.DB, deviceId string) error {
 	_, err := conn.ExecContext(ctx, `
 	DELETE FROM _device WHERE id = ?`, deviceId)
 	if err != nil {
@@ -38,7 +46,7 @@ func ListDevice(ctx context.Context, conn *sql.DB) (list []dao.Device, err error
 	list = []dao.Device{}
 	for rows.Next() {
 		var item dao.Device
-		err = rows.Scan(&item.Id, &item.Name, &item.OS)
+		err = rows.Scan(&item.Id, &item.Name, &item.OS, &item.UserAgent, &item.Hostname)
 		if err != nil {
 			return
 		}

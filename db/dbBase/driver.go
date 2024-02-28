@@ -219,7 +219,7 @@ func ListCloudDriverSync(ctx context.Context, txOrDb TxOrDb) (drivers []dao.Driv
 	return
 }
 
-func ListLocalFileDriver(ctx context.Context, txOrDb TxOrDb, deviceId uint64) (drivers []dao.Driver, err error) {
+func ListLocalFileDriver(ctx context.Context, txOrDb TxOrDb, deviceId string) (drivers []dao.Driver, err error) {
 	rows, err := txOrDb.QueryContext(ctx, `
 	SELECT _driver.id, h, m, srcPath, ignores, encoder
 	FROM _driver_local_file LEFT JOIN _driver_sync LEFT JOIN _driver

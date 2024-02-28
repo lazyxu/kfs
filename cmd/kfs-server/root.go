@@ -136,7 +136,16 @@ var rootCmd = &cobra.Command{
 		defer kfsCore.Close()
 
 		startAllCloudSync()
-
+		hostname, err := os.Hostname()
+		if err != nil {
+			return
+		}
+		println(hostname)
+		dir, err := os.UserConfigDir()
+		if err != nil {
+			return
+		}
+		println(dir)
 		go func() {
 			// socket
 			lis, err := net.Listen("tcp", "0.0.0.0:"+socketPortString)

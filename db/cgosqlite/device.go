@@ -6,13 +6,13 @@ import (
 	"github.com/lazyxu/kfs/db/dbBase"
 )
 
-func (db *DB) InsertDevice(ctx context.Context, name string, os string) (int64, error) {
+func (db *DB) InsertDevice(ctx context.Context, id string, name string, os string, userAgent string, hostname string) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
-	return dbBase.InsertDevice(ctx, conn, name, os)
+	return dbBase.InsertDevice(ctx, conn, id, name, os, userAgent, hostname)
 }
 
-func (db *DB) DeleteDevice(ctx context.Context, deviceId uint64) error {
+func (db *DB) DeleteDevice(ctx context.Context, deviceId string) error {
 	conn := db.getConn()
 	defer db.putConn(conn)
 	return dbBase.DeleteDevice(ctx, conn, deviceId)

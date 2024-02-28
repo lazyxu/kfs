@@ -19,20 +19,30 @@ import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButto
 import { SnackbarProvider } from 'notistack';
 import { useEffect, useState } from "react";
 import { UAParser } from 'ua-parser-js';
+import { v4 as uuidv4 } from "uuid";
 
 async function newDeviceIfNeeded(sysConfig, setSysConfig) {
     console.log("newDeviceIfNeeded", sysConfig);
-    let deviceId = sysConfig.deviceId;
-    if (!sysConfig.hasOwnProperty("deviceId")) {
-        let parser = new UAParser(navigator.userAgent);
-        let parserOS = parser.getOS();
-        console.log(parserOS);
-        let os = parserOS.name + " " + parserOS.version;
-        let name = os;
-        deviceId = await newDevice(name, os);
-        setSysConfig(prev => { return { ...prev, deviceId } });
+    const userAgent = navigator.userAgent;
+    let parser = new UAParser(userAgent);
+    let parserOS = parser.getOS();
+    console.log(parserOS);
+    let os = parserOS.name + " " + parserOS.version;
+    let hostname = "";
+    if (window.kfsEnv.VITE_APP_PLATFORM !== 'web') {
+        hostname = window.require("os").hostname();
     }
-    listLocalFileDriver(deviceId).then(drivers => startAllLocalFileSync(drivers))
+    let name = hostname;
+    let id;
+    if (sysConfig.hasOwnProperty("deviceId")) {
+        id = sysConfig.deviceId;
+    } else {
+        id = uuidv4();
+    }
+    newDevice(id, name, os, userAgent, hostname).then(() => {
+        setSysConfig(prev => { return { ...prev, deviceId: id } });
+    });
+    listLocalFileDriver(id).then(drivers => startAllLocalFileSync(drivers));
 }
 
 function Version() {

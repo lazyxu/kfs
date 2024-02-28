@@ -1,29 +1,28 @@
 package main
 
 import (
-	"github.com/labstack/echo/v4"
 	"net/http"
-	"strconv"
+
+	"github.com/labstack/echo/v4"
 )
 
 func apiNewDevice(c echo.Context) error {
+	id := c.QueryParam("id")
 	name := c.QueryParam("name")
 	os := c.QueryParam("os")
-	deviceId, err := kfsCore.Db.InsertDevice(c.Request().Context(), name, os)
+	userAgent := c.QueryParam("userAgent")
+	hostname := c.QueryParam("hostname")
+	err := kfsCore.Db.InsertDevice(c.Request().Context(), id, name, os, userAgent, hostname)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
 	}
-	return ok(c, deviceId)
+	return c.String(http.StatusOK, "")
 }
 
 func apiDeleteDevice(c echo.Context) error {
-	deviceIdStr := c.QueryParam("deviceId")
-	deviceId, err := strconv.ParseUint(deviceIdStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "id should be a number")
-	}
-	err = kfsCore.Db.DeleteDevice(c.Request().Context(), deviceId)
+	deviceId := c.QueryParam("deviceId")
+	err := kfsCore.Db.DeleteDevice(c.Request().Context(), deviceId)
 	if err != nil {
 		c.Logger().Error(err)
 		return err

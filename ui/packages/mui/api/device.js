@@ -12,10 +12,11 @@ export async function listDevice(setDevices) {
     }
 }
 
-export async function newDevice(name, os) {
+export async function newDevice(id, name, os, userAgent, hostname) {
     try {
-        console.log('api.newDevice', name, os);
-        return await httpPost("/api/v1/devices", { name, os });
+        console.log('api.newDevice', id, name, os, userAgent, hostname);
+        await httpPost("/api/v1/devices", { id, name, os, userAgent, hostname });
+        return id;
     } catch (e) {
         noteError("创建设备失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;

@@ -56,7 +56,7 @@ func ListDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, filePath
 			modifyTime,
 			changeTime,
 			accessTime
-		FROM _driver_file WHERE driverId=? AND dirPath=? AND version=0
+		FROM _driver_file WHERE driverId=? AND dirPath=?
 	`, driverId, arrayToJson(filePath))
 	if err != nil {
 		return
@@ -122,7 +122,7 @@ func CheckExists(ctx context.Context, conn *sql.DB, driverId uint64, dirPath []s
 		    hash,
 			size,
 			modifyTime
-		FROM _driver_file WHERE driverId=? AND dirPath=? AND mode < 2147483648 AND version=0;
+		FROM _driver_file WHERE driverId=? AND dirPath=? AND mode < 2147483648;
 	`, driverId, arrayToJson(dirPath))
 	if err != nil {
 		return err
