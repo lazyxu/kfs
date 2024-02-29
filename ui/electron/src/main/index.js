@@ -3,7 +3,6 @@ import remoteMain from '@electron/remote/main'
 import { spawn } from 'child_process'
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from 'electron'
 import reloader from 'electron-reloader'
-import fs from 'fs'
 import iconvLite from 'iconv-lite'
 import path from 'path'
 import { getProcesses } from './processManager'
@@ -14,34 +13,33 @@ if (!app.isPackaged) {
 
 let child;
 
+let configFilename = 'kfs-config.json'
+const userData = app.getPath('userData');
+console.log('userData', userData);
+let configPath = path.join(userData, configFilename)
+console.log("configPath", configPath)
+
+const defaultConfig = {
+  theme: 'dark',
+  webServer: 'http://127.0.0.1:1123',
+  socketServer: '127.0.0.1:1124',
+  maxContentSize: 1 * 1024 * 1024,
+  port: "11234",
+};
+if (!fs.existsSync(configPath)) {
+  fs.writeFileSync(configPath, JSON.stringify(defaultConfig, undefined, 2), { flag: 'w+' })
+}
+
 if (app.isPackaged) {
-  let configFilename = 'kfs-config.json'
-  const userData = app.getPath('userData');
-  console.log('userData', userData);
-  let configPath = path.join(userData, configFilename)
   let cwd = path.join(__dirname, '../../resources')
   console.log('spawn kfs-electron', __dirname, cwd)
-  child = spawn(".\\kfs-electron.exe", ['-p', '11234'], {
+  child = spawn(".\\kfs-electron.exe", ['-c', configPath], {
     cwd,
     shell: true
   })
-  let regex = new RegExp(/KFS electron web server listening at: .+:(\d+)\n/)
   child.stdout.on('data', function (chunk) {
     let stdout = iconvLite.decode(chunk, 'cp936')
     console.log('kfs-electron stdout', stdout)
-    let results = regex.exec(stdout)
-    console.log('kfs-electron results', results)
-    if (results && results[1]) {
-      const port = results[1]
-      console.log('port', results[1])
-      let json = {}
-      if (fs.existsSync(configPath)) {
-        const config = fs.readFileSync(configPath).toString()
-        json = JSON.parse(config)
-      }
-      json.port = port
-      fs.writeFileSync(configPath, JSON.stringify(json, undefined, 2), { flag: 'w+' })
-    }
   })
   child.stderr.on('data', function (chunk) {
     console.log('kfs-electron stderr', iconvLite.decode(chunk, 'cp936'))

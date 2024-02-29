@@ -3,10 +3,17 @@ package local_file
 import (
 	"net"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/lazyxu/kfs/core"
 )
+
+type DriverLocalFile struct {
+	driverId uint64
+	mutex    sync.Locker
+	taskInfo TaskInfo
+}
 
 type WebUploadProcess struct {
 	d *DriverLocalFile

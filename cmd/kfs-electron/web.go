@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/lazyxu/kfs/cmd/kfs-electron/task/local_file"
 	"github.com/lazyxu/kfs/cmd/kfs-electron/task/local_file_filter"
+	"github.com/lazyxu/kfs/rpc/client/local_file"
 	"net"
 	"net/http"
 	"strconv"

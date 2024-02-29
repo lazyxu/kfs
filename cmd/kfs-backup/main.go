@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/lazyxu/kfs/rpc/client/local_file"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -23,6 +24,8 @@ var ignores []string
 var serverAddr string
 var driverId uint64
 
+var configPath string
+
 const invalidDriverId uint64 = 18446744073709551615
 
 func rootCmd() *cobra.Command {
@@ -38,6 +41,8 @@ func rootCmd() *cobra.Command {
 
 	cmd.PersistentFlags().StringVar(&serverAddr, "server", "", "server address")
 	cmd.PersistentFlags().Uint64Var(&driverId, "driver", invalidDriverId, "driver id")
+
+	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", "~/.kfs-config.json", "config path")
 	return cmd
 }
 
@@ -50,6 +55,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			fmt.Printf("请输入正确的云盘ID：%d\n", driverId)
 			return
 		}
+		local_file.NewDeviceIfNeeded(configPath)
 		doUpload(ctx, serverAddr, driverId, srcPath, ignores, verbose)
 	}
 }
