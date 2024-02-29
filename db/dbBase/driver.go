@@ -65,6 +65,7 @@ func InsertDriverLocalFile(ctx context.Context, conn *sql.DB, db DbImpl, driverN
 	if db.IsUniqueConstraintError(err) {
 		exist = true
 		err = nil
+		return
 	}
 	id, err := res.LastInsertId()
 	if err != nil {

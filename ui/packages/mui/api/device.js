@@ -1,4 +1,4 @@
-import { httpDelete, httpGet, httpPost } from "@kfs/common/api/webServer";
+import { httpDelete, httpGet, httpPostJson } from "@kfs/common/api/webServer";
 import { noteError } from "@kfs/mui/components/Notification";
 
 export async function listDevice(setDevices) {
@@ -15,7 +15,7 @@ export async function listDevice(setDevices) {
 export async function newDevice(id, name, os, userAgent, hostname) {
     try {
         console.log('api.newDevice', id, name, os, userAgent, hostname);
-        await httpPost("/api/v1/devices", { id, name, os, userAgent, hostname });
+        await httpPostJson("/api/v1/devices", { id, name, os, userAgent, hostname });
         return id;
     } catch (e) {
         noteError("创建设备失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));

@@ -56,7 +56,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 	m["port"] = lis.Addr().(*net.TCPAddr).Port
-	data, err = json.MarshalIndent(m, "", "\t")
+	data, err = json.MarshalIndent(m, "", " ")
 	if err != nil {
 		panic(err)
 	}

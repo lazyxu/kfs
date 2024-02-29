@@ -78,7 +78,7 @@ func (h *WebUploadDirProcess) EndDir(filePath string, info os.FileInfo) {
 func (h *WebUploadDirProcess) PushFile(info os.FileInfo) {
 }
 
-func doUpload(ctx context.Context, serverAddr string, driverId uint64, srcPath string, ignores []string, verbose bool) {
+func doUpload(ctx context.Context, deviceId string, serverAddr string, driverId uint64, srcPath string, ignores []string, verbose bool) {
 	var encoder string
 	start := time.Now()
 	srcPath, err := filepath.Abs(srcPath)
@@ -110,7 +110,7 @@ func doUpload(ctx context.Context, serverAddr string, driverId uint64, srcPath s
 		gitIgnore: gitIgnore,
 		verbose:   verbose,
 	}
-	err = fs.UploadDir(ctx, driverId, "/", srcPath, core.UploadDirConfig{
+	err = fs.UploadDir(ctx, deviceId, driverId, "/", srcPath, core.UploadDirConfig{
 		UploadDirProcess: handlers,
 		Encoder:          encoder,
 		Concurrent:       1,

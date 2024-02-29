@@ -80,7 +80,7 @@ func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint6
 		d:         d,
 		gitIgnore: gitIgnore,
 	}
-	err = fs.UploadDir(ctx, driverId, "/", srcPath, core.UploadDirConfig{
+	err = fs.UploadDir(ctx, deviceId, driverId, "/", srcPath, core.UploadDirConfig{
 		UploadDirProcess: w,
 		Encoder:          encoder,
 		Concurrent:       1,

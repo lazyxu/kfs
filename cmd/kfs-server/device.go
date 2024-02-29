@@ -1,18 +1,20 @@
 package main
 
 import (
+	"github.com/lazyxu/kfs/dao"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
 func apiNewDevice(c echo.Context) error {
-	id := c.QueryParam("id")
-	name := c.QueryParam("name")
-	os := c.QueryParam("os")
-	userAgent := c.QueryParam("userAgent")
-	hostname := c.QueryParam("hostname")
-	err := kfsCore.Db.InsertDevice(c.Request().Context(), id, name, os, userAgent, hostname)
+	var d dao.Device
+	err := c.Bind(&d)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	err = kfsCore.Db.InsertDevice(c.Request().Context(), d.Id, d.Name, d.OS, d.UserAgent, d.Hostname)
 	if err != nil {
 		c.Logger().Error(err)
 		return err

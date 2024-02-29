@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	json "github.com/json-iterator/go"
 	"github.com/lazyxu/kfs/dao"
 	"github.com/robfig/cron/v3"
@@ -23,7 +24,9 @@ func jsonBody(m any) io.Reader {
 	return bytes.NewReader(b)
 }
 
-func NewDeviceIfNeeded(configPath string) {
+var deviceId string
+
+func NewDeviceIfNeeded(configPath string) string {
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		panic(err)
@@ -33,11 +36,23 @@ func NewDeviceIfNeeded(configPath string) {
 	if err != nil {
 		panic(err)
 	}
-	var deviceId string
 	if id, o := m["deviceId"]; o {
 		deviceId = id.(string)
 	} else {
-		deviceId = ""
+		id, err := uuid.NewUUID()
+		if err != nil {
+			panic(err)
+		}
+		deviceId = id.String()
+		m["deviceId"] = deviceId
+		data, err = json.MarshalIndent(m, "", " ")
+		if err != nil {
+			panic(err)
+		}
+		err = os.WriteFile(configPath, data, 0o600)
+		if err != nil {
+			panic(err)
+		}
 	}
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -74,6 +89,7 @@ func NewDeviceIfNeeded(configPath string) {
 	for _, d := range drivers {
 		StartLocalFileSync(d.Id, m["socketServer"].(string), d.H, d.M, d.SrcPath, d.Ignores, d.Encoder)
 	}
+	return deviceId
 }
 
 var cronTasks sync.Map

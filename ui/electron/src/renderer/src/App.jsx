@@ -1,7 +1,5 @@
 import useMenu from "@kfs/common/hox/menu";
 import useSysConfig from "@kfs/common/hox/sysConfig";
-import { newDevice } from '@kfs/mui/api/device';
-import { listLocalFileDriver, startAllLocalFileSync } from '@kfs/mui/api/driver';
 import SvgIcon from '@kfs/mui/components/Icon/SvgIcon';
 import { SnackbarAction } from '@kfs/mui/components/Notification';
 import useWindows, { APP_LIVP_UNZIP, APP_METADATA_MANAGER, newWindow } from "@kfs/mui/hox/windows";
@@ -18,29 +16,6 @@ import Menu from '@mui/icons-material/Menu';
 import { AppBar, Box, Divider, Drawer, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, styled, useColorScheme } from "@mui/material";
 import { SnackbarProvider } from 'notistack';
 import { useEffect, useState } from "react";
-import { UAParser } from 'ua-parser-js';
-import { v4 as uuidv4 } from "uuid";
-
-async function newDeviceIfNeeded(sysConfig, setSysConfig) {
-    console.log("newDeviceIfNeeded", sysConfig);
-    const userAgent = navigator.userAgent;
-    let parser = new UAParser(userAgent);
-    let parserOS = parser.getOS();
-    console.log(parserOS);
-    let os = parserOS.name + " " + parserOS.version;
-    let hostname = window.require("os").hostname();
-    let name = hostname + "@" + os;
-    let id;
-    if (sysConfig.hasOwnProperty("deviceId")) {
-        id = sysConfig.deviceId;
-    } else {
-        id = uuidv4();
-    }
-    newDevice(id, name, os, userAgent, hostname).then(() => {
-        setSysConfig(prev => { return { ...prev, deviceId: id } });
-    });
-    listLocalFileDriver(id).then(drivers => startAllLocalFileSync(drivers));
-}
 
 function Version() {
     return (
@@ -69,9 +44,6 @@ function App() {
 
         setOpen(open);
     };
-    useEffect(() => {
-        newDeviceIfNeeded(sysConfig, setSysConfig);
-    }, []);
     useEffect(() => {
         // document.body.setAttribute('data-theme', sysConfig.theme);
         console.log("mode:", mode, "=>", sysConfig.theme);

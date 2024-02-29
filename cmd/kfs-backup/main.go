@@ -55,7 +55,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 			fmt.Printf("请输入正确的云盘ID：%d\n", driverId)
 			return
 		}
-		local_file.NewDeviceIfNeeded(configPath)
-		doUpload(ctx, serverAddr, driverId, srcPath, ignores, verbose)
+		deviceId := local_file.NewDeviceIfNeeded(configPath)
+		doUpload(ctx, deviceId, serverAddr, driverId, srcPath, ignores, verbose)
 	}
 }

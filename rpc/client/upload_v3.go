@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-func (fs *RpcFs) UploadDir(ctx context.Context, driverId uint64, dstPath string, srcPath string, config core.UploadDirConfig) (err error) {
+func (fs *RpcFs) UploadDir(ctx context.Context, deviceId string, driverId uint64, dstPath string, srcPath string, config core.UploadDirConfig) (err error) {
 	srcPath, err = filepath.Abs(srcPath)
 	if err != nil {
 		return
@@ -33,6 +33,7 @@ func (fs *RpcFs) UploadDir(ctx context.Context, driverId uint64, dstPath string,
 		srcPath:          srcPath,
 		dstPath:          dstPath,
 		conn:             conn,
+		uploadDeviceId:   deviceId,
 	}
 	var startResp pb.UploadStartResp
 	_, err = ReqRespWithConn(handlers.conn, rpcutil.CommandUploadStart, &pb.UploadStartReq{}, &startResp)
