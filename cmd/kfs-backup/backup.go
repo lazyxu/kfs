@@ -13,14 +13,16 @@ import (
 )
 
 type WebUploadDirProcess struct {
-	srcPath     string
-	gitIgnore   *ignore.GitIgnore
-	ignoreCount int
-	errCount    int
-	size        uint64
-	fileCount   uint64
-	dirCount    uint64
-	verbose     bool
+	srcPath      string
+	gitIgnore    *ignore.GitIgnore
+	ignoreCount  int
+	errCount     int
+	newSize      uint64
+	newFileCount uint64
+	size         uint64
+	count        uint64
+	dirCount     uint64
+	verbose      bool
 }
 
 var _ core.UploadDirProcess = &WebUploadDirProcess{}
@@ -43,35 +45,65 @@ func (h *WebUploadDirProcess) OnFileError(filePath string, err error) {
 }
 
 func (h *WebUploadDirProcess) StartFile(filePath string, info os.FileInfo) {
+	//if h.verbose {
+	//	size := uint64(info.Size())
+	//	rel, _ := filepath.Rel(h.srcPath, filePath)
+	//	fmt.Printf("开始上传文件，大小为 %s - %s\n", humanize.IBytes(size), rel)
+	//}
+}
+
+func (h *WebUploadDirProcess) StartUploadFile(filePath string, info os.FileInfo, hash string) {
 	if h.verbose {
 		size := uint64(info.Size())
 		rel, _ := filepath.Rel(h.srcPath, filePath)
-		fmt.Printf("开始上传文件，大小为 %s - %s\n", humanize.IBytes(size), rel)
+		fmt.Printf("第 %5d 个文件 %s 开始上传，大小为 %s, 哈希值为%s\n", h.count, rel, humanize.IBytes(size), hash)
+	}
+}
+
+func (h *WebUploadDirProcess) EndUploadFile(filePath string, info os.FileInfo) {
+	size := uint64(info.Size())
+	h.count++
+	h.size += size
+	h.newFileCount++
+	h.newSize += size
+	if h.verbose {
+		rel, _ := filepath.Rel(h.srcPath, filePath)
+		fmt.Printf("第 %5d 个文件 %s 上传完成\n", h.count, rel)
+	}
+}
+
+func (h *WebUploadDirProcess) SkipFile(filePath string, info os.FileInfo, hash string) {
+	size := uint64(info.Size())
+	h.count++
+	h.size += size
+	if h.verbose {
+		rel, _ := filepath.Rel(h.srcPath, filePath)
+		fmt.Printf("第 %5d 个文件 %s 已存在，跳过, 哈希值为 %s\n", h.count, rel, hash)
 	}
 }
 
 func (h *WebUploadDirProcess) EndFile(filePath string, info os.FileInfo) {
-	h.fileCount++
-	size := uint64(info.Size())
-	h.size += size
-	if h.verbose {
-		rel, _ := filepath.Rel(h.srcPath, filePath)
-		fmt.Printf("第 %d 个文件上传完成 - %s\n", h.fileCount, rel)
-	}
+	//h.fileCount++
+	//size := uint64(info.Size())
+	//h.size += size
+	//if h.verbose {
+	//	rel, _ := filepath.Rel(h.srcPath, filePath)
+	//	fmt.Printf("第 %d 个文件上传完成 - %s\n", h.fileCount, rel)
+	//}
 }
 
 func (h *WebUploadDirProcess) StartDir(filePath string, n uint64) {
+	h.dirCount++
 	if h.verbose {
 		rel, _ := filepath.Rel(h.srcPath, filePath)
-		fmt.Printf("开始上传目录 - %s\n", rel)
+		fmt.Printf("第 %5d 个目录 %s 开始上传, 目录下包括 %d 个文件或子目录\n", h.dirCount, rel, n)
 	}
 }
 
 func (h *WebUploadDirProcess) EndDir(filePath string, info os.FileInfo) {
-	h.dirCount++
 	if h.verbose {
 		rel, _ := filepath.Rel(h.srcPath, filePath)
-		fmt.Printf("第 %d 个目录上传完成 - %s\n", h.dirCount, rel)
+		fmt.Printf("第 %5d 个目录 %s 上传完成\n", h.dirCount, rel)
 	}
 }
 
@@ -127,6 +159,7 @@ func doUpload(ctx context.Context, deviceId string, serverAddr string, driverId 
 	} else {
 		fmt.Printf("上传时未发生错误\n")
 	}
-	fmt.Printf("总大小：%s，共 %d 个文件，%d 个目录\n", humanize.IBytes(handlers.size), handlers.fileCount, handlers.dirCount)
+	fmt.Printf("本次上传 %s, 包括 %d 个文件\n", humanize.IBytes(handlers.newSize), handlers.newFileCount)
+	fmt.Printf("总大小 %s，包括 %d 个文件，%d 个目录\n", humanize.IBytes(handlers.size), handlers.count, handlers.dirCount)
 	return
 }

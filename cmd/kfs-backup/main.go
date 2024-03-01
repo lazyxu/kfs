@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/lazyxu/kfs/rpc/client/local_file"
 	"os"
@@ -40,7 +41,7 @@ func rootCmd() *cobra.Command {
 	cmd.PersistentFlags().StringSliceVar(&ignores, "ignore", []string{}, "ignores")
 
 	cmd.PersistentFlags().StringVar(&serverAddr, "server", "", "server address")
-	cmd.PersistentFlags().Uint64Var(&driverId, "driver", invalidDriverId, "driver id")
+	cmd.PersistentFlags().Uint64VarP(&driverId, "driver", "d", invalidDriverId, "driver id")
 
 	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", "~/.kfs-config.json", "config path")
 	return cmd
@@ -52,10 +53,23 @@ func runRoot(cmd *cobra.Command, args []string) {
 		doScan(ctx, srcPath, ignores, verbose)
 	} else {
 		if driverId == invalidDriverId {
-			fmt.Printf("请输入正确的云盘ID：%d\n", driverId)
+			fmt.Printf("请输入正确的云盘ID\n")
+			return
+		}
+		data, err := os.ReadFile(configPath)
+		if err != nil {
+			fmt.Printf("读取配置文件失败： %s\n", configPath)
 			return
 		}
 		deviceId := local_file.NewDeviceIfNeeded(configPath)
+		m := map[string]interface{}{}
+		err = json.Unmarshal(data, &m)
+		if err != nil {
+			panic(err)
+		}
+		if serverAddr == "" {
+			serverAddr = m["socketServer"].(string)
+		}
 		doUpload(ctx, deviceId, serverAddr, driverId, srcPath, ignores, verbose)
 	}
 }

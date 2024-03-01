@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dustin/go-humanize"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/client"
 	ignore "github.com/sabhiram/go-gitignore"
@@ -19,10 +20,6 @@ type WebUploadDirProcess struct {
 
 var _ core.UploadDirProcess = &WebUploadDirProcess{}
 
-func (w *WebUploadDirProcess) StartFile(filePath string, info os.FileInfo) {
-	w.d.setTaskFile(filePath, info)
-}
-
 func (h *WebUploadDirProcess) FilePathFilter(filePath string) bool {
 	ignored := h.gitIgnore.MatchesPath(filePath)
 	if ignored {
@@ -34,25 +31,41 @@ func (h *WebUploadDirProcess) FilePathFilter(filePath string) bool {
 	return ignored
 }
 
-func (w *WebUploadDirProcess) OnFileError(filePath string, err error) {
-	w.d.addTaskWarning(err.Error())
+func (h *WebUploadDirProcess) OnFileError(filePath string, err error) {
+	h.d.addTaskWarning(err.Error())
 	println(filePath+":", err.Error())
 }
 
-func (w *WebUploadDirProcess) EndFile(filePath string, info os.FileInfo) {
-	w.d.addTaskCnt(info)
+func (h *WebUploadDirProcess) PushFile(info os.FileInfo) {
+	h.d.addTaskTotal(info)
 }
 
-func (w *WebUploadDirProcess) StartDir(filePath string, n uint64) {
-	w.d.setTaskDir(filePath, n)
+func (h *WebUploadDirProcess) StartFile(filePath string, info os.FileInfo) {
+	h.d.setTaskFile(filePath, info)
 }
 
-func (w *WebUploadDirProcess) EndDir(filePath string, info os.FileInfo) {
-	w.d.addTaskCnt(info)
+func (h *WebUploadDirProcess) StartUploadFile(filePath string, info os.FileInfo, hash string) {
+	fmt.Printf("file %s start upload, size %s, hash %s\n", filePath, humanize.IBytes(uint64(info.Size())), hash)
 }
 
-func (w *WebUploadDirProcess) PushFile(info os.FileInfo) {
-	w.d.addTaskTotal(info)
+func (h *WebUploadDirProcess) EndUploadFile(filePath string, info os.FileInfo) {
+	println(filePath + ": uploaded")
+}
+
+func (h *WebUploadDirProcess) SkipFile(filePath string, info os.FileInfo, hash string) {
+	println(filePath + ": skipped")
+}
+
+func (h *WebUploadDirProcess) EndFile(filePath string, info os.FileInfo) {
+	h.d.addTaskCnt(info)
+}
+
+func (h *WebUploadDirProcess) StartDir(filePath string, n uint64) {
+	h.d.setTaskDir(filePath, n)
+}
+
+func (h *WebUploadDirProcess) EndDir(filePath string, info os.FileInfo) {
+	h.d.addTaskCnt(info)
 }
 
 func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint64, serverAddr, srcPath, ignores, encoder string) error {

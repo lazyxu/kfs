@@ -4,8 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
-	"github.com/dustin/go-humanize"
 	"io"
 	"net"
 	"os"
@@ -66,6 +64,9 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 		h.uploadProcess.OnFileError(filePath, err)
 		return nil
 	}
+	if filePath != h.srcPath {
+		h.uploadProcess.StartDir(filePath, uint64(len(infos)))
+	}
 	uploadReqDirItemCheckV3 := make([]*pb.UploadReqDirItemCheckV3, len(infos))
 	for i, info := range infos {
 		h.uploadProcess.PushFile(info)
@@ -105,17 +106,15 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	}
 
 	for i, hash := range startResp.Hash {
-		info := infos[i]
-		p := filepath.Join(filePath, info.Name())
-		if !info.IsDir() {
-			h.uploadProcess.StartFile(p, info)
-		}
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		default:
 		}
+		info := infos[i]
+		p := filepath.Join(filePath, info.Name())
 		if !info.IsDir() {
+			h.uploadProcess.StartFile(p, info)
 			if hash == "" {
 				var fileErr error
 				hash, fileErr, err = h.uploadFile(ctx, p, info)
@@ -127,19 +126,12 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 					return err
 				}
 			} else {
-				if h.verbose {
-					fmt.Printf("文件 %s 已存在，跳过\n", info.Name())
-				}
+				h.uploadProcess.SkipFile(p, info, hash)
 			}
-		}
-		if !info.IsDir() {
 			h.uploadProcess.EndFile(p, info)
 		}
 	}
 
-	if filePath != h.srcPath {
-		h.uploadProcess.StartDir(filePath, uint64(len(infos)))
-	}
 	select {
 	case <-ctx.Done():
 		return context.Canceled
@@ -159,30 +151,23 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	return nil
 }
 
-func (h *uploadHandlersV3) copyFile(conn net.Conn, f *os.File, name string, size int64) error {
+func (h *uploadHandlersV3) copyFile(conn net.Conn, f *os.File, size int64) error {
 	_, err := f.Seek(0, io.SeekStart)
 	if err != nil {
 		return err
 	}
-	if h.verbose {
-		fmt.Printf("开始拷贝文件内容 %s，大小为 %s\n", name, humanize.IBytes(uint64(size)))
-	}
-	var n int64
 	if h.encoder == "lz4" {
 		w := lz4.NewWriter(conn)
-		n, err = io.CopyN(w, f, size)
+		_, err = io.CopyN(w, f, size)
 		if err != nil {
 			return err
 		}
 		defer w.Flush()
 	} else {
-		n, err = io.CopyN(conn, f, size)
+		_, err = io.CopyN(conn, f, size)
 		if err != nil {
 			return err
 		}
-	}
-	if h.verbose {
-		fmt.Printf("拷贝文件内容完成 %s，大小为 %s\n", name, humanize.IBytes(uint64(n)))
 	}
 	return nil
 }
@@ -215,12 +200,8 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 		return
 	default:
 	}
-	if h.verbose {
-		fmt.Printf("文件 %s 的哈希值为 %s\n", filePath, hash)
-	}
-	dirPath, err := h.formatPath(filepath.Dir(filePath))
-	if err != nil {
-		h.uploadProcess.OnFileError(filePath, err)
+	dirPath, fileErr := h.formatPath(filepath.Dir(filePath))
+	if fileErr != nil {
 		return
 	}
 
@@ -249,13 +230,14 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 			return
 		default:
 		}
+		h.uploadProcess.StartUploadFile(filePath, info, hash)
 		//println("encoder", len(h.encoder), h.encoder)
 		err = rpcutil.WriteString(h.conn, h.encoder)
 		if err != nil {
 			return
 		}
 
-		err = h.copyFile(h.conn, f, info.Name(), info.Size())
+		err = h.copyFile(h.conn, f, info.Size())
 		if err != nil {
 			return
 		}
@@ -264,11 +246,10 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 		if err != nil {
 			return
 		}
+		h.uploadProcess.EndUploadFile(filePath, info)
 		return
 	} else {
-		if h.verbose {
-			fmt.Printf("文件 %s 已存在，跳过\n", info.Name())
-		}
+		h.uploadProcess.SkipFile(filePath, info, hash)
 	}
 	return
 }
