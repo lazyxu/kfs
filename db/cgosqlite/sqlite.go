@@ -217,9 +217,24 @@ func (db *DB) Create() error {
 		modifyTime     INT64          NOT NULL,
 		changeTime     INT64          NOT NULL,
 		accessTime     INT64          NOT NULL,
+		PRIMARY KEY (driverId, dirPath, name),
+		FOREIGN KEY (driverId)  REFERENCES _driver(id)
+	);
+
+	CREATE TABLE IF NOT EXISTS _driver_file_history (
+		driverId       INTEGER        NOT NULL,
+		dirPath        VARCHAR(32767) NOT NULL,
+		name           VARCHAR(255)   NOT NULL,
+		hash           CHAR(64)       NOT NULL,
+		mode           INT64          NOT NULL,
+		size           INT64          NOT NULL,
+		createTime     INT64          NOT NULL,
+		modifyTime     INT64          NOT NULL,
+		changeTime     INT64          NOT NULL,
+		accessTime     INT64          NOT NULL,
 	    uploadDeviceId CHAR(36)       NOT NULL,
 	    uploadTime     INT64          NOT NULL,
-		PRIMARY KEY (driverId, dirPath, name, uploadTime),
+		PRIMARY KEY (driverId, dirPath, name, uploadDeviceId, uploadTime),
 		FOREIGN KEY (driverId)  REFERENCES _driver(id),
 		FOREIGN KEY (uploadDeviceId)  REFERENCES _device(id)
 	);

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/lazyxu/kfs/dao"
 	"os"
 	"strings"
@@ -41,9 +42,7 @@ func GetDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, filePath 
 		createTime,
 		modifyTime,
 		changeTime,
-		accessTime,
-		uploadDeviceId,
-		uploadTime
+		accessTime
 		FROM _driver_file WHERE driverId=? and dirPath=? and name=?
 	`, file.DriverId, arrayToJson(file.DirPath), file.Name)
 	if err != nil {
@@ -61,9 +60,7 @@ func GetDriverFile(ctx context.Context, conn *sql.DB, driverId uint64, filePath 
 		&file.CreateTime,
 		&file.ModifyTime,
 		&file.ChangeTime,
-		&file.AccessTime,
-		&file.UploadDeviceId,
-		&file.UploadTime)
+		&file.AccessTime)
 	return
 }
 
@@ -190,7 +187,7 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 	defer func() {
 		err = CommitAndRollback(tx, err)
 	}()
-	_, err = tx.ExecContext(ctx, `
+	res, err := tx.ExecContext(ctx, `
 	INSERT INTO _driver_file (
 		driverId,
 		dirPath,
@@ -201,25 +198,56 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 		createTime,
 		modifyTime,
 		changeTime,
-		accessTime,
-		uploadDeviceId,
-		uploadTime
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO UPDATE SET
+		accessTime
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO UPDATE SET
 		hash=?,
 		mode=?,
 		size=?,
 		createTime=?,
 		modifyTime=?,
 		changeTime=?,
-		accessTime=?,
-		uploadDeviceId=?,
-		uploadTime=?;
-	`, f.DriverId, arrayToJson(f.DirPath), f.Name, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime, f.UploadDeviceId, f.UploadTime,
-		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime, f.UploadDeviceId, f.UploadTime)
+		accessTime=?
+	WHERE
+		hash!=? OR
+		mode!=? OR
+		size!=? OR
+		createTime!=? OR
+		modifyTime!=? OR
+		changeTime!=? OR
+		accessTime!=?;
+	`, f.DriverId, arrayToJson(f.DirPath), f.Name, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
+		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime,
+		f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime)
 	if err != nil {
 		return err
 	}
-	return err
+	i, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if i > 0 {
+		fmt.Printf("%+v %s: %d\n", f.DirPath, f.Name, i)
+		_, err = tx.ExecContext(ctx, `
+	INSERT INTO _driver_file_history (
+		driverId,
+		dirPath,
+		name,
+		hash,
+		mode,
+		size,
+		createTime,
+		modifyTime,
+		changeTime,
+		accessTime,
+	    uploadDeviceId,
+	    uploadTime
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+	`, f.DriverId, arrayToJson(f.DirPath), f.Name, f.Hash, f.Mode, f.Size, f.CreateTime, f.ModifyTime, f.ChangeTime, f.AccessTime, f.UploadDeviceId, f.UploadTime)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func upsertDriverFilesQuery(row int) (string, error) {
