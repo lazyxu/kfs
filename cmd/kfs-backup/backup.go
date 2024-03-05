@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type WebUploadDirProcess struct {
+type CmdUploadDirProcess struct {
 	srcPath      string
 	gitIgnore    *ignore.GitIgnore
 	ignoreCount  int
@@ -25,9 +25,9 @@ type WebUploadDirProcess struct {
 	verbose      bool
 }
 
-var _ core.UploadDirProcess = &WebUploadDirProcess{}
+var _ core.UploadDirProcess = &CmdUploadDirProcess{}
 
-func (h *WebUploadDirProcess) FilePathFilter(filePath string) bool {
+func (h *CmdUploadDirProcess) FilePathFilter(filePath string) bool {
 	ignored := h.gitIgnore.MatchesPath(filePath)
 	if ignored {
 		h.ignoreCount++
@@ -39,12 +39,12 @@ func (h *WebUploadDirProcess) FilePathFilter(filePath string) bool {
 	return ignored
 }
 
-func (h *WebUploadDirProcess) OnFileError(filePath string, err error) {
+func (h *CmdUploadDirProcess) OnFileError(filePath string, err error) {
 	h.errCount++
 	fmt.Printf("发现第 %d 个错误 - %s: %s\n", h.errCount, filePath, err.Error())
 }
 
-func (h *WebUploadDirProcess) StartFile(filePath string, info os.FileInfo) {
+func (h *CmdUploadDirProcess) StartFile(filePath string, info os.FileInfo) {
 	//if h.verbose {
 	//	size := uint64(info.Size())
 	//	rel, _ := filepath.Rel(h.srcPath, filePath)
@@ -52,7 +52,7 @@ func (h *WebUploadDirProcess) StartFile(filePath string, info os.FileInfo) {
 	//}
 }
 
-func (h *WebUploadDirProcess) StartUploadFile(filePath string, info os.FileInfo, hash string) {
+func (h *CmdUploadDirProcess) StartUploadFile(filePath string, info os.FileInfo, hash string) {
 	if h.verbose {
 		size := uint64(info.Size())
 		rel, _ := filepath.Rel(h.srcPath, filePath)
@@ -60,7 +60,7 @@ func (h *WebUploadDirProcess) StartUploadFile(filePath string, info os.FileInfo,
 	}
 }
 
-func (h *WebUploadDirProcess) EndUploadFile(filePath string, info os.FileInfo) {
+func (h *CmdUploadDirProcess) EndUploadFile(filePath string, info os.FileInfo) {
 	size := uint64(info.Size())
 	h.count++
 	h.size += size
@@ -72,7 +72,7 @@ func (h *WebUploadDirProcess) EndUploadFile(filePath string, info os.FileInfo) {
 	}
 }
 
-func (h *WebUploadDirProcess) SkipFile(filePath string, info os.FileInfo, hash string) {
+func (h *CmdUploadDirProcess) SkipFile(filePath string, info os.FileInfo, hash string) {
 	size := uint64(info.Size())
 	h.count++
 	h.size += size
@@ -82,7 +82,7 @@ func (h *WebUploadDirProcess) SkipFile(filePath string, info os.FileInfo, hash s
 	}
 }
 
-func (h *WebUploadDirProcess) EndFile(filePath string, info os.FileInfo) {
+func (h *CmdUploadDirProcess) EndFile(filePath string, info os.FileInfo) {
 	//h.fileCount++
 	//size := uint64(info.Size())
 	//h.size += size
@@ -92,7 +92,7 @@ func (h *WebUploadDirProcess) EndFile(filePath string, info os.FileInfo) {
 	//}
 }
 
-func (h *WebUploadDirProcess) StartDir(filePath string, n uint64) {
+func (h *CmdUploadDirProcess) StartDir(filePath string, info os.FileInfo, n uint64) {
 	h.dirCount++
 	if h.verbose {
 		rel, _ := filepath.Rel(h.srcPath, filePath)
@@ -100,14 +100,14 @@ func (h *WebUploadDirProcess) StartDir(filePath string, n uint64) {
 	}
 }
 
-func (h *WebUploadDirProcess) EndDir(filePath string, info os.FileInfo) {
+func (h *CmdUploadDirProcess) EndDir(filePath string, info os.FileInfo) {
 	if h.verbose {
 		rel, _ := filepath.Rel(h.srcPath, filePath)
 		fmt.Printf("第 %3d 个目录 %s 上传完成\n", h.dirCount, rel)
 	}
 }
 
-func (h *WebUploadDirProcess) PushFile(info os.FileInfo) {
+func (h *CmdUploadDirProcess) PushFile(info os.FileInfo) {
 }
 
 func doUpload(ctx context.Context, deviceId string, serverAddr string, driverId uint64, srcPath string, ignores []string, verbose bool) {
@@ -137,7 +137,7 @@ func doUpload(ctx context.Context, deviceId string, serverAddr string, driverId 
 	//}
 	//list := strings.Split(ignores, "\n")
 	gitIgnore := ignore.CompileIgnoreLines(ignores...)
-	handlers := &WebUploadDirProcess{
+	handlers := &CmdUploadDirProcess{
 		srcPath:   srcPath,
 		gitIgnore: gitIgnore,
 		verbose:   verbose,

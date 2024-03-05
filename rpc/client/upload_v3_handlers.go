@@ -42,10 +42,13 @@ func (h *uploadHandlersV3) OnFileError(filePath string, err error) {
 	h.uploadProcess.OnFileError(filePath, err)
 }
 
-func (h *uploadHandlersV3) formatPath(filePath string) ([]string, error) {
+func (h *uploadHandlersV3) formatPath(filePath string) ([]string, bool, error) {
 	rel, err := filepath.Rel(h.srcPath, filePath)
 	if err != nil {
-		return nil, err
+		return nil, false, err
+	}
+	if rel == ".." && h.dstPath == "/" {
+		return []string{}, true, nil
 	}
 	actualPath := filepath.Join(h.dstPath, rel)
 	pathList := strings.Split(actualPath, string(os.PathSeparator))
@@ -55,18 +58,19 @@ func (h *uploadHandlersV3) formatPath(filePath string) ([]string, error) {
 			newPathList = append(newPathList, path)
 		}
 	}
-	return newPathList, nil
+	return newPathList, false, nil
 }
 
 func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo, continues []bool) error {
-	dirPath, err := h.formatPath(filepath.Dir(filePath))
+	dirPath, isRoot, err := h.formatPath(filepath.Dir(filePath))
 	if err != nil {
 		h.uploadProcess.OnFileError(filePath, err)
 		return nil
 	}
-	if filePath != h.srcPath {
-		h.uploadProcess.StartDir(filePath, uint64(len(infos)))
+	if h.srcPath == filePath {
+		h.uploadProcess.PushFile(dirInfo)
 	}
+	h.uploadProcess.StartDir(filePath, dirInfo, uint64(len(infos)))
 	uploadReqDirItemCheckV3 := make([]*pb.UploadReqDirItemCheckV3, len(infos))
 	for i, info := range infos {
 		h.uploadProcess.PushFile(info)
@@ -100,6 +104,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 		UploadDeviceId:          h.uploadDeviceId,
 		UploadTime:              h.uploadTime,
 		UploadReqDirItemCheckV3: uploadReqDirItemCheckV3,
+		IsRoot:                  isRoot,
 	}, &startResp)
 	if err != nil {
 		return err
@@ -144,10 +149,12 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	if err != nil {
 		return err
 	}
-	if filePath != h.srcPath {
-		h.uploadProcess.EndDir(filePath, dirInfo)
-	}
 
+	return nil
+}
+
+func (h *uploadHandlersV3) EndDir(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo) error {
+	h.uploadProcess.EndDir(filePath, dirInfo)
 	return nil
 }
 
@@ -200,7 +207,7 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 		return
 	default:
 	}
-	dirPath, fileErr := h.formatPath(filepath.Dir(filePath))
+	dirPath, _, fileErr := h.formatPath(filepath.Dir(filePath))
 	if fileErr != nil {
 		return
 	}

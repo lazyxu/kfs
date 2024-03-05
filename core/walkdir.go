@@ -12,6 +12,7 @@ type WalkDirHandlers interface {
 	FileInfoFilter(filePath string, info os.FileInfo) bool
 	OnFileError(filePath string, err error)
 	DirHandler(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo, continues []bool) error
+	EndDir(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo) error
 }
 
 type DefaultWalkDirHandlers struct{}
@@ -31,6 +32,10 @@ func (DefaultWalkDirHandlers) OnFileError(filePath string, err error) {
 }
 
 func (DefaultWalkDirHandlers) DirHandler(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo, continues []bool) error {
+	return nil
+}
+
+func (DefaultWalkDirHandlers) EndDir(ctx context.Context, filePath string, dirInfo os.FileInfo, infos []os.FileInfo) error {
 	return nil
 }
 
@@ -97,6 +102,10 @@ func handleDir(ctx context.Context, filePath string, dirInfo os.FileInfo, handle
 		if err != nil {
 			return err
 		}
+	}
+	err = handlers.EndDir(ctx, filePath, dirInfo, filteredInfos)
+	if err != nil {
+		return err
 	}
 	return nil
 }

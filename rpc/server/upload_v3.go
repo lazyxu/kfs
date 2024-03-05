@@ -48,20 +48,26 @@ func handleUploadStartDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	}
 	println(conn.RemoteAddr().String(), "UploadStartDir", req.DriverId, "/"+strings.Join(req.DirPath, "/"))
 
-	err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
-		DriverId:       req.DriverId,
-		DirPath:        req.DirPath,
-		Name:           req.Name,
-		Hash:           req.Hash,
-		Mode:           req.Mode,
-		Size:           req.Size,
-		CreateTime:     req.CreateTime,
-		ModifyTime:     req.ModifyTime,
-		ChangeTime:     req.ChangeTime,
-		AccessTime:     req.AccessTime,
-		UploadDeviceId: req.UploadDeviceId,
-		UploadTime:     req.UploadTime,
-	})
+	if !req.IsRoot {
+		err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
+			DriverId:       req.DriverId,
+			DirPath:        req.DirPath,
+			Name:           req.Name,
+			Hash:           req.Hash,
+			Mode:           req.Mode,
+			Size:           req.Size,
+			CreateTime:     req.CreateTime,
+			ModifyTime:     req.ModifyTime,
+			ChangeTime:     req.ChangeTime,
+			AccessTime:     req.AccessTime,
+			UploadDeviceId: req.UploadDeviceId,
+			UploadTime:     req.UploadTime,
+		})
+		if err != nil {
+			println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
+			return err
+		}
+	}
 
 	l := len(req.UploadReqDirItemCheckV3)
 	hashList := make([]string, l)
@@ -76,10 +82,6 @@ func handleUploadStartDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	}
 	err = kfsCore.Db.CheckExists(context.TODO(), req.DriverId, req.DirPath, dirItemChecks, hashList)
 	if err != nil {
-		return err
-	}
-	if err != nil {
-		println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
 		return err
 	}
 	// write

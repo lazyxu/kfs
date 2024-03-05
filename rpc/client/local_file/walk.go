@@ -26,7 +26,7 @@ func (h *WebUploadDirProcess) FilePathFilter(filePath string) bool {
 		println(filePath + ": ignored")
 		h.d.addTaskIgnores(filePath)
 	} else {
-		println(filePath)
+		//println(filePath)
 	}
 	return ignored
 }
@@ -41,6 +41,7 @@ func (h *WebUploadDirProcess) PushFile(info os.FileInfo) {
 }
 
 func (h *WebUploadDirProcess) StartFile(filePath string, info os.FileInfo) {
+	//h.d.addTaskTotal(info)
 	h.d.setTaskFile(filePath, info)
 }
 
@@ -60,7 +61,8 @@ func (h *WebUploadDirProcess) EndFile(filePath string, info os.FileInfo) {
 	h.d.addTaskCnt(info)
 }
 
-func (h *WebUploadDirProcess) StartDir(filePath string, n uint64) {
+func (h *WebUploadDirProcess) StartDir(filePath string, info os.FileInfo, n uint64) {
+	//h.d.addTaskTotal(info)
 	h.d.setTaskDir(filePath, n)
 }
 

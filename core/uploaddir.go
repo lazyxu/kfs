@@ -20,6 +20,6 @@ type UploadDirProcess interface {
 	EndUploadFile(filePath string, info os.FileInfo)
 	SkipFile(filePath string, info os.FileInfo, hash string)
 	EndFile(filePath string, info os.FileInfo)
-	StartDir(filePath string, n uint64)
+	StartDir(filePath string, info os.FileInfo, n uint64)
 	EndDir(filePath string, info os.FileInfo)
 }

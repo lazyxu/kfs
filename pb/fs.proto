@@ -74,6 +74,7 @@ message UploadStartDirReq {
   string UploadDeviceId = 11;
   uint64 UploadTime = 12;
   repeated UploadReqDirItemCheckV3 uploadReqDirItemCheckV3 = 13;
+  bool isRoot = 14;
 }
 
 message UploadReqDirItemCheckV3 {
