@@ -28,8 +28,8 @@ func (db *DB) GetFileHashMode(ctx context.Context, branchName string, splitPath 
 	return dbBase.GetFileHashMode(ctx, db.db, branchName, splitPath)
 }
 
-func (db *DB) UpsertDriverFile(ctx context.Context, f dao.DriverFile) error {
-	return dbBase.UpsertDriverFileMysql(ctx, db.db, f)
+func (db *DB) UpsertDriverFile(ctx context.Context, f dao.DriverFile, mkdir bool) error {
+	return dbBase.UpsertDriverFileMysql(ctx, db.db, f, mkdir)
 }
 
 func (db *DB) UpsertDriverFiles(ctx context.Context, files []dao.DriverFile) error {

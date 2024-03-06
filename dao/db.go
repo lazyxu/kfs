@@ -66,7 +66,7 @@ type Database interface {
 	ListFileMd5(ctx context.Context, md5List []string) (m map[string]string, err error)
 	SumFileSize(ctx context.Context) (size uint64, err error)
 
-	UpsertDriverFile(ctx context.Context, f DriverFile) error
+	UpsertDriverFile(ctx context.Context, f DriverFile, mkdir bool) error
 	UpsertDriverFiles(ctx context.Context, files []DriverFile) error
 	ListDriverFile(ctx context.Context, driverId uint64, filePath []string) (files []DriverFile, err error)
 	GetDriverFile(ctx context.Context, driverId uint64, filePath []string) (file DriverFile, err error)

@@ -62,7 +62,7 @@ func handleUploadStartDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 			AccessTime:     req.AccessTime,
 			UploadDeviceId: req.UploadDeviceId,
 			UploadTime:     req.UploadTime,
-		})
+		}, false)
 		if err != nil {
 			println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
 			return err
@@ -168,7 +168,7 @@ func handleUploadV3File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		AccessTime:     req.AccessTime,
 		UploadDeviceId: req.UploadDeviceId,
 		UploadTime:     req.UploadTime,
-	})
+	}, false)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
 		return err

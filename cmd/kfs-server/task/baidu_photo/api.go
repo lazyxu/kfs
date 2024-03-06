@@ -214,7 +214,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, hash string)
 		ModifyTime: uint64(file.ShootTime),
 		ChangeTime: uint64(file.ShootTime),
 		AccessTime: uint64(file.ShootTime),
-	})
+	}, true)
 	if err != nil {
 		return err
 	}

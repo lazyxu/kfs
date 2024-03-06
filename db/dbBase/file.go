@@ -179,7 +179,7 @@ func jsonToArray(data []byte) (arr []string) {
 	return arr
 }
 
-func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error {
+func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile, mkdir bool) error {
 	tx, err := conn.Begin()
 	if err != nil {
 		return err
@@ -187,6 +187,34 @@ func UpsertDriverFile(ctx context.Context, conn *sql.DB, f dao.DriverFile) error
 	defer func() {
 		err = CommitAndRollback(tx, err)
 	}()
+	// TODO: check by option.
+	if mkdir && len(f.DirPath) != 0 {
+		time := f.CreateTime
+		hash := ""
+		size := 0
+		mode := uint64(os.ModeDir)
+		for i := 0; i < len(f.DirPath); i++ {
+			dirPath := f.DirPath[:i]
+			name := f.DirPath[i]
+			_, err = tx.ExecContext(ctx, `
+				INSERT OR IGNORE INTO _driver_file (
+					driverId,
+					dirPath,
+					name,
+					hash,
+					mode,
+					size,
+					createTime,
+					modifyTime,
+					changeTime,
+					accessTime
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+				`, f.DriverId, arrayToJson(dirPath), name, hash, mode, size, time, time, time, time)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	res, err := tx.ExecContext(ctx, `
 	INSERT INTO _driver_file (
 		driverId,
@@ -306,7 +334,7 @@ func UpsertDriverFiles(ctx context.Context, conn *sql.DB, db DbImpl, files []dao
 	return err
 }
 
-func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile) error {
+func UpsertDriverFileMysql(ctx context.Context, txOrDb TxOrDb, f dao.DriverFile, mkdir bool) error {
 	_, err := txOrDb.ExecContext(ctx, `
 	INSERT INTO _driver_file (
 		driverId,
