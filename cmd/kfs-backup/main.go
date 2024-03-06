@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/lazyxu/kfs/rpc/client/local_file"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -43,7 +44,11 @@ func rootCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&serverAddr, "server", "", "server address")
 	cmd.PersistentFlags().Uint64VarP(&driverId, "driver", "d", invalidDriverId, "driver id")
 
-	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", "~/.kfs-config.json", "config path")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+	}
+	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", filepath.Join(home, "kfs-config.json"), "config path")
 	return cmd
 }
 
@@ -58,18 +63,44 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 		data, err := os.ReadFile(configPath)
 		if err != nil {
-			fmt.Printf("读取配置文件失败： %s\n", configPath)
-			return
+			if os.IsNotExist(err) {
+				f, err := os.Create(configPath)
+				if err != nil {
+					fmt.Printf("创建配置文件失败： %s\n", configPath)
+					return
+				}
+				_, err = f.WriteString("{}")
+				if err != nil {
+					fmt.Printf("初始化配置文件失败： %s\n", configPath)
+					return
+				}
+				f.Close()
+			} else {
+				fmt.Printf("读取配置文件失败： %s\n", configPath)
+				return
+			}
+			data, err = os.ReadFile(configPath)
+			if err != nil {
+				fmt.Printf("读取配置文件失败： %s\n", configPath)
+				return
+			}
 		}
-		deviceId := local_file.NewDeviceIfNeeded(configPath)
 		m := map[string]interface{}{}
 		err = json.Unmarshal(data, &m)
 		if err != nil {
 			panic(err)
 		}
 		if serverAddr == "" {
-			serverAddr = m["socketServer"].(string)
+			if s, ok := m["socketServer"]; ok {
+				if ss, ok2 := s.(string); ok2 {
+					serverAddr = ss
+				}
+			}
+			if serverAddr == "" {
+				fmt.Printf("请配置serverAddr\n")
+			}
 		}
+		deviceId := local_file.NewDeviceIfNeeded(configPath)
 		doUpload(ctx, deviceId, serverAddr, driverId, srcPath, ignores, verbose)
 	}
 }
