@@ -31,19 +31,30 @@ func NewDeviceIfNeeded(configPath string) string {
 	if err != nil {
 		panic(err)
 	}
-	m := map[string]interface{}{}
-	err = json.Unmarshal(data, &m)
-	if err != nil {
-		panic(err)
+	socketServer := json.ConfigCompatibleWithStandardLibrary.Get(data, "socketServer").ToString()
+	if socketServer == "" {
+		fmt.Printf("请配置socketServer\n")
+		os.Exit(1)
 	}
-	if id, o := m["deviceId"]; o {
-		deviceId = id.(string)
+	webServer := json.ConfigCompatibleWithStandardLibrary.Get(data, "webServer").ToString()
+	if webServer == "" {
+		fmt.Printf("请配置webServer\n")
+		os.Exit(1)
+	}
+	id := json.ConfigCompatibleWithStandardLibrary.Get(data, "deviceId").ToString()
+	if id != "" {
+		deviceId = id
 	} else {
 		id, err := uuid.NewUUID()
 		if err != nil {
 			panic(err)
 		}
 		deviceId = id.String()
+		m := map[string]interface{}{}
+		err = json.Unmarshal(data, &m)
+		if err != nil {
+			panic(err)
+		}
 		m["deviceId"] = deviceId
 		data, err = json.MarshalIndent(m, "", " ")
 		if err != nil {
@@ -60,18 +71,17 @@ func NewDeviceIfNeeded(configPath string) string {
 	}
 	os := runtime.GOOS
 	name := hostname + "@" + os
-	webServerHost := m["webServer"].(string)
 	buf := jsonBody(map[string]interface{}{
 		"id":       deviceId,
 		"name":     name,
 		"os":       os,
 		"hostname": hostname,
 	})
-	_, err = http.Post(webServerHost+"/api/v1/devices", "application/json", buf)
+	_, err = http.Post(webServer+"/api/v1/devices", "application/json", buf)
 	if err != nil {
 		panic(err)
 	}
-	resp, err := http.Get(webServerHost + "/api/v1/listLocalFileDriver?deviceId=" + deviceId)
+	resp, err := http.Get(webServer + "/api/v1/listLocalFileDriver?deviceId=" + deviceId)
 	if err != nil {
 		panic(err)
 	}
@@ -87,7 +97,7 @@ func NewDeviceIfNeeded(configPath string) string {
 	var drivers []dao.Driver
 	json.ConfigCompatibleWithStandardLibrary.Get(body, "data").ToVal(&drivers)
 	for _, d := range drivers {
-		StartLocalFileSync(d.Id, m["socketServer"].(string), d.H, d.M, d.SrcPath, d.Ignores, d.Encoder)
+		StartLocalFileSync(d.Id, socketServer, d.H, d.M, d.SrcPath, d.Ignores, d.Encoder)
 	}
 	return deviceId
 }

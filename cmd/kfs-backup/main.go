@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	json "github.com/json-iterator/go"
 	"github.com/lazyxu/kfs/rpc/client/local_file"
 	"os"
 	"path/filepath"
@@ -23,7 +23,6 @@ var scanOnly bool
 var srcPath string
 var ignores []string
 
-var serverAddr string
 var driverId uint64
 
 var configPath string
@@ -41,7 +40,6 @@ func rootCmd() *cobra.Command {
 	cmd.PersistentFlags().StringVar(&srcPath, "src", "", "src path")
 	cmd.PersistentFlags().StringSliceVar(&ignores, "ignore", []string{}, "ignores")
 
-	cmd.PersistentFlags().StringVar(&serverAddr, "server", "", "server address")
 	cmd.PersistentFlags().Uint64VarP(&driverId, "driver", "d", invalidDriverId, "driver id")
 
 	home, err := os.UserHomeDir()
@@ -50,6 +48,28 @@ func rootCmd() *cobra.Command {
 	}
 	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", filepath.Join(home, "kfs-config.json"), "config path")
 	return cmd
+}
+
+func initConfigFile(path string) {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			f, err := os.Create(path)
+			if err != nil {
+				fmt.Printf("创建配置文件失败： %s\n", path)
+				os.Exit(1)
+			}
+			defer f.Close()
+			_, err = f.WriteString("{}")
+			if err != nil {
+				fmt.Printf("初始化配置文件失败： %s\n", path)
+				os.Exit(1)
+			}
+		} else {
+			fmt.Printf("读取配置文件失败： %s\n", path)
+			os.Exit(1)
+		}
+	}
 }
 
 func runRoot(cmd *cobra.Command, args []string) {
@@ -61,46 +81,18 @@ func runRoot(cmd *cobra.Command, args []string) {
 			fmt.Printf("请输入正确的云盘ID\n")
 			return
 		}
+		initConfigFile(configPath)
 		data, err := os.ReadFile(configPath)
 		if err != nil {
-			if os.IsNotExist(err) {
-				f, err := os.Create(configPath)
-				if err != nil {
-					fmt.Printf("创建配置文件失败： %s\n", configPath)
-					return
-				}
-				_, err = f.WriteString("{}")
-				if err != nil {
-					fmt.Printf("初始化配置文件失败： %s\n", configPath)
-					return
-				}
-				f.Close()
-			} else {
-				fmt.Printf("读取配置文件失败： %s\n", configPath)
-				return
-			}
-			data, err = os.ReadFile(configPath)
-			if err != nil {
-				fmt.Printf("读取配置文件失败： %s\n", configPath)
-				return
-			}
+			fmt.Printf("读取配置文件失败： %s\n", configPath)
+			return
 		}
-		m := map[string]interface{}{}
-		err = json.Unmarshal(data, &m)
-		if err != nil {
-			panic(err)
-		}
-		if serverAddr == "" {
-			if s, ok := m["socketServer"]; ok {
-				if ss, ok2 := s.(string); ok2 {
-					serverAddr = ss
-				}
-			}
-			if serverAddr == "" {
-				fmt.Printf("请配置serverAddr\n")
-			}
+		socketServer := json.ConfigCompatibleWithStandardLibrary.Get(data, "socketServer").ToString()
+		if socketServer == "" {
+			fmt.Printf("请配置socketServer\n")
+			os.Exit(1)
 		}
 		deviceId := local_file.NewDeviceIfNeeded(configPath)
-		doUpload(ctx, deviceId, serverAddr, driverId, srcPath, ignores, verbose)
+		doUpload(ctx, deviceId, socketServer, driverId, srcPath, ignores, verbose)
 	}
 }
