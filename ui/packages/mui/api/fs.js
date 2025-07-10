@@ -68,3 +68,75 @@ export async function getDriverFile(driverId, filePath) {
         driverId, filePath
     });
 }
+
+export async function uploadFile(driverId, filePath, file) {
+    try {
+        const formData = new FormData();
+        formData.append("driverId", driverId);
+        formData.append("filePath", JSON.stringify(filePath));
+        formData.append("file", file);
+        await axios.post(`${getSysConfig().webServer}/api/v1/uploadFile`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        });
+    } catch (e) {
+        noteError("上传文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
+export async function checkFileExists(driverId, dirPath, hash) {
+    try {
+        const resp = await axios.get(`${getSysConfig().webServer}/api/v1/checkFileExists`, {
+            params: {
+                driverId,
+                dirPath,
+                hash,
+            }
+        });
+        return resp.data.exists;
+    } catch (e) {
+        noteError("检查文件失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
+export async function uploadFileChunk(driverId, dirPath, hash, chunkIndex, chunk, fileMeta) {
+    try {
+        const formData = new FormData();
+        formData.append("driverId", driverId);
+        formData.append("dirPath", dirPath);
+        formData.append("hash", hash);
+        formData.append("chunkIndex", chunkIndex);
+        formData.append("chunk", chunk);
+        if (fileMeta) {
+            formData.append("fileName", fileMeta.name);
+            formData.append("fileSize", fileMeta.size);
+            formData.append("fileLastModified", fileMeta.lastModified);
+            formData.append("fileType", fileMeta.type);
+        }
+        await axios.post(`${getSysConfig().webServer}/api/v1/uploadFileChunk`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        });
+    } catch (e) {
+        throw e;
+    }
+}
+
+export async function mergeFileChunks(driverId, dirPath, hash, totalChunks, fileMeta) {
+    try {
+        await axios.post(`${getSysConfig().webServer}/api/v1/mergeFileChunks`, {
+            driverId,
+            dirPath,
+            hash,
+            totalChunks,
+            fileMeta,
+        });
+    } catch (e) {
+        noteError("合并分块失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}

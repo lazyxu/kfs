@@ -23,7 +23,7 @@ ENV StorageDir $KFS_ROOT
 ENV ThumbnailDir $KFS_ROOT/thumbnail
 ENV TransCodeDir $KFS_ROOT/transcode
 
-ENV PATH="/root/ffmpeg-6.1-${arch}-static:${PATH}"
+ENV PATH "/root/ffmpeg-6.1-${arch}-static:${PATH}"
 
 CMD /root/kfs-server \
     --web-server $WebServer \

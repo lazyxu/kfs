@@ -2,14 +2,19 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
-	"github.com/lazyxu/kfs/cmd/kfs-server/task/livp"
-	"github.com/lazyxu/kfs/rpc/server"
 	"image"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
+
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/livp"
+	"github.com/lazyxu/kfs/rpc/server"
 
 	"go.uber.org/zap"
 
@@ -105,6 +110,10 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/event/baiduPhotoTask/:driverId", func(c echo.Context) error {
 		return baidu_photo.ApiEvent(c, kfsCore)
 	}) // TODO: handle name
+
+	e.POST("/api/v1/uploadFileChunk", apiUploadFileChunk)
+	e.POST("/api/v1/mergeFileChunks", apiMergeFileChunks)
+	e.GET("/api/v1/checkFileExists", apiCheckFileExists)
 
 	println("KFS web server listening at:", webPortString)
 	// Start server
@@ -564,4 +573,189 @@ func apiStartBaiduPhotoTask(c echo.Context) error {
 	}
 	d.StartOrStop(ctx, start)
 	return c.String(http.StatusOK, "")
+}
+
+// 检查文件是否已存在
+func apiCheckFileExists(c echo.Context) error {
+	driverIdStr := c.QueryParam("driverId")
+	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]interface{}{"exists": false, "msg": "driverId should be a number"})
+	}
+	filePathStr := c.QueryParam("filePath")
+	var filePath []string
+	if filePathStr != "" {
+		_ = json.Unmarshal([]byte(filePathStr), &filePath)
+	}
+	hash := c.QueryParam("hash")
+	// 检查driver+filePath下是否有hash为该值的文件
+	files, err := kfsCore.Db.ListDriverFile(c.Request().Context(), driverId, filePath)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"exists": false, "msg": err.Error()})
+	}
+	for _, f := range files {
+		if f.Hash == hash {
+			return c.JSON(http.StatusOK, map[string]interface{}{"exists": true})
+		}
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{"exists": false})
+}
+
+// 上传分块
+func apiUploadFileChunk(c echo.Context) error {
+	filePathStr := c.FormValue("filePath")
+	hash := c.FormValue("hash")
+	chunkIndex := c.FormValue("chunkIndex")
+	file, err := c.FormFile("chunk")
+	if err != nil {
+		return c.String(http.StatusBadRequest, "missing chunk")
+	}
+	var filePath []string
+	if filePathStr != "" {
+		_ = json.Unmarshal([]byte(filePathStr), &filePath)
+	}
+	// 文件元信息
+	fileName := c.FormValue("fileName")
+	fileSize := c.FormValue("fileSize")
+	fileLastModified := c.FormValue("fileLastModified")
+	fileType := c.FormValue("fileType")
+	// 可将这些信息写入临时目录的meta.json
+	tmpDir := path.Join(os.TempDir(), "kfs_upload_chunks", hash)
+	err = os.MkdirAll(tmpDir, 0755)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "mkdir failed: "+err.Error())
+	}
+	// 写meta.json（只写一次）
+	metaPath := path.Join(tmpDir, "meta.json")
+	if fileName != "" && fileSize != "" && fileLastModified != "" {
+		if _, err := os.Stat(metaPath); os.IsNotExist(err) {
+			meta := map[string]string{
+				"name":         fileName,
+				"size":         fileSize,
+				"lastModified": fileLastModified,
+				"type":         fileType,
+			}
+			bs, _ := json.Marshal(meta)
+			_ = os.WriteFile(metaPath, bs, 0644)
+		}
+	}
+	// ...existing code...
+	src, err := file.Open()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "open chunk failed: "+err.Error())
+	}
+	defer src.Close()
+	chunkPath := path.Join(tmpDir, chunkIndex)
+	dst, err := os.Create(chunkPath)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "create chunk failed: "+err.Error())
+	}
+	defer dst.Close()
+	_, err = io.Copy(dst, src)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "write chunk failed: "+err.Error())
+	}
+	return c.String(http.StatusOK, "ok")
+}
+
+// 合并分块
+func apiMergeFileChunks(c echo.Context) error {
+	var req struct {
+		DriverId    uint64   `json:"driverId"`
+		DirPath     []string `json:"dirPath"`
+		Hash        string   `json:"hash"`
+		TotalChunks int      `json:"totalChunks"`
+		FileMeta    struct {
+			Name         string `json:"name"`
+			Size         uint64 `json:"size"`
+			LastModified uint64 `json:"lastModified"`
+			Type         string `json:"type"`
+		} `json:"fileMeta"`
+	}
+	body, err := ioutil.ReadAll(c.Request().Body)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "read body failed: "+err.Error())
+	}
+	err = json.Unmarshal(body, &req)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "json decode failed: "+err.Error())
+	}
+	tmpDir := path.Join(os.TempDir(), "kfs_upload_chunks", req.Hash)
+	mergedPath := path.Join(tmpDir, "merged_file")
+	merged, err := os.Create(mergedPath)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "create merged file failed: "+err.Error())
+	}
+	defer merged.Close()
+	// 按顺序合并
+	for i := 0; i < req.TotalChunks; i++ {
+		chunkPath := path.Join(tmpDir, strconv.Itoa(i))
+		chunk, err := os.Open(chunkPath)
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "open chunk failed: "+err.Error())
+		}
+		_, err = io.Copy(merged, chunk)
+		chunk.Close()
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "merge chunk failed: "+err.Error())
+		}
+	}
+	// 读取meta.json（如果有）
+	metaPath := path.Join(tmpDir, "meta.json")
+	var meta map[string]string
+	if bs, err := os.ReadFile(metaPath); err == nil {
+		_ = json.Unmarshal(bs, &meta)
+	}
+	// TODO: 将mergedPath文件保存到最终存储，并入库
+	// 这里只做简单演示，实际应调用kfsCore相关接口
+	// 清理分块
+	merged.Seek(0, io.SeekStart)
+	stat, err := merged.Stat()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "stat merged file failed: "+err.Error())
+	}
+	size := uint64(stat.Size())
+	ctx := c.Request().Context()
+
+	// 保存文件到存储
+	_, err = merged.Seek(0, io.SeekStart)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "seek merged file failed: "+err.Error())
+	}
+	_, err = kfsCore.S.Write(req.Hash, func(w io.Writer, hasher io.Writer) (e error) {
+		rr := io.TeeReader(merged, hasher)
+		_, err = io.Copy(w, rr)
+		return err
+	})
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "write to storage failed: "+err.Error())
+	}
+
+	// 入库
+	err = kfsCore.Db.InsertFile(ctx, req.Hash, size)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "insert file failed: "+err.Error())
+	}
+	err = kfsCore.Db.UpsertDriverFile(ctx, dao.DriverFile{
+		DriverId:   req.DriverId,
+		DirPath:    req.DirPath,
+		Hash:       req.Hash,
+		Name:       req.FileMeta.Name,
+		Version:    0,
+		Mode:       0o644,
+		Size:       size,
+		CreateTime: req.FileMeta.LastModified,
+		ModifyTime: req.FileMeta.LastModified,
+		ChangeTime: req.FileMeta.LastModified,
+		AccessTime: req.FileMeta.LastModified,
+	}, false)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "upsert driver file failed: "+err.Error())
+	}
+	files, _ := ioutil.ReadDir(tmpDir)
+	for _, f := range files {
+		os.Remove(path.Join(tmpDir, f.Name()))
+	}
+	os.RemoveAll(tmpDir)
+	return c.String(http.StatusOK, "ok")
 }

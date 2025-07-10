@@ -6,6 +6,8 @@ root=$(cd "$(dirname "$0")"; pwd)
 
 echo "root: "$root
 
+export GOPROXY=https://goproxy.cn,direct
+
 is_command_exist () {
   which $1 >/dev/null 2>&1
 }
@@ -111,7 +113,7 @@ case $1 in
 
       server)
         cd $root/ui/web
-        yarn install --check-files --network-timeout 1000000
+#        yarn install --check-files --network-timeout 1000000
         yarn build
         cd $root/cmd/kfs-server
         echo "GOOS=$GOOS GOARCH=$GOARCH"
