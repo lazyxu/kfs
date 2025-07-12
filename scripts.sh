@@ -212,6 +212,14 @@ case $1 in
         DISABLE_ESLINT_PLUGIN='true' NODE_ENV=production VITE_APP_PLATFORM=$GOOS BUILD_PATH=electron-production PUBLIC_URL=. yarn build:mac
         ;;
 
+      # npx eas-cli build --platform android --profile preview 
+      android)
+        cd $root/ui
+        # yarn
+        cd $root/ui/mobile
+        EXPO_USE_METRO_WORKSPACE_ROOT=1 VITE_APP_PLATFORM=mobile yarn android
+        ;;
+
       *)
         usage
         ;;
