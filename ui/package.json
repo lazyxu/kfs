@@ -1,12 +1,9 @@
 {
   "name": "kfs",
   "private": true,
-  "scripts": {
-    "genpatch": "npx patch-package @expo/dev-server/raw-body --use-yarn",
-    "postinstall": "npx patch-package --use-yarn"
-  },
+  "scripts": {},
   "workspaces": {
-    "packages":[
+    "packages": [
       "web",
       "electron",
       "mobile",
@@ -15,5 +12,8 @@
     "nohoist": [
       "**electron**"
     ]
+  },
+  "devDependencies": {
+    "yarn-upgrade-all": "^0.7.5"
   }
 }

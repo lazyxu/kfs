@@ -1,5 +1,3 @@
-self.importScripts("https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"); // 确保axios可用，或用fetch
-
 self.onmessage = async function (e) {
     const { driverId, dirPath, hash, chunkIndex, chunk, fileMeta } = e.data;
     try {

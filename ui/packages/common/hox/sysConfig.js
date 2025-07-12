@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 const defaultConfig = {
   api: 'web',
   theme: 'dark',
-  webServer: 'http://127.0.0.1:1123',
-  socketServer: '127.0.0.1:1124',
+  webServer: 'http://192.168.1.131:1123',
+  socketServer: '192.168.1.131:1124',
   maxContentSize: 1 * 1024 * 1024,
   port: "11234",
 };
