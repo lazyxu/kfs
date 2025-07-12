@@ -18,7 +18,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos.",
-        "NSPhotoLibraryAddUsageDescription": "Allow $(PRODUCT_NAME) to save photos."
+        "NSPhotoLibraryAddUsageDescription": "Allow $(PRODUCT_NAME) to save photos.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.ricardo.xu.kfs"
     },
