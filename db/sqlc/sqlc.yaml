@@ -1,0 +1,15 @@
+version: "2"
+sql:
+  - engine: "mysql"
+    queries:
+      - "file.sql"
+      - "exif.sql"
+      - "media.sql"
+      - "device.sql"
+      - "driver.sql"
+      - "driver_file.sql"
+    schema: "schema.sql"
+    gen:
+      go:
+        package: "sqlc"
+        out: "./"

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"embed"
 	"errors"
 	"fmt"
@@ -9,10 +11,12 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/lazyxu/kfs/dao"
 	"github.com/lazyxu/kfs/db/cgosqlite"
 	"github.com/lazyxu/kfs/db/mysql"
+	"github.com/lazyxu/kfs/db/sqlc"
 	storage "github.com/lazyxu/kfs/storage/local"
 
 	"github.com/gorilla/websocket"
@@ -98,6 +102,72 @@ var rootCmd = &cobra.Command{
 		databaseType := cmd.Flag(DatabaseTypeStr).Value.String()
 		dataSourceName := cmd.Flag(DataSourceNameStr).Value.String()
 
+		if dataSourceName != "" {
+			// 自动建库逻辑，仅对 MySQL 有效
+			if databaseType == "mysql" {
+				// 提取不带 db 的 DSN
+				// 自动获取数据库名
+				noDBDSN := dataSourceName
+				dbName := ""
+				if idx := strings.LastIndex(noDBDSN, "/"); idx != -1 {
+					rest := noDBDSN[idx+1:]
+					qidx := strings.Index(rest, "?")
+					if qidx != -1 {
+						dbName = rest[:qidx]
+						noDBDSN = noDBDSN[:idx+1] + rest[qidx:]
+					} else {
+						dbName = rest
+						noDBDSN = noDBDSN[:idx+1]
+					}
+				}
+				if dbName == "" {
+					fmt.Fprintln(os.Stderr, "excect database name from data source name failed:", dataSourceName)
+					os.Exit(1)
+				}
+				initDB, err := sql.Open("mysql", noDBDSN)
+				if err == nil {
+					initDB.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s`", dbName))
+					initDB.Close()
+				}
+			}
+			db, err := sql.Open("mysql", dataSourceName)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "connect error:", err)
+				os.Exit(1)
+			}
+			defer db.Close()
+			// 执行 db\sqlc\schema.sql 中的建表语句
+			schemaSQL, err := os.ReadFile("db/sqlc/schema.sql")
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "read schema.sql error:", err)
+				os.Exit(1)
+			}
+			_, err = db.Exec(string(schemaSQL))
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "exec schema.sql error:", err)
+				os.Exit(1)
+			}
+			q := sqlc.New(db)
+
+			// 插入
+			err = q.InsertDriver(context.Background(), sqlc.InsertDriverParams{
+				Name:        "test",
+				Description: "desc",
+				Type:        "local",
+			})
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "insert error:", err)
+				os.Exit(1)
+			}
+
+			// 查询
+			drivers, err := q.ListDriver(context.Background())
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "query error:", err)
+				os.Exit(1)
+			}
+			fmt.Println("drivers:", drivers)
+		}
 		webPortString := cmd.Flag(WebServerStr).Value.String()
 		webPort, err := strconv.Atoi(webPortString)
 		if err != nil {

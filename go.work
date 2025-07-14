@@ -15,6 +15,7 @@ use (
 	./db/gosqlite
 	./db/mysql
 	./db/dbBase
+	./db/sqlc
 	./dao
 	./storage/local
 )

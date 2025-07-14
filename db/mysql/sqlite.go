@@ -67,6 +67,8 @@ func (db *DB) Remove() error {
 
 func (db *DB) Create() error {
 	_, err := db.db.Exec(`
+	CREATE DATABASE IF NOT EXISTS kfs;
+	use kfs;
 	CREATE TABLE IF NOT EXISTS _file (
 		hash CHAR(64) NOT NULL PRIMARY KEY,
 		size BIGINT   NOT NULL
@@ -91,7 +93,7 @@ func (db *DB) Create() error {
 
 	CREATE TABLE IF NOT EXISTS _driver_file (
 		driverName VARCHAR(255)   NOT NULL,
-		dirPath    VARCHAR(32767) NOT NULL,
+		dirPath    VARCHAR(1255) NOT NULL,
 		name       VARCHAR(255)   NOT NULL,
 	    version    BIGINT         NOT NULL,
 		hash       CHAR(64)       NOT NULL,
