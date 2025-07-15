@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"image"
@@ -12,8 +13,10 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/livp"
+	"github.com/lazyxu/kfs/db/sqlc"
 	"github.com/lazyxu/kfs/rpc/server"
 
 	"go.uber.org/zap"
@@ -111,6 +114,7 @@ func webServer(webPortString string) {
 		return baidu_photo.ApiEvent(c, kfsCore)
 	}) // TODO: handle name
 
+	e.POST("/api/v1/createFolder", apiCreateFolder)
 	e.POST("/api/v1/uploadFileChunk", apiUploadFileChunk)
 	e.POST("/api/v1/mergeFileChunks", apiMergeFileChunks)
 	e.GET("/api/v1/checkFileExists", apiCheckFileExists)
@@ -577,28 +581,64 @@ func apiStartBaiduPhotoTask(c echo.Context) error {
 
 // 检查文件是否已存在
 func apiCheckFileExists(c echo.Context) error {
-	driverIdStr := c.QueryParam("driverId")
-	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]interface{}{"exists": false, "msg": "driverId should be a number"})
-	}
-	filePathStr := c.QueryParam("filePath")
-	var filePath []string
-	if filePathStr != "" {
-		_ = json.Unmarshal([]byte(filePathStr), &filePath)
-	}
-	hash := c.QueryParam("hash")
-	// 检查driver+filePath下是否有hash为该值的文件
-	files, err := kfsCore.Db.ListDriverFile(c.Request().Context(), driverId, filePath)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"exists": false, "msg": err.Error()})
-	}
-	for _, f := range files {
-		if f.Hash == hash {
-			return c.JSON(http.StatusOK, map[string]interface{}{"exists": true})
+	dirPathStr := c.QueryParam("dirPath")
+	var dirPath []string
+	if dirPathStr != "" {
+		err := json.Unmarshal([]byte(dirPathStr), &dirPath)
+		if err != nil && err != sql.ErrNoRows {
+			return c.JSON(http.StatusInternalServerError, map[string]interface{}{"msg": err.Error()})
 		}
 	}
-	return c.JSON(http.StatusOK, map[string]interface{}{"exists": false})
+	md5 := c.QueryParam("md5")
+	sha256 := c.QueryParam("sha256")
+	logicFileExist := false
+	fileExist, err := kfsCore.Q.GetFileByHash(c.Request().Context(), sqlc.GetFileByHashParams{
+		Md5:    md5,
+		Sha256: sha256,
+	})
+	if err != nil && err != sql.ErrNoRows {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"fileExist": fileExist, "logicFileExist": logicFileExist, "msg": err.Error()})
+	}
+	var userID int64
+	name := c.QueryParam("name")
+	_, files, err := kfsCore.Q.ListDir(c.Request().Context(), userID, dirPath)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"fileExist": fileExist, "logicFileExist": logicFileExist, "msg": err.Error()})
+	}
+	for _, f := range files {
+		if f.Name == name {
+			if f.FileID.Int64 == f.ID {
+				logicFileExist = true
+				break
+			}
+		}
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{"fileExist": fileExist, "logicFileExist": logicFileExist})
+}
+
+const defaultDirPerm = int64(os.ModeDir | os.ModePerm)
+
+func apiCreateFolder(c echo.Context) error {
+	type request struct {
+		DirPath    []string `json:"dirPath"`
+		FolderName string   `json:"folderName"`
+	}
+
+	var req request
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "无效请求参数"})
+	}
+
+	// 调用核心服务创建文件夹
+	t := time.Now().UnixNano()
+	var userID int64
+	err := kfsCore.Q.SetLogicFileByPath(c.Request().Context(), userID, req.DirPath, req.FolderName,
+		sql.NullInt64{Valid: false}, defaultDirPerm, 0, t, t, t, t, false)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]bool{"success": true})
 }
 
 // 上传分块
@@ -658,17 +698,19 @@ func apiUploadFileChunk(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
 }
 
+var defaultFilePerm int64 = 0o644
+
 // 合并分块
 func apiMergeFileChunks(c echo.Context) error {
 	var req struct {
-		DriverId    uint64   `json:"driverId"`
 		DirPath     []string `json:"dirPath"`
-		Hash        string   `json:"hash"`
+		Md5         string   `json:"md5"`
+		Sha256      string   `json:"sha256"`
 		TotalChunks int      `json:"totalChunks"`
 		FileMeta    struct {
 			Name         string `json:"name"`
-			Size         uint64 `json:"size"`
-			LastModified uint64 `json:"lastModified"`
+			Size         int64  `json:"size"`
+			LastModified int64  `json:"lastModified"`
 			Type         string `json:"type"`
 		} `json:"fileMeta"`
 	}
@@ -680,7 +722,7 @@ func apiMergeFileChunks(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, "json decode failed: "+err.Error())
 	}
-	tmpDir := path.Join(os.TempDir(), "kfs_upload_chunks", req.Hash)
+	tmpDir := path.Join(os.TempDir(), "kfs_upload_chunks", req.Md5+"_"+req.Sha256)
 	mergedPath := path.Join(tmpDir, "merged_file")
 	merged, err := os.Create(mergedPath)
 	if err != nil {
@@ -700,59 +742,42 @@ func apiMergeFileChunks(c echo.Context) error {
 			return c.String(http.StatusInternalServerError, "merge chunk failed: "+err.Error())
 		}
 	}
-	// 读取meta.json（如果有）
-	metaPath := path.Join(tmpDir, "meta.json")
-	var meta map[string]string
-	if bs, err := os.ReadFile(metaPath); err == nil {
-		_ = json.Unmarshal(bs, &meta)
-	}
-	// TODO: 将mergedPath文件保存到最终存储，并入库
-	// 这里只做简单演示，实际应调用kfsCore相关接口
-	// 清理分块
-	merged.Seek(0, io.SeekStart)
 	stat, err := merged.Stat()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "stat merged file failed: "+err.Error())
 	}
-	size := uint64(stat.Size())
+	size := stat.Size()
+	if req.FileMeta.Size != size {
+		return c.String(http.StatusInternalServerError, "size is not same: expected "+strconv.Itoa(int(req.FileMeta.Size))+" got "+strconv.Itoa(int(size)))
+	}
 	ctx := c.Request().Context()
 
-	// 保存文件到存储
-	_, err = merged.Seek(0, io.SeekStart)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "seek merged file failed: "+err.Error())
-	}
-	_, err = kfsCore.S.Write(req.Hash, func(w io.Writer, hasher io.Writer) (e error) {
-		rr := io.TeeReader(merged, hasher)
-		_, err = io.Copy(w, rr)
-		return err
-	})
+	_, err = kfsCore.S2.Add(req.Md5, req.Sha256, merged)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "write to storage failed: "+err.Error())
 	}
 
 	// 入库
-	err = kfsCore.Db.InsertFile(ctx, req.Hash, size)
+	res, err := kfsCore.Q.InsertFile(ctx, sqlc.InsertFileParams{
+		Size:   size,
+		Md5:    req.Md5,
+		Sha256: req.Sha256,
+	})
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "insert file failed: "+err.Error())
 	}
-	err = kfsCore.Db.UpsertDriverFile(ctx, dao.DriverFile{
-		DriverId:   req.DriverId,
-		DirPath:    req.DirPath,
-		Hash:       req.Hash,
-		Name:       req.FileMeta.Name,
-		Version:    0,
-		Mode:       0o644,
-		Size:       size,
-		CreateTime: req.FileMeta.LastModified,
-		ModifyTime: req.FileMeta.LastModified,
-		ChangeTime: req.FileMeta.LastModified,
-		AccessTime: req.FileMeta.LastModified,
-	}, false)
+	fileID, err := res.LastInsertId()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "get last insert id failed: "+err.Error())
+	}
+	var userID int64
+	err = kfsCore.Q.SetLogicFileByPath(ctx, userID, req.DirPath, req.FileMeta.Name,
+		sql.NullInt64{Valid: true, Int64: fileID}, defaultFilePerm, size,
+		req.FileMeta.LastModified, req.FileMeta.LastModified, req.FileMeta.LastModified, req.FileMeta.LastModified, false)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "upsert driver file failed: "+err.Error())
 	}
-	files, _ := ioutil.ReadDir(tmpDir)
+	files, _ := os.ReadDir(tmpDir)
 	for _, f := range files {
 		os.Remove(path.Join(tmpDir, f.Name()))
 	}

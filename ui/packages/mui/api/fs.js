@@ -86,13 +86,13 @@ export async function uploadFile(driverId, filePath, file) {
     }
 }
 
-export async function checkFileExists(driverId, dirPath, hash) {
+export async function checkFileExists(dirPath, name, sha256, md5) {
+    console.log('api.checkFileExists', dirPath, name, sha256, md5);
     try {
         const resp = await axios.get(`${getSysConfig().webServer}/api/v1/checkFileExists`, {
             params: {
-                driverId,
-                dirPath,
-                hash,
+                dirPath, name,
+                sha256, md5,
             }
         });
         return resp.data.exists;
@@ -102,34 +102,21 @@ export async function checkFileExists(driverId, dirPath, hash) {
     }
 }
 
-export async function uploadFileChunk(driverId, dirPath, hash, chunkIndex, chunk, fileMeta) {
+export async function createFolder(dirPath, folderName) {
     try {
-        const formData = new FormData();
-        formData.append("driverId", driverId);
-        formData.append("dirPath", dirPath);
-        formData.append("hash", hash);
-        formData.append("chunkIndex", chunkIndex);
-        formData.append("chunk", chunk);
-        if (fileMeta) {
-            formData.append("fileName", fileMeta.name);
-            formData.append("fileSize", fileMeta.size);
-            formData.append("fileLastModified", fileMeta.lastModified);
-            formData.append("fileType", fileMeta.type);
-        }
-        await axios.post(`${getSysConfig().webServer}/api/v1/uploadFileChunk`, formData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
+        await axios.post(`${getSysConfig().webServer}/api/v1/createFolder`, {
+            dirPath,
+            folderName
         });
     } catch (e) {
+        noteError("创建文件夹失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
 }
 
-export async function mergeFileChunks(driverId, dirPath, hash, totalChunks, fileMeta) {
+export async function mergeFileChunks( dirPath, hash, totalChunks, fileMeta) {
     try {
         await axios.post(`${getSysConfig().webServer}/api/v1/mergeFileChunks`, {
-            driverId,
             dirPath,
             hash,
             totalChunks,

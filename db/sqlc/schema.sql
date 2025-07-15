@@ -21,14 +21,14 @@ CREATE TABLE IF NOT EXISTS _logic_file (
     user_id       BIGINT         NOT NULL,
     name          VARCHAR(255)   NOT NULL,
     -- current_version_id BIGINT         NOT NULL,
-    file_id       BIGINT          NOT NULL,
+    file_id       BIGINT          DEFAULT NULL,
     mode          BIGINT          NOT NULL,  -- isDirectory, isFile, isSymlink
     size          BIGINT          NOT NULL,
     create_time   BIGINT          NOT NULL,
     modify_time   BIGINT          NOT NULL,
     change_time   BIGINT          NOT NULL,
     access_time   BIGINT          NOT NULL,
-    FOREIGN KEY (parent_id)       REFERENCES _logic_file(id),
+    -- FOREIGN KEY (parent_id)       REFERENCES _logic_file(id),
     FOREIGN KEY (file_id)         REFERENCES _file(id)
     -- FOREIGN KEY (current_version_id)  REFERENCES _version_file(id)
 );

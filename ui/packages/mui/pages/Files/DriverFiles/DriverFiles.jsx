@@ -13,14 +13,14 @@ export default function () {
     const [driverFiles, setDriverFiles] = useState([]);
     const [driverFilesTotal, setDriverFilesTotal] = useState(0);
     const [resourceManager, setResourceManager] = useResourceManager();
-    const { driver, dirPath } = resourceManager;
+    const { dirPath } = resourceManager;
     const controller = new AbortController();
     const [menu, setMenu] = useState(null);
     const [fileMenu, setFileMenu] = useState(null);
     const [fileAttribute, setFileAttribute] = useState(null);
     useEffect(() => {
         setDriverFiles([]);
-        fetchEventSource(`${getSysConfig().webServer}/api/v1/event/list?driverId=${driver.id}&${dirPath.map(f => "filePath[]=" + f).join("&")}`, {
+        fetchEventSource(`${getSysConfig().webServer}/api/v1/event/list?${dirPath.map(f => "filePath[]=" + f).join("&")}`, {
             signal: controller.signal,
             openWhenHidden: true,
             async onopen(response) {
@@ -69,6 +69,7 @@ export default function () {
             controller.abort();
         }
     }, [resourceManager.dirPath]);
+    console.log("===render DriverFiles", dirPath, driverFiles, driverFilesTotal);
     return (
         <>
             <Grid container padding={1} spacing={1}
@@ -77,7 +78,7 @@ export default function () {
                     e.preventDefault(); e.stopPropagation();
                     setMenu({
                         mouseX: e.clientX, mouseY: e.clientY,
-                        driver, dirPath,
+                        dirPath,
                     });
                 }}
             >

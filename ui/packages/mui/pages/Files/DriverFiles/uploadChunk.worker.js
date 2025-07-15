@@ -1,8 +1,7 @@
 self.onmessage = async function (e) {
-    const { driverId, dirPath, hash, chunkIndex, chunk, fileMeta } = e.data;
+    const { dirPath, hash, chunkIndex, chunk, fileMeta } = e.data;
     try {
         const formData = new FormData();
-        formData.append("driverId", driverId);
         formData.append("dirPath", dirPath);
         formData.append("hash", hash);
         formData.append("chunkIndex", chunkIndex);

@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "yarn-upgrade-all": "^0.7.5"
+  },
+  "dependencies": {
+    "js-md5": "^0.8.3"
   }
 }

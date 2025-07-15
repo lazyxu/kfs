@@ -202,7 +202,7 @@ var rootCmd = &cobra.Command{
 			fmt.Printf("logicFiles: %+v\n", logicFiles)
 
 			// 更新文件
-			err = q.SetLogicFileByPath(context.Background(), 1, []string{"test", "path"}, "ttt", fileID, 0644, 12345, 1622547800, 1622547800, 1622547800, 1622547800, true)
+			err = q.SetLogicFileByPath(context.Background(), 1, []string{"test", "path"}, "ttt", sql.NullInt64{Int64: fileID, Valid: true}, 0644, 12345, 1622547800, 1622547800, 1622547800, 1622547800, true)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "SetLogicFileByPath error:", err)
 				// 查询文件

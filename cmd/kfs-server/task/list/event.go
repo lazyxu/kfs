@@ -1,26 +1,20 @@
 package list
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/lazyxu/kfs/rpc/server"
 	"log"
-	"net/http"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/core"
-	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/db/sqlc"
 )
 
 type Response struct {
-	Files  []dao.DriverFile `json:"files,omitempty"`
-	ErrMsg string           `json:"errMsg,omitempty"`
-	N      int              `json:"n,omitempty"`
+	Files  []*sqlc.LogicFile `json:"files,omitempty"`
+	ErrMsg string            `json:"errMsg,omitempty"`
+	N      int               `json:"n,omitempty"`
 }
 
 func send(c echo.Context, msg Response) {
@@ -44,16 +38,11 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 		fmt.Println("Closing connection")
 	}()
 
-	driverIdStr := c.QueryParam("driverId")
-	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "driverId should be a number")
-	}
 	filePath := c.QueryParams()["filePath[]"]
 	if filePath == nil {
 		filePath = []string{}
 	}
-	files, err := kfsCore.Db.ListDriverFile(c.Request().Context(), driverId, filePath)
+	_, files, err := kfsCore.Q.ListDir(c.Request().Context(), 0, filePath)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -64,28 +53,28 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 	send(c, Response{N: n})
 
 	tick := time.NewTicker(time.Second)
-	curFiles := []dao.DriverFile{}
+	curFiles := []*sqlc.LogicFile{}
 	packetSize := 1
 	for _, file := range files {
-		if !os.FileMode(file.Mode).IsDir() {
-			err = server.AnalyzeIfNoFileType(c.Request().Context(), kfsCore, file.Hash)
-			if errors.Is(err, context.Canceled) {
-				fmt.Println("Connection canceled")
-				return nil
-			}
-			if err != nil {
-				send(c, Response{ErrMsg: err.Error()})
-			}
-		}
+		// if !os.FileMode(file.Mode).IsDir() {
+		// 	err = server.AnalyzeIfNoFileType(c.Request().Context(), kfsCore, file.Hash)
+		// 	if errors.Is(err, context.Canceled) {
+		// 		fmt.Println("Connection canceled")
+		// 		return nil
+		// 	}
+		// 	if err != nil {
+		// 		send(c, Response{ErrMsg: err.Error()})
+		// 	}
+		// }
 		curFiles = append(curFiles, file)
 		select {
 		case <-tick.C:
 			send(c, Response{Files: curFiles, N: n})
-			curFiles = []dao.DriverFile{}
+			curFiles = []*sqlc.LogicFile{}
 		default:
 			if len(curFiles) > packetSize {
 				send(c, Response{Files: curFiles, N: n})
-				curFiles = []dao.DriverFile{}
+				curFiles = []*sqlc.LogicFile{}
 				packetSize = packetSize * 2
 			}
 		}
