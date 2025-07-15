@@ -102,6 +102,7 @@ var rootCmd = &cobra.Command{
 		databaseType := cmd.Flag(DatabaseTypeStr).Value.String()
 		dataSourceName := cmd.Flag(DataSourceNameStr).Value.String()
 
+		var q *sqlc.Queries
 		if dataSourceName != "" {
 			// 自动建库逻辑，仅对 MySQL 有效
 			if databaseType == "mysql" {
@@ -142,27 +143,32 @@ var rootCmd = &cobra.Command{
 				fmt.Fprintln(os.Stderr, "read schema.sql error:", err)
 				os.Exit(1)
 			}
-			_, err = db.Exec(string(schemaSQL))
+			sqls := strings.Split(string(schemaSQL), ";")
+			for _, sqlStmt := range sqls {
+				sqlStmt = strings.TrimSpace(sqlStmt)
+				if sqlStmt == "" {
+					continue
+				}
+				_, err = db.Exec(sqlStmt)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, "exec schema.sql error:", err, "SQL:", sqlStmt)
+					os.Exit(1)
+				}
+			}
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "exec schema.sql error:", err)
 				os.Exit(1)
 			}
-			q := sqlc.New(db)
+			q = sqlc.New(db)
 			// 插入用户
-			userRes, err := q.InsertUser(context.Background(), sqlc.InsertUserParams{
+			_, err = q.InsertUser(context.Background(), sqlc.InsertUserParams{
 				Email:    "test@user.com",
 				Password: "password123",
 			})
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "Duplicate entry") {
 				fmt.Fprintln(os.Stderr, "InsertUser error:", err)
 				os.Exit(1)
 			}
-			userID, err := userRes.LastInsertId()
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "LastInsertId (user) error:", err)
-				os.Exit(1)
-			}
-			fmt.Println("Inserted user ID:", userID)
 
 			// 查询用户
 			user, err := q.GetUserByEmail(context.Background(), "test@user.com")
@@ -170,11 +176,12 @@ var rootCmd = &cobra.Command{
 				fmt.Fprintln(os.Stderr, "GetUserByName error:", err)
 			}
 			fmt.Println("User:", user)
+			userID := user.ID
 			// 插入文件
 			res, err := q.InsertFile(context.Background(), sqlc.InsertFileParams{
 				Size:   12345,
-				Md5:    "d41d8cd98f00b204e980067ae2aef",
-				Sha256: "e3b0c44298fc6cdcd5eaab0e63b8b8f6c7d4fb5c0f6e8d1c4f8b2a3d9f8b8f6c7d4fb5c0f6e8d1",
+				Md5:    "d41d8cd98f00b204e980067ae2aefaef",
+				Sha256: "e3b0c44298fc6cdcd5eaab0e63b8b8f6c7d4fb5c0f6e8d1c4f8b2a3d9f8b8f6c",
 			})
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "InsertFile error:", err)
@@ -188,26 +195,32 @@ var rootCmd = &cobra.Command{
 			fmt.Println("Inserted file ID:", fileID)
 
 			// 查询文件
-			logicFile, err := q.GetLogicFileByPath(context.Background(), db, userID, []string{"test", "path"})
+			logicFiles, err := q.ListLogicFileByUserId(context.Background(), userID)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
 			}
-			fmt.Println("Logic file:", logicFile)
+			fmt.Printf("logicFiles: %+v\n", logicFiles)
 
 			// 更新文件
-			err = q.SetLogicFileByPath(context.Background(), db, 1, []string{"test", "path"}, fileID, 0644, 12345, 1622547800, 1622547800, 1622547800, 1622547800, true)
+			err = q.SetLogicFileByPath(context.Background(), 1, []string{"test", "path"}, "ttt", fileID, 0644, 12345, 1622547800, 1622547800, 1622547800, 1622547800, true)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "SetLogicFileByPath error:", err)
+				// 查询文件
+				logicFiles, err = q.ListLogicFileByUserId(context.Background(), userID)
+				if err != nil {
+					fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
+				}
+				fmt.Printf("logicFiles: %+v\n", logicFiles)
 				os.Exit(1)
 			}
 			fmt.Println("Logic file updated")
 
 			// 查询文件
-			logicFile, err = q.GetLogicFileByPath(context.Background(), db, userID, []string{"test", "path"})
+			logicFiles, err = q.ListLogicFileByUserId(context.Background(), userID)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
 			}
-			fmt.Println("Logic file:", logicFile)
+			fmt.Printf("logicFiles: %+v\n", logicFiles)
 		}
 		webPortString := cmd.Flag(WebServerStr).Value.String()
 		webPort, err := strconv.Atoi(webPortString)
@@ -240,7 +253,7 @@ var rootCmd = &cobra.Command{
 
 		thumbnailDir := cmd.Flag(ThumbnailDirStr).Value.String()
 		transCodeDir := cmd.Flag(TransCodeDirStr).Value.String()
-		kfsCore, err = core.New2(dao.DatabaseNewFunc(dataSourceName, newDatabase), dao.StorageNewFunc(storageDir, newStorage), thumbnailDir, transCodeDir)
+		kfsCore, err = core.New3(q, dao.DatabaseNewFunc(dataSourceName, newDatabase), dao.StorageNewFunc(storageDir, newStorage), thumbnailDir, transCodeDir)
 		if err != nil {
 			return
 		}

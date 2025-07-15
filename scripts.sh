@@ -22,6 +22,10 @@ if ! is_command_exist protoc-gen-go-grpc; then
   GOOS= GOARCH= go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 fi
 
+if ! is_command_exist sqlc; then
+  GOOS= GOARCH= go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+fi
+
 export GO111MODULE=on
 export PATH="$PATH:$(go env GOPATH)/bin"
 
@@ -81,7 +85,7 @@ case $1 in
 
       mobile) # REACT_NATIVE_PACKAGER_HOSTNAME=192.168.137.1 ./scripts.sh start mobile
         cd $root/ui
-        yarn
+        # yarn
         cd $root/ui/mobile
         EXPO_USE_METRO_WORKSPACE_ROOT=1 VITE_APP_PLATFORM=mobile yarn start
         ;;
@@ -110,7 +114,7 @@ case $1 in
           go build -o kfs-server
         fi
         ;;
-
+      # cmd/kfs-server/kfs-server --database-type mysql --data-source-name 'root:passwd@(localhost:3306)/kfs-0714-8?parseTime=true&multiStatements=true'
       server)
         cd $root/ui/web
 #        yarn install --check-files --network-timeout 1000000

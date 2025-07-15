@@ -135,6 +135,44 @@ func GetOrLoadDriver(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*
 	return driver, nil
 }
 
+var tasks sync.Map
+
+func GetOrLoad(ctx context.Context, kfsCore *core.KFS, id int64) (*DriverBaiduPhoto, error) {
+	d, ok := tasks.Load(id)
+	if ok {
+		return d.(*DriverBaiduPhoto), nil
+	}
+	driver, err := LoadTaskFromDb(ctx, kfsCore, id)
+	if err != nil {
+		return nil, err
+	}
+	drivers.Store(id, driver)
+	return driver, nil
+}
+
+func LoadTaskFromDb(ctx context.Context, kfsCore *core.KFS, id int64) (*DriverBaiduPhoto, error) {
+	driver, err := kfsCore.Q.GetSyncFromById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &DriverBaiduPhoto{
+		kfsCore:      kfsCore,
+		id:           id,
+		AccessToken:  driver.AccessToken,
+		RefreshToken: driver.RefreshToken,
+		AppKey:       AppKey,
+		SecretKey:    SecretKey,
+		taskInfo: TaskInfo{
+			cancel:       nil,
+			Status:       StatusIdle,
+			LastDoneTime: 0,
+			Cnt:          0,
+			Total:        0,
+		},
+		mutex: &sync.Mutex{},
+	}, nil
+}
+
 func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*DriverBaiduPhoto, error) {
 	driver, err := kfsCore.Db.GetDriverToken(ctx, driverId)
 	if err != nil {
@@ -156,6 +194,36 @@ func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverId uint64) (
 		},
 		mutex: &sync.Mutex{},
 	}, nil
+}
+
+func (d *DriverBaiduPhoto) StartOrStop2(ctx context.Context, start bool) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	if !start {
+		d.setTaskStatusWithLock(StatusWaitCanceled)
+		d.taskInfo.cancel()
+		return
+	}
+	if d.taskInfo.Status == StatusWaitRunning ||
+		d.taskInfo.Status == StatusRunning ||
+		d.taskInfo.Status == StatusWaitCanceled {
+		return
+	}
+	d.taskInfo.Status = StatusWaitRunning
+	ctx, cancel := context.WithCancel(context.TODO())
+	d.taskInfo.cancel = cancel
+	go func() {
+		err := d.Analyze2(ctx)
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				d.setTaskStatus(StatusCanceled)
+				return
+			}
+			d.setTaskError(err.Error())
+			return
+		}
+		d.setTaskStatus(StatusFinished)
+	}()
 }
 
 func (d *DriverBaiduPhoto) StartOrStop(ctx context.Context, start bool) {
@@ -194,6 +262,48 @@ func toStringSlice(s []File) []string {
 		c[i] = v.Md5
 	}
 	return c
+}
+
+func (d *DriverBaiduPhoto) Analyze2(ctx context.Context) (err error) {
+	d.setTaskStatus(StatusRunning)
+	defer func() {
+		if err != nil {
+			return
+		}
+		_, err = d.kfsCore.Q.SetLivpForMovAndHeicOrJpgInDriver(ctx)
+	}()
+	var err1 error
+	err = d.GetAllFile(ctx, func(list []File) bool {
+		d.addTaskTotal(len(list))
+		var m map[string]string
+		m, err1 = d.kfsCore.Q.ListFileMd5(ctx, toStringSlice(list))
+		if err1 != nil {
+			return false
+		}
+		for i, f := range list {
+			fmt.Printf("[%d/%d] handle %s\n", i+1, len(list), f.Path)
+			select {
+			case <-ctx.Done():
+				err1 = context.Canceled
+				return false
+			default:
+			}
+			err1 = d.Download(ctx, f, m[f.Md5])
+			if err1 != nil {
+				return false
+			}
+			d.addTaskCnt()
+		}
+		return true
+	})
+	if err != nil {
+		return
+	}
+	if err1 != nil {
+		err = err1
+		return
+	}
+	return
 }
 
 func (d *DriverBaiduPhoto) Analyze(ctx context.Context) (err error) {

@@ -118,9 +118,8 @@ CREATE TABLE IF NOT EXISTS _live_photo (
     FOREIGN KEY (livp) REFERENCES _file(id)
 );
 
-CREATE TABLE IF NOT EXISTS _sync_from (
+CREATE TABLE IF NOT EXISTS _sync_from_baidu_photo (
     id   BIGINT NOT NULL PRIMARY KEY,
-    cron VARCHAR(64) NOT NULL,
     -- Cron任务的时间表达式由5个字段组成，分别表示：
     -- 分钟 小时 日期 月份 星期几
 
@@ -150,22 +149,20 @@ CREATE TABLE IF NOT EXISTS _sync_from (
     -- 0 9-18 * * 1-5	​工作日9点至18点整点每小时执行
     -- */5 * * * *	​每5分钟执行一次
     -- 0 20 * * 1,3,5	​每周一、三、五晚上8点执行
+    cron VARCHAR(64) NOT NULL,
+    sync BOOLEAN NOT NULL DEFAULT FALSE,
+    -- baidu_photo
+    access_token  VARCHAR(256) NOT NULL,
+    refresh_token VARCHAR(256) NOT NULL,
     FOREIGN KEY (id) REFERENCES _logic_file(id)
 );
 
-CREATE TABLE IF NOT EXISTS _sync_from_baidu_photo (
-    id           BIGINT       NOT NULL PRIMARY KEY,
-    accessToken  VARCHAR(256) NOT NULL,
-    refreshToken VARCHAR(256) NOT NULL,
-    FOREIGN KEY (id)          REFERENCES _logic_file(id)
-);
-
 CREATE TABLE IF NOT EXISTS _device (
-    id        CHAR(36) NOT NULL PRIMARY KEY,
-    name      VARCHAR(256) NOT NULL,
-    os        VARCHAR(256) NOT NULL,
-    userAgent VARCHAR(256) NOT NULL,
-    hostname  VARCHAR(256) NOT NULL
+    id         CHAR(36) NOT NULL PRIMARY KEY,
+    name       VARCHAR(256) NOT NULL,
+    os         VARCHAR(256) NOT NULL,
+    user_agent VARCHAR(256) NOT NULL,
+    host_name  VARCHAR(256) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS _local_file_sync_to_logic_file (

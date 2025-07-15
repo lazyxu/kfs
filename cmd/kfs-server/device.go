@@ -1,20 +1,21 @@
 package main
 
 import (
-	"github.com/lazyxu/kfs/dao"
 	"net/http"
+
+	"github.com/lazyxu/kfs/db/sqlc"
 
 	"github.com/labstack/echo/v4"
 )
 
 func apiNewDevice(c echo.Context) error {
-	var d dao.Device
-	err := c.Bind(&d)
+	var p sqlc.InsertDeviceParams
+	err := c.Bind(&p)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
 	}
-	err = kfsCore.Db.InsertDevice(c.Request().Context(), d.Id, d.Name, d.OS, d.UserAgent, d.Hostname)
+	err = kfsCore.Q.InsertDevice(c.Request().Context(), p)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -24,7 +25,7 @@ func apiNewDevice(c echo.Context) error {
 
 func apiDeleteDevice(c echo.Context) error {
 	deviceId := c.QueryParam("deviceId")
-	err := kfsCore.Db.DeleteDevice(c.Request().Context(), deviceId)
+	err := kfsCore.Q.DeleteDevice(c.Request().Context(), deviceId)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -33,7 +34,7 @@ func apiDeleteDevice(c echo.Context) error {
 }
 
 func apiDevices(c echo.Context) error {
-	devices, err := kfsCore.Db.ListDevice(c.Request().Context())
+	devices, err := kfsCore.Q.ListDevice(c.Request().Context())
 	if err != nil {
 		c.Logger().Error(err)
 		return err

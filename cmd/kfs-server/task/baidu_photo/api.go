@@ -6,11 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/hex"
 	"fmt"
-	"github.com/go-resty/resty/v2"
-	json "github.com/json-iterator/go"
-	"github.com/lazyxu/kfs/core"
-	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/rpc/server"
 	"io"
 	"net/http"
 	"os"
@@ -18,6 +13,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/go-resty/resty/v2"
+	json "github.com/json-iterator/go"
+	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/rpc/server"
 )
 
 type TokenErrResp struct {
@@ -36,6 +37,7 @@ type TokenResp struct {
 
 type DriverBaiduPhoto struct {
 	kfsCore      *core.KFS
+	id           int64
 	driverId     uint64
 	AccessToken  string
 	RefreshToken string

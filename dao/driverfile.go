@@ -30,9 +30,9 @@ type DriverFile struct {
 	Hash           string   `json:"hash"`
 	Mode           uint64   `json:"mode"`
 	Size           uint64   `json:"size"`
-	CreateTime     uint64   `json:"createTime"` // linux does not support it.
+	CreateTime     uint64   `json:"createTime"` // linux/web does not support it.
 	ModifyTime     uint64   `json:"modifyTime"`
-	ChangeTime     uint64   `json:"changeTime"` // windows does not support it.
+	ChangeTime     uint64   `json:"changeTime"` // windows/web does not support it.
 	AccessTime     uint64   `json:"accessTime"`
 	UploadDeviceId string   `json:"uploadDeviceId"`
 	UploadTime     uint64   `json:"uploadTime"`

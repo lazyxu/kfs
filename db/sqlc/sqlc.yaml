@@ -8,8 +8,12 @@ sql:
       - "media.sql"
       - "device.sql"
       - "logic_file.sql"
+      - sync_from.sql
+      - livp.sql
     schema: "schema.sql"
     gen:
       go:
         package: "sqlc"
         out: "./"
+        emit_json_tags: true
+        emit_empty_slices: true

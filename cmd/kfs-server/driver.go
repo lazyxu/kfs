@@ -150,13 +150,42 @@ type CronTask struct {
 }
 
 func startAllCloudSync() {
-	drivers, err := kfsCore.Db.ListCloudDriverSync(context.TODO())
+	sf, err := kfsCore.Q.ListSync(context.TODO())
 	if err != nil {
 		panic(err)
 	}
-	for _, d := range drivers {
-		startCloudSync(d.Id, d.H, d.M)
+	for _, d := range sf {
+		startCloudSync2(d.ID, d.Cron)
 	}
+}
+
+func startCloudSync2(id int64, cronStr string) {
+	actual, loaded := cronTasks.LoadOrStore(id, CronTask{
+		c:      cron.New(),
+		cancel: nil,
+	})
+	t := actual.(CronTask)
+	if loaded {
+		if t.cancel != nil {
+			t.cancel()
+			t.cancel = nil
+		}
+		t.c.Stop()
+	}
+	_, err := t.c.AddFunc(cronStr, func() {
+		ctx, cancel := context.WithCancel(context.TODO())
+		t.cancel = cancel
+		d, err := baidu_photo.GetOrLoad(ctx, kfsCore, id)
+		if err != nil {
+			cronTasks.LoadAndDelete(id)
+			return
+		}
+		d.StartOrStop2(ctx, true)
+	})
+	if err != nil {
+		panic(err)
+	}
+	t.c.Start()
 }
 
 func startCloudSync(driverId uint64, h int64, m int64) {

@@ -90,10 +90,10 @@ export default ({ device, setDevices }) => {
                             系统：{device.os}
                         </Box>
                         <Box color="text.secondary" sx={{ flex: 1 }}>
-                            userAgent：{device.userAgent}
+                            userAgent：{device.user_agent}
                         </Box>
                         <Box color="text.secondary" sx={{ flex: 1 }}>
-                            hostname：{device.hostname}
+                            hostname：{device.host_name}
                         </Box>
                     </Stack>
                     <IconButton aria-label="settings" onClick={e => {

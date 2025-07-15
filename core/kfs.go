@@ -1,11 +1,14 @@
 package core
 
 import (
-	"github.com/lazyxu/kfs/dao"
 	"os"
+
+	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/db/sqlc"
 )
 
 type KFS struct {
+	Q            *sqlc.Queries
 	Db           dao.Database
 	S            dao.Storage
 	thumbnailDir string
@@ -56,6 +59,26 @@ func New2(newDatabase func() (dao.Database, error), newStorage func() (dao.Stora
 		return nil, err
 	}
 	return &KFS{Db: db, S: s, thumbnailDir: thumbnailDir, transCodeDir: transCodeDir}, nil
+}
+
+func New3(q *sqlc.Queries, newDatabase func() (dao.Database, error), newStorage func() (dao.Storage, error), thumbnailDir, transCodeDir string) (*KFS, error) {
+	s, err := newStorage()
+	if err != nil {
+		return nil, err
+	}
+	db, err := newDatabase()
+	if err != nil {
+		return nil, err
+	}
+	err = mkdirIfNotExist(thumbnailDir)
+	if err != nil {
+		return nil, err
+	}
+	err = mkdirIfNotExist(transCodeDir)
+	if err != nil {
+		return nil, err
+	}
+	return &KFS{Q: q, Db: db, S: s, thumbnailDir: thumbnailDir, transCodeDir: transCodeDir}, nil
 }
 
 func (fs *KFS) ThumbnailDir() string {
