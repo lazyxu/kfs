@@ -1,11 +1,70 @@
+CREATE TABLE IF NOT EXISTS _user (
+  id          BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  email       VARCHAR(255) NOT NULL UNIQUE,
+  password    VARCHAR(255) NOT NULL,
+  is_verified BOOLEAN      NOT NULL DEFAULT FALSE,
+  is_deleted  BOOLEAN      NOT NULL DEFAULT FALSE,
+  created_at  DATETIME     NOT NULL DEFAULT NOW(),
+  updated_at  DATETIME     NOT NULL DEFAULT NOW() ON UPDATE NOW() 
+);
 
 CREATE TABLE IF NOT EXISTS _file (
-    hash CHAR(64) NOT NULL PRIMARY KEY,
-    size BIGINT   NOT NULL
+    id     BIGINT   NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    size   BIGINT   NOT NULL,
+    md5    CHAR(32) NOT NULL,
+    sha256 CHAR(64) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS _logic_file (
+    id            BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    parent_id     BIGINT         DEFAULT NULL,
+    user_id       BIGINT         NOT NULL,
+    name          VARCHAR(255)   NOT NULL,
+    -- current_version_id BIGINT         NOT NULL,
+    file_id       BIGINT          NOT NULL,
+    mode          BIGINT          NOT NULL,  -- isDirectory, isFile, isSymlink
+    size          BIGINT          NOT NULL,
+    create_time   BIGINT          NOT NULL,
+    modify_time   BIGINT          NOT NULL,
+    change_time   BIGINT          NOT NULL,
+    access_time   BIGINT          NOT NULL,
+    FOREIGN KEY (parent_id)       REFERENCES _logic_file(id),
+    FOREIGN KEY (file_id)         REFERENCES _file(id)
+    -- FOREIGN KEY (current_version_id)  REFERENCES _version_file(id)
+);
+
+-- CREATE TABLE IF NOT EXISTS _version_file (
+--     id            BIGINT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
+--     description   VARCHAR(255)    NOT NULL,
+--     logic_file_id BIGINT          NOT NULL,
+--     file_id       BIGINT          NOT NULL,
+--     mode          BIGINT          NOT NULL,  -- isDirectory, isFile, isSymlink
+--     size          BIGINT          NOT NULL,
+--     create_time   BIGINT          NOT NULL,
+--     modify_time   BIGINT          NOT NULL,
+--     change_time   BIGINT          NOT NULL,
+--     access_time   BIGINT          NOT NULL,
+--     FOREIGN KEY (logic_file_id)   REFERENCES _logic_file(id),
+--     FOREIGN KEY (file_id)         REFERENCES _file(id)
+-- );
+
+CREATE TABLE IF NOT EXISTS _file_type (
+    id        BIGINT       NOT NULL PRIMARY KEY,
+    Type      VARCHAR(255) NOT NULL,
+    SubType   VARCHAR(255) NOT NULL,
+    Extension VARCHAR(255) NOT NULL,
+    FOREIGN KEY (id)  REFERENCES   _file(id)
+);
+
+CREATE TABLE IF NOT EXISTS _height_width (
+    id     BIGINT NOT NULL PRIMARY KEY,
+    height BIGINT DEFAULT NULL,
+    width  BIGINT DEFAULT NULL,
+    FOREIGN KEY (id)  REFERENCES   _file(id)
 );
 
 CREATE TABLE IF NOT EXISTS _exif (
-    hash                CHAR(64)     NOT NULL PRIMARY KEY,
+    id                  BIGINT       NOT NULL PRIMARY KEY,
     ExifVersion         CHAR(4)      DEFAULT NULL,
     ImageDescription    VARCHAR(255) DEFAULT NULL,
     Orientation         INT8         DEFAULT NULL,
@@ -27,131 +86,94 @@ CREATE TABLE IF NOT EXISTS _exif (
     GPSLatitude         DOUBLE       DEFAULT NULL,
     GPSLongitudeRef     CHAR(1)      DEFAULT NULL,
     GPSLongitude        DOUBLE       DEFAULT NULL,
-    FOREIGN KEY (hash)  REFERENCES   _file(hash)
-);
-
-CREATE TABLE IF NOT EXISTS _driver (
-    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(256) NOT NULL UNIQUE,
-    description VARCHAR(256) NOT NULL DEFAULT '',
-    Type VARCHAR(256) NOT NULL DEFAULT ''
-);
-
-CREATE TABLE IF NOT EXISTS _driver_file (
-    driverId    BIGINT        NOT NULL,
-    dirPath    VARCHAR(376) NOT NULL,
-    name       VARCHAR(255)   NOT NULL,
-    version    BIGINT         NOT NULL,
-    hash       CHAR(64)       NOT NULL,
-    mode       BIGINT         NOT NULL,
-    size       BIGINT         NOT NULL,
-    createTime BIGINT         NOT NULL,
-    modifyTime BIGINT         NOT NULL,
-    changeTime BIGINT         NOT NULL,
-    accessTime BIGINT         NOT NULL,
-    PRIMARY KEY (driverId, dirPath, name, version),
-    FOREIGN KEY (driverId)  REFERENCES _driver(id)
-);
-
--- 其它表名（字段需补充）：
-
-CREATE TABLE IF NOT EXISTS _file_md5 (
-    hash CHAR(64) NOT NULL PRIMARY KEY,
-    md5  CHAR(32) NOT NULL
-);
--- CREATE INDEX index_md5 ON _file_md5 (md5);
-
-CREATE TABLE IF NOT EXISTS _height_width (
-    hash CHAR(64) NOT NULL PRIMARY KEY,
-    height BIGINT DEFAULT NULL,
-    width BIGINT DEFAULT NULL,
-    FOREIGN KEY (hash) REFERENCES _file(hash)
+    FOREIGN KEY (id)  REFERENCES   _file(id)
 );
 
 CREATE TABLE IF NOT EXISTS _video_metadata (
-    hash CHAR(64) NOT NULL PRIMARY KEY,
-    Codec VARCHAR(255) DEFAULT NULL,
-    Created BIGINT DEFAULT NULL,
+    id       BIGINT       NOT NULL PRIMARY KEY,
+    Codec    VARCHAR(255) DEFAULT NULL,
+    Created  BIGINT DEFAULT NULL,
     Modified BIGINT DEFAULT NULL,
     Duration DOUBLE DEFAULT NULL,
-    FOREIGN KEY (hash) REFERENCES _file(hash)
-);
-
-CREATE TABLE IF NOT EXISTS _file_type (
-    hash CHAR(64) NOT NULL PRIMARY KEY,
-    Type VARCHAR(255) NOT NULL,
-    SubType VARCHAR(255) NOT NULL,
-    Extension VARCHAR(255) NOT NULL,
-    FOREIGN KEY (hash) REFERENCES _file(hash)
+    FOREIGN KEY (id)  REFERENCES   _file(id)
 );
 
 CREATE TABLE IF NOT EXISTS _dcim_metadata_time (
-    hash CHAR(64) NOT NULL PRIMARY KEY,
-    time BIGINT DEFAULT NULL,
-    year BIGINT DEFAULT NULL,
-    month BIGINT DEFAULT NULL,
-    day BIGINT DEFAULT NULL,
-    FOREIGN KEY (hash) REFERENCES _file(hash)
+    id       BIGINT       NOT NULL PRIMARY KEY,
+    time     BIGINT DEFAULT NULL,
+    year     BIGINT DEFAULT NULL,
+    month    BIGINT DEFAULT NULL,
+    day      BIGINT DEFAULT NULL,
+    FOREIGN KEY (id) REFERENCES _file(id)
 );
 
 CREATE TABLE IF NOT EXISTS _live_photo (
-    movHash CHAR(64) NOT NULL PRIMARY KEY,
-    heicHash CHAR(64) DEFAULT NULL,
-    jpgHash CHAR(64) DEFAULT NULL,
-    livpHash CHAR(64) DEFAULT NULL,
-    FOREIGN KEY (movHash) REFERENCES _file(hash),
-    FOREIGN KEY (heicHash) REFERENCES _file(hash),
-    FOREIGN KEY (jpgHash) REFERENCES _file(hash),
-    FOREIGN KEY (livpHash) REFERENCES _file(hash)
+    mov  BIGINT NOT NULL PRIMARY KEY,
+    heic BIGINT DEFAULT NULL,
+    jpg  BIGINT DEFAULT NULL,
+    livp BIGINT DEFAULT NULL,
+    FOREIGN KEY (mov)  REFERENCES _file(id),
+    FOREIGN KEY (heic) REFERENCES _file(id),
+    FOREIGN KEY (jpg)  REFERENCES _file(id),
+    FOREIGN KEY (livp) REFERENCES _file(id)
 );
 
-CREATE TABLE IF NOT EXISTS _driver_sync (
-    id BIGINT NOT NULL PRIMARY KEY,
-    sync TINYINT NOT NULL DEFAULT 1,
-    h TINYINT NOT NULL DEFAULT 4,
-    m TINYINT NOT NULL DEFAULT 0,
-    FOREIGN KEY (id) REFERENCES _driver(id)
+CREATE TABLE IF NOT EXISTS _sync_from (
+    id   BIGINT NOT NULL PRIMARY KEY,
+    cron VARCHAR(64) NOT NULL,
+    -- Cron任务的时间表达式由5个字段组成，分别表示：
+    -- 分钟 小时 日期 月份 星期几
+
+    -- 每个字段的取值范围及含义如下：
+    -- 字段	取值范围	说明
+    -- ​分钟​	0-59	每小时的第几分钟执行
+    -- ​小时​	0-23	每天的第几小时执行
+    -- ​日期​	1-31	每月的第几天执行
+    -- ​月份​	1-12	每年的第几月执行
+    -- ​星期几​	0-7	每周的第几天执行（0和7均代表周日）
+
+    -- ⚙️ ​二、特殊符号详解​
+    -- 以下符号用于灵活定义时间：
+    -- 符号	示例	说明
+    -- *	* * * * *	匹配所有值（如*在分钟字段=每分钟）
+    -- ,	0,15,30 * * * *	指定多个时间点（每小时的0、15、30分执行）
+    -- -	0 9-18 * * *	定义连续范围（每天9点至18点整点执行）
+    -- */n	*/10 * * * *	固定间隔（每10分钟执行一次）
+
+    -- ​三、常用时间设置示例​
+    -- 表达式	说明
+    -- * * * * *	​每分钟执行一次
+    -- 0 * * * *	​每小时整点执行（如1:00, 2:00）
+    -- 0 2 * * *	​每天凌晨2点执行
+    -- 0 0 * * 0	​每周日0点执行
+    -- 0 0 1 * *	​每月1日0点执行
+    -- 0 9-18 * * 1-5	​工作日9点至18点整点每小时执行
+    -- */5 * * * *	​每5分钟执行一次
+    -- 0 20 * * 1,3,5	​每周一、三、五晚上8点执行
+    FOREIGN KEY (id) REFERENCES _logic_file(id)
 );
 
-CREATE TABLE IF NOT EXISTS _driver_baidu_photo (
-    id BIGINT NOT NULL PRIMARY KEY,
-    accessToken VARCHAR(256) NOT NULL DEFAULT '',
-    refreshToken VARCHAR(256) NOT NULL DEFAULT '',
-    FOREIGN KEY (id) REFERENCES _driver(id)
+CREATE TABLE IF NOT EXISTS _sync_from_baidu_photo (
+    id           BIGINT       NOT NULL PRIMARY KEY,
+    accessToken  VARCHAR(256) NOT NULL,
+    refreshToken VARCHAR(256) NOT NULL,
+    FOREIGN KEY (id)          REFERENCES _logic_file(id)
 );
 
 CREATE TABLE IF NOT EXISTS _device (
-    id CHAR(36) NOT NULL PRIMARY KEY,
-    name VARCHAR(256) NOT NULL,
-    os VARCHAR(256) NOT NULL,
+    id        CHAR(36) NOT NULL PRIMARY KEY,
+    name      VARCHAR(256) NOT NULL,
+    os        VARCHAR(256) NOT NULL,
     userAgent VARCHAR(256) NOT NULL,
-    hostname VARCHAR(256) NOT NULL
+    hostname  VARCHAR(256) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS _driver_local_file (
-    id BIGINT NOT NULL PRIMARY KEY,
-    deviceId CHAR(36) NOT NULL DEFAULT '',
-    srcPath VARCHAR(1024) NOT NULL DEFAULT '',
-    ignores TEXT NOT NULL,
-    encoder VARCHAR(64) NOT NULL DEFAULT '',
-    FOREIGN KEY (id) REFERENCES _driver(id),
-    FOREIGN KEY (deviceId) REFERENCES _device(id)
-);
-
-CREATE TABLE IF NOT EXISTS _driver_file_history (
-    driverId BIGINT NOT NULL,
-    dirPath VARCHAR(376) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    hash CHAR(64) NOT NULL,
-    mode BIGINT NOT NULL,
-    size BIGINT NOT NULL,
-    createTime BIGINT NOT NULL,
-    modifyTime BIGINT NOT NULL,
-    changeTime BIGINT NOT NULL,
-    accessTime BIGINT NOT NULL,
-    uploadDeviceId CHAR(36) NOT NULL,
-    uploadTime BIGINT NOT NULL,
-    PRIMARY KEY (driverId, dirPath, name, uploadDeviceId, uploadTime),
-    FOREIGN KEY (driverId) REFERENCES _driver(id),
-    FOREIGN KEY (uploadDeviceId) REFERENCES _device(id)
+CREATE TABLE IF NOT EXISTS _local_file_sync_to_logic_file (
+    id        BIGINT        NOT NULL PRIMARY KEY,
+    device_id CHAR(36)      NOT NULL DEFAULT '',
+    srcPath   VARCHAR(1024) NOT NULL DEFAULT '',
+    ignores   TEXT          NOT NULL,
+    encoder   VARCHAR(64)   NOT NULL DEFAULT '',
+    FOREIGN KEY (id)        REFERENCES _logic_file(id),
+    FOREIGN KEY (device_id) REFERENCES _device(id)
 );

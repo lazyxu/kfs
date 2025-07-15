@@ -148,25 +148,66 @@ var rootCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			q := sqlc.New(db)
-
-			// 插入
-			err = q.InsertDriver(context.Background(), sqlc.InsertDriverParams{
-				Name:        "test",
-				Description: "desc",
-				Type:        "local",
+			// 插入用户
+			userRes, err := q.InsertUser(context.Background(), sqlc.InsertUserParams{
+				Email:    "test@user.com",
+				Password: "password123",
 			})
 			if err != nil {
-				fmt.Fprintln(os.Stderr, "insert error:", err)
+				fmt.Fprintln(os.Stderr, "InsertUser error:", err)
 				os.Exit(1)
 			}
-
-			// 查询
-			drivers, err := q.ListDriver(context.Background())
+			userID, err := userRes.LastInsertId()
 			if err != nil {
-				fmt.Fprintln(os.Stderr, "query error:", err)
+				fmt.Fprintln(os.Stderr, "LastInsertId (user) error:", err)
 				os.Exit(1)
 			}
-			fmt.Println("drivers:", drivers)
+			fmt.Println("Inserted user ID:", userID)
+
+			// 查询用户
+			user, err := q.GetUserByEmail(context.Background(), "test@user.com")
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "GetUserByName error:", err)
+			}
+			fmt.Println("User:", user)
+			// 插入文件
+			res, err := q.InsertFile(context.Background(), sqlc.InsertFileParams{
+				Size:   12345,
+				Md5:    "d41d8cd98f00b204e980067ae2aef",
+				Sha256: "e3b0c44298fc6cdcd5eaab0e63b8b8f6c7d4fb5c0f6e8d1c4f8b2a3d9f8b8f6c7d4fb5c0f6e8d1",
+			})
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "InsertFile error:", err)
+				os.Exit(1)
+			}
+			fileID, err := res.LastInsertId()
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "LastInsertId error:", err)
+				os.Exit(1)
+			}
+			fmt.Println("Inserted file ID:", fileID)
+
+			// 查询文件
+			logicFile, err := q.GetLogicFileByPath(context.Background(), db, userID, []string{"test", "path"})
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
+			}
+			fmt.Println("Logic file:", logicFile)
+
+			// 更新文件
+			err = q.SetLogicFileByPath(context.Background(), db, 1, []string{"test", "path"}, fileID, 0644, 12345, 1622547800, 1622547800, 1622547800, 1622547800, true)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "SetLogicFileByPath error:", err)
+				os.Exit(1)
+			}
+			fmt.Println("Logic file updated")
+
+			// 查询文件
+			logicFile, err = q.GetLogicFileByPath(context.Background(), db, userID, []string{"test", "path"})
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
+			}
+			fmt.Println("Logic file:", logicFile)
 		}
 		webPortString := cmd.Flag(WebServerStr).Value.String()
 		webPort, err := strconv.Atoi(webPortString)

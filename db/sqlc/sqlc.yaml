@@ -2,12 +2,12 @@ version: "2"
 sql:
   - engine: "mysql"
     queries:
+      - "user.sql"
       - "file.sql"
       - "exif.sql"
       - "media.sql"
       - "device.sql"
-      - "driver.sql"
-      - "driver_file.sql"
+      - "logic_file.sql"
     schema: "schema.sql"
     gen:
       go:
