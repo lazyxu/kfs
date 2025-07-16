@@ -36,18 +36,48 @@ const (
 	lockFileName = "index.lock"
 )
 
+func createGlobalLockFile(root string) error {
+	lockFile, err := os.Create(path.Join(root, lockFileName))
+	if err != nil {
+		return err
+	}
+	defer lockFile.Close()
+	return nil
+}
+
+func (s *Storage2) Create() error {
+	_, err := os.Stat(s.root)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	err = os.MkdirAll(path.Join(s.root), dirPerm)
+	if err != nil && !os.IsExist(err) {
+		return err
+	}
+	err = createGlobalLockFile(s.root)
+	if err != nil && !os.IsExist(err) {
+		return err
+	}
+	return nil
+}
+
 func (s *Storage2) Add(md5Hash string, sha256Hash string, file *os.File) (bool, error) {
-	lock := flock.New(path.Join(s.root, lockFileName))
-	err := lock.Lock()
+	_, err := file.Seek(0, io.SeekStart)
 	if err != nil {
 		return false, err
 	}
-	defer lock.Unlock()
 	size, err := file.Stat()
 	if err != nil {
 		return false, err
 	}
 	itoaSize := strconv.Itoa(int(size.Size()))
+
+	lock := flock.New(path.Join(s.root, lockFileName))
+	err = lock.Lock()
+	if err != nil {
+		return false, err
+	}
+	defer lock.Unlock()
 	dirPath := path.Join(s.root, itoaSize)
 	_, err = os.Stat(dirPath)
 	if os.IsNotExist(err) {
@@ -67,40 +97,63 @@ func (s *Storage2) Add(md5Hash string, sha256Hash string, file *os.File) (bool, 
 		}
 		return false, err
 	}
-	defer f.Close()
 	sha256Hasher := sha256.New()
 	md5Hasher := md5.New()
-	multiWriter := io.MultiWriter(sha256Hasher, md5Hasher)
-	_, err = file.Seek(0, io.SeekStart)
+	multiWriter := io.MultiWriter(sha256Hasher, md5Hasher, f)
+	written, err := io.Copy(multiWriter, file) // 一次写入，同时计算两个哈希，并且写入文件
 	if err != nil {
-		os.Remove(p)
-		return false, err
-	}
-	written, err := io.Copy(multiWriter, file) // 一次写入，同时计算两个哈希
-	if err != nil {
+		f.Close()
 		os.Remove(p)
 		return false, err
 	}
 	if written != size.Size() {
+		f.Close()
 		os.Remove(p)
 		return false, fmt.Errorf("written size %d does not match file size %d", written, size.Size())
 	}
 	sha256Hash2 := hex.EncodeToString(sha256Hasher.Sum(nil))
 	if sha256Hash != sha256Hash2 {
+		f.Close()
 		os.Remove(p)
 		return false, fmt.Errorf("invalid sha256: expected %s, actual %s", sha256Hash, sha256Hash2)
 	}
 	md5Hash2 := hex.EncodeToString(md5Hasher.Sum(nil))
 	if md5Hash != md5Hash2 {
+		f.Close()
 		os.Remove(p)
 		return false, fmt.Errorf("invalid md5: expected %s, actual %s", md5Hash, md5Hash2)
 	}
+	f.Close()
 	err = os.Chmod(p, 0o400) // read only
 	if err != nil {
+		f.Close()
 		os.Remove(p)
 		return false, fmt.Errorf("failed to change file mode: %s", p)
 	}
 	return false, nil
+}
+
+type sizedReaderCloser struct {
+	io.ReadSeekCloser
+	size int64
+}
+
+func (rc sizedReaderCloser) Size() int64 {
+	return rc.size
+}
+
+func (s *Storage2) ReadWithSize(size int64, md5Hash string, sha256Hash string) (dao.SizedReadCloser, error) {
+	itoaSize := strconv.Itoa(int(size))
+	p := path.Join(s.root, itoaSize, md5Hash+"_"+sha256Hash)
+	f, err := os.OpenFile(p, os.O_RDONLY, 0o200)
+	if err != nil {
+		return nil, err
+	}
+	info, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	return sizedReaderCloser{f, info.Size()}, nil
 }
 
 func New(newDatabase func() (dao.Database, error), newStorage func() (dao.Storage, error)) (*KFS, error) {
@@ -112,7 +165,9 @@ func New(newDatabase func() (dao.Database, error), newStorage func() (dao.Storag
 	if err != nil {
 		return nil, err
 	}
-	return &KFS{Db: db, S: s, S2: &Storage2{root: "tmp"}}, nil
+	s2 := &Storage2{root: "tmp"}
+	s2.Create()
+	return &KFS{Db: db, S: s, S2: s2}, nil
 }
 
 func mkdirIfNotExist(path string) error {
@@ -160,7 +215,9 @@ func New3(q *sqlc.Queries, newDatabase func() (dao.Database, error), storageDir,
 	if err != nil {
 		return nil, err
 	}
-	return &KFS{Q: q, Db: db, S2: &Storage2{root: storageDir}, storageDir: storageDir, thumbnailDir: thumbnailDir, transCodeDir: transCodeDir}, nil
+	s2 := &Storage2{root: storageDir}
+	s2.Create()
+	return &KFS{Q: q, Db: db, S2: s2, storageDir: storageDir, thumbnailDir: thumbnailDir, transCodeDir: transCodeDir}, nil
 }
 
 func (fs *KFS) ThumbnailDir() string {

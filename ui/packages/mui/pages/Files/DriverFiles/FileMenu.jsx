@@ -56,7 +56,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
             </>}
             <MenuItem disabled={modeIsDir(mode)} onClick={() => {
                 setContextMenu(null);
-                download(driver.id, filePath);
+                download(filePath);
             }}>
                 <Download />
                 <ListItemText>下载</ListItemText>

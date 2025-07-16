@@ -31,12 +31,11 @@ function downloader(data, name) {
     window.URL.revokeObjectURL(url);
 }
 
-export async function download(driverId, filePath) {
+export async function download(filePath) {
     try {
-        console.log('api.download', driverId, filePath);
+        console.log('api.download', filePath);
         let resp = await axios.get(`${getSysConfig().webServer}/api/v1/downloadFile`, {
             params: {
-                driverId,
                 filePath,
             },
             responseType: "arraybuffer",

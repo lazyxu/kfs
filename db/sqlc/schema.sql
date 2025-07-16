@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS _file (
     id     BIGINT   NOT NULL PRIMARY KEY AUTO_INCREMENT,
     size   BIGINT   NOT NULL,
     md5    CHAR(32) NOT NULL,
-    sha256 CHAR(64) NOT NULL
+    sha256 CHAR(64) NOT NULL,
+    UNIQUE INDEX idx_size_hash (size, md5, sha256)
 );
 
 CREATE TABLE IF NOT EXISTS _logic_file (

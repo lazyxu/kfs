@@ -8,6 +8,7 @@ import (
 	"image"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -219,13 +220,9 @@ func apiOpenFile(c echo.Context) error {
 }
 
 func apiDownloadFile(c echo.Context) error {
-	driverIdStr := c.QueryParam("driverId")
-	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "id should be a number")
-	}
 	filePath := c.QueryParams()["filePath[]"]
-	rc, _, err := kfsCore.OpenFile(c.Request().Context(), driverId, filePath, -1)
+	var userID int64
+	rc, _, err := kfsCore.OpenFile2(c.Request().Context(), userID, filePath, -1)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -743,6 +740,7 @@ func apiMergeFileChunks(c echo.Context) error {
 			return c.String(http.StatusInternalServerError, "merge chunk failed: "+err.Error())
 		}
 	}
+	log.Printf("merged file: %s", mergedPath)
 	stat, err := merged.Stat()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "stat merged file failed: "+err.Error())
@@ -782,6 +780,6 @@ func apiMergeFileChunks(c echo.Context) error {
 	for _, f := range files {
 		os.Remove(path.Join(tmpDir, f.Name()))
 	}
-	os.RemoveAll(tmpDir)
+	// os.RemoveAll(tmpDir)
 	return c.String(http.StatusOK, "ok")
 }

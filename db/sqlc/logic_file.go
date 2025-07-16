@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func (q *Queries) GetLogicFileByPath(ctx context.Context, userID int64, dirpath []string) (*LogicFile, error) {
+func (q *Queries) GetLogicFileByPath(ctx context.Context, userID int64, dirpath []string) (*LogicFile, *File, error) {
 	var parentID sql.NullInt64
 	var lf *LogicFile
 
@@ -18,19 +18,29 @@ func (q *Queries) GetLogicFileByPath(ctx context.Context, userID int64, dirpath 
 			ParentID: parentID,
 			Name:     name,
 		}
+		log.Printf("Getting LogicFile for UserID: %d, ParentID: %v, Name: %s\n", userID, parentID, name)
 		logicFile, err := q.GetLogicFile(ctx, params)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
+		log.Printf("logicFile: %+v\n", logicFile)
 		lf = &logicFile
 		parentID.Scan(lf.ID)
 	}
 
+	log.Printf("lf: %+v\n", lf)
 	if lf == nil {
-		return nil, sql.ErrNoRows
+		return nil, nil, sql.ErrNoRows
 	}
-
-	return lf, nil
+	if !lf.FileID.Valid {
+		return lf, nil, nil // directory
+	}
+	f, err := q.GetFileByID(ctx, lf.FileID.Int64)
+	if err != nil {
+		return nil, nil, err
+	}
+	log.Printf("f: %+v\n", f)
+	return lf, &f, nil
 }
 
 // 设置某路径的LogicFile，如果某一层不存在则创建（mkdir控制），只处理_logic_file表

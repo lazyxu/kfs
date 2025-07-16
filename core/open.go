@@ -59,3 +59,16 @@ func (fs *KFS) OpenFile(ctx context.Context, driverId uint64, filePath []string,
 	rc, err = fs.S.ReadWithSize(f.Hash)
 	return
 }
+
+func (fs *KFS) OpenFile2(ctx context.Context, userID int64, filePath []string, maxContentSize int64) (rc dao.SizedReadCloser, tooLarge bool, err error) {
+	_, f, err := fs.Q.GetLogicFileByPath(ctx, userID, filePath)
+	if err != nil {
+		return
+	}
+	if uint64(f.Size) > uint64(maxContentSize) {
+		tooLarge = true
+		return
+	}
+	rc, err = fs.S2.ReadWithSize(f.Size, f.Md5, f.Sha256)
+	return
+}

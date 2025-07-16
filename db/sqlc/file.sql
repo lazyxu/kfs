@@ -1,6 +1,5 @@
 -- name: InsertFile :execresult
-INSERT INTO _file (size, md5, sha256)
-VALUES (?, ?, ?);
+INSERT INTO _file (size, md5, sha256) VALUES (?, ?, ?) ON DUPLICATE KEY IGNORE;
 -- name: GetFileByID :one
 SELECT * FROM _file WHERE id = ?;
 -- name: GetFileByHash :one

@@ -69,10 +69,6 @@ WHERE user_id = ? AND (
   OR (parent_id IS NULL AND sqlc.arg('parent_id') IS NULL)
 ) AND name = ?;
 
--- 说明：
--- MySQL 不支持 IS NOT DISTINCT FROM（仅 PostgreSQL 和 MySQL 8.0.22+ 支持）。
--- 推荐用上述 OR (parent_id IS NULL AND ? IS NULL) 方式，兼容所有 MySQL 版本。
-
 -- name: ListLogicFilesByUserId :many
 SELECT * FROM _logic_file
 WHERE user_id = ?;
