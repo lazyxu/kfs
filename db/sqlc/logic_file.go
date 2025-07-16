@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -35,21 +36,22 @@ func (q *Queries) GetLogicFileByPath(ctx context.Context, userID int64, dirpath 
 // 设置某路径的LogicFile，如果某一层不存在则创建（mkdir控制），只处理_logic_file表
 func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath []string, name string, fileID sql.NullInt64, mode, size, createTime, modifyTime, changeTime, accessTime int64, mkdir bool) error {
 	var parentID sql.NullInt64
-	var lf *LogicFile
 
 	for _, name := range dirpath {
 		params := GetLogicFileParams{
 			UserID:   userID,
 			ParentID: parentID,
-			Column3:  parentID,
 			Name:     name,
 		}
 		logicFile, err := q.GetLogicFile(ctx, params)
 		if err != nil {
-			if err == sql.ErrNoRows && mkdir {
+			if err != sql.ErrNoRows {
+				fmt.Fprintf(os.Stderr, "GetLogicFile 1 error: %v", err)
+				return err
+			} else if mkdir {
 				createParams := InsertLogicFileParams{
-					ParentID:   parentID,
 					UserID:     userID,
+					ParentID:   parentID,
 					Name:       name,
 					FileID:     sql.NullInt64{Valid: false},
 					Mode:       int64(os.ModeDir | 0755),
@@ -72,24 +74,15 @@ func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath 
 					fmt.Fprintf(os.Stderr, "GetLogicFile 2 error: %v", err)
 					return err
 				}
-			} else {
-				fmt.Fprintf(os.Stderr, "GetLogicFile 1 error: %v", err)
-				return err
 			}
 		}
-		lf = &logicFile
-		parentID.Scan(lf.ID)
-	}
-
-	if lf == nil {
-		fmt.Fprintf(os.Stderr, "sql.ErrNoRows error")
-		return sql.ErrNoRows
+		parentID.Scan(logicFile.ID)
 	}
 
 	// 可选：更新最后一层的文件属性
-	updateParams := UpdateLogicFileParams{
-		ParentID:   lf.ParentID,
-		UserID:     lf.UserID,
+	updateParams := UpsertLogicFileParams{
+		UserID:     userID,
+		ParentID:   parentID,
 		Name:       name,
 		FileID:     fileID,
 		Mode:       mode,
@@ -98,9 +91,9 @@ func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath 
 		ModifyTime: modifyTime,
 		ChangeTime: changeTime,
 		AccessTime: accessTime,
-		ID:         lf.ID,
 	}
-	if err := q.UpdateLogicFile(ctx, updateParams); err != nil {
+	log.Printf("Upserting LogicFile: %+v\n", updateParams)
+	if err := q.UpsertLogicFile(ctx, updateParams); err != nil {
 		fmt.Fprintf(os.Stderr, "UpdateLogicFile error: %v", err)
 		return err
 	}
@@ -128,7 +121,7 @@ func (q *Queries) ListDir(ctx context.Context, userID int64, dirpath []string) (
 	}
 
 	// 列出该目录下的所有子项
-	children, err := q.ListLogicFileByParentId(ctx, parentID)
+	children, err := q.ListLogicFilesByParentId(ctx, ListLogicFilesByParentIdParams{UserID: userID, ParentID: parentID})
 	if err != nil {
 		return lf, nil, err
 	}

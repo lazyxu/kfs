@@ -46,7 +46,7 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
             await uploadLargeFile({
                 file,
                 dirPath: contextMenu.dirPath,
-                hash,
+                md5, sha256,
                 setProgress,
                 fileMeta: {
                     name: file.name,
@@ -203,7 +203,7 @@ function calcFileSha256(file, setProgress) {
 }
 
 // 分块并发上传
-async function uploadLargeFile({ file, dirPath, hash, setProgress, fileMeta }) {
+async function uploadLargeFile({ file, dirPath, md5, sha256, setProgress, fileMeta }) {
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
     let uploaded = 0;
     let concurrency = navigator.hardwareConcurrency || 4;
@@ -217,7 +217,7 @@ async function uploadLargeFile({ file, dirPath, hash, setProgress, fileMeta }) {
             if (errors.length) return;
             if (uploaded === totalChunks) {
                 // 合并分块
-                mergeFileChunks(dirPath, hash, totalChunks, fileMeta)
+                mergeFileChunks(dirPath, md5, sha256, totalChunks, fileMeta)
                     .then(resolve)
                     .catch(reject);
                 return;
@@ -233,7 +233,7 @@ async function uploadLargeFile({ file, dirPath, hash, setProgress, fileMeta }) {
                 const worker = new UploadChunkWorker();
                 worker.postMessage({
                     dirPath,
-                    hash,
+                    md5, sha256,
                     chunkIndex,
                     chunk,
                     fileMeta, // 传递文件元信息

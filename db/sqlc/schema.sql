@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS _file (
 
 CREATE TABLE IF NOT EXISTS _logic_file (
     id            BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    parent_id     BIGINT         DEFAULT NULL,
     user_id       BIGINT         NOT NULL,
+    parent_id     BIGINT         DEFAULT NULL,
     name          VARCHAR(255)   NOT NULL,
     -- current_version_id BIGINT         NOT NULL,
     file_id       BIGINT          DEFAULT NULL,
@@ -28,9 +28,10 @@ CREATE TABLE IF NOT EXISTS _logic_file (
     modify_time   BIGINT          NOT NULL,
     change_time   BIGINT          NOT NULL,
     access_time   BIGINT          NOT NULL,
-    -- FOREIGN KEY (parent_id)       REFERENCES _logic_file(id),
-    FOREIGN KEY (file_id)         REFERENCES _file(id)
+    FOREIGN KEY (parent_id)       REFERENCES _logic_file(id),
+    FOREIGN KEY (file_id)         REFERENCES _file(id),
     -- FOREIGN KEY (current_version_id)  REFERENCES _version_file(id)
+    UNIQUE INDEX idx_unique_user_id_parent_id_name (user_id, parent_id, name)
 );
 
 -- CREATE TABLE IF NOT EXISTS _version_file (

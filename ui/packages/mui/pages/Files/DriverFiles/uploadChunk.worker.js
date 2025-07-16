@@ -1,9 +1,10 @@
 self.onmessage = async function (e) {
-    const { dirPath, hash, chunkIndex, chunk, fileMeta } = e.data;
+    const { dirPath, md5, sha256, chunkIndex, chunk, fileMeta } = e.data;
     try {
         const formData = new FormData();
         formData.append("dirPath", dirPath);
-        formData.append("hash", hash);
+        formData.append("md5", md5);
+        formData.append("sha256", sha256);
         formData.append("chunkIndex", chunkIndex);
         formData.append("chunk", chunk);
         if (fileMeta) {

@@ -96,7 +96,6 @@ var rootCmd = &cobra.Command{
 			}
 		}()
 
-		storageType := cmd.Flag(StorageTypeStr).Value.String()
 		storageDir := cmd.Flag(StorageDirStr).Value.String()
 
 		databaseType := cmd.Flag(DatabaseTypeStr).Value.String()
@@ -195,7 +194,7 @@ var rootCmd = &cobra.Command{
 			fmt.Println("Inserted file ID:", fileID)
 
 			// 查询文件
-			logicFiles, err := q.ListLogicFileByUserId(context.Background(), userID)
+			logicFiles, err := q.ListLogicFilesByUserId(context.Background(), userID)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
 			}
@@ -206,7 +205,7 @@ var rootCmd = &cobra.Command{
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "SetLogicFileByPath error:", err)
 				// 查询文件
-				logicFiles, err = q.ListLogicFileByUserId(context.Background(), userID)
+				logicFiles, err = q.ListLogicFilesByUserId(context.Background(), userID)
 				if err != nil {
 					fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
 				}
@@ -216,7 +215,7 @@ var rootCmd = &cobra.Command{
 			fmt.Println("Logic file updated")
 
 			// 查询文件
-			logicFiles, err = q.ListLogicFileByUserId(context.Background(), userID)
+			logicFiles, err = q.ListLogicFilesByUserId(context.Background(), userID)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
 			}
@@ -242,10 +241,6 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		newStorage, err := getStorageByType(storageType)
-		if err != nil {
-			return
-		}
 		newDatabase, err := getDatabaseByType(databaseType)
 		if err != nil {
 			return
@@ -253,7 +248,7 @@ var rootCmd = &cobra.Command{
 
 		thumbnailDir := cmd.Flag(ThumbnailDirStr).Value.String()
 		transCodeDir := cmd.Flag(TransCodeDirStr).Value.String()
-		kfsCore, err = core.New3(q, dao.DatabaseNewFunc(dataSourceName, newDatabase), dao.StorageNewFunc(storageDir, newStorage), thumbnailDir, transCodeDir)
+		kfsCore, err = core.New3(q, dao.DatabaseNewFunc(dataSourceName, newDatabase), storageDir, thumbnailDir, transCodeDir)
 		if err != nil {
 			return
 		}

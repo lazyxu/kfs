@@ -19,6 +19,7 @@ type KFS struct {
 	Q            *sqlc.Queries
 	Db           dao.Database
 	S            dao.Storage
+	storageDir   string
 	thumbnailDir string
 	transCodeDir string
 	newStorage   func(root string) (dao.Storage, error)
@@ -111,7 +112,7 @@ func New(newDatabase func() (dao.Database, error), newStorage func() (dao.Storag
 	if err != nil {
 		return nil, err
 	}
-	return &KFS{Db: db, S: s, S2: &Storage2{root: "."}}, nil
+	return &KFS{Db: db, S: s, S2: &Storage2{root: "tmp"}}, nil
 }
 
 func mkdirIfNotExist(path string) error {
@@ -146,11 +147,7 @@ func New2(newDatabase func() (dao.Database, error), newStorage func() (dao.Stora
 	return &KFS{Db: db, S: s, thumbnailDir: thumbnailDir, transCodeDir: transCodeDir}, nil
 }
 
-func New3(q *sqlc.Queries, newDatabase func() (dao.Database, error), newStorage func() (dao.Storage, error), thumbnailDir, transCodeDir string) (*KFS, error) {
-	s, err := newStorage()
-	if err != nil {
-		return nil, err
-	}
+func New3(q *sqlc.Queries, newDatabase func() (dao.Database, error), storageDir, thumbnailDir, transCodeDir string) (*KFS, error) {
 	db, err := newDatabase()
 	if err != nil {
 		return nil, err
@@ -163,7 +160,7 @@ func New3(q *sqlc.Queries, newDatabase func() (dao.Database, error), newStorage 
 	if err != nil {
 		return nil, err
 	}
-	return &KFS{Q: q, Db: db, S: s, thumbnailDir: thumbnailDir, transCodeDir: transCodeDir}, nil
+	return &KFS{Q: q, Db: db, S2: &Storage2{root: storageDir}, storageDir: storageDir, thumbnailDir: thumbnailDir, transCodeDir: transCodeDir}, nil
 }
 
 func (fs *KFS) ThumbnailDir() string {

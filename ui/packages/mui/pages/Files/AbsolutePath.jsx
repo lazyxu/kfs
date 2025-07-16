@@ -9,7 +9,6 @@ function PathButton({ name, icon, dirPath, onMenu }) {
     const [resourceManager, setResourceManager] = useResourceManager();
     const { driver } = resourceManager;
     const [anchorEl, setAnchorEl] = useState(null);
-    const theme = useTheme();
 
     const handleContextMenu = (e) => {
         e.preventDefault(); e.stopPropagation();
@@ -28,13 +27,13 @@ function PathButton({ name, icon, dirPath, onMenu }) {
                     borderRadius: 1,
                     minWidth: 0,
                     px: 1,
-                    bgcolor: "transparent",
-                    color: theme.palette.text.primary,
+                    bgcolor: theme => theme.background.primary,
+                    color: theme => theme.context.secondary,
                     display: "flex",
                     alignItems: "center",
                     gap: 0.5,
                     boxShadow: "none",
-                    ":hover": { bgcolor: theme.palette.action.hover }
+                    ":hover": { bgcolor: theme => theme.palette.action.hover }
                 }}
                 onClick={e => {
                     e.preventDefault(); e.stopPropagation();
@@ -53,18 +52,18 @@ function PathButton({ name, icon, dirPath, onMenu }) {
                 sx={{
                     borderRadius: 1,
                     minWidth: 0,
-                    bgcolor: "transparent",
-                    color: theme.palette.text.secondary,
+                    bgcolor: theme => theme.background.primary,
+                    color: theme => theme.context.secondary,
                     boxShadow: "none",
                     borderLeft: "none",
-                    borderRight: `1px solid ${theme.palette.divider}`,
+                    borderRight: theme => `1px solid ${theme.palette.divider}`,
                     m: 0,
                     width: 32,
                     height: 32,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    ":hover": { bgcolor: theme.palette.action.hover }
+                    ":hover": { bgcolor: theme => theme.palette.action.hover }
                 }}
                 onClick={e => {
                     e.preventDefault(); e.stopPropagation();

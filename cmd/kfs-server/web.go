@@ -644,7 +644,8 @@ func apiCreateFolder(c echo.Context) error {
 // 上传分块
 func apiUploadFileChunk(c echo.Context) error {
 	filePathStr := c.FormValue("filePath")
-	hash := c.FormValue("hash")
+	md5 := c.FormValue("md5")
+	sha256 := c.FormValue("sha256")
 	chunkIndex := c.FormValue("chunkIndex")
 	file, err := c.FormFile("chunk")
 	if err != nil {
@@ -660,7 +661,7 @@ func apiUploadFileChunk(c echo.Context) error {
 	fileLastModified := c.FormValue("fileLastModified")
 	fileType := c.FormValue("fileType")
 	// 可将这些信息写入临时目录的meta.json
-	tmpDir := path.Join(os.TempDir(), "kfs_upload_chunks", hash)
+	tmpDir := path.Join(os.TempDir(), "kfs_upload_chunks", md5+"_"+sha256)
 	err = os.MkdirAll(tmpDir, 0755)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "mkdir failed: "+err.Error())

@@ -114,11 +114,11 @@ export async function createFolder(dirPath, folderName) {
     }
 }
 
-export async function mergeFileChunks( dirPath, hash, totalChunks, fileMeta) {
+export async function mergeFileChunks( dirPath, md5, sha256, totalChunks, fileMeta) {
     try {
         await axios.post(`${getSysConfig().webServer}/api/v1/mergeFileChunks`, {
             dirPath,
-            hash,
+            md5, sha256,
             totalChunks,
             fileMeta,
         });
