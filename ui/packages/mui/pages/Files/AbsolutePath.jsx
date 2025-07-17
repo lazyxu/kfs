@@ -27,8 +27,6 @@ function PathButton({ name, icon, dirPath, onMenu }) {
                     borderRadius: 1,
                     minWidth: 0,
                     px: 1,
-                    bgcolor: theme => theme.background.primary,
-                    color: theme => theme.context.secondary,
                     display: "flex",
                     alignItems: "center",
                     gap: 0.5,
@@ -52,8 +50,6 @@ function PathButton({ name, icon, dirPath, onMenu }) {
                 sx={{
                     borderRadius: 1,
                     minWidth: 0,
-                    bgcolor: theme => theme.background.primary,
-                    color: theme => theme.context.secondary,
                     boxShadow: "none",
                     borderLeft: "none",
                     borderRight: theme => `1px solid ${theme.palette.divider}`,
@@ -180,7 +176,6 @@ export default () => {
                 padding: "0 1em",
                 margin: "0.3em",
                 cursor: editMode ? "text" : "pointer",
-                bgcolor: theme.palette.background.paper,
                 borderRadius: 2,
                 boxShadow: 1,
                 minHeight: 48,
@@ -242,7 +237,6 @@ export default () => {
                         sx={{
                             flex: 1,
                             minWidth: 0,
-                            bgcolor: theme.palette.action.hover,
                             borderRadius: 2,
                             border: `1px solid ${theme.palette.divider}`,
                             px: 1,

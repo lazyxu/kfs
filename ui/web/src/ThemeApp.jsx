@@ -1,10 +1,10 @@
-import {experimental_extendTheme} from "@mui/material";
 
-import {Experimental_CssVarsProvider as CssVarsProvider} from '@mui/material/styles';
-import React, {useState} from "react";
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import App from "./App";
 
-const theme = experimental_extendTheme({
+const theme = createTheme({
+    colorSchemeSelector: 'class',
+    cssVariables: true,
     colorSchemes: {
         light: {
             background: {
@@ -45,15 +45,8 @@ const theme = experimental_extendTheme({
 
 export default function () {
     return (
-        <div id="css-vars-custom-theme">
-            <CssVarsProvider
-                enableColorScheme={true}
-                theme={theme}
-                colorSchemeStorageKey="custom-theme-color-scheme"
-                modeStorageKey="custom-theme-mode"
-            >
-                <App/>
-            </CssVarsProvider>
-        </div>
+        <ThemeProvider theme={theme} >
+            <App />
+        </ThemeProvider>
     );
 }

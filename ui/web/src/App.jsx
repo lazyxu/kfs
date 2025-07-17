@@ -88,8 +88,6 @@ function App() {
             <Box sx={{
                 position: 'fixed', width: "100%", height: "100%",
                 display: 'flex', flexDirection: 'column',
-                backgroundColor: theme => theme.background.primary,
-                color: theme => theme.context.primary
             }}>
                 <AppBar position="fixed" open={open}>
                     <Toolbar>
