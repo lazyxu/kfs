@@ -74,8 +74,27 @@ SELECT * FROM _logic_file
 WHERE user_id = ?;
 
 -- name: ListLogicFilesByParentId :many
-SELECT * FROM _logic_file
+SELECT
+  lf.id,
+  lf.user_id,
+  lf.parent_id,
+  lf.is_root,
+  lf.name,
+  lf.file_id,
+  lf.mode,
+  lf.size,
+  lf.create_time,
+  lf.modify_time,
+  lf.change_time,
+  lf.access_time,
+  COALESCE(f.md5, '') AS md5,
+  COALESCE(f.sha256, '') AS sha256
+FROM _logic_file lf
+LEFT JOIN _file f ON lf.file_id = f.id  
 WHERE user_id = ? AND (
   (parent_id = sqlc.arg('parent_id'))
   OR (parent_id IS NULL AND sqlc.arg('parent_id') IS NULL)
 );
+
+-- name: GetEarliestCrated :one
+SELECT min(createTime) FROM _logic_file WHERE file_id=?;

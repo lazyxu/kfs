@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/db/sqlc"
 	"github.com/lazyxu/kfs/rpc/server"
 )
 
@@ -120,7 +121,7 @@ func addTaskError(err error) {
 	s.SendAll()
 }
 
-func StartOrStop(kfsCore *core.KFS, start bool, force bool) {
+func StartOrStop(kfsCore *core.KFS, start bool, all bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	if !start {
@@ -138,7 +139,7 @@ func StartOrStop(kfsCore *core.KFS, start bool, force bool) {
 	ctx, cancel := context.WithCancel(context.TODO())
 	taskInfo.cancel = cancel
 	go func() {
-		err := analyze(ctx, kfsCore, force)
+		err := analyze(ctx, kfsCore, all)
 		if err == nil {
 			setTaskStatus(StatusFinished)
 			return
@@ -151,23 +152,23 @@ func StartOrStop(kfsCore *core.KFS, start bool, force bool) {
 	}()
 }
 
-func analyze(ctx context.Context, kfsCore *core.KFS, force bool) (err error) {
+func analyze(ctx context.Context, kfsCore *core.KFS, all bool) (err error) {
 	setTaskStatus(StatusRunningCollect)
-	var hashList []string
-	if force {
-		hashList, err = kfsCore.Db.ListFileHash(ctx)
+	var fileList []sqlc.File
+	if all {
+		fileList, err = kfsCore.Q.ListFile(ctx)
 	} else {
-		hashList, err = kfsCore.Db.ListExpectFileType(ctx)
+		fileList, err = kfsCore.Q.ListFileExpectFileType(ctx)
 	}
 	if err != nil {
 		return err
 	}
-	setTaskTotal(len(hashList))
-	for _, hash := range hashList {
-		if force {
-			err = server.Analyze(ctx, kfsCore, hash)
+	setTaskTotal(len(fileList))
+	for _, f := range fileList {
+		if all {
+			err = server.Analyze(ctx, kfsCore, f.ID, f.Size, f.Md5, f.Sha256)
 		} else {
-			err = server.AnalyzeIfNoFileType(ctx, kfsCore, hash)
+			err = server.AnalyzeIfNoFileType(ctx, kfsCore, f.ID, f.Size, f.Md5, f.Sha256)
 		}
 		if errors.Is(err, context.Canceled) {
 			return err

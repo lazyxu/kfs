@@ -3,6 +3,7 @@ package list
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -11,12 +12,13 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/db/sqlc"
+	"github.com/lazyxu/kfs/rpc/server"
 )
 
 type Response struct {
-	Files  []*sqlc.LogicFile `json:"files,omitempty"`
-	ErrMsg string            `json:"errMsg,omitempty"`
-	N      int               `json:"n,omitempty"`
+	Files  []*sqlc.ListLogicFilesByParentIdRow `json:"files,omitempty"`
+	ErrMsg string                              `json:"errMsg,omitempty"`
+	N      int                                 `json:"n,omitempty"`
 }
 
 func send(c echo.Context, msg Response) {
@@ -64,28 +66,28 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 	send(c, Response{N: n})
 
 	tick := time.NewTicker(time.Second)
-	curFiles := []*sqlc.LogicFile{}
+	curFiles := []*sqlc.ListLogicFilesByParentIdRow{}
 	packetSize := 1
 	for _, file := range files {
-		// if !os.FileMode(file.Mode).IsDir() {
-		// 	err = server.AnalyzeIfNoFileType(c.Request().Context(), kfsCore, file.Hash)
-		// 	if errors.Is(err, context.Canceled) {
-		// 		fmt.Println("Connection canceled")
-		// 		return nil
-		// 	}
-		// 	if err != nil {
-		// 		send(c, Response{ErrMsg: err.Error()})
-		// 	}
-		// }
+		if !os.FileMode(file.Mode).IsDir() {
+			err = server.AnalyzeIfNoFileType(c.Request().Context(), kfsCore, file.FileID.Int64, file.Size, file.Md5, file.Sha256)
+			if errors.Is(err, context.Canceled) {
+				fmt.Println("Connection canceled")
+				return nil
+			}
+			if err != nil {
+				send(c, Response{ErrMsg: err.Error()})
+			}
+		}
 		curFiles = append(curFiles, file)
 		select {
 		case <-tick.C:
 			send(c, Response{Files: curFiles, N: n})
-			curFiles = []*sqlc.LogicFile{}
+			curFiles = []*sqlc.ListLogicFilesByParentIdRow{}
 		default:
 			if len(curFiles) > packetSize {
 				send(c, Response{Files: curFiles, N: n})
-				curFiles = []*sqlc.LogicFile{}
+				curFiles = []*sqlc.ListLogicFilesByParentIdRow{}
 				packetSize = packetSize * 2
 			}
 		}

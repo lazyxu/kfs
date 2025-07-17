@@ -78,7 +78,7 @@ export default function () {
                     e.preventDefault(); e.stopPropagation();
                     setMenu({
                         mouseX: e.clientX, mouseY: e.clientY,
-                        dirPath,
+                        dirPath, open: true,
                     });
                 }}
             >
@@ -95,7 +95,7 @@ export default function () {
             >
                 共{driverFiles.length}/{driverFilesTotal}个项目
             </Stack>
-            {menu && <Menu contextMenu={menu} setContextMenu={setMenu} />}
+            <Menu contextMenu={menu} setContextMenu={setMenu} onUploaded={() => setResourceManager(p => ({ ...p, dirPath: p.dirPath}))}/>
             {fileMenu && <FileMenu contextMenu={fileMenu} setContextMenu={setFileMenu} setFileAttribute={setFileAttribute} />}
             {fileAttribute && <FileAttribute fileAttribute={fileAttribute} onClose={() => setFileAttribute(null)} />}
         </>

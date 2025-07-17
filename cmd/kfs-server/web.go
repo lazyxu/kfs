@@ -29,7 +29,6 @@ import (
 	"github.com/adrium/goheif"
 	"github.com/disintegration/imaging"
 	"github.com/h2non/filetype/matchers"
-	"github.com/lazyxu/kfs/dao"
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 
 	"github.com/labstack/echo/v4"
@@ -280,7 +279,7 @@ func apiImage(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			img = orientation(img, m.Exif)
+			img = orientation(img, int64(m.Exif.Orientation))
 			err = imaging.Save(img, thumbnailFilePath)
 			if err != nil {
 				return err
@@ -307,7 +306,7 @@ func apiImage(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			img = orientation(img, m.Exif)
+			img = orientation(img, int64(m.Exif.Orientation))
 			err = imaging.Save(img, thumbnailFilePath)
 			if err != nil {
 				return err
@@ -376,11 +375,8 @@ func generateThumbnail(img image.Image, thumbnailFilePath string, cutSquare bool
 	return nil
 }
 
-func orientation(img image.Image, exif *dao.Exif) image.Image {
-	if exif == nil {
-		return img
-	}
-	switch exif.Orientation {
+func orientation(img image.Image, o int64) image.Image {
+	switch o {
 	case 2:
 		return imaging.FlipH(img)
 	case 3:
@@ -402,14 +398,25 @@ func orientation(img image.Image, exif *dao.Exif) image.Image {
 var thumbnailTaskChan = make(chan struct{}, 1)
 
 func apiThumbnail(c echo.Context) error {
-	hash := c.QueryParam("hash")
-	sizeStr := c.QueryParam("size")
-	size, err1 := strconv.Atoi(sizeStr)
+	idStr := c.QueryParam("id")
+	id, err1 := strconv.ParseInt(idStr, 10, 64)
 	if err1 != nil {
 		return err1
 	}
-	if size != 64 && size != 128 && size != 256 {
-		return errors.New("invalid size, expected 64, 128 or 256")
+	sizeStr := c.QueryParam("size")
+	size, err1 := strconv.ParseInt(sizeStr, 10, 64)
+	if err1 != nil {
+		return err1
+	}
+	md5 := c.QueryParam("md5")
+	sha256 := c.QueryParam("sha256")
+	hwStr := c.QueryParam("hw")
+	hw, err1 := strconv.Atoi(hwStr)
+	if err1 != nil {
+		return err1
+	}
+	if hw != 64 && hw != 128 && hw != 256 {
+		return errors.New("invalid hw, expected 64, 128 or 256")
 	}
 	cutSquareStr := c.QueryParam("cutSquare")
 	cutSquare := false
@@ -422,34 +429,33 @@ func apiThumbnail(c echo.Context) error {
 	// TODO: save it to storage.
 	var filename string
 	if cutSquare {
-		filename = hash + "@" + sizeStr + "x" + sizeStr
+		filename = sizeStr + "_" + md5 + "_" + sha256 + "@" + hwStr + "x" + hwStr
 	} else {
-		filename = hash + "@" + sizeStr
+		filename = sizeStr + "_" + md5 + "_" + sha256 + "@" + hwStr
 	}
-	m, err1 := kfsCore.Db.GetMetadata(c.Request().Context(), hash)
+	m, err1 := kfsCore.Q.GetMetadata(c.Request().Context(), id)
 	if err1 != nil {
 		return err1
 	}
-	fileType := m.FileType
 	thumbnailFilePath := filepath.Join(kfsCore.ThumbnailDir(), filename+".jpg")
 	f, err1 := os.Open(thumbnailFilePath)
 	if os.IsNotExist(err1) {
 		select {
 		case thumbnailTaskChan <- struct{}{}:
-			println("generate thumbnail for", filename, fileType.SubType)
+			println("generate thumbnail for", filename, m.SubType)
 		case <-c.Request().Context().Done():
-			println("deadlineExceeded generating thumbnail for", filename, fileType.SubType)
+			println("deadlineExceeded generating thumbnail for", filename, m.SubType)
 			return context.DeadlineExceeded
 		case <-c.Request().Cancel:
-			println("canceled generating thumbnail for", filename, fileType.SubType)
+			println("canceled generating thumbnail for", filename, m.SubType)
 			return context.Canceled
 		}
 		defer func() {
 			<-thumbnailTaskChan
 		}()
 
-		if fileType.Extension == "zip" {
-			_, heicHash, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, hash)
+		if m.Extension == "zip" {
+			_, heicHash, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, "")
 			if err != nil {
 				return err
 			}
@@ -462,13 +468,15 @@ func apiThumbnail(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			img = orientation(img, m.Exif)
-			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
+			if m.Orientation.Valid {
+				img = orientation(img, m.Orientation.Int64)
+			}
+			err = generateThumbnail(img, thumbnailFilePath, cutSquare, hw)
 			if err != nil {
 				return err
 			}
-		} else if fileType.Extension == matchers.TypeHeif.Extension {
-			rc, err := kfsCore.S.ReadWithSize(hash)
+		} else if m.Extension == matchers.TypeHeif.Extension {
+			rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
 			if err != nil {
 				return err
 			}
@@ -477,13 +485,15 @@ func apiThumbnail(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			img = orientation(img, m.Exif)
-			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
+			if m.Orientation.Valid {
+				img = orientation(img, m.Orientation.Int64)
+			}
+			err = generateThumbnail(img, thumbnailFilePath, cutSquare, hw)
 			if err != nil {
 				return err
 			}
-		} else if fileType.Type == "image" {
-			rc, err := kfsCore.S.ReadWithSize(hash)
+		} else if m.Type == "image" {
+			rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
 			if err != nil {
 				return err
 			}
@@ -492,14 +502,16 @@ func apiThumbnail(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			img = orientation(img, m.Exif)
-			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
+			if m.Orientation.Valid {
+				img = orientation(img, m.Orientation.Int64)
+			}
+			err = generateThumbnail(img, thumbnailFilePath, cutSquare, hw)
 			if err != nil {
 				return err
 			}
-		} else if fileType.Type == "video" {
+		} else if m.Type == "video" {
 			originFilePath := filepath.Join(kfsCore.ThumbnailDir(), filename+".origin.jpg")
-			src := kfsCore.S.GetFilePath(hash)
+			src := kfsCore.S2.GetFilePath(size, md5, sha256)
 			err := ffmpeg_go.Input(src).
 				Output(originFilePath, ffmpeg_go.KwArgs{"frames:v": 1, "loglevel": "error"}).
 				OverWriteOutput().ErrorToStdOut().Run()
@@ -515,7 +527,7 @@ func apiThumbnail(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			err = generateThumbnail(img, thumbnailFilePath, cutSquare, size)
+			err = generateThumbnail(img, thumbnailFilePath, cutSquare, hw)
 			if err != nil {
 				return err
 			}

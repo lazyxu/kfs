@@ -16,7 +16,9 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
     const [folderName, setFolderName] = useState("");
 
     console.log("Menu contextMenu", contextMenu);
+    const onClose = () => setContextMenu(c => ({ ...c, open: false }))
     const handleUploadClick = () => {
+        onClose();
         fileInputRef.current?.click();
     };
 
@@ -35,7 +37,7 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
         if (exists) {
             setProgress(null);
             noteSuccess("文件已存在，无需上传");
-            setContextMenu(null);
+            // setContextMenu(null);
             onUploaded?.();
             return;
         }
@@ -67,18 +69,18 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
     };
 
     const handleNewFolderClick = async () => {
-        
-        try {
-            await createFolder(0, contextMenu.dirPath, "new folder");
-            noteSuccess("新建文件夹成功");
-            setFolderDialog(false);
-            setContextMenu(null);
-            onUploaded?.();
-        } catch (err) {
-            noteError("新建文件夹失败：" + (err?.message || err));
-        }
-        // setFolderDialog(true);
-        // setFolderName("");
+        onClose();
+        // try {
+        //     await createFolder(0, contextMenu.dirPath, "new folder");
+        //     noteSuccess("新建文件夹成功");
+        //     setFolderDialog(false);
+        //     setContextMenu(null);
+        //     onUploaded?.();
+        // } catch (err) {
+        //     noteError("新建文件夹失败：" + (err?.message || err));
+        // }
+        setFolderDialog(true);
+        setFolderName("");
     };
 
     const handleFolderNameChange = (e) => {
@@ -111,8 +113,8 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
             />
             <Menu
                 contextMenu={contextMenu}
-                open={contextMenu !== null}
-                onClose={() => setContextMenu(null)}
+                open={contextMenu?.open}
+                onClose={onClose}
             >
                 <MenuItem onClick={handleUploadClick}>
                     <UploadFile />

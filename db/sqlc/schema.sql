@@ -17,10 +17,11 @@ CREATE TABLE IF NOT EXISTS _file (
 );
 
 CREATE TABLE IF NOT EXISTS _logic_file (
-    id            BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    user_id       BIGINT         NOT NULL,
-    parent_id     BIGINT         DEFAULT NULL,
-    name          VARCHAR(255)   NOT NULL,
+    id            BIGINT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    user_id       BIGINT          NOT NULL,
+    parent_id     BIGINT          DEFAULT NULL,
+    is_root       BOOLEAN GENERATED ALWAYS AS (IF(parent_id IS NULL, 1, NULL)) VIRTUAL, -- 新增虚拟列
+    name          VARCHAR(255)    NOT NULL,
     -- current_version_id BIGINT         NOT NULL,
     file_id       BIGINT          DEFAULT NULL,
     mode          BIGINT          NOT NULL,  -- isDirectory, isFile, isSymlink
@@ -32,7 +33,8 @@ CREATE TABLE IF NOT EXISTS _logic_file (
     FOREIGN KEY (parent_id)       REFERENCES _logic_file(id),
     FOREIGN KEY (file_id)         REFERENCES _file(id),
     -- FOREIGN KEY (current_version_id)  REFERENCES _version_file(id)
-    UNIQUE INDEX idx_unique_user_id_parent_id_name (user_id, parent_id, name)
+    UNIQUE INDEX idx_unique_user_id_parent_id_name (user_id, parent_id, name),
+    UNIQUE INDEX idx_root_unique (user_id, is_root, name)
 );
 
 -- CREATE TABLE IF NOT EXISTS _version_file (
@@ -52,9 +54,9 @@ CREATE TABLE IF NOT EXISTS _logic_file (
 
 CREATE TABLE IF NOT EXISTS _file_type (
     id        BIGINT       NOT NULL PRIMARY KEY,
-    Type      VARCHAR(255) NOT NULL,
-    SubType   VARCHAR(255) NOT NULL,
-    Extension VARCHAR(255) NOT NULL,
+    type      VARCHAR(255) NOT NULL,
+    sub_type  VARCHAR(255) NOT NULL,
+    extension VARCHAR(255) NOT NULL,
     FOREIGN KEY (id)  REFERENCES   _file(id)
 );
 
@@ -66,30 +68,30 @@ CREATE TABLE IF NOT EXISTS _height_width (
 );
 
 CREATE TABLE IF NOT EXISTS _exif (
-    id                  BIGINT       NOT NULL PRIMARY KEY,
-    ExifVersion         CHAR(4)      DEFAULT NULL,
-    ImageDescription    VARCHAR(255) DEFAULT NULL,
-    Orientation         INT8         DEFAULT NULL,
-    DateTime            VARCHAR(19)  DEFAULT NULL,
-    DateTimeOriginal    VARCHAR(19)  DEFAULT NULL,
-    DateTimeDigitized   VARCHAR(19)  DEFAULT NULL,
-    OffsetTime          VARCHAR(6)   DEFAULT NULL,
-    OffsetTimeOriginal  VARCHAR(6)   DEFAULT NULL,
-    OffsetTimeDigitized VARCHAR(6)   DEFAULT NULL,
-    SubsecTime          VARCHAR(9)   DEFAULT NULL,
-    SubsecTimeOriginal  VARCHAR(9)   DEFAULT NULL,
-    SubsecTimeDigitized VARCHAR(9)   DEFAULT NULL,
-    HostComputer        VARCHAR(255) DEFAULT NULL,
-    Make                VARCHAR(255) DEFAULT NULL,
-    Model               VARCHAR(255) DEFAULT NULL,
-    ExifImageWidth      BIGINT        DEFAULT NULL,
-    ExifImageLength     BIGINT        DEFAULT NULL,
-    GPSLatitudeRef      CHAR(1)      DEFAULT NULL,
-    GPSLatitude         DOUBLE       DEFAULT NULL,
-    GPSLongitudeRef     CHAR(1)      DEFAULT NULL,
-    GPSLongitude        DOUBLE       DEFAULT NULL,
-    FOREIGN KEY (id)  REFERENCES   _file(id)
-);
+    id                   BIGINT        NOT NULL PRIMARY KEY,
+    exif_version         CHAR(4)       DEFAULT NULL COMMENT 'Exif版本号',
+    image_description    VARCHAR(255)  DEFAULT NULL COMMENT '图像描述',
+    orientation          BIGINT        DEFAULT NULL COMMENT '方向（0~8）',
+    date_time            VARCHAR(19)   DEFAULT NULL COMMENT '修改时间（YYYY:MM:DD HH:MM:SS）',
+    date_time_original   VARCHAR(19)   DEFAULT NULL COMMENT '原始拍摄时间',
+    date_time_digitized  VARCHAR(19)   DEFAULT NULL COMMENT '数字化时间',
+    offset_time          VARCHAR(6)    DEFAULT NULL COMMENT '时区偏移（±HHMM）',
+    offset_time_original VARCHAR(6)    DEFAULT NULL COMMENT '原始时区偏移',
+    offset_time_digitized VARCHAR(6)   DEFAULT NULL COMMENT '数字化时区偏移',
+    subsec_time          VARCHAR(9)    DEFAULT NULL COMMENT '秒以下时间（毫秒/微秒）',
+    subsec_time_original VARCHAR(9)    DEFAULT NULL COMMENT '原始秒以下时间',
+    subsec_time_digitized VARCHAR(9)   DEFAULT NULL COMMENT '数字化秒以下时间',
+    host_computer        VARCHAR(255)  DEFAULT NULL COMMENT '处理设备型号',
+    make                 VARCHAR(255)  DEFAULT NULL COMMENT '相机品牌',
+    model                VARCHAR(255)  DEFAULT NULL COMMENT '相机型号',
+    exif_image_width     BIGINT        DEFAULT NULL COMMENT '图像宽度（像素）',
+    exif_image_length    BIGINT        DEFAULT NULL COMMENT '图像高度（像素）',
+    gps_latitude_ref     CHAR(1)       DEFAULT NULL COMMENT '纬度参考（N/S）',
+    gps_latitude         DOUBLE        DEFAULT NULL COMMENT '纬度（十进制）',
+    gps_longitude_ref    CHAR(1)       DEFAULT NULL COMMENT '经度参考（E/W）',
+    gps_longitude        DOUBLE        DEFAULT NULL COMMENT '经度（十进制）',
+    FOREIGN KEY (id) REFERENCES _file(id)
+) COMMENT '存储图像Exif元数据';
 
 CREATE TABLE IF NOT EXISTS _video_metadata (
     id       BIGINT       NOT NULL PRIMARY KEY,
@@ -103,9 +105,9 @@ CREATE TABLE IF NOT EXISTS _video_metadata (
 CREATE TABLE IF NOT EXISTS _dcim_metadata_time (
     id       BIGINT       NOT NULL PRIMARY KEY,
     time     BIGINT DEFAULT NULL,
-    year     BIGINT DEFAULT NULL,
-    month    BIGINT DEFAULT NULL,
-    day      BIGINT DEFAULT NULL,
+    year  BIGINT GENERATED ALWAYS AS (FROM_UNIXTIME(time / 1000, '%Y')) VIRTUAL,
+    month BIGINT GENERATED ALWAYS AS (FROM_UNIXTIME(time / 1000, '%c')) VIRTUAL,
+    day   BIGINT GENERATED ALWAYS AS (FROM_UNIXTIME(time / 1000, '%e')) VIRTUAL,
     FOREIGN KEY (id) REFERENCES _file(id)
 );
 

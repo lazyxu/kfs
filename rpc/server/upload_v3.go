@@ -173,7 +173,8 @@ func handleUploadV3File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
 		return err
 	}
-	err = AnalyzeIfNoFileType(context.TODO(), kfsCore, req.Hash)
+	panic("AnalyzeIfNoFileType is not implemented yet")
+	err = AnalyzeIfNoFileType(context.TODO(), kfsCore, 0, 0, "", "")
 	if err != nil {
 		println(conn.RemoteAddr().String(), "AnalyzeIfNoFileType", req.Hash, err.Error())
 		return err

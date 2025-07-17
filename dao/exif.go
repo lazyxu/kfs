@@ -42,8 +42,8 @@ type VideoMetadataFfmpeg struct {
 }
 
 type HeightWidth struct {
-	Width  uint64 `json:"width"`
-	Height uint64 `json:"height"`
+	Width  int64 `json:"width"`
+	Height int64 `json:"height"`
 }
 
 type Metadata struct {

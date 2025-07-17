@@ -111,7 +111,7 @@ func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath 
 	return nil
 }
 
-func (q *Queries) ListDir(ctx context.Context, userID int64, dirpath []string) (*LogicFile, []*LogicFile, error) {
+func (q *Queries) ListDir(ctx context.Context, userID int64, dirpath []string) (*LogicFile, []*ListLogicFilesByParentIdRow, error) {
 	var parentID sql.NullInt64
 	var lf *LogicFile
 
@@ -137,7 +137,7 @@ func (q *Queries) ListDir(ctx context.Context, userID int64, dirpath []string) (
 	}
 
 	// 转换为 []*LogicFile
-	childPtrs := make([]*LogicFile, 0, len(children))
+	childPtrs := make([]*ListLogicFilesByParentIdRow, 0, len(children))
 	for i := range children {
 		childPtrs = append(childPtrs, &children[i])
 	}

@@ -45,6 +45,11 @@ func createGlobalLockFile(root string) error {
 	return nil
 }
 
+func (s *Storage2) GetFilePath(size int64, md5Hash string, sha256Hash string) string {
+	itoaSize := strconv.Itoa(int(size))
+	return path.Join(s.root, itoaSize, md5Hash+"_"+sha256Hash)
+}
+
 func (s *Storage2) Create() error {
 	_, err := os.Stat(s.root)
 	if err != nil && !os.IsNotExist(err) {

@@ -2,8 +2,15 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"image"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/adrium/goheif"
 	"github.com/dsoprea/go-exif/v3"
 	exifcommon "github.com/dsoprea/go-exif/v3/common"
@@ -11,12 +18,8 @@ import (
 	jpegimage "github.com/dsoprea/go-jpeg-image-structure/v2"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/db/sqlc"
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
-	"image"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func GetJpegExifData(kfsCore *core.KFS, hash string) (e dao.Exif, err error) {
@@ -62,19 +65,19 @@ func getImageHeightWidth(kfsCore *core.KFS, hash string) (hw dao.HeightWidth, er
 			return
 		}
 		return dao.HeightWidth{
-			Width:  uint64(img.Bounds().Dx()),
-			Height: uint64(img.Bounds().Dy()),
+			Width:  int64(img.Bounds().Dx()),
+			Height: int64(img.Bounds().Dy()),
 		}, nil
 	}
 	return dao.HeightWidth{
-		Width:  uint64(conf.Width),
-		Height: uint64(conf.Height),
+		Width:  int64(conf.Width),
+		Height: int64(conf.Height),
 	}, nil
 }
 
 const defaultOffset = "+08:00"
 
-func insertImageTime(ctx context.Context, kfsCore *core.KFS, hash string, e dao.Exif) error {
+func insertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e dao.Exif) error {
 	var t int64
 	if e.DateTime != "" {
 		offset := e.OffsetTime
@@ -109,88 +112,109 @@ func insertImageTime(ctx context.Context, kfsCore *core.KFS, hash string, e dao.
 	}
 	if t == 0 {
 		var err error
-		t, err = kfsCore.Db.GetEarliestCrated(ctx, hash)
+		iter, err := kfsCore.Q.GetEarliestCrated(ctx, sql.NullInt64{Int64: id, Valid: true})
 		if err != nil {
 			return err
 		}
+		t = iter.(int64)
 	}
-	err := kfsCore.Db.UpsertDCIMMetadataTime(ctx, hash, t)
+	err := kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{
+		ID:   id,
+		Time: sqlc.NInt64(t),
+	})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func insertVideoTime(ctx context.Context, kfsCore *core.KFS, hash string, m dao.VideoMetadata) error {
+func insertVideoTime(ctx context.Context, kfsCore *core.KFS, id int64, m dao.VideoMetadata) error {
 	t := m.Created
 	if t == 0 {
 		t = m.Modified
 	}
 	if t == 0 {
 		var err error
-		t, err = kfsCore.Db.GetEarliestCrated(ctx, hash)
+		iter, err := kfsCore.Q.GetEarliestCrated(ctx, sql.NullInt64{Int64: id, Valid: true})
 		if err != nil {
 			return err
 		}
+		t = iter.(int64)
 	}
-	err := kfsCore.Db.UpsertDCIMMetadataTime(ctx, hash, t)
+	err := kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{
+		ID:   id,
+		Time: sqlc.NInt64(t),
+	})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType *dao.FileType) error {
+func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md5 string, sha256 string, fileType *dao.FileType) error {
 	if fileType.Type == "image" {
 		//if fileType.SubType == matchers.TypeJpeg.MIME.Subtype {
 		//	GetJpegExifData(kfsCore, hash)
 		//}
-		width, height, err := getImageHeightWidthByFfmpeg(kfsCore, hash)
+		width, height, err := getImageHeightWidthByFfmpeg(kfsCore, size, md5, sha256)
 		if err != nil {
 			return err
 		}
-		hw := dao.HeightWidth{
-			Width:  width,
-			Height: height,
-		}
-		e, err := GetExifData(kfsCore, hash)
+		e, err := GetExifData(kfsCore, size, md5, sha256)
 		if err != nil {
-			err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+			err = kfsCore.Q.InsertHeightWidth(ctx, sqlc.InsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
 			// TODO: what if exist
 			if err != nil {
 				return err
 			}
-			_, err = kfsCore.Db.InsertNullExif(ctx, hash)
+			err = kfsCore.Q.InsertNullExif(ctx, id)
 			// TODO: what if exist
 			if err != nil {
 				return err
 			}
 			return nil
 		}
-		if e.Orientation > 4 {
-			hw = dao.HeightWidth{
-				Width:  hw.Height,
-				Height: hw.Width,
-			}
-		}
-		err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+		err = kfsCore.Q.InsertHeightWidth(ctx, sqlc.InsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
 		// TODO: what if exist
 		if err != nil {
 			return err
 		}
-		err = insertImageTime(ctx, kfsCore, hash, e)
+		err = insertImageTime(ctx, kfsCore, id, e)
 		// TODO: what if exist
 		if err != nil {
 			return err
 		}
-		_, err = kfsCore.Db.InsertExif(ctx, hash, e)
+		err = kfsCore.Q.InsertExif(ctx, sqlc.InsertExifParams{
+			ID:                  id,
+			ExifVersion:         sqlc.NString(e.ExifVersion),
+			ImageDescription:    sqlc.NString(e.ImageDescription),
+			Orientation:         sqlc.NInt64(int64(e.Orientation)),
+			DateTime:            sqlc.NString(e.DateTime),
+			DateTimeOriginal:    sqlc.NString(e.DateTimeOriginal),
+			DateTimeDigitized:   sqlc.NString(e.DateTimeDigitized),
+			OffsetTime:          sqlc.NString(e.OffsetTime),
+			OffsetTimeOriginal:  sqlc.NString(e.OffsetTimeOriginal),
+			OffsetTimeDigitized: sqlc.NString(e.OffsetTimeDigitized),
+			SubsecTime:          sqlc.NString(e.SubsecTime),
+			SubsecTimeOriginal:  sqlc.NString(e.SubsecTimeOriginal),
+			SubsecTimeDigitized: sqlc.NString(e.SubsecTimeDigitized),
+			HostComputer:        sqlc.NString(e.HostComputer),
+			Make:                sqlc.NString(e.Make),
+			Model:               sqlc.NString(e.Model),
+			ExifImageWidth:      sqlc.NInt64(int64(e.ExifImageWidth)),
+			ExifImageLength:     sqlc.NInt64(int64(e.ExifImageLength)),
+			GpsLatitudeRef:      sqlc.NString(e.GPSLatitudeRef),
+			GpsLatitude:         sqlc.NFloat64(e.GPSLatitude),
+			GpsLongitudeRef:     sqlc.NString(e.GPSLongitudeRef),
+			GpsLongitude:        sqlc.NFloat64(e.GPSLongitude),
+		})
 		// TODO: what if exist
 		if err != nil {
 			return err
 		}
 		return nil
 	} else if fileType.Type == "video" {
-		width, height, err := GetVideoHeightWidthByFfmpeg(kfsCore, hash)
+		width, height, err := GetVideoHeightWidthByFfmpeg(kfsCore, size, md5, sha256)
 		// https://stackoverflow.com/questions/9412384/m4a-mp4-file-format-whats-the-difference-or-are-they-the-same
 		if fileType.SubType == "mp4" && err == NO_VALUE_FOR_KEY {
 			fileType.Type = "audio"
@@ -199,30 +223,32 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, hash string, fileType *d
 		if err != nil {
 			return err
 		}
-		hw := dao.HeightWidth{
-			Width:  width,
-			Height: height,
-		}
-		m, err := GetVideoMetadata(kfsCore, hash)
+		m, err := GetVideoMetadata(kfsCore, size, md5, sha256)
 		if err != nil {
-			_, err = kfsCore.Db.InsertNullVideoMetadata(ctx, hash)
+			err = kfsCore.Q.InsertNullVideoMetadata(ctx, id)
 			// TODO: what if exist
 			if err != nil {
 				return err
 			}
 			return nil
 		}
-		err = kfsCore.Db.InsertHeightWidth(ctx, hash, hw)
+		err = kfsCore.Q.InsertHeightWidth(ctx, sqlc.InsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
 		// TODO: what if exist
 		if err != nil {
 			return err
 		}
-		err = insertVideoTime(ctx, kfsCore, hash, m)
+		err = insertVideoTime(ctx, kfsCore, id, m)
 		// TODO: what if exist
 		if err != nil {
 			return err
 		}
-		_, err = kfsCore.Db.InsertVideoMetadata(ctx, hash, m)
+		err = kfsCore.Q.InsertVideoMetadata(ctx, sqlc.InsertVideoMetadataParams{
+			ID:       id,
+			Codec:    sql.NullString{String: m.Codec, Valid: true},
+			Created:  sql.NullInt64{Int64: m.Created, Valid: true},
+			Modified: sql.NullInt64{Int64: m.Modified, Valid: true},
+			Duration: sql.NullFloat64{Float64: m.Duration, Valid: true},
+		})
 		// TODO: what if exist
 		if err != nil {
 			return err
@@ -269,8 +295,8 @@ func getInt64ValueFor(s string, key string) (int64, error) {
 	}
 	return n, nil
 }
-func getImageHeightWidthByFfmpegOtherWays(kfsCore *core.KFS, hash string) (width uint64, height uint64, err error) {
-	rc, err := kfsCore.S.ReadWithSize(hash)
+func getImageHeightWidthByFfmpegOtherWays(kfsCore *core.KFS, size int64, md5 string, sha256 string) (width int64, height int64, err error) {
+	rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
 	if err != nil {
 		return
 	}
@@ -283,25 +309,23 @@ func getImageHeightWidthByFfmpegOtherWays(kfsCore *core.KFS, hash string) (width
 		if err != nil {
 			return
 		}
-		height = uint64(c.Height)
-		width = uint64(c.Width)
-		return
+		return int64(c.Width), int64(c.Height), nil
 	}
-	return uint64(conf.Width), uint64(conf.Height), nil
+	return int64(conf.Width), int64(conf.Height), nil
 }
 
-func getImageHeightWidthByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, height uint64, err error) {
-	s, err := ffmpeg_go.Probe(kfsCore.S.GetFilePath(hash), ffmpeg_go.KwArgs{"v": "error", "select_streams": "v", "show_entries": "stream=width,height", "of": "default=noprint_wrappers=1"})
+func getImageHeightWidthByFfmpeg(kfsCore *core.KFS, size int64, md5 string, sha256 string) (width int64, height int64, err error) {
+	s, err := ffmpeg_go.Probe(kfsCore.S2.GetFilePath(size, md5, sha256), ffmpeg_go.KwArgs{"v": "error", "select_streams": "v", "show_entries": "stream=width,height", "of": "default=noprint_wrappers=1"})
 	if err != nil {
-		return getImageHeightWidthByFfmpegOtherWays(kfsCore, hash)
+		return getImageHeightWidthByFfmpegOtherWays(kfsCore, size, md5, sha256)
 	}
-	width, err = getUint64ValueFor(s, "width")
+	width, err = getInt64ValueFor(s, "width")
 	if err != nil {
-		return getImageHeightWidthByFfmpegOtherWays(kfsCore, hash)
+		return getImageHeightWidthByFfmpegOtherWays(kfsCore, size, md5, sha256)
 	}
-	height, err = getUint64ValueFor(s, "height")
+	height, err = getInt64ValueFor(s, "height")
 	if err != nil {
-		return getImageHeightWidthByFfmpegOtherWays(kfsCore, hash)
+		return getImageHeightWidthByFfmpegOtherWays(kfsCore, size, md5, sha256)
 	}
 	rotation, err := getInt64ValueFor(s, "rotation")
 	if err != nil {
@@ -314,16 +338,16 @@ func getImageHeightWidthByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, 
 	return
 }
 
-func GetVideoHeightWidthByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, height uint64, err error) {
-	s, err := ffmpeg_go.Probe(kfsCore.S.GetFilePath(hash), ffmpeg_go.KwArgs{"v": "error", "select_streams": "v", "show_entries": "stream=width,height", "of": "default=noprint_wrappers=1"})
+func GetVideoHeightWidthByFfmpeg(kfsCore *core.KFS, size int64, md5 string, sha256 string) (width int64, height int64, err error) {
+	s, err := ffmpeg_go.Probe(kfsCore.S2.GetFilePath(size, md5, sha256), ffmpeg_go.KwArgs{"v": "error", "select_streams": "v", "show_entries": "stream=width,height", "of": "default=noprint_wrappers=1"})
 	if err != nil {
 		return
 	}
-	width, err = getUint64ValueFor(s, "width")
+	width, err = getInt64ValueFor(s, "width")
 	if err != nil {
 		return
 	}
-	height, err = getUint64ValueFor(s, "height")
+	height, err = getInt64ValueFor(s, "height")
 	if err != nil {
 		return
 	}
@@ -338,8 +362,8 @@ func GetVideoHeightWidthByFfmpeg(kfsCore *core.KFS, hash string) (width uint64, 
 	return
 }
 
-func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, err error) {
-	rc, err := kfsCore.S.ReadWithSize(hash)
+func GetVideoMetadata(kfsCore *core.KFS, size int64, md5 string, sha256 string) (m dao.VideoMetadata, err error) {
+	rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
 	if err != nil {
 		return
 	}
@@ -362,8 +386,8 @@ func GetVideoMetadata(kfsCore *core.KFS, hash string) (m dao.VideoMetadata, err 
 	return
 }
 
-func GetExifData(kfsCore *core.KFS, hash string) (e dao.Exif, err error) {
-	rc, err := kfsCore.S.ReadWithSize(hash)
+func GetExifData(kfsCore *core.KFS, size int64, md5 string, sha256 string) (e dao.Exif, err error) {
+	rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
 	if err != nil {
 		return
 	}

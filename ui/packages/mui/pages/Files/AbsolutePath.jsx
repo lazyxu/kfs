@@ -249,7 +249,7 @@ export default () => {
                             py: 0.5,
                         }}
                     >
-                        <PathButton name="我的云盘" icon="wangpan" dirPath={null} isCurrent={false} onMenu={handleMenuAction} />
+                        <PathButton name="我的云盘" icon="wangpan" dirPath={[]} isCurrent={false} onMenu={handleMenuAction} />
                         {resourceManager.driver?.name && <PathButton name={resourceManager.driver?.name} icon="folder" dirPath={[]} isCurrent={dirPath.length === 0} onMenu={handleMenuAction} />}
                         {dirPath.map((name, i) => (
                             <Stack direction="row" alignItems="center" key={i}>

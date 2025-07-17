@@ -2,15 +2,16 @@ package server
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
-	"io"
 )
 
-func AnalyzeFileType(kfsCore *core.KFS, hash string) (ft dao.FileType, err error) {
-	header, err := getHeader(kfsCore, hash)
+func AnalyzeFileType(kfsCore *core.KFS, size int64, md5 string, sha256 string) (ft dao.FileType, err error) {
+	header, err := getHeader(kfsCore, size, md5, sha256)
 	if err == io.EOF {
 		ft = NewFileType(filetype.Unknown)
 		err = nil
@@ -23,7 +24,7 @@ func AnalyzeFileType(kfsCore *core.KFS, hash string) (ft dao.FileType, err error
 	if err != nil {
 		return
 	}
-	fmt.Printf("%s %+v\n", hash, fileType)
+	fmt.Printf("%d %s %s %+v\n", size, md5, sha256, fileType)
 	ft = NewFileType(fileType)
 	return
 }
@@ -36,8 +37,8 @@ func NewFileType(fileType types.Type) dao.FileType {
 	}
 }
 
-func getHeader(kfsCore *core.KFS, hash string) (header []byte, err error) {
-	rc, err := kfsCore.S.ReadWithSize(hash)
+func getHeader(kfsCore *core.KFS, size int64, md5 string, sha256 string) (header []byte, err error) {
+	rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
 	if err != nil {
 		return
 	}
