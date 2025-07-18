@@ -17,7 +17,7 @@ export default memo(({ driver, filePath, driverFile, hasBeenInView, inView }) =>
         return (
             <Box className="file-icon-box">
                 <SvgIcon icon="folder1" className='file-icon file-icon-folder' fontSize="inherit" onClick={() => {
-                    openDir(setResourceManager, driver, filePath);
+                    openDir(setResourceManager, filePath);
                 }} />
             </Box>
         );

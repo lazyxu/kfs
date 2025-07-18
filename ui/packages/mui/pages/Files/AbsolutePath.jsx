@@ -7,7 +7,6 @@ import { useRef, useState } from "react";
 
 function PathButton({ name, icon, dirPath, onMenu }) {
     const [resourceManager, setResourceManager] = useResourceManager();
-    const { driver } = resourceManager;
     const [anchorEl, setAnchorEl] = useState(null);
 
     const handleContextMenu = (e) => {
@@ -35,11 +34,7 @@ function PathButton({ name, icon, dirPath, onMenu }) {
                 }}
                 onClick={e => {
                     e.preventDefault(); e.stopPropagation();
-                    if (Array.isArray(dirPath)) {
-                        openDir(setResourceManager, driver, dirPath);
-                    } else {
-                        openDrivers(setResourceManager);
-                    }
+                    openDir(setResourceManager, dirPath);
                 }}
                 onContextMenu={handleContextMenu}
             >
@@ -96,7 +91,7 @@ export default () => {
 
     // 跳转目录并维护历史
     const jumpDir = (newPath) => {
-        openDir(setResourceManager, resourceManager.driver, newPath);
+        openDir(setResourceManager, newPath);
         setHistory(prev => {
             const updated = prev.slice(0, historyIndex + 1).concat([newPath]);
             setHistoryIndex(updated.length - 1);
@@ -108,7 +103,7 @@ export default () => {
     const handleBack = () => {
         if (historyIndex > 0) {
             setHistoryIndex(historyIndex - 1);
-            openDir(setResourceManager, resourceManager.driver, history[historyIndex - 1]);
+            openDir(setResourceManager, history[historyIndex - 1]);
         }
     };
 
@@ -116,7 +111,7 @@ export default () => {
     const handleForward = () => {
         if (historyIndex < history.length - 1) {
             setHistoryIndex(historyIndex + 1);
-            openDir(setResourceManager, resourceManager.driver, history[historyIndex + 1]);
+            openDir(setResourceManager, history[historyIndex + 1]);
         }
     };
 
@@ -130,7 +125,7 @@ export default () => {
 
     // 刷新
     const handleRefresh = () => {
-        openDir(setResourceManager, resourceManager.driver, dirPath, { refresh: true });
+        openDir(setResourceManager, dirPath, { refresh: true });
     };
 
     // 搜索
@@ -153,7 +148,7 @@ export default () => {
             const parts = inputValue.split("/");
             console.log("Navigating to:", parts);
             if (parts[0]?.length > 0) {
-                openDir(setResourceManager, parts[0], parts.slice(1));
+                openDir(setResourceManager, parts.slice(1));
             } else {
                 openDrivers(setResourceManager);
             }
@@ -243,14 +238,12 @@ export default () => {
                             py: 0.5,
                         }}
                     >
-                        <PathButton name="我的云盘" icon="wangpan" dirPath={[]} isCurrent={false} onMenu={handleMenuAction} />
-                        {resourceManager.driver?.name && <PathButton name={resourceManager.driver?.name} icon="folder" dirPath={[]} isCurrent={dirPath.length === 0} onMenu={handleMenuAction} />}
+                        <PathButton icon="wangpan" dirPath={[]} onMenu={handleMenuAction} />
                         {dirPath.map((name, i) => (
                             <Stack direction="row" alignItems="center" key={i}>
                                 <PathButton
                                     name={name}
                                     dirPath={dirPath.slice(0, i + 1)}
-                                    isCurrent={i === dirPath.length - 1}
                                     onMenu={handleMenuAction}
                                 />
                             </Stack>

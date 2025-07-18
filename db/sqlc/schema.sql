@@ -21,15 +21,24 @@ CREATE TABLE IF NOT EXISTS _logic_file (
     user_id       BIGINT          NOT NULL,
     parent_id     BIGINT          DEFAULT NULL,
     is_root       BOOLEAN GENERATED ALWAYS AS (IF(parent_id IS NULL, 1, NULL)) VIRTUAL, -- 新增虚拟列
+    -- windows: 不允许使用的字符 \ / : * ? " < > |
+    --          大小不敏感
+    --          文件和文件夹名称不得超过255个字符，包括扩展名
+    --          完整路径长度，最大为 260 个字符，启用了长路径支持，最大为 32,767 个字符
+    --          避免使用 CON, PRN, AUX, NUL, COM1-COM9, LPT1-LPT9 等保留名称
+    -- linux:   不允许使用的字符 /
+    --          大小写敏感
+    -- macos：  不允许使用的字符 :
+    --          大小写敏感
     name          VARCHAR(255)    NOT NULL,
     -- current_version_id BIGINT         NOT NULL,
     file_id       BIGINT          DEFAULT NULL,
     mode          BIGINT          NOT NULL,  -- isDirectory, isFile, isSymlink
     size          BIGINT          NOT NULL,
-    create_time   BIGINT          NOT NULL,
-    modify_time   BIGINT          NOT NULL,
-    change_time   BIGINT          NOT NULL,
-    access_time   BIGINT          NOT NULL,
+    create_time   BIGINT          NOT NULL,  -- 创建时间
+    modify_time   BIGINT          NOT NULL,  -- 属性修改时间
+    change_time   BIGINT          NOT NULL,  -- 内容修改时间
+    access_time   BIGINT          NOT NULL,  -- 访问时间
     FOREIGN KEY (parent_id)       REFERENCES _logic_file(id),
     FOREIGN KEY (file_id)         REFERENCES _file(id),
     -- FOREIGN KEY (current_version_id)  REFERENCES _version_file(id)

@@ -21,7 +21,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
             <MenuItem onClick={() => {
                 setContextMenu(null);
                 if (modeIsDir(mode)) {
-                    openDir(setResourceManager, driver, filePath);
+                    openDir(setResourceManager, filePath);
                 } else {
                     const app = getOpenApp(name);
                     newWindow(setWindows, app, { driver, filePath, driverFile });;
