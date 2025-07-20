@@ -220,7 +220,7 @@ func apiOpenFile(c echo.Context) error {
 
 func apiDownloadFile(c echo.Context) error {
 	filePath := c.QueryParams()["filePath[]"]
-	var userID int64
+	var userID int64 = 1
 	rc, _, err := kfsCore.OpenFile2(c.Request().Context(), userID, filePath, -1)
 	if err != nil {
 		println(err.Error())
@@ -608,7 +608,7 @@ func apiCheckFileExists(c echo.Context) error {
 	if err != nil && err != sql.ErrNoRows {
 		return c.JSON(http.StatusInternalServerError, map[string]interface{}{"fileExist": fileExist, "logicFileExist": logicFileExist, "msg": err.Error()})
 	}
-	var userID int64
+	var userID int64 = 1
 	name := c.QueryParam("name")
 	_, files, err := kfsCore.Q.ListDir(c.Request().Context(), userID, dirPath)
 	if err != nil {
@@ -625,8 +625,6 @@ func apiCheckFileExists(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]interface{}{"fileExist": fileExist, "logicFileExist": logicFileExist})
 }
 
-const defaultDirPerm = int64(os.ModeDir | os.ModePerm)
-
 func apiCreateFolder(c echo.Context) error {
 	type request struct {
 		DirPath    []string `json:"dirPath"`
@@ -640,9 +638,9 @@ func apiCreateFolder(c echo.Context) error {
 
 	// 调用核心服务创建文件夹
 	t := time.Now().UnixNano()
-	var userID int64
-	err := kfsCore.Q.SetLogicFileByPath(c.Request().Context(), userID, req.DirPath, req.FolderName,
-		sql.NullInt64{Valid: false}, defaultDirPerm, 0, t, t, t, t, false)
+	var userID int64 = 1
+	_, err := kfsCore.Q.SetLogicFileByPath(c.Request().Context(), userID, req.DirPath, req.FolderName,
+		sql.NullInt64{Valid: false}, sqlc.DefaultDirPerm, 0, t, t, t, t, false)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -769,7 +767,7 @@ func apiMergeFileChunks(c echo.Context) error {
 	}
 
 	// 入库
-	res, err := kfsCore.Q.InsertFile(ctx, sqlc.InsertFileParams{
+	res, err := kfsCore.Q.UpsertFile(ctx, sqlc.UpsertFileParams{
 		Size:   size,
 		Md5:    req.Md5,
 		Sha256: req.Sha256,
@@ -781,8 +779,8 @@ func apiMergeFileChunks(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "get last insert id failed: "+err.Error())
 	}
-	var userID int64
-	err = kfsCore.Q.SetLogicFileByPath(ctx, userID, req.DirPath, req.FileMeta.Name,
+	var userID int64 = 1
+	_, err = kfsCore.Q.SetLogicFileByPath(ctx, userID, req.DirPath, req.FileMeta.Name,
 		sql.NullInt64{Valid: true, Int64: fileID}, defaultFilePerm, size,
 		req.FileMeta.LastModified, req.FileMeta.LastModified, req.FileMeta.LastModified, req.FileMeta.LastModified, false)
 	if err != nil {

@@ -11,9 +11,9 @@ SELECT
 FROM (
 	SELECT
 		_logic_file.hash,
-		_logic_file.dirPath,
+		_logic_file.parent_id,
 		_logic_file.name,
-		_file_type.SubType,
+		_file_type.sub_type,
 		SUBSTRING_INDEX(_logic_file.name, '.', 1) AS perfix,
 		CASE WHEN _logic_file.name LIKE '%.%' THEN LOWER(SUBSTRING_INDEX(_logic_file.name, '.', -1)) ELSE '' END AS suffix
 	FROM _file_type
@@ -23,7 +23,7 @@ FROM (
 LEFT JOIN (
 	SELECT
 		_logic_file.hash,
-		_logic_file.dirPath,
+		_logic_file.parent_id,
 		_logic_file.name,
 		SUBSTRING_INDEX(_logic_file.name, '.', 1) AS perfix,
 		CASE WHEN _logic_file.name LIKE '%.%' THEN LOWER(SUBSTRING_INDEX(_logic_file.name, '.', -1)) ELSE '' END AS suffix,
@@ -34,7 +34,7 @@ LEFT JOIN (
 	WHERE (suffix = 'heic' AND _file_type.Extension = 'heif')
 		OR (suffix = 'jpg' AND _file_type.Extension = 'jpg')
 ) AS t1
-ON t0.dirPath = t1.dirPath AND t0.perfix = t1.perfix
+ON t0.parent_id = t1.parent_id AND t0.perfix = t1.perfix
 ON DUPLICATE KEY UPDATE
 	mov = VALUES(mov),
 	heic = VALUES(heic),

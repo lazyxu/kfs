@@ -1,13 +1,17 @@
+import useResourceManager from "@kfs/common/hox/resourceManager";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { Button, DialogActions, DialogContent, Link, Stack, TextField } from "@mui/material";
+import { Button, DialogActions, DialogContent, Link, Stack, Switch, TextField } from "@mui/material";
 import { useState } from 'react';
 import { newDriverBaiduPhoto } from "../../../api/driver";
 
 // https://pan.baidu.com/union/doc/ol0rsap9s
 export default function ({ onSucc }) {
-    let [name, setName] = useState("");
-    let [description, setDescription] = useState("");
+    const [resourceManager, setResourceManager] = useResourceManager();
+    const { dirPath } = resourceManager;
+    let [name, setName] = useState("新的同步文件夹");
+    let [cron, setCron] = useState("*/10 * * * *");
     let [code, setCode] = useState("");
+    let [syncAtStart, setSyncAtStart] = useState(true);
     const appKey = "huREKC2eNTctaBWfh3LdiAYjZ9ARBh5g";
     let redirectUri = `${getSysConfig().webServer}/api/v1/driver/baidu/callback`;
     redirectUri = `http://1zkl.com`;
@@ -15,24 +19,15 @@ export default function ({ onSucc }) {
     const url = `https://openapi.baidu.com/oauth/2.0/authorize?response_type=code&client_id=${appKey}&redirect_uri=${redirectUri}&scope=basic,netdisk&qrcode=1`;
     return (
         <>
-            <DialogContent sx={{
-                backgroundColor: theme => theme.background.primary,
-                color: theme => theme.context.primary
-            }}>
+            <DialogContent>
                 <TextField
                     autoFocus
-                    placeholder="云盘名字"
+                    placeholder="文件夹名称"
                     margin="dense"
                     fullWidth
                     variant="outlined"
+                    value={name}
                     onChange={e => setName(e.target.value)}
-                />
-                <TextField
-                    placeholder="云盘描述"
-                    margin="dense"
-                    fullWidth
-                    variant="outlined"
-                    onChange={e => setDescription(e.target.value)}
                 />
                 <Stack spacing={2} direction="row" sx={{ alignItems: "center" }}>
                     <TextField
@@ -51,13 +46,24 @@ export default function ({ onSucc }) {
                         }}>点击获取授权码</Link>
                     }
                 </Stack>
+                <TextField
+                    placeholder="cron"
+                    margin="dense"
+                    fullWidth
+                    variant="outlined"
+                    value={cron}
+                    onChange={e => setCron(e.target.value)}
+                />
+                <Switch
+                    checked={syncAtStart}
+                    onChange={ (event) => {
+                        setSyncAtStart(event.target.checked);
+                    }}
+                />
             </DialogContent>
-            <DialogActions sx={{
-                backgroundColor: theme => theme.background.primary,
-                color: theme => theme.context.primary
-            }}>
+            <DialogActions>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={name === "" || code === ""} onClick={() => {
-                    newDriverBaiduPhoto(name, description, code).then(onSucc);
+                    newDriverBaiduPhoto(dirPath, name, code, cron, syncAtStart).then(onSucc);
                 }}>确定</Button>
             </DialogActions>
         </>

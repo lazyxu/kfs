@@ -19,7 +19,7 @@ UPDATE _logic_file
 SET parent_id = ?, user_id = ?, name = ?, file_id = ?, mode = ?, size = ?, create_time = ?, modify_time = ?, change_time = ?, access_time = ?
 WHERE id = ?;
 
--- name: UpsertLogicFile :exec
+-- name: UpsertLogicFile :execresult
 INSERT INTO _logic_file (
     user_id,
     parent_id,
@@ -45,6 +45,7 @@ VALUES (
     ?   -- access_time
 )
 ON DUPLICATE KEY UPDATE
+    id = LAST_INSERT_ID(id),
     user_id = VALUES(user_id),
     file_id = VALUES(file_id),
     mode = VALUES(mode),
@@ -97,4 +98,4 @@ WHERE user_id = ? AND (
 );
 
 -- name: GetEarliestCrated :one
-SELECT min(createTime) FROM _logic_file WHERE file_id=?;
+SELECT min(create_time) FROM _logic_file WHERE file_id=?;

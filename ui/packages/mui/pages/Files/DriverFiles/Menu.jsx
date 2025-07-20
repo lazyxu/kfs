@@ -4,6 +4,7 @@ import { noteError, noteSuccess } from "@kfs/mui/components/Notification";
 import { Add, Bookmark, ContentPaste, CreateNewFolder, DriveFolderUpload, History, IosShare, Settings, UploadFile } from "@mui/icons-material";
 import { Box, LinearProgress, ListItemText, MenuItem, Typography } from "@mui/material";
 import { useRef, useState } from "react";
+import NewBaiduPhoto from "../NewDriver/NewBaiduPhoto";
 import Sha256Worker from "./sha256.worker.js?worker";
 import UploadChunkWorker from "./uploadChunk.worker.js?worker";
 
@@ -13,6 +14,8 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
     const fileInputRef = useRef();
     const [progress, setProgress] = useState(null);
     const [folderDialog, setFolderDialog] = useState(false);
+    const [syncFloderDialog, setSyncFloderDialog] = useState(false);
+    
     const [folderName, setFolderName] = useState("");
 
     console.log("Menu contextMenu", contextMenu);
@@ -132,6 +135,13 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
                     <CreateNewFolder />
                     <ListItemText>新建文件夹</ListItemText>
                 </MenuItem>
+                <MenuItem onClick={async () => {
+                    onClose();
+                    setSyncFloderDialog(true);
+                }}>
+                    <CreateNewFolder />
+                    <ListItemText>新建同步文件夹</ListItemText>
+                </MenuItem>
                 <MenuItem disabled>
                     <ContentPaste />
                     <ListItemText>粘贴</ListItemText>
@@ -174,6 +184,9 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
                     </Box>
                 </Box>
             )}
+            {syncFloderDialog && <NewBaiduPhoto onSucc={()=> {
+                setSyncFloderDialog(false);
+            }} />}
             {progress && (
                 <Box sx={{ width: 300, p: 2, position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 9999, bgcolor: "#fff", borderRadius: 2, boxShadow: 3 }}>
                     <Typography variant="body2">{progress.status}</Typography>

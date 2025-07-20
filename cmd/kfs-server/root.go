@@ -175,51 +175,6 @@ var rootCmd = &cobra.Command{
 				fmt.Fprintln(os.Stderr, "GetUserByName error:", err)
 			}
 			fmt.Println("User:", user)
-			userID := user.ID
-			// 插入文件
-			res, err := q.InsertFile(context.Background(), sqlc.InsertFileParams{
-				Size:   12345,
-				Md5:    "d41d8cd98f00b204e980067ae2aefaef",
-				Sha256: "e3b0c44298fc6cdcd5eaab0e63b8b8f6c7d4fb5c0f6e8d1c4f8b2a3d9f8b8f6c",
-			})
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "InsertFile error:", err)
-				os.Exit(1)
-			}
-			fileID, err := res.LastInsertId()
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "LastInsertId error:", err)
-				os.Exit(1)
-			}
-			fmt.Println("Inserted file ID:", fileID)
-
-			// 查询文件
-			logicFiles, err := q.ListLogicFilesByUserId(context.Background(), userID)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
-			}
-			fmt.Printf("logicFiles: %+v\n", logicFiles)
-
-			// 更新文件
-			err = q.SetLogicFileByPath(context.Background(), 1, []string{"test", "path"}, "ttt", sql.NullInt64{Int64: fileID, Valid: true}, 0644, 12345, 1622547800, 1622547800, 1622547800, 1622547800, true)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "SetLogicFileByPath error:", err)
-				// 查询文件
-				logicFiles, err = q.ListLogicFilesByUserId(context.Background(), userID)
-				if err != nil {
-					fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
-				}
-				fmt.Printf("logicFiles: %+v\n", logicFiles)
-				os.Exit(1)
-			}
-			fmt.Println("Logic file updated")
-
-			// 查询文件
-			logicFiles, err = q.ListLogicFilesByUserId(context.Background(), userID)
-			if err != nil {
-				fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
-			}
-			fmt.Printf("logicFiles: %+v\n", logicFiles)
 		}
 		webPortString := cmd.Flag(WebServerStr).Value.String()
 		webPort, err := strconv.Atoi(webPortString)

@@ -15,11 +15,7 @@ export function Window({ id, children }) {
 export function TitleBar({ id, title, buttons }) {
     const [windows, setWindows] = useWindows();
     return (
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{
-            color: theme => theme.context.secondary,
-            backgroundColor: theme => theme.background.secondary,
-        }}
-        >
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Box sx={{ paddingLeft: "1em" }}>
                 {title}
             </Box>
@@ -47,8 +43,6 @@ export function WorkingArea({ children }) {
     return (
         <DialogContent sx={{
             padding: "0", paddingLeft: "5px",
-            color: theme => theme.context.primary,
-            backgroundColor: theme => theme.background.primary,
         }}>
             {children}
         </DialogContent>
@@ -59,8 +53,6 @@ export function StatusBar({ children }) {
     return (
         <Box sx={{
             flex: "0 0 auto", padding: "8px",
-            color: theme => theme.context.secondary,
-            backgroundColor: theme => theme.background.secondary,
         }}>
             {children}
         </Box>

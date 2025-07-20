@@ -3,6 +3,7 @@ package metadata
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -115,6 +116,7 @@ func addTaskCnt() {
 }
 
 func addTaskError(err error) {
+	fmt.Printf("addTaskError: %v\n", err)
 	mutex.Lock()
 	taskInfo.Errors = append(taskInfo.Errors, err.Error())
 	mutex.Unlock()
@@ -148,6 +150,7 @@ func StartOrStop(kfsCore *core.KFS, start bool, all bool) {
 			setTaskStatus(StatusCanceled)
 			return
 		}
+		fmt.Printf("analyze error: %v\n", err)
 		setTaskStatus(StatusError)
 	}()
 }

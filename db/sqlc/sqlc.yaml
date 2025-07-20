@@ -2,14 +2,14 @@ version: "2"
 sql:
   - engine: "mysql"
     queries:
-      - "user.sql"
-      - "file.sql"
-      - "exif.sql"
-      - "media.sql"
-      - "device.sql"
-      - "logic_file.sql"
-      - sync_from.sql
+      - user.sql
+      - file.sql
+      - exif.sql
+      - media.sql
+      - device.sql
+      - logic_file.sql
       - livp.sql
+      - sync_from.sql
     schema: "schema.sql"
     gen:
       go:

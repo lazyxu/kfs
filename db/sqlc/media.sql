@@ -13,13 +13,10 @@ SELECT * FROM _file_type;
 
 -- DCIM Metadata
 -- name: UpsertDCIMMetadataTime :exec
-INSERT INTO _dcim_metadata_time (id, time, year, month, day)
-VALUES (?, ?, ?, ?, ?)
+INSERT INTO _dcim_metadata_time (id, time)
+VALUES (?, ?)
 ON DUPLICATE KEY UPDATE
-    time = VALUES(time),
-    year = VALUES(year),
-    month = VALUES(month),
-    day = VALUES(day);
+    time = VALUES(time);
 -- name: GetDCIMMetadataTime :one
 SELECT * FROM _dcim_metadata_time WHERE id = ?;
 

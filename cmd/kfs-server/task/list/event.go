@@ -46,21 +46,13 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 	if filePath == nil {
 		filePath = []string{}
 	}
-	var userID int64
-	// 查询文件
-	logicFiles, err := kfsCore.Q.ListLogicFilesByUserId(context.Background(), userID)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "GetLogicFileByPath error:", err)
-	}
-	fmt.Printf("logicFiles: %+v\n", logicFiles)
-	fmt.Printf("ListDir: %d, %+v\n", userID, filePath)
+	var userID int64 = 1
 	_, files, err := kfsCore.Q.ListDir(c.Request().Context(), userID, filePath)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
 		return err
 	}
-	fmt.Printf("files: %+v\n", files)
 
 	n := len(files)
 	send(c, Response{N: n})

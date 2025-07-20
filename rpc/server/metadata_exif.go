@@ -162,7 +162,7 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 		}
 		e, err := GetExifData(kfsCore, size, md5, sha256)
 		if err != nil {
-			err = kfsCore.Q.InsertHeightWidth(ctx, sqlc.InsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
+			err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
 			// TODO: what if exist
 			if err != nil {
 				return err
@@ -174,7 +174,7 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 			}
 			return nil
 		}
-		err = kfsCore.Q.InsertHeightWidth(ctx, sqlc.InsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
+		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
 		// TODO: what if exist
 		if err != nil {
 			return err
@@ -184,7 +184,7 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 		if err != nil {
 			return err
 		}
-		err = kfsCore.Q.InsertExif(ctx, sqlc.InsertExifParams{
+		err = kfsCore.Q.UpsertExif(ctx, sqlc.UpsertExifParams{
 			ID:                  id,
 			ExifVersion:         sqlc.NString(e.ExifVersion),
 			ImageDescription:    sqlc.NString(e.ImageDescription),
@@ -232,7 +232,7 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 			}
 			return nil
 		}
-		err = kfsCore.Q.InsertHeightWidth(ctx, sqlc.InsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
+		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
 		// TODO: what if exist
 		if err != nil {
 			return err

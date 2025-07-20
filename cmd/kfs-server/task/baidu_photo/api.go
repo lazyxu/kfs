@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"crypto/tls"
+	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -17,8 +18,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	json "github.com/json-iterator/go"
 	"github.com/lazyxu/kfs/core"
-	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/rpc/server"
+	"github.com/lazyxu/kfs/db/sqlc"
 )
 
 type TokenErrResp struct {
@@ -51,30 +51,35 @@ type DriverBaiduPhoto struct {
 // 1)大小限制：图片大于50M和视频大于100M的，不支持导入；
 // 2)时间限制：图片缺少拍摄时间信息的不支持导入；
 // 3)位置限制：仅支持【来自：手机型号】文件夹（如果用户需要导入其他文件夹，可以在网盘里把文件夹移至该里）。
+
+var cookieString string = "BDUSS_BFESS=W1pVXZQSE9KZjhsc2tBS1FjWVFiTFpGaUsyY1h2ZE5mQ1JkZ2RTQzZjNEttNkpvSUFBQUFBJCQAAAAAAAAAAAEAAACamFMptqu3vdDHs71vAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoOe2gKDntoL; STOKEN=8985988b8dff1bb0a9a1e7c7e72546395d5f27a170dc968526034ff086472a02; "
+
 var client = resty.New().
 	SetHeader("user-agent", UserAgent).
-	SetRetryCount(3).
+	SetRetryCount(3).SetRetryWaitTime(3*time.Second).
+	SetHeader("Cookie", cookieString).
 	SetTimeout(100 * time.Second). // (100M) / (1M/s) = 100s
 	SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
-func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, name, description, code string) (bool, error) {
+func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, dirPath []string, name, code, cron string, syncAtStart bool) error {
 	accessToken, refreshToken, err := authByCode(ctx, client, AppKey, SecretKey, code)
 	if err != nil {
-		return false, err
+		return err
 	}
-	exist, err := kfsCore.Db.InsertDriverBaiduPhoto(ctx, name, description, accessToken, refreshToken)
+	t := time.Now().UnixNano()
+	var userID int64 = 1
+	id, err := kfsCore.Q.SetLogicFileByPath(ctx, userID, dirPath, name,
+		sql.NullInt64{Valid: false}, sqlc.DefaultDirPerm, 0, t, t, t, t, false)
 	if err != nil {
-		return false, err
+		return err
 	}
-	//d := &DriverBaiduPhoto{
-	//	kfsCore:      kfsCore,
-	//	AccessToken:  accessToken,
-	//	RefreshToken: refreshToken,
-	//	AppKey:       AppKey,
-	//	SecretKey:    SecretKey,
-	//}
-	//d.test(ctx, name)
-	return exist, nil
+	return kfsCore.Q.UpsertSyncFromBaiduPhoto(ctx, sqlc.UpsertSyncFromBaiduPhotoParams{
+		ID:           id,
+		Cron:         cron,
+		SyncAtStart:  syncAtStart,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	})
 }
 
 func (d *DriverBaiduPhoto) Get(ctx context.Context, furl string, callback func(req *resty.Request), resp interface{}) error {
@@ -83,6 +88,29 @@ func (d *DriverBaiduPhoto) Get(ctx context.Context, furl string, callback func(r
 
 func (d *DriverBaiduPhoto) WGet(ctx context.Context, furl string, output string) error {
 	return d.Request(ctx, furl, http.MethodGet, nil, nil, output)
+}
+
+func parseCookies(cookieStr string) []*http.Cookie {
+	cookies := []*http.Cookie{}
+	pairs := strings.Split(cookieStr, ";")
+
+	for _, pair := range pairs {
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			continue
+		}
+
+		kv := strings.SplitN(pair, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		println("cookie", kv[0], kv[1])
+		cookies = append(cookies, &http.Cookie{
+			Name:  strings.TrimSpace(kv[0]),
+			Value: strings.TrimSpace(kv[1]),
+		})
+	}
+	return cookies
 }
 
 func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method string, callback func(req *resty.Request), resp interface{}, output string) (err error) {
@@ -95,13 +123,16 @@ func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method stri
 			fmt.Printf("%+v\n", time.Now().Sub(t).Seconds())
 		}
 	}()
-	req.SetContext(ctx).SetQueryParam("access_token", d.AccessToken)
+	// req.SetContext(ctx).SetQueryParam("access_token", d.AccessToken)
 	if output != "" {
 		req.SetOutput(output)
 	}
 	if callback != nil {
 		callback(req)
 	}
+
+	// req.SetContext(ctx).SetQueryParam("accessToken", d.AccessToken)
+	fmt.Printf("Request %s %s %v\n", method, furl, req.QueryParam)
 	if resp != nil {
 		req.SetResult(resp)
 	}
@@ -109,7 +140,8 @@ func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method stri
 	if err != nil {
 		return err
 	}
-
+	fmt.Printf("res %v\n", res)
+	fmt.Printf("resp %v\n", resp)
 	erron := json.ConfigCompatibleWithStandardLibrary.Get(res.Body(), "errno").ToInt()
 	switch erron {
 	case 0:
@@ -121,11 +153,20 @@ func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method stri
 	case 50100:
 		return fmt.Errorf("illegal title, only supports 50 characters")
 	case -6:
+		fmt.Printf("d %v, err: %v\n", d, err)
 		d.AccessToken, d.RefreshToken, err = refreshToken(ctx, client, d.AppKey, d.SecretKey, d.RefreshToken)
+		fmt.Printf("d %v, err: %v\n", d, err)
 		if err != nil {
 			return err
 		}
-		// TODO: save accessToken and refreshToken to db.
+		err = d.kfsCore.Q.UpdateSyncFromBaiduPhoto(ctx, sqlc.UpdateSyncFromBaiduPhotoParams{
+			ID:           d.id,
+			AccessToken:  d.AccessToken,
+			RefreshToken: d.RefreshToken,
+		})
+		if err != nil {
+			return err
+		}
 		// Do not need to goto execute since we have set SetRetryCount to 3.
 	default:
 		return fmt.Errorf("errno: %d, refer to https://photo.baidu.com/union/doc", erron)
@@ -156,18 +197,19 @@ func formatPath(filePath string) ([]string, string, error) {
 	return newPathList[0 : len(newPathList)-1], newPathList[len(newPathList)-1], nil
 }
 
-func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, hash string) error {
-	dirPath, name, err := formatPath(file.Path)
+func (d *DriverBaiduPhoto) Download(ctx context.Context, bdFile BaiduFile, file *sqlc.File) error {
+	dirPath, name, err := formatPath(bdFile.Path)
 	if err != nil {
 		return err
 	}
-	size := uint64(file.Size)
-	if hash == "" {
-		fmt.Printf("download %s\n", file.Path)
-		downloadPath, err := d.GetDownloadPath(ctx, file.Fsid)
+	var sha256 string
+	if file == nil {
+		fmt.Printf("download %d %s\n", bdFile.Fsid, bdFile.Path)
+		downloadPath, err := d.GetDownloadPath(ctx, bdFile.Fsid)
 		if err != nil {
 			return err
 		}
+		fmt.Printf("GetDownloadPath %s\n", downloadPath)
 		tempFilePath, err := d.DownloadFile(ctx, name, downloadPath)
 		if err != nil {
 			return err
@@ -177,53 +219,54 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, file File, hash string)
 			return err
 		}
 		defer f.Close()
-		hash, err = getHash(f)
+		sha256, err = getHash(f)
 		if err != nil {
 			return err
 		}
-		_, err = d.kfsCore.S.Write(hash, func(w io.Writer, hasher io.Writer) (e error) {
-			_, err := f.Seek(0, io.SeekStart)
-			if err != nil {
-				return err
-			}
-			rr := io.TeeReader(f, hasher)
-			_, err = io.Copy(w, rr)
-			return err
-		})
+		_, err = d.kfsCore.S2.Add(bdFile.Md5, sha256, f)
 		if err != nil {
 			return err
 		}
 	} else {
-		fmt.Printf("exist %s with sha256 %s\n", file.Path, hash)
+		fmt.Printf("exist %s with file %v\n", bdFile.Path, file)
+		sha256 = file.Sha256
 	}
-	err = d.kfsCore.Db.InsertFile(ctx, hash, size)
+	res, err := d.kfsCore.Q.UpsertFile(ctx, sqlc.UpsertFileParams{
+		Size:   bdFile.Size,
+		Md5:    bdFile.Md5,
+		Sha256: sha256,
+	})
 	if err != nil {
 		return err
 	}
-	err = d.kfsCore.Db.InsertFileMd5(ctx, hash, file.Md5)
+	id, err := res.LastInsertId()
 	if err != nil {
 		return err
 	}
-	err = d.kfsCore.Db.UpsertDriverFile(ctx, dao.DriverFile{
-		DriverId:   d.driverId,
-		DirPath:    dirPath,
-		Name:       name,
-		Version:    0,
-		Hash:       hash,
-		Mode:       0o777,
-		Size:       size,
-		CreateTime: uint64(file.ShootTime),
-		ModifyTime: uint64(file.ShootTime),
-		ChangeTime: uint64(file.ShootTime),
-		AccessTime: uint64(file.ShootTime),
-	}, true)
+	var userID int64 = 1
+	_, err = d.kfsCore.Q.SetLogicFileByPath(ctx, userID, dirPath, name,
+		sql.NullInt64{Valid: true, Int64: id}, sqlc.DefaultFilePerm, bdFile.Size,
+		bdFile.ShootTime, bdFile.ShootTime, bdFile.ShootTime, bdFile.ShootTime, true)
+	// err = d.kfsCore.Q.SetLogicFileByPath(ctx, dao.DriverFile{
+	// 	DriverId:   d.driverId,
+	// 	DirPath:    dirPath,
+	// 	Name:       name,
+	// 	Version:    0,
+	// 	Hash:       hash,
+	// 	Mode:       0o777,
+	// 	Size:       size,
+	// 	CreateTime: uint64(bdFile.ShootTime),
+	// 	ModifyTime: uint64(bdFile.ShootTime),
+	// 	ChangeTime: uint64(bdFile.ShootTime),
+	// 	AccessTime: uint64(bdFile.ShootTime),
+	// }, true)
 	if err != nil {
 		return err
 	}
-	err = server.PluginUnzipIfLivp(ctx, d.kfsCore, hash, name)
-	if err != nil {
-		return err
-	}
+	// err = server.PluginUnzipIfLivp(ctx, d.kfsCore, hash, name)
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -233,7 +276,8 @@ func (d *DriverBaiduPhoto) GetDownloadPath(ctx context.Context, fsid int64) (str
 	}
 	err := d.Get(ctx, FILE_API_URL_V2+"/download", func(r *resty.Request) {
 		r.SetQueryParams(map[string]string{
-			"fsid": fmt.Sprint(fsid),
+			"fsid":       fmt.Sprint(fsid),
+			"clienttype": "70",
 		})
 	}, &downloadUrl)
 	if err != nil {
@@ -267,10 +311,10 @@ func (p Page) HasNextPage() bool {
 type (
 	FileListResp struct {
 		Page
-		List []File `json:"list"`
+		List []BaiduFile `json:"list"`
 	}
 
-	File struct {
+	BaiduFile struct {
 		Fsid      int64  `json:"fsid"` // 文件ID
 		Path      string `json:"path"` // 文件路径
 		Size      int64  `json:"size"`
@@ -284,7 +328,14 @@ type (
 	}
 )
 
-func (d *DriverBaiduPhoto) GetAllFile(ctx context.Context, cb func([]File) bool) error {
+func (d *DriverBaiduPhoto) GetAllFile(ctx context.Context, cb func([]BaiduFile) bool) error {
+	// list := []File{
+	// 	File{
+	// 		Fsid: 1081059821377677,
+	// 		Path: "/youa/album/1717326331735.heic",
+	// 	},
+	// }
+	// cb(list)
 	var cursor string
 	for {
 		var resp FileListResp

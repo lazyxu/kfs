@@ -134,9 +134,17 @@ export default function ({ id }) {
                 {(taskInfo?.status === StatusFinished ||
                     taskInfo?.status === StatusCanceled ||
                     taskInfo?.status === StatusError) &&
-                    <Box sx={{ padding: "0.5em 1em" }}>
-                        上次执行结果：{taskInfo?.cnt}/{taskInfo?.total}
-                    </Box>
+                    <>
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            上次执行结果：{taskInfo?.cnt}/{taskInfo?.total}
+                        </Box>
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            错误：{taskInfo?.errors?.length || 0}
+                        </Box>
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            剩余：{taskInfo?.total - (taskInfo?.cnt || 0) - (taskInfo?.errors?.length || 0)}
+                        </Box>
+                    </>
                 }
             </WorkingArea>
         </Window>

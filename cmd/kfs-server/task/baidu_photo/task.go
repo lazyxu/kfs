@@ -256,7 +256,7 @@ func (d *DriverBaiduPhoto) StartOrStop(ctx context.Context, start bool) {
 	}()
 }
 
-func toStringSlice(s []File) []string {
+func toStringSlice(s []BaiduFile) []string {
 	c := make([]string, len(s))
 	for i, v := range s {
 		c[i] = v.Md5
@@ -273,10 +273,9 @@ func (d *DriverBaiduPhoto) Analyze2(ctx context.Context) (err error) {
 		_, err = d.kfsCore.Q.SetLivpForMovAndHeicOrJpgInDriver(ctx)
 	}()
 	var err1 error
-	err = d.GetAllFile(ctx, func(list []File) bool {
+	err = d.GetAllFile(ctx, func(list []BaiduFile) bool {
 		d.addTaskTotal(len(list))
-		var m map[string]string
-		m, err1 = d.kfsCore.Q.ListFileMd5(ctx, toStringSlice(list))
+		filterdList, err1 := d.kfsCore.Q.ListFileMd5(ctx, toStringSlice(list))
 		if err1 != nil {
 			return false
 		}
@@ -288,7 +287,7 @@ func (d *DriverBaiduPhoto) Analyze2(ctx context.Context) (err error) {
 				return false
 			default:
 			}
-			err1 = d.Download(ctx, f, m[f.Md5])
+			err1 = d.Download(ctx, f, filterdList[f.Md5])
 			if err1 != nil {
 				return false
 			}
@@ -315,10 +314,9 @@ func (d *DriverBaiduPhoto) Analyze(ctx context.Context) (err error) {
 		err = d.kfsCore.Db.SetLivpForMovAndHeicOrJpgInDriver(ctx, d.driverId)
 	}()
 	var err1 error
-	err = d.GetAllFile(ctx, func(list []File) bool {
+	err = d.GetAllFile(ctx, func(list []BaiduFile) bool {
 		d.addTaskTotal(len(list))
-		var m map[string]string
-		m, err1 = d.kfsCore.Db.ListFileMd5(ctx, toStringSlice(list))
+		_, err1 := d.kfsCore.Db.ListFileMd5(ctx, toStringSlice(list))
 		if err1 != nil {
 			return false
 		}
@@ -330,7 +328,7 @@ func (d *DriverBaiduPhoto) Analyze(ctx context.Context) (err error) {
 				return false
 			default:
 			}
-			err1 = d.Download(ctx, f, m[f.Md5])
+			err1 = d.Download(ctx, f, nil)
 			if err1 != nil {
 				return false
 			}

@@ -34,15 +34,26 @@ func apiNewDriver(c echo.Context) error {
 }
 
 func apiNewDriverBaiduPhoto(c echo.Context) error {
-	name := c.QueryParam("name")
-	description := c.QueryParam("description")
-	code := c.QueryParam("code")
-	exist, err := baidu_photo.InsertDriverBaiduPhoto(c.Request().Context(), kfsCore, name, description, code)
+	type request struct {
+		DirPath     []string `json:"dirPath",omitempty`
+		Name        string   `json:"name"`
+		Code        string   `json:"code"`
+		Cron        string   `json:"cron"`
+		SyncAtStart bool     `json:"syncAtStart"`
+	}
+
+	var req request
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "无效请求参数"})
+	}
+
+	fmt.Printf("apiNewDriverBaiduPhoto: %+v\n", req)
+	err := baidu_photo.InsertDriverBaiduPhoto(c.Request().Context(), kfsCore, req.DirPath, req.Name, req.Code, req.Cron, req.SyncAtStart)
 	if err != nil {
 		c.Logger().Error(err)
 		return err
 	}
-	return ok(c, exist)
+	return c.String(http.StatusOK, "")
 }
 
 func apiNewDriverLocalFile(c echo.Context) error {
@@ -172,6 +183,16 @@ func startCloudSync2(id int64, cronStr string) {
 		}
 		t.c.Stop()
 	}
+	// {
+	// 	ctx, cancel := context.WithCancel(context.TODO())
+	// 	t.cancel = cancel
+	// 	d, err := baidu_photo.GetOrLoad(ctx, kfsCore, id)
+	// 	if err != nil {
+	// 		cronTasks.LoadAndDelete(id)
+	// 		return
+	// 	}
+	// 	d.StartOrStop2(ctx, true)
+	// }
 	_, err := t.c.AddFunc(cronStr, func() {
 		ctx, cancel := context.WithCancel(context.TODO())
 		t.cancel = cancel
@@ -183,7 +204,8 @@ func startCloudSync2(id int64, cronStr string) {
 		d.StartOrStop2(ctx, true)
 	})
 	if err != nil {
-		panic(err)
+		fmt.Println("startCloudSync2 error", err)
+		return
 	}
 	t.c.Start()
 }

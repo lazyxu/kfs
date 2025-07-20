@@ -127,16 +127,32 @@ export default function ({ id }) {
                     上次执行结束时间：{taskInfo?.lastDoneTime ? moment(taskInfo?.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss") : "无记录"}
                 </Box>
                 {(taskInfo?.status === StatusRunningAnalyze) &&
-                    <Box sx={{ padding: "0.5em 1em" }}>
-                        当前进度：{taskInfo?.cnt}/{taskInfo?.total}
-                    </Box>
+                    <>
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            当前进度：{taskInfo?.cnt}/{taskInfo?.total}
+                        </Box>
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            错误：{taskInfo?.errors?.length || 0}
+                        </Box>
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            剩余：{taskInfo?.total - (taskInfo?.cnt || 0) - (taskInfo?.errors?.length || 0)}
+                        </Box>
+                    </>
                 }
                 {(taskInfo?.status === StatusFinished ||
                     taskInfo?.status === StatusCanceled ||
                     taskInfo?.status === StatusError) &&
-                    <Box sx={{ padding: "0.5em 1em" }}>
-                        上次执行结果：{taskInfo?.cnt}/{taskInfo?.total}
-                    </Box>
+                    <>
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            上次执行结果：{taskInfo?.cnt}/{taskInfo?.total}
+                        </Box>
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            错误：{taskInfo?.errors?.length || 0}
+                        </Box>
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            剩余：{taskInfo?.total - (taskInfo?.cnt || 0) - (taskInfo?.errors?.length || 0)}
+                        </Box>
+                    </>
                 }
             </WorkingArea>
         </Window>

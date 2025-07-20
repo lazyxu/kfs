@@ -1,4 +1,4 @@
--- name: InsertFile :execresult
+-- name: UpsertFile :execresult
 INSERT INTO _file (size, md5, sha256) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id);
 -- name: GetFileByID :one
 SELECT * FROM _file WHERE id = ?;
@@ -39,4 +39,4 @@ LEFT JOIN _exif ex
     ON ft.id = ex.id  -- 关联条件保持不变
 WHERE ft.id = ?;
 -- name: ListFileExpectFileType :many
-SELECT * FROM _file EXCEPT SELECT id FROM _file_type;
+SELECT id, size, md5, sha256 FROM _file EXCEPT SELECT id, NULL, NULL, NULL FROM _file_type;

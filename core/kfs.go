@@ -234,7 +234,10 @@ func (fs *KFS) TransCodeDir() string {
 }
 
 func (fs *KFS) Close() error {
-	err1 := fs.S.Close()
+	var err1 error
+	if fs.S != nil {
+		err1 = fs.S.Close()
+	}
 	err2 := fs.Db.Close()
 	if err1 != nil {
 		return err1

@@ -1,5 +1,5 @@
 import { httpPostBody as httpPostBodyLocal } from "@kfs/common/api/localServer";
-import { httpDelete, httpGet, httpPost } from "@kfs/common/api/webServer";
+import { httpDelete, httpGet, httpPost, httpPostJson } from "@kfs/common/api/webServer";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { noteError } from "@kfs/mui/components/Notification";
 
@@ -27,13 +27,10 @@ export async function newDriver(name, description) {
     }
 }
 
-export async function newDriverBaiduPhoto(name, description, code) {
+export async function newDriverBaiduPhoto(dirPath, name, code, cron, syncAtStart) {
     try {
-        console.log('api.newDriverBaiduPhoto', name, description, code);
-        let exist = await httpPost("/api/v1/driverBaiduPhotos", { name, description, code });
-        if (exist) {
-            throw new Error("云盘名称重复: " + name);
-        }
+        console.log('api.newDriverBaiduPhoto', dirPath, name, code, cron, syncAtStart);
+        await httpPostJson("/api/v1/driverBaiduPhotos", { dirPath, name, code, cron, syncAtStart });
     } catch (e) {
         noteError("创建云盘失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;

@@ -2,6 +2,7 @@ package sqlc
 
 import (
 	"context"
+	"fmt"
 	"strings"
 )
 
@@ -33,26 +34,27 @@ func toAny(s []string) []any {
 	return c
 }
 
-func (q *Queries) ListFileMd5(ctx context.Context, md5List []string) (m map[string]string, err error) {
-	query, err := getListFileMd5Query(len(md5List))
-	if err != nil {
-		return
-	}
+func (q *Queries) ListFileMd5(ctx context.Context, md5List []string) (m map[string]*File, err error) {
+	placeholders := strings.Repeat("?,", len(md5List)-1) + "?"
+	query := fmt.Sprintf("SELECT * FROM _file WHERE md5 IN (%s)", placeholders)
 	rows, err := q.db.QueryContext(ctx, query, toAny(md5List)...)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
-	m = make(map[string]string)
+	m = make(map[string]*File)
 	for rows.Next() {
-		var id, md5 string
+		var i File
 		err = rows.Scan(
-			&id,
-			&md5)
+			&i.ID,
+			&i.Size,
+			&i.Md5,
+			&i.Sha256,
+		)
 		if err != nil {
 			return
 		}
-		m[md5] = id
+		m[i.Md5] = &i
 	}
 	return
 }
