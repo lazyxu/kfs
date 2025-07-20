@@ -66,7 +66,7 @@ func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, dirPath []st
 	if err != nil {
 		return err
 	}
-	t := time.Now().UnixNano()
+	t := time.Now()
 	var userID int64 = 1
 	id, err := kfsCore.Q.SetLogicFileByPath(ctx, userID, dirPath, name,
 		sql.NullInt64{Valid: false}, sqlc.DefaultDirPerm, 0, t, t, t, t, false)
@@ -243,10 +243,11 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, bdFile BaiduFile, file 
 	if err != nil {
 		return err
 	}
+	createTime := time.Now()
 	var userID int64 = 1
 	_, err = d.kfsCore.Q.SetLogicFileByPath(ctx, userID, dirPath, name,
 		sql.NullInt64{Valid: true, Int64: id}, sqlc.DefaultFilePerm, bdFile.Size,
-		bdFile.ShootTime, bdFile.ShootTime, bdFile.ShootTime, bdFile.ShootTime, true)
+		createTime, time.Unix(bdFile.ShootTime, 0), time.Unix(bdFile.ShootTime, 0), time.Unix(bdFile.ShootTime, 0), true)
 	// err = d.kfsCore.Q.SetLogicFileByPath(ctx, dao.DriverFile{
 	// 	DriverId:   d.driverId,
 	// 	DirPath:    dirPath,

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 func (q *Queries) GetLogicFileByPath(ctx context.Context, userID int64, dirpath []string) (*LogicFile, *File, error) {
@@ -48,7 +49,7 @@ const DefaultDirPerm = int64(os.ModeDir | 0755)
 
 // 设置某路径的LogicFile，如果某一层不存在则创建（mkdir控制），只处理_logic_file表
 func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath []string, name string, fileID sql.NullInt64,
-	mode, size, createTime, modifyTime, changeTime, accessTime int64, mkdir bool) (int64, error) {
+	mode, size int64, createTime, modifyTime, changeTime, accessTime time.Time, mkdir bool) (int64, error) {
 	var parentID sql.NullInt64
 
 	for _, name := range dirpath {

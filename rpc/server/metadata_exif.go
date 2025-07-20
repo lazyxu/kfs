@@ -78,49 +78,48 @@ func getImageHeightWidth(kfsCore *core.KFS, hash string) (hw dao.HeightWidth, er
 const defaultOffset = "+08:00"
 
 func insertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e dao.Exif) error {
-	var t int64
+	var t time.Time
+	var err error
 	if e.DateTime != "" {
 		offset := e.OffsetTime
 		if offset == "" {
 			offset = defaultOffset
 		}
-		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTime+" "+offset)
+		t, err = time.Parse("2006:01:02 15:04:05 -07:00", e.DateTime+" "+offset)
 		if err != nil {
 			return err
 		}
-		t = tt.UnixNano()
 	} else if e.DateTimeOriginal != "" {
 		offset := e.OffsetTime
 		if offset == "" {
 			offset = defaultOffset
 		}
-		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeOriginal+" "+offset)
+		t, err = time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeOriginal+" "+offset)
 		if err != nil {
 			return err
 		}
-		t = tt.UnixNano()
 	} else if e.DateTimeDigitized != "" {
 		offset := e.OffsetTime
 		if offset == "" {
 			offset = defaultOffset
 		}
-		tt, err := time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeDigitized+" "+offset)
+		t, err = time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeDigitized+" "+offset)
 		if err != nil {
 			return err
 		}
-		t = tt.UnixNano()
 	}
-	if t == 0 {
+	if t.IsZero() {
 		var err error
 		iter, err := kfsCore.Q.GetEarliestCrated(ctx, sql.NullInt64{Int64: id, Valid: true})
 		if err != nil {
 			return err
 		}
-		t = iter.(int64)
+		t = iter.(time.Time)
 	}
-	err := kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{
+	fmt.Printf("insertImageTime: %d %s\n", id, t)
+	err = kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{
 		ID:   id,
-		Time: sqlc.NInt64(t),
+		Time: t,
 	})
 	if err != nil {
 		return err
@@ -129,21 +128,22 @@ func insertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e dao.Exi
 }
 
 func insertVideoTime(ctx context.Context, kfsCore *core.KFS, id int64, m dao.VideoMetadata) error {
-	t := m.Created
-	if t == 0 {
-		t = m.Modified
+	t := time.Unix(m.Created, 0)
+	if t.IsZero() {
+		t = time.Unix(m.Modified, 0)
 	}
-	if t == 0 {
+	if t.IsZero() {
 		var err error
 		iter, err := kfsCore.Q.GetEarliestCrated(ctx, sql.NullInt64{Int64: id, Valid: true})
 		if err != nil {
 			return err
 		}
-		t = iter.(int64)
+		t = iter.(time.Time)
 	}
+	fmt.Printf("insertVideoTime: %d %s\n", id, t)
 	err := kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{
 		ID:   id,
-		Time: sqlc.NInt64(t),
+		Time: t,
 	})
 	if err != nil {
 		return err

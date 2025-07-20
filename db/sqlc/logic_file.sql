@@ -98,4 +98,11 @@ WHERE user_id = ? AND (
 );
 
 -- name: GetEarliestCrated :one
-SELECT min(create_time) FROM _logic_file WHERE file_id=?;
+SELECT LEAST(
+    create_time,
+    modify_time,
+    change_time,
+    access_time
+) AS min_time
+FROM _logic_file
+WHERE file_id = ?;

@@ -114,7 +114,7 @@ case $1 in
           go build -o kfs-server
         fi
         ;;
-      # cmd/kfs-server/kfs-server --database-type mysql --data-source-name 'root:passwd@(localhost:3306)/kfs-0714-8?parseTime=true&multiStatements=true'
+      # ./scripts.sh build server && ./cmd/kfs-server/kfs-server --database-type mysql --data-source-name "root:passwd@tcp(127.0.0.1:3306)/kfs-0720-2?parseTime=true&loc=Asia%2FShanghai&multiStatements=true"
       server)
         cd $root/ui/web
 #        yarn install --check-files --network-timeout 1000000

@@ -637,7 +637,7 @@ func apiCreateFolder(c echo.Context) error {
 	}
 
 	// 调用核心服务创建文件夹
-	t := time.Now().UnixNano()
+	t := time.Now()
 	var userID int64 = 1
 	_, err := kfsCore.Q.SetLogicFileByPath(c.Request().Context(), userID, req.DirPath, req.FolderName,
 		sql.NullInt64{Valid: false}, sqlc.DefaultDirPerm, 0, t, t, t, t, false)
@@ -718,7 +718,7 @@ func apiMergeFileChunks(c echo.Context) error {
 		FileMeta    struct {
 			Name         string `json:"name"`
 			Size         int64  `json:"size"`
-			LastModified int64  `json:"lastModified"`
+			LastModified int64  `json:"lastModified"` // ms
 			Type         string `json:"type"`
 		} `json:"fileMeta"`
 	}
@@ -780,9 +780,11 @@ func apiMergeFileChunks(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "get last insert id failed: "+err.Error())
 	}
 	var userID int64 = 1
+	createTime := time.Now()
+	t := time.UnixMilli(req.FileMeta.LastModified)
 	_, err = kfsCore.Q.SetLogicFileByPath(ctx, userID, req.DirPath, req.FileMeta.Name,
 		sql.NullInt64{Valid: true, Int64: fileID}, defaultFilePerm, size,
-		req.FileMeta.LastModified, req.FileMeta.LastModified, req.FileMeta.LastModified, req.FileMeta.LastModified, false)
+		createTime, t, t, t, false)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "upsert driver file failed: "+err.Error())
 	}

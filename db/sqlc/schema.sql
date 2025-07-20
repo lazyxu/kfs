@@ -35,10 +35,10 @@ CREATE TABLE IF NOT EXISTS _logic_file (
     file_id       BIGINT          DEFAULT NULL,
     mode          BIGINT          NOT NULL,  -- isDirectory, isFile, isSymlink
     size          BIGINT          NOT NULL,
-    create_time   BIGINT          NOT NULL,  -- 创建时间
-    modify_time   BIGINT          NOT NULL,  -- 属性修改时间
-    change_time   BIGINT          NOT NULL,  -- 内容修改时间
-    access_time   BIGINT          NOT NULL,  -- 访问时间
+    create_time   DATETIME        NOT NULL,  -- 创建时间，跨盘跨设备移动文件时也会更新，linux未强制要求记录创建时间
+    modify_time   DATETIME        NOT NULL,  -- 内容修改时间，ls -l的时间
+    change_time   DATETIME        NOT NULL,  -- 属性修改时间，windows不支持
+    access_time   DATETIME        NOT NULL,  -- 访问时间
     FOREIGN KEY (parent_id)       REFERENCES _logic_file(id),
     FOREIGN KEY (file_id)         REFERENCES _file(id),
     -- FOREIGN KEY (current_version_id)  REFERENCES _version_file(id)
@@ -112,11 +112,8 @@ CREATE TABLE IF NOT EXISTS _video_metadata (
 );
 
 CREATE TABLE IF NOT EXISTS _dcim_metadata_time (
-    id       BIGINT       NOT NULL PRIMARY KEY,
-    time     BIGINT DEFAULT NULL,
-    year  BIGINT GENERATED ALWAYS AS (FROM_UNIXTIME(time / 1000, '%Y')) VIRTUAL,
-    month BIGINT GENERATED ALWAYS AS (FROM_UNIXTIME(time / 1000, '%c')) VIRTUAL,
-    day   BIGINT GENERATED ALWAYS AS (FROM_UNIXTIME(time / 1000, '%e')) VIRTUAL,
+    id       BIGINT     NOT NULL PRIMARY KEY,
+    time     DATETIME   NOT NULL,
     FOREIGN KEY (id) REFERENCES _file(id)
 );
 

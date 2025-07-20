@@ -1,7 +1,6 @@
-import { getPerm, modeIsDir } from '@kfs/common/api/utils';
-import { getDriversDirCalculatedInfo } from '@kfs/mui/api/driver';
+import { formatLinuxPermission, modeIsDir } from '@kfs/common/api/utils';
 import { Close } from '@mui/icons-material';
-import { Dialog, DialogContent, DialogTitle, Grid, Box } from "@mui/material";
+import { Box, Dialog, DialogContent, DialogTitle, Grid } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import humanize from 'humanize';
 import moment from "moment/moment";
@@ -70,21 +69,22 @@ export default ({ fileAttribute, onClose }) => {
                     <Attr k="类型">{isDir ? "文件夹" : "文件"}</Attr>
                     <Attr k="文件路径">{"/" + filePath.join("/")}</Attr>
                     {!isDir && <>
+                        <Attr k="文件ID">{driverFile.file_id.Int64}</Attr>
                         <Attr k="文件大小">{humanize.filesize(driverFile.size)}</Attr>
                         <Attr k="md5">{driverFile.md5}</Attr>
                         <Attr k="sha256">{driverFile.sha256}</Attr>
                     </>}
-                    <Attr k="文件权限">{getPerm(driverFile.mode).toString(8)}</Attr>
+                    <Attr k="文件权限">{formatLinuxPermission(driverFile.mode)}</Attr>
                     {/* {isDir && <>
                         <Attr k="目录下文件">共 {attributes.fileCount} 个，总大小 {humanize.filesize(attributes.fileSize)}</Attr>
                         <Attr k="目录下重复文件">共 {attributes.fileCount - attributes.distinctFileCount} 个，总大小  {humanize.filesize(attributes.fileSize - attributes.distinctFileSize)}</Attr>
                         <Attr k="子目录">共 {attributes.dirCount} 个</Attr>
                     </>
                     } */}
-                    <Attr k="创建时间">{formatTime(driverFile.createTime)}</Attr>
-                    <Attr k="属性修改时间">{formatTime(driverFile.changeTime)}</Attr>
-                    <Attr k="内容修改时间">{formatTime(driverFile.modifyTime)}</Attr>
-                    <Attr k="访问时间">{formatTime(driverFile.accessTime)}</Attr>
+                    <Attr k="创建时间">{driverFile.create_time}</Attr>
+                    <Attr k="属性修改时间">{driverFile.change_time}</Attr>
+                    <Attr k="内容修改时间">{driverFile.modify_time}</Attr>
+                    <Attr k="访问时间">{driverFile.access_time}</Attr>
                 </Grid>
                 </Box>
             </DialogContent>
