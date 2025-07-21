@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/baidu_photo"
 	"github.com/lazyxu/kfs/db/dbBase"
+	"github.com/lazyxu/kfs/db/sqlc"
 	"github.com/robfig/cron/v3"
 )
 
@@ -33,11 +34,13 @@ func apiNewDriver(c echo.Context) error {
 	return ok(c, exist)
 }
 
-func apiNewDriverBaiduPhoto(c echo.Context) error {
+func apiCreateBaiduPhoto(c echo.Context) error {
 	type request struct {
 		DirPath     []string `json:"dirPath",omitempty`
 		Name        string   `json:"name"`
-		Code        string   `json:"code"`
+		BdussBfess  string   `json:"bduss_bfess"`
+		Stoken      string   `json:"stoken"`
+		Enabled     bool     `json:"enabled"`
 		Cron        string   `json:"cron"`
 		SyncAtStart bool     `json:"syncAtStart"`
 	}
@@ -47,8 +50,39 @@ func apiNewDriverBaiduPhoto(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "无效请求参数"})
 	}
 
-	fmt.Printf("apiNewDriverBaiduPhoto: %+v\n", req)
-	err := baidu_photo.InsertDriverBaiduPhoto(c.Request().Context(), kfsCore, req.DirPath, req.Name, req.Code, req.Cron, req.SyncAtStart)
+	fmt.Printf("apiCreateBaiduPhoto: %+v\n", req)
+	err := baidu_photo.InsertDriverBaiduPhoto(c.Request().Context(), kfsCore, req.DirPath, req.Name, req.BdussBfess, req.Stoken, req.Cron, req.Enabled, req.SyncAtStart)
+	if err != nil {
+		c.Logger().Error(err)
+		return err
+	}
+	return c.String(http.StatusOK, "")
+}
+
+func apiUpdateBaiduPhoto(c echo.Context) error {
+	type request struct {
+		ID          int64  `json:"id"`
+		BdussBfess  string `json:"bduss_bfess"`
+		Stoken      string `json:"stoken"`
+		Enabled     bool   `json:"enabled"`
+		Cron        string `json:"cron"`
+		SyncAtStart bool   `json:"syncAtStart"`
+	}
+
+	var req request
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "无效请求参数"})
+	}
+
+	fmt.Printf("apiUpdateBaiduPhoto: %+v\n", req)
+	err := kfsCore.Q.UpsertSyncFromBaiduPhoto(c.Request().Context(), sqlc.UpsertSyncFromBaiduPhotoParams{
+		ID:          req.ID,
+		Cron:        req.Cron,
+		Enabled:     req.Enabled,
+		SyncAtStart: req.SyncAtStart,
+		BdussBfess:  req.BdussBfess,
+		Stoken:      req.Stoken,
+	})
 	if err != nil {
 		c.Logger().Error(err)
 		return err
@@ -161,13 +195,13 @@ type CronTask struct {
 }
 
 func startAllCloudSync() {
-	sf, err := kfsCore.Q.ListSync(context.TODO())
-	if err != nil {
-		panic(err)
-	}
-	for _, d := range sf {
-		startCloudSync2(d.ID, d.Cron)
-	}
+	// sf, err := kfsCore.Q.ListSync(context.TODO())
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// for _, d := range sf {
+	// 	startCloudSync2(d.ID, d.Cron)
+	// }
 }
 
 func startCloudSync2(id int64, cronStr string) {
@@ -211,33 +245,33 @@ func startCloudSync2(id int64, cronStr string) {
 }
 
 func startCloudSync(driverId uint64, h int64, m int64) {
-	actual, loaded := cronTasks.LoadOrStore(driverId, CronTask{
-		c:      cron.New(),
-		cancel: nil,
-	})
-	t := actual.(CronTask)
-	if loaded {
-		if t.cancel != nil {
-			t.cancel()
-			t.cancel = nil
-		}
-		t.c.Stop()
-	}
-	spec := fmt.Sprintf("%d %d * * ?", m, h)
-	_, err := t.c.AddFunc(spec, func() {
-		ctx, cancel := context.WithCancel(context.TODO())
-		t.cancel = cancel
-		d, err := baidu_photo.GetOrLoadDriver(ctx, kfsCore, driverId)
-		if err != nil {
-			cronTasks.LoadAndDelete(driverId)
-			return
-		}
-		d.StartOrStop(ctx, true)
-	})
-	if err != nil {
-		panic(err)
-	}
-	t.c.Start()
+	// actual, loaded := cronTasks.LoadOrStore(driverId, CronTask{
+	// 	c:      cron.New(),
+	// 	cancel: nil,
+	// })
+	// t := actual.(CronTask)
+	// if loaded {
+	// 	if t.cancel != nil {
+	// 		t.cancel()
+	// 		t.cancel = nil
+	// 	}
+	// 	t.c.Stop()
+	// }
+	// spec := fmt.Sprintf("%d %d * * ?", m, h)
+	// _, err := t.c.AddFunc(spec, func() {
+	// 	ctx, cancel := context.WithCancel(context.TODO())
+	// 	t.cancel = cancel
+	// 	d, err := baidu_photo.GetOrLoadDriver(ctx, kfsCore, driverId)
+	// 	if err != nil {
+	// 		cronTasks.LoadAndDelete(driverId)
+	// 		return
+	// 	}
+	// 	d.StartOrStop(ctx, true)
+	// })
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// t.c.Start()
 }
 
 func apiDeleteDriver(c echo.Context) error {

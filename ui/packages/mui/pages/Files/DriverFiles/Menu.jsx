@@ -4,19 +4,17 @@ import { noteError, noteSuccess } from "@kfs/mui/components/Notification";
 import { Add, Bookmark, ContentPaste, CreateNewFolder, DriveFolderUpload, History, IosShare, Settings, UploadFile } from "@mui/icons-material";
 import { Box, LinearProgress, ListItemText, MenuItem, Typography } from "@mui/material";
 import { useRef, useState } from "react";
-import NewBaiduPhoto from "../NewDriver/NewBaiduPhoto";
+import NewBaiduPhoto from "./CreateBaiduPhoto";
 import Sha256Worker from "./sha256.worker.js?worker";
 import UploadChunkWorker from "./uploadChunk.worker.js?worker";
+import CreateFolder from "./CreateFolder";
 
 const CHUNK_SIZE = 100 * 1024 * 1024; // 100MB
 
 export default function ({ contextMenu, setContextMenu, onUploaded }) {
     const fileInputRef = useRef();
     const [progress, setProgress] = useState(null);
-    const [folderDialog, setFolderDialog] = useState(false);
-    const [syncFloderDialog, setSyncFloderDialog] = useState(false);
-    
-    const [folderName, setFolderName] = useState("");
+    const [createFolderDialog, setCreateFolderDialog] = useState(false);
 
     console.log("Menu contextMenu", contextMenu);
     const onClose = () => setContextMenu(c => ({ ...c, open: false }))
@@ -70,42 +68,6 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
         }
         e.target.value = "";
     };
-
-    const handleNewFolderClick = async () => {
-        onClose();
-        // try {
-        //     await createFolder(0, contextMenu.dirPath, "new folder");
-        //     noteSuccess("新建文件夹成功");
-        //     setFolderDialog(false);
-        //     setContextMenu(null);
-        //     onUploaded?.();
-        // } catch (err) {
-        //     noteError("新建文件夹失败：" + (err?.message || err));
-        // }
-        setFolderDialog(true);
-        setFolderName("");
-    };
-
-    const handleFolderNameChange = (e) => {
-        setFolderName(e.target.value);
-    };
-
-    const handleCreateFolder = async () => {
-        if (!folderName.trim()) {
-            noteError("文件夹名称不能为空");
-            return;
-        }
-        try {
-            await createFolder(contextMenu.dirPath, folderName.trim());
-            noteSuccess("新建文件夹成功");
-            setFolderDialog(false);
-            setContextMenu(null);
-            onUploaded?.();
-        } catch (err) {
-            noteError("新建文件夹失败：" + (err?.message || err));
-        }
-    };
-
     return (
         <>
             <input
@@ -131,16 +93,12 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
                     <Add />
                     <ListItemText>新建文件</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={handleNewFolderClick}>
-                    <CreateNewFolder />
-                    <ListItemText>新建文件夹</ListItemText>
-                </MenuItem>
                 <MenuItem onClick={async () => {
                     onClose();
-                    setSyncFloderDialog(true);
+                    setCreateFolderDialog(true);
                 }}>
                     <CreateNewFolder />
-                    <ListItemText>新建同步文件夹</ListItemText>
+                    <ListItemText>新建文件夹</ListItemText>
                 </MenuItem>
                 <MenuItem disabled>
                     <ContentPaste />
@@ -163,29 +121,8 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
                     <ListItemText>添加书签</ListItemText>
                 </MenuItem>
             </Menu>
-            {/* 新建文件夹弹窗 */}
-            {folderDialog && (
-                <Box sx={{ width: 300, p: 2, position: "fixed", bottom: 100, left: "50%", transform: "translateX(-50%)", zIndex: 9999, bgcolor: "#fff", borderRadius: 2, boxShadow: 3 }}>
-                    <Typography variant="body2">新建文件夹</Typography>
-                    <input
-                        type="text"
-                        value={folderName}
-                        onChange={handleFolderNameChange}
-                        placeholder="输入文件夹名称"
-                        style={{ width: "100%", marginTop: 8, marginBottom: 8, padding: 4 }}
-                        autoFocus
-                        onKeyDown={e => {
-                            if (e.key === "Enter") handleCreateFolder();
-                        }}
-                    />
-                    <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
-                        <button onClick={() => setFolderDialog(false)}>取消</button>
-                        <button onClick={handleCreateFolder}>确定</button>
-                    </Box>
-                </Box>
-            )}
-            {syncFloderDialog && <NewBaiduPhoto onSucc={()=> {
-                setSyncFloderDialog(false);
+            {createFolderDialog && <CreateFolder onClose={()=> {
+                setCreateFolderDialog(false);
             }} />}
             {progress && (
                 <Box sx={{ width: 300, p: 2, position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 9999, bgcolor: "#fff", borderRadius: 2, boxShadow: 3 }}>

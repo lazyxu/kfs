@@ -14,21 +14,13 @@ export function getPerm(mode) {
  * @returns {string} 权限字符串（如 'drwxr-xr-x'）
  */
 export function formatLinuxPermission(mode) {
-    // 处理 int64 的 32 位限制：仅取低 16 位（高 4 位文件类型 + 低 12 位权限）
-    const safeMode = BigInt(mode) & 0xFFFFn; // 限制在 16 位范围内[5,7](@ref)
-    
-    // 1. 提取文件类型（高 4 位）
-    const fileTypeBits = Number(safeMode >> 12n) & 0xF;
     let typeChar = '-'; // 默认普通文件
-    switch (fileTypeBits) {
-        case 0x4: typeChar = 'd'; break; // 目录[4](@ref)
-        case 0x8: typeChar = '-'; break; // 普通文件
-        case 0xA: typeChar = 'l'; break; // 符号链接
-        // 可扩展其他类型：管道(p)、套接字(s)等
+    if (mode > 2147483648) {
+        typeChar = 'd'
     }
 
     // 2. 提取权限位（低 12 位，仅用低 9 位）
-    const permBits = Number(safeMode & 0x1FFn); // 0x1FF = 二进制 111111111 (9位)[4](@ref)
+    const permBits = mode & 0x1FF; // 0x1FF = 二进制 111111111 (9位)[4](@ref)
 
     // 3. 权限分组转换函数
     const toRwx = (perm) => {

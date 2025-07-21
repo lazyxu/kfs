@@ -17,3 +17,10 @@ sql:
         out: "./"
         emit_json_tags: true
         emit_empty_slices: true
+        # overrides:
+        #   - column: "_sync_from_baidu_photo.BDUSS_BFESS"
+        #     go_type: "int64"
+        #     go_struct_tag: "json:\"BDUSS_BFESS\""
+        #   - column: "_sync_from_baidu_photo.STOKEN"
+        #     go_type: "string"
+        #     go_struct_tag: "json:\"STOKEN\""

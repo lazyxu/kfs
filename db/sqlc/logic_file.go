@@ -44,8 +44,8 @@ func (q *Queries) GetLogicFileByPath(ctx context.Context, userID int64, dirpath 
 	return lf, &f, nil
 }
 
-const DefaultFilePerm int64 = 0o644
-const DefaultDirPerm = int64(os.ModeDir | 0755)
+const DefaultFileMode int64 = 0o644
+const DefaultDirMode = int64(os.ModeDir | 0755)
 
 // 设置某路径的LogicFile，如果某一层不存在则创建（mkdir控制），只处理_logic_file表
 func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath []string, name string, fileID sql.NullInt64,
@@ -69,7 +69,7 @@ func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath 
 					ParentID:   parentID,
 					Name:       name,
 					FileID:     sql.NullInt64{Valid: false},
-					Mode:       DefaultDirPerm,
+					Mode:       DefaultDirMode,
 					Size:       0,
 					CreateTime: createTime,
 					ModifyTime: modifyTime,

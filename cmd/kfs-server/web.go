@@ -67,7 +67,8 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/updateDriverSync", apiUpdateDriverSync)
 	e.GET("/api/v1/updateDriverLocalFile", apiUpdateDriverLocalFile)
 	e.POST("/api/v1/drivers", apiNewDriver)
-	e.POST("/api/v1/driverBaiduPhotos", apiNewDriverBaiduPhoto)
+	e.POST("/api/v1/createBaiduPhoto", apiCreateBaiduPhoto)
+	e.POST("/api/v1/updateBaiduPhoto", apiUpdateBaiduPhoto)
 	e.POST("/api/v1/driverLocalFiles", apiNewDriverLocalFile)
 	e.DELETE("/api/v1/drivers", apiDeleteDriver)
 	e.GET("/api/v1/drivers/reset", apiResetDriver)
@@ -627,8 +628,9 @@ func apiCheckFileExists(c echo.Context) error {
 
 func apiCreateFolder(c echo.Context) error {
 	type request struct {
-		DirPath    []string `json:"dirPath"`
-		FolderName string   `json:"folderName"`
+		DirPath []string `json:"dirPath"`
+		Name    string   `json:"name"`
+		Perm    int64    `json:"perm"`
 	}
 
 	var req request
@@ -636,11 +638,10 @@ func apiCreateFolder(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "无效请求参数"})
 	}
 
-	// 调用核心服务创建文件夹
 	t := time.Now()
 	var userID int64 = 1
-	_, err := kfsCore.Q.SetLogicFileByPath(c.Request().Context(), userID, req.DirPath, req.FolderName,
-		sql.NullInt64{Valid: false}, sqlc.DefaultDirPerm, 0, t, t, t, t, false)
+	_, err := kfsCore.Q.SetLogicFileByPath(c.Request().Context(), userID, req.DirPath, req.Name,
+		sql.NullInt64{Valid: false}, int64(os.ModeDir)|req.Perm, 0, t, t, t, t, false)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -706,7 +707,7 @@ func apiUploadFileChunk(c echo.Context) error {
 	return c.String(http.StatusOK, "ok")
 }
 
-var defaultFilePerm int64 = 0o644
+var DefaultFileMode int64 = 0o644
 
 // 合并分块
 func apiMergeFileChunks(c echo.Context) error {
@@ -783,7 +784,7 @@ func apiMergeFileChunks(c echo.Context) error {
 	createTime := time.Now()
 	t := time.UnixMilli(req.FileMeta.LastModified)
 	_, err = kfsCore.Q.SetLogicFileByPath(ctx, userID, req.DirPath, req.FileMeta.Name,
-		sql.NullInt64{Valid: true, Int64: fileID}, defaultFilePerm, size,
+		sql.NullInt64{Valid: true, Int64: fileID}, DefaultFileMode, size,
 		createTime, t, t, t, false)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "upsert driver file failed: "+err.Error())

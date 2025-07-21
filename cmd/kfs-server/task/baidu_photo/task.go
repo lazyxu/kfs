@@ -151,17 +151,15 @@ func GetOrLoad(ctx context.Context, kfsCore *core.KFS, id int64) (*DriverBaiduPh
 }
 
 func LoadTaskFromDb(ctx context.Context, kfsCore *core.KFS, id int64) (*DriverBaiduPhoto, error) {
-	driver, err := kfsCore.Q.GetSyncFromById(ctx, id)
+	s, err := kfsCore.Q.GetSyncFromById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	return &DriverBaiduPhoto{
-		kfsCore:      kfsCore,
-		id:           id,
-		AccessToken:  driver.AccessToken,
-		RefreshToken: driver.RefreshToken,
-		AppKey:       AppKey,
-		SecretKey:    SecretKey,
+		kfsCore:    kfsCore,
+		id:         id,
+		BdussBfess: s.BdussBfess,
+		Stoken:     s.Stoken,
 		taskInfo: TaskInfo{
 			cancel:       nil,
 			Status:       StatusIdle,
@@ -174,17 +172,10 @@ func LoadTaskFromDb(ctx context.Context, kfsCore *core.KFS, id int64) (*DriverBa
 }
 
 func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*DriverBaiduPhoto, error) {
-	driver, err := kfsCore.Db.GetDriverToken(ctx, driverId)
-	if err != nil {
-		return nil, err
-	}
 	return &DriverBaiduPhoto{
-		kfsCore:      kfsCore,
-		driverId:     driverId,
-		AccessToken:  driver.AccessToken,
-		RefreshToken: driver.RefreshToken,
-		AppKey:       AppKey,
-		SecretKey:    SecretKey,
+		kfsCore:    kfsCore,
+		BdussBfess: "",
+		Stoken:     "",
 		taskInfo: TaskInfo{
 			cancel:       nil,
 			Status:       StatusIdle,
@@ -255,7 +246,6 @@ func (d *DriverBaiduPhoto) StartOrStop(ctx context.Context, start bool) {
 		d.setTaskStatus(StatusFinished)
 	}()
 }
-
 func toStringSlice(s []BaiduFile) []string {
 	c := make([]string, len(s))
 	for i, v := range s {
@@ -311,7 +301,7 @@ func (d *DriverBaiduPhoto) Analyze(ctx context.Context) (err error) {
 		if err != nil {
 			return
 		}
-		err = d.kfsCore.Db.SetLivpForMovAndHeicOrJpgInDriver(ctx, d.driverId)
+		err = d.kfsCore.Db.SetLivpForMovAndHeicOrJpgInDriver(ctx, 0)
 	}()
 	var err1 error
 	err = d.GetAllFile(ctx, func(list []BaiduFile) bool {

@@ -160,10 +160,13 @@ CREATE TABLE IF NOT EXISTS _sync_from_baidu_photo (
     -- */5 * * * *	​每5分钟执行一次
     -- 0 20 * * 1,3,5	​每周一、三、五晚上8点执行
     cron VARCHAR(64) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT FALSE,
     sync_at_start BOOLEAN NOT NULL DEFAULT FALSE,
     -- baidu_photo
-    access_token  VARCHAR(256) NOT NULL,
-    refresh_token VARCHAR(256) NOT NULL,
+    bduss_bfess   VARCHAR(192) NOT NULL COMMENT 'BDUSS_BFESS',
+    stoken        VARCHAR(64)  NOT NULL COMMENT 'STOKEN',
+    -- access_token  VARCHAR(256) NOT NULL,
+    -- refresh_token VARCHAR(256) NOT NULL,
     FOREIGN KEY (id) REFERENCES _logic_file(id) ON DELETE CASCADE
 );
 

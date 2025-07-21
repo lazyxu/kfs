@@ -27,12 +27,22 @@ export async function newDriver(name, description) {
     }
 }
 
-export async function newDriverBaiduPhoto(dirPath, name, code, cron, syncAtStart) {
+export async function createBaiduPhoto(dirPath, name, bduss_bfess, stoken, cron, enabled, syncAtStart) {
     try {
-        console.log('api.newDriverBaiduPhoto', dirPath, name, code, cron, syncAtStart);
-        await httpPostJson("/api/v1/driverBaiduPhotos", { dirPath, name, code, cron, syncAtStart });
+        console.log('api.createBaiduPhoto', dirPath, name, bduss_bfess, stoken, cron, enabled, syncAtStart);
+        await httpPostJson("/api/v1/createBaiduPhoto", { dirPath, name, bduss_bfess, stoken, cron, enabled, syncAtStart });
     } catch (e) {
-        noteError("创建云盘失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        noteError("创建同步文件夹失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
+        throw e;
+    }
+}
+
+export async function updateBaiduPhoto(id, bduss_bfess, stoken, cron, enabled, syncAtStart) {
+    try {
+        console.log('api.updateBaiduPhoto', id, bduss_bfess, stoken, cron, enabled, syncAtStart);
+        await httpPostJson("/api/v1/updateBaiduPhoto", { id, bduss_bfess, stoken, cron, enabled, syncAtStart });
+    } catch (e) {
+        noteError("创建同步文件夹失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;
     }
 }

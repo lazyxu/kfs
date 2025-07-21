@@ -89,12 +89,19 @@ SELECT
   lf.change_time,
   lf.access_time,
   COALESCE(f.md5, '') AS md5,
-  COALESCE(f.sha256, '') AS sha256
+  COALESCE(f.sha256, '') AS sha256,
+  COALESCE(sfb.id, 0) AS sync_from_id,
+  COALESCE(sfb.cron, '') AS cron,
+  COALESCE(sfb.enabled, FALSE) AS enabled,
+  COALESCE(sfb.sync_at_start, FALSE) AS sync_at_start,
+  COALESCE(sfb.bduss_bfess, '') AS bduss_bfess,
+  COALESCE(sfb.stoken, '') AS stoken
 FROM _logic_file lf
-LEFT JOIN _file f ON lf.file_id = f.id  
-WHERE user_id = ? AND (
-  (parent_id = sqlc.arg('parent_id'))
-  OR (parent_id IS NULL AND sqlc.arg('parent_id') IS NULL)
+LEFT JOIN _file f ON lf.file_id = f.id
+LEFT JOIN _sync_from_baidu_photo sfb ON lf.id = sfb.id
+WHERE lf.user_id = ? AND (
+  (lf.parent_id = sqlc.arg('parent_id'))
+  OR (lf.parent_id IS NULL AND sqlc.arg('parent_id') IS NULL)
 );
 
 -- name: GetEarliestCrated :one

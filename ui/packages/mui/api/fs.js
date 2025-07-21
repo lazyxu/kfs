@@ -101,11 +101,12 @@ export async function checkFileExists(dirPath, name, sha256, md5) {
     }
 }
 
-export async function createFolder(dirPath, folderName) {
+export async function createFolder(dirPath, name, perm) {
     try {
         await axios.post(`${getSysConfig().webServer}/api/v1/createFolder`, {
             dirPath,
-            folderName
+            name,
+            perm,
         });
     } catch (e) {
         noteError("创建文件夹失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));

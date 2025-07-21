@@ -36,15 +36,16 @@ type TokenResp struct {
 }
 
 type DriverBaiduPhoto struct {
-	kfsCore      *core.KFS
-	id           int64
-	driverId     uint64
-	AccessToken  string
-	RefreshToken string
-	AppKey       string
-	SecretKey    string
-	mutex        sync.Locker
-	taskInfo     TaskInfo
+	kfsCore    *core.KFS
+	id         int64
+	BdussBfess string
+	Stoken     string
+	// AccessToken  string
+	// RefreshToken string
+	// AppKey       string
+	// SecretKey    string
+	mutex    sync.Locker
+	taskInfo TaskInfo
 }
 
 // 目前一刻相册导入相关限制如下：
@@ -56,29 +57,26 @@ var cookieString string = "BDUSS_BFESS=W1pVXZQSE9KZjhsc2tBS1FjWVFiTFpGaUsyY1h2ZE
 
 var client = resty.New().
 	SetHeader("user-agent", UserAgent).
-	SetRetryCount(3).SetRetryWaitTime(3*time.Second).
-	SetHeader("Cookie", cookieString).
+	SetRetryCount(3).SetRetryWaitTime(3 * time.Second).
+	// SetHeader("Cookie", cookieString).
 	SetTimeout(100 * time.Second). // (100M) / (1M/s) = 100s
 	SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
-func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, dirPath []string, name, code, cron string, syncAtStart bool) error {
-	accessToken, refreshToken, err := authByCode(ctx, client, AppKey, SecretKey, code)
-	if err != nil {
-		return err
-	}
+func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, dirPath []string, name, bdussBfess, stoken, cron string, enabled, syncAtStart bool) error {
 	t := time.Now()
 	var userID int64 = 1
 	id, err := kfsCore.Q.SetLogicFileByPath(ctx, userID, dirPath, name,
-		sql.NullInt64{Valid: false}, sqlc.DefaultDirPerm, 0, t, t, t, t, false)
+		sql.NullInt64{Valid: false}, sqlc.DefaultDirMode, 0, t, t, t, t, false)
 	if err != nil {
 		return err
 	}
 	return kfsCore.Q.UpsertSyncFromBaiduPhoto(ctx, sqlc.UpsertSyncFromBaiduPhotoParams{
-		ID:           id,
-		Cron:         cron,
-		SyncAtStart:  syncAtStart,
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		ID:          id,
+		BdussBfess:  bdussBfess,
+		Stoken:      stoken,
+		Enabled:     enabled,
+		Cron:        cron,
+		SyncAtStart: syncAtStart,
 	})
 }
 
@@ -124,6 +122,14 @@ func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method stri
 		}
 	}()
 	// req.SetContext(ctx).SetQueryParam("access_token", d.AccessToken)
+	req.SetCookie(&http.Cookie{
+		Name:  "BDUSS_BFESS",
+		Value: d.BdussBfess,
+	}).SetCookie(&http.Cookie{
+		Name:  "STOKEN",
+		Value: d.Stoken,
+	})
+
 	if output != "" {
 		req.SetOutput(output)
 	}
@@ -152,22 +158,22 @@ func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method stri
 		return fmt.Errorf("no shared albums found")
 	case 50100:
 		return fmt.Errorf("illegal title, only supports 50 characters")
-	case -6:
-		fmt.Printf("d %v, err: %v\n", d, err)
-		d.AccessToken, d.RefreshToken, err = refreshToken(ctx, client, d.AppKey, d.SecretKey, d.RefreshToken)
-		fmt.Printf("d %v, err: %v\n", d, err)
-		if err != nil {
-			return err
-		}
-		err = d.kfsCore.Q.UpdateSyncFromBaiduPhoto(ctx, sqlc.UpdateSyncFromBaiduPhotoParams{
-			ID:           d.id,
-			AccessToken:  d.AccessToken,
-			RefreshToken: d.RefreshToken,
-		})
-		if err != nil {
-			return err
-		}
-		// Do not need to goto execute since we have set SetRetryCount to 3.
+	// case -6:
+	// 	fmt.Printf("d %v, err: %v\n", d, err)
+	// 	d.AccessToken, d.RefreshToken, err = refreshToken(ctx, client, d.AppKey, d.SecretKey, d.RefreshToken)
+	// 	fmt.Printf("d %v, err: %v\n", d, err)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	err = d.kfsCore.Q.UpdateSyncFromBaiduPhoto(ctx, sqlc.UpdateSyncFromBaiduPhotoParams{
+	// 		ID:           d.id,
+	// 		AccessToken:  d.AccessToken,
+	// 		RefreshToken: d.RefreshToken,
+	// 	})
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// Do not need to goto execute since we have set SetRetryCount to 3.
 	default:
 		return fmt.Errorf("errno: %d, refer to https://photo.baidu.com/union/doc", erron)
 	}
@@ -246,7 +252,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, bdFile BaiduFile, file 
 	createTime := time.Now()
 	var userID int64 = 1
 	_, err = d.kfsCore.Q.SetLogicFileByPath(ctx, userID, dirPath, name,
-		sql.NullInt64{Valid: true, Int64: id}, sqlc.DefaultFilePerm, bdFile.Size,
+		sql.NullInt64{Valid: true, Int64: id}, sqlc.DefaultFileMode, bdFile.Size,
 		createTime, time.Unix(bdFile.ShootTime, 0), time.Unix(bdFile.ShootTime, 0), time.Unix(bdFile.ShootTime, 0), true)
 	// err = d.kfsCore.Q.SetLogicFileByPath(ctx, dao.DriverFile{
 	// 	DriverId:   d.driverId,
@@ -330,13 +336,6 @@ type (
 )
 
 func (d *DriverBaiduPhoto) GetAllFile(ctx context.Context, cb func([]BaiduFile) bool) error {
-	// list := []File{
-	// 	File{
-	// 		Fsid: 1081059821377677,
-	// 		Path: "/youa/album/1717326331735.heic",
-	// 	},
-	// }
-	// cb(list)
 	var cursor string
 	for {
 		var resp FileListResp
@@ -363,51 +362,4 @@ func (d *DriverBaiduPhoto) GetAllFile(ctx context.Context, cb func([]BaiduFile) 
 		cursor = resp.Cursor
 	}
 	return nil
-}
-
-func authByCode(ctx context.Context, client *resty.Client, appKey string, secretKey string, code string) (string, string, error) {
-	u := "https://openapi.baidu.com/oauth/2.0/token"
-	var resp TokenResp
-	var e TokenErrResp
-	req := client.R()
-	_, err := req.SetContext(ctx).SetResult(&resp).SetError(&e).SetQueryParams(map[string]string{
-		"grant_type":    "authorization_code",
-		"code":          code,
-		"client_id":     appKey,
-		"client_secret": secretKey,
-		"redirect_uri":  "oob",
-	}).Get(u)
-	if err != nil {
-		return "", "", err
-	}
-	if e.ErrorMsg != "" {
-		return "", "", &e
-	}
-	if resp.RefreshToken == "" {
-		return "", "", EmptyToken
-	}
-	return resp.AccessToken, resp.RefreshToken, nil
-}
-
-func refreshToken(ctx context.Context, client *resty.Client, appKey string, secretKey string, refreshToken string) (string, string, error) {
-	u := "https://openapi.baidu.com/oauth/2.0/token"
-	var resp TokenResp
-	var e TokenErrResp
-	req := client.R()
-	_, err := req.SetContext(ctx).SetResult(&resp).SetError(&e).SetQueryParams(map[string]string{
-		"grant_type":    "refresh_token",
-		"refresh_token": refreshToken,
-		"client_id":     appKey,
-		"client_secret": secretKey,
-	}).Get(u)
-	if err != nil {
-		return "", "", err
-	}
-	if e.ErrorMsg != "" {
-		return "", "", &e
-	}
-	if resp.RefreshToken == "" {
-		return "", "", EmptyToken
-	}
-	return resp.AccessToken, resp.RefreshToken, nil
 }
