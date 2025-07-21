@@ -17,11 +17,11 @@ export async function startLivePhotoAnalysisTask(start, force) {
     });
 }
 
-export async function startBaiduPhotoTask(start, driverId) {
+export async function startBaiduPhotoTask(start, id) {
     try {
-        console.log('web.startBaiduPhotoTask', start, driverId);
+        console.log('web.startBaiduPhotoTask', start, id);
         return await httpPost("/api/v1/startBaiduPhotoTask", {
-            start, driverId,
+            start, id,
         });
     } catch (e) {
         noteError("备份一刻相册失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));

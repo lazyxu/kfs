@@ -204,7 +204,7 @@ func formatPath(filePath string) ([]string, string, error) {
 }
 
 func (d *DriverBaiduPhoto) Download(ctx context.Context, bdFile BaiduFile, file *sqlc.File) error {
-	dirPath, name, err := formatPath(bdFile.Path)
+	_, name, err := formatPath(bdFile.Path)
 	if err != nil {
 		return err
 	}
@@ -251,9 +251,14 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, bdFile BaiduFile, file 
 	}
 	createTime := time.Now()
 	var userID int64 = 1
-	_, err = d.kfsCore.Q.SetLogicFileByPath(ctx, userID, dirPath, name,
+	shootTime := time.Unix(bdFile.ShootTime, 0)
+	dirPath := []string{shootTime.Format("2006-01")}
+	_, err = d.kfsCore.Q.SetLogicFileByParentIdPath(ctx, userID, sqlc.NInt64(d.id), dirPath, name,
 		sql.NullInt64{Valid: true, Int64: id}, sqlc.DefaultFileMode, bdFile.Size,
-		createTime, time.Unix(bdFile.ShootTime, 0), time.Unix(bdFile.ShootTime, 0), time.Unix(bdFile.ShootTime, 0), true)
+		createTime, shootTime, shootTime, shootTime, true)
+	// _, err = d.kfsCore.Q.SetLogicFileByPath(ctx, userID, dirPath, name,
+	// 	sql.NullInt64{Valid: true, Int64: id}, sqlc.DefaultFileMode, bdFile.Size,
+	// 	createTime, shootTime, shootTime, shootTime, true)
 	// err = d.kfsCore.Q.SetLogicFileByPath(ctx, dao.DriverFile{
 	// 	DriverId:   d.driverId,
 	// 	DirPath:    dirPath,

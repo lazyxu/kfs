@@ -10,6 +10,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/db/sqlc"
 )
 
 type Client struct {
@@ -22,18 +23,19 @@ func (c *Client) Chan() chan TaskInfo {
 }
 
 func (c *Client) Message() TaskInfo {
+	fmt.Printf("Message ptr:%p id:%d, %+v\n", c.d, c.d.id, c.d.taskInfo)
 	return c.d.taskInfo
 }
 
 var s = &core.EventServer[TaskInfo]{
 	Clients: make(map[echo.Context]core.EventClient[TaskInfo]),
 	NewClient: func(c echo.Context, kfsCore *core.KFS) (core.EventClient[TaskInfo], error) {
-		driverIdStr := c.Param("driverId")
-		driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+		idStr := c.Param("id")
+		id, err := strconv.ParseInt(idStr, 10, 0)
 		if err != nil {
 			return nil, err
 		}
-		d, err := GetOrLoadDriver(c.Request().Context(), kfsCore, driverId)
+		d, err := GetOrLoad(c.Request().Context(), kfsCore, id)
 		if err != nil {
 			return nil, err
 		}
@@ -68,6 +70,7 @@ type TaskInfo struct {
 }
 
 func (d *DriverBaiduPhoto) setTaskStatus(status int) {
+	fmt.Printf("setTaskStatus ptr:%p id:%d, %d\n", d, d.id, status)
 	d.mutex.Lock()
 	d.taskInfo.Status = status
 	if status == StatusFinished || status == StatusCanceled || status == StatusError {
@@ -84,6 +87,7 @@ func (d *DriverBaiduPhoto) setTaskStatus(status int) {
 }
 
 func (d *DriverBaiduPhoto) setTaskError(errMsg string) {
+	fmt.Printf("setTaskError ptr:%p id:%d, %s\n", d, d.id, errMsg)
 	d.mutex.Lock()
 	d.taskInfo.Status = StatusError
 	d.taskInfo.cancel = nil
@@ -107,6 +111,7 @@ func (d *DriverBaiduPhoto) setTaskStatusWithLock(status int) {
 }
 
 func (d *DriverBaiduPhoto) addTaskTotal(total int) {
+	fmt.Printf("addTaskTotal ptr:%p id:%d, %d\n", d, d.id, total)
 	d.mutex.Lock()
 	d.taskInfo.Total += total
 	d.mutex.Unlock()
@@ -114,25 +119,11 @@ func (d *DriverBaiduPhoto) addTaskTotal(total int) {
 }
 
 func (d *DriverBaiduPhoto) addTaskCnt() {
+	fmt.Printf("addTaskCnt ptr:%p id:%d, %d\n", d, d.id, d.taskInfo.Cnt)
 	d.mutex.Lock()
 	d.taskInfo.Cnt++
 	d.mutex.Unlock()
 	s.SendAll()
-}
-
-var drivers sync.Map
-
-func GetOrLoadDriver(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*DriverBaiduPhoto, error) {
-	d, ok := drivers.Load(driverId)
-	if ok {
-		return d.(*DriverBaiduPhoto), nil
-	}
-	driver, err := LoadDriverFromDb(ctx, kfsCore, driverId)
-	if err != nil {
-		return nil, err
-	}
-	drivers.Store(driverId, driver)
-	return driver, nil
 }
 
 var tasks sync.Map
@@ -142,12 +133,12 @@ func GetOrLoad(ctx context.Context, kfsCore *core.KFS, id int64) (*DriverBaiduPh
 	if ok {
 		return d.(*DriverBaiduPhoto), nil
 	}
-	driver, err := LoadTaskFromDb(ctx, kfsCore, id)
+	t, err := LoadTaskFromDb(ctx, kfsCore, id)
 	if err != nil {
 		return nil, err
 	}
-	drivers.Store(id, driver)
-	return driver, nil
+	tasks.Store(id, t)
+	return t, nil
 }
 
 func LoadTaskFromDb(ctx context.Context, kfsCore *core.KFS, id int64) (*DriverBaiduPhoto, error) {
@@ -160,22 +151,6 @@ func LoadTaskFromDb(ctx context.Context, kfsCore *core.KFS, id int64) (*DriverBa
 		id:         id,
 		BdussBfess: s.BdussBfess,
 		Stoken:     s.Stoken,
-		taskInfo: TaskInfo{
-			cancel:       nil,
-			Status:       StatusIdle,
-			LastDoneTime: 0,
-			Cnt:          0,
-			Total:        0,
-		},
-		mutex: &sync.Mutex{},
-	}, nil
-}
-
-func LoadDriverFromDb(ctx context.Context, kfsCore *core.KFS, driverId uint64) (*DriverBaiduPhoto, error) {
-	return &DriverBaiduPhoto{
-		kfsCore:    kfsCore,
-		BdussBfess: "",
-		Stoken:     "",
 		taskInfo: TaskInfo{
 			cancel:       nil,
 			Status:       StatusIdle,
@@ -217,35 +192,6 @@ func (d *DriverBaiduPhoto) StartOrStop2(ctx context.Context, start bool) {
 	}()
 }
 
-func (d *DriverBaiduPhoto) StartOrStop(ctx context.Context, start bool) {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
-	if !start {
-		d.setTaskStatusWithLock(StatusWaitCanceled)
-		d.taskInfo.cancel()
-		return
-	}
-	if d.taskInfo.Status == StatusWaitRunning ||
-		d.taskInfo.Status == StatusRunning ||
-		d.taskInfo.Status == StatusWaitCanceled {
-		return
-	}
-	d.taskInfo.Status = StatusWaitRunning
-	ctx, cancel := context.WithCancel(context.TODO())
-	d.taskInfo.cancel = cancel
-	go func() {
-		err := d.Analyze(ctx)
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
-				d.setTaskStatus(StatusCanceled)
-				return
-			}
-			d.setTaskError(err.Error())
-			return
-		}
-		d.setTaskStatus(StatusFinished)
-	}()
-}
 func toStringSlice(s []BaiduFile) []string {
 	c := make([]string, len(s))
 	for i, v := range s {
@@ -265,7 +211,8 @@ func (d *DriverBaiduPhoto) Analyze2(ctx context.Context) (err error) {
 	var err1 error
 	err = d.GetAllFile(ctx, func(list []BaiduFile) bool {
 		d.addTaskTotal(len(list))
-		filterdList, err1 := d.kfsCore.Q.ListFileMd5(ctx, toStringSlice(list))
+		var filterdList map[string]*sqlc.File
+		filterdList, err1 = d.kfsCore.Q.ListFileMd5(ctx, toStringSlice(list))
 		if err1 != nil {
 			return false
 		}
@@ -278,47 +225,6 @@ func (d *DriverBaiduPhoto) Analyze2(ctx context.Context) (err error) {
 			default:
 			}
 			err1 = d.Download(ctx, f, filterdList[f.Md5])
-			if err1 != nil {
-				return false
-			}
-			d.addTaskCnt()
-		}
-		return true
-	})
-	if err != nil {
-		return
-	}
-	if err1 != nil {
-		err = err1
-		return
-	}
-	return
-}
-
-func (d *DriverBaiduPhoto) Analyze(ctx context.Context) (err error) {
-	d.setTaskStatus(StatusRunning)
-	defer func() {
-		if err != nil {
-			return
-		}
-		err = d.kfsCore.Db.SetLivpForMovAndHeicOrJpgInDriver(ctx, 0)
-	}()
-	var err1 error
-	err = d.GetAllFile(ctx, func(list []BaiduFile) bool {
-		d.addTaskTotal(len(list))
-		_, err1 := d.kfsCore.Db.ListFileMd5(ctx, toStringSlice(list))
-		if err1 != nil {
-			return false
-		}
-		for i, f := range list {
-			fmt.Printf("[%d/%d] handle %s\n", i+1, len(list), f.Path)
-			select {
-			case <-ctx.Done():
-				err1 = context.Canceled
-				return false
-			default:
-			}
-			err1 = d.Download(ctx, f, nil)
 			if err1 != nil {
 				return false
 			}

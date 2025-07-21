@@ -117,6 +117,73 @@ func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath 
 	return r.LastInsertId()
 }
 
+func (q *Queries) SetLogicFileByParentIdPath(ctx context.Context, userID int64, parentID sql.NullInt64, dirpath []string, name string, fileID sql.NullInt64,
+	mode, size int64, createTime, modifyTime, changeTime, accessTime time.Time, mkdir bool) (int64, error) {
+	for _, name := range dirpath {
+		params := GetLogicFileParams{
+			UserID:   userID,
+			ParentID: parentID,
+			Name:     name,
+		}
+		logicFile, err := q.GetLogicFile(ctx, params)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				fmt.Fprintf(os.Stderr, "GetLogicFile 1 error: %v", err)
+				return 0, err
+			} else if mkdir {
+				createParams := InsertLogicFileParams{
+					UserID:     userID,
+					ParentID:   parentID,
+					Name:       name,
+					FileID:     sql.NullInt64{Valid: false},
+					Mode:       DefaultDirMode,
+					Size:       0,
+					CreateTime: createTime,
+					ModifyTime: modifyTime,
+					ChangeTime: changeTime,
+					AccessTime: accessTime,
+				}
+				fmt.Printf("Inserting LogicFile: %+v\n", createParams)
+				_, err = q.InsertLogicFile(ctx, createParams)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "InsertLogicFile error: %v", err)
+					return 0, err
+				}
+				fmt.Printf("Inserted LogicFile with ParentID: %v, UserID: %d, Name: %s\n", parentID, userID, name)
+				fmt.Printf("GetLogicFile: %+v\n", params)
+				logicFile, err = q.GetLogicFile(ctx, params)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "GetLogicFile 2 error: %v", err)
+					return 0, err
+				}
+			}
+		}
+		parentID.Scan(logicFile.ID)
+	}
+
+	// 可选：更新最后一层的文件属性
+	updateParams := UpsertLogicFileParams{
+		UserID:     userID,
+		ParentID:   parentID,
+		Name:       name,
+		FileID:     fileID,
+		Mode:       mode,
+		Size:       size,
+		CreateTime: createTime,
+		ModifyTime: modifyTime,
+		ChangeTime: changeTime,
+		AccessTime: accessTime,
+	}
+	log.Printf("Upserting LogicFile: %+v\n", updateParams)
+	r, err := q.UpsertLogicFile(ctx, updateParams)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "UpdateLogicFile error: %v", err)
+		return 0, err
+	}
+
+	return r.LastInsertId()
+}
+
 func (q *Queries) ListDir(ctx context.Context, userID int64, dirpath []string) (*LogicFile, []*ListLogicFilesByParentIdRow, error) {
 	var parentID sql.NullInt64
 	var lf *LogicFile

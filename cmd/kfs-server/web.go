@@ -111,7 +111,7 @@ func webServer(webPortString string) {
 		return livp.ApiEvent(c, kfsCore)
 	})
 	e.POST("/api/v1/startBaiduPhotoTask", apiStartBaiduPhotoTask)
-	e.GET("/api/v1/event/baiduPhotoTask/:driverId", func(c echo.Context) error {
+	e.GET("/api/v1/event/baiduPhotoTask/:id", func(c echo.Context) error {
 		return baidu_photo.ApiEvent(c, kfsCore)
 	}) // TODO: handle name
 
@@ -575,17 +575,17 @@ func apiStartBaiduPhotoTask(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	driverIdStr := c.QueryParam("driverId")
-	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseInt(idStr, 10, 0)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "driverId should be a number")
+		return c.String(http.StatusBadRequest, "id should be a number")
 	}
 	ctx := c.Request().Context()
-	d, err := baidu_photo.GetOrLoadDriver(ctx, kfsCore, driverId)
+	d, err := baidu_photo.GetOrLoad(ctx, kfsCore, id)
 	if err != nil {
 		return err
 	}
-	d.StartOrStop(ctx, start)
+	d.StartOrStop2(ctx, start)
 	return c.String(http.StatusOK, "")
 }
 

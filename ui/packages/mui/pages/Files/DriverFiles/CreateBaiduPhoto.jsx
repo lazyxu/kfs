@@ -8,7 +8,7 @@ import { createBaiduPhoto } from "../../../api/driver";
 export default function ({ onClose }) {
     const [resourceManager, setResourceManager] = useResourceManager();
     const { dirPath } = resourceManager;
-    let [name, setName] = useState("新的同步文件夹");
+    let [name, setName] = useState("来自：一刻相册");
     let [cron, setCron] = useState("0 4 * * *");
     let [bduss_bfess, setBdussBfess] = useState("");
     let [stoken, setStoken] = useState("");
@@ -31,7 +31,7 @@ export default function ({ onClose }) {
                     value={name}
                     onChange={e => setName(e.target.value)}
                 />
-                <Link href="https://photo.baidu.com">一刻相册官网</Link>
+                <Link target="_blank" href="https://photo.baidu.com">一刻相册官网</Link>
                 <TextField
                     autoFocus
                     placeholder="BDUSS_BFESS"

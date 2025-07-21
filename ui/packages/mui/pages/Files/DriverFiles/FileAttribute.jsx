@@ -1,12 +1,15 @@
 import { formatLinuxPermission, modeIsDir } from '@kfs/common/api/utils';
-import { Close } from '@mui/icons-material';
+import { Close, HourglassDisabled, HourglassTop, PlayArrow, Stop } from '@mui/icons-material';
 import { Box, Dialog, DialogContent, DialogTitle, Grid, TextField, FormControlLabel, Checkbox, Button, DialogActions } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import humanize from 'humanize';
 import moment from "moment/moment";
 import { useEffect, useState } from 'react';
 import { createBaiduPhoto, updateBaiduPhoto } from '../../../api/driver';
-
+import { startBaiduPhotoTask } from '../../../api/exif';
+import { getSysConfig } from '@kfs/common/hox/sysConfig';
+import { noteError } from '@kfs/mui/components/Notification';
+import { EventStreamContentType, fetchEventSource } from '@microsoft/fetch-event-source';
 function formatTime(t) {
     return moment(t / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss");
 }
@@ -35,6 +38,14 @@ function getDriverType(driver) {
     }
 }
 
+const StatusIdle = 0
+const StatusFinished = 1
+const StatusCanceled = 2
+const StatusError = 3
+const StatusWaitRunning = 4
+const StatusWaitCanceled = 5
+const StatusRunning = 6
+
 export default ({ fileAttribute, onClose }) => {
     const { filePath, driverFile } = fileAttribute;
     const isDir = modeIsDir(driverFile.mode);
@@ -45,12 +56,55 @@ export default ({ fileAttribute, onClose }) => {
     const [syncAtStart, setSyncAtStart] = useState(driverFile.sync_at_start || false);
     const [bdussBfess, setBdussBfess] = useState(driverFile.bduss_bfess || '');
     const [stoken, setStoken] = useState(driverFile.stoken || '');
-    const [attributes, setAttributes] = useState({});
-
+    const [taskInfo, setTaskInfo] = useState();
+    const controller = new AbortController();
     useEffect(() => {
         // getDriversDirCalculatedInfo(driver.id, filePath).then(setAttributes);
     }, []);
-
+    useEffect(() => {
+        fetchEventSource(`${getSysConfig().webServer}/api/v1/event/baiduPhotoTask/${driverFile.id}`, {
+            signal: controller.signal,
+            async onopen(response) {
+                if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
+                    return; // everything's good
+                }
+                console.error(response);
+                noteError("event/baiduPhotoTask.onopen: " + response.status);
+            },
+            onmessage(msg) {
+                // if the server emits an error message, throw an exception
+                // so it gets handled by the onerror callback below:
+                if (msg.event === 'FatalError') {
+                    console.error(msg);
+                    noteError("event/baiduPhotoTask.onmessage: " + msg);
+                    return;
+                }
+                let info = JSON.parse(msg.data);
+                console.log(info);
+                if (info.errMsg) {
+                    noteError(info.errMsg);
+                }
+                setTaskInfo(info);
+            },
+            onclose() {
+                // if the server closes the connection unexpectedly, retry:
+                noteError("event/baiduPhotoTask.onclose");
+            },
+            onerror(err) {
+                console.error(err);
+                // noteError("event/baiduPhotoTask.onerror: " + err.message);
+                // if (err instanceof FatalError) {
+                //     throw err; // rethrow to stop the operation
+                // } else {
+                //     // do nothing to automatically retry. You can also
+                //     // return a specific retry interval here.
+                // }
+            }
+        });
+        return () => {
+            controller.abort();
+        }
+    }, []);
     const handleConfirm = () => {
         updateBaiduPhoto(driverFile.id, bdussBfess, stoken, cron, enabled, syncAtStart)
             .then(onClose);
@@ -99,49 +153,75 @@ export default ({ fileAttribute, onClose }) => {
                                 <Box fontWeight="bold" fontSize="1.1rem">同步设置</Box>
                             </Grid>
                             <Attr k="cron表达式">
-                                <TextField 
+                                <TextField
                                     size="small"
                                     value={cron}
                                     onChange={(e) => setCron(e.target.value)}
                                     placeholder="0 * * * *"
                                 />
                             </Attr>
-                            
+
                             <Attr k="开启同步">
                                 <FormControlLabel
                                     control={
-                                        <Checkbox 
-                                            checked={enabled} 
-                                            onChange={(e) => setEnabled(e.target.checked)} 
+                                        <Checkbox
+                                            checked={enabled}
+                                            onChange={(e) => setEnabled(e.target.checked)}
                                         />
                                     }
                                     label={enabled ? "已启用" : "已禁用"}
                                 />
                             </Attr>
-                            
+
                             <Attr k="启动时同步">
                                 <FormControlLabel
                                     control={
-                                        <Checkbox 
-                                            checked={syncAtStart} 
-                                            onChange={(e) => setSyncAtStart(e.target.checked)} 
+                                        <Checkbox
+                                            checked={syncAtStart}
+                                            onChange={(e) => setSyncAtStart(e.target.checked)}
                                         />
                                     }
                                     label={syncAtStart ? "是" : "否"}
                                 />
                             </Attr>
-                            
+                            <Attr k="手动同步">
+                                {(taskInfo?.status === undefined ||
+                                    taskInfo?.status === StatusIdle ||
+                                    taskInfo?.status === StatusFinished ||
+                                    taskInfo?.status === StatusCanceled ||
+                                    taskInfo?.status === StatusError) &&
+                                    <IconButton onClick={e => startBaiduPhotoTask(true, driverFile.id).catch(e => noteError(e.message))}>
+                                        <PlayArrow />
+                                    </IconButton>
+                                }
+                                {taskInfo?.status === StatusWaitRunning &&
+                                    <IconButton>
+                                        <HourglassTop />
+                                    </IconButton>
+                                }
+                                {taskInfo?.status === StatusWaitCanceled &&
+                                    <IconButton>
+                                        <HourglassDisabled />
+                                    </IconButton>
+                                }
+                                {taskInfo?.status === StatusRunning &&
+                                    <IconButton onClick={e => startBaiduPhotoTask(false, driverFile.id)}>
+                                        <Stop />
+                                    </IconButton>
+                                }
+                                {taskInfo ? String(taskInfo.cnt) + "/" + taskInfo.total : "loading..."}
+                            </Attr>
                             <Attr k="BDUSS_BFESS">
-                                <TextField 
+                                <TextField
                                     size="small"
                                     value={bdussBfess}
                                     onChange={(e) => setBdussBfess(e.target.value)}
                                     placeholder="输入BDUSS_BFESS"
                                 />
                             </Attr>
-                            
+
                             <Attr k="STOKEN">
-                                <TextField 
+                                <TextField
                                     size="small"
                                     value={stoken}
                                     onChange={(e) => setStoken(e.target.value)}
@@ -154,8 +234,8 @@ export default ({ fileAttribute, onClose }) => {
             </DialogContent>
             {driverFile.sync_from_id > 0 && <DialogActions>
                 <Button onClick={onClose}>取消</Button>
-                <Button 
-                    variant="contained" 
+                <Button
+                    variant="contained"
                     onClick={handleConfirm}
                     color="primary"
                 >
