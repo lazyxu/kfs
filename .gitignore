@@ -6,6 +6,7 @@ supervisord.*
 .kfs*
 *.log
 thumbnail
+transcode
 
 # IDE
 .vscode

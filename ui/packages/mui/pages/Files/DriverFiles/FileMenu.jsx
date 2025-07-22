@@ -12,14 +12,15 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
     const [windows, setWindows] = useWindows();
     const { filePath, driverFile } = contextMenu;
     const { name, mode } = driverFile;
+    const onClose = () => setContextMenu(null)
     return (
         <Menu
             contextMenu={contextMenu}
             open={contextMenu !== null}
-            onClose={() => setContextMenu(null)}
+            onClose={onClose}
         >
             <MenuItem onClick={() => {
-                setContextMenu(null);
+                onClose();
                 if (modeIsDir(mode)) {
                     openDir(setResourceManager, filePath);
                 } else {
@@ -32,7 +33,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
             </MenuItem>
             {window.kfsEnv.VITE_APP_PLATFORM !== 'web' && <>
                 <MenuItem onClick={() => {
-                    setContextMenu(null);
+                onClose();
                     getDriverLocalFile().then(driverLocalFile => {
                         const { shell } = window.require('@electron/remote');
                         shell.openPath(driverLocalFile.srcPath + "\\" + filePath.join("\\"));
@@ -42,7 +43,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
                     <ListItemText>打开本地文件</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => {
-                    setContextMenu(null);
+                    onClose();
                     getDriverLocalFile().then(driverLocalFile => {
                         const { shell } = window.require('@electron/remote');
                         shell.showItemInFolder(driverLocalFile.srcPath + "\\" + filePath.join("\\"));
@@ -53,7 +54,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
                 </MenuItem>
             </>}
             <MenuItem disabled={modeIsDir(mode)} onClick={() => {
-                setContextMenu(null);
+                onClose();
                 download(filePath);
             }}>
                 <Download />
@@ -76,9 +77,9 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
                 <ListItemText>重命名</ListItemText>
             </MenuItem>
             <MenuItem onClick={() => {
-                setContextMenu(null);
+                onClose();
                 setFileAttribute(contextMenu);
-            }} >
+            }}>
                 <Settings />
                 <ListItemText>属性</ListItemText>
             </MenuItem>

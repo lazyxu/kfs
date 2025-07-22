@@ -10,7 +10,7 @@ const RESERVED_NAMES = [
   'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
 ];
 
-export default function ({ onClose, dirPath }) {
+export default function ({ dirPath, onSucc }) {
   const [name, setName] = useState("新建文件夹");
   const [prem, setPrem] = useState("rwxrwxrwx");
   const [nameError, setNameError] = useState("");
@@ -91,7 +91,7 @@ export default function ({ onClose, dirPath }) {
     try {
       await createFolder(dirPath, name, convertPremToDecimal(prem));
       noteSuccess("新建文件夹成功");
-      onClose();
+      onSucc();
     } catch (err) {
       noteError("新建文件夹失败：" + (err?.message || err));
     }

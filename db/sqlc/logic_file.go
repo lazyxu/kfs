@@ -184,9 +184,31 @@ func (q *Queries) SetLogicFileByParentIdPath(ctx context.Context, userID int64, 
 	return r.LastInsertId()
 }
 
+var startTime = time.Now()
+var rootDir = LogicFile{
+	ID:         0,
+	UserID:     0,
+	ParentID:   sql.NullInt64{Valid: false},
+	IsRoot:     sql.NullBool{Valid: true, Bool: true},
+	Name:       "/",
+	FileID:     sql.NullInt64{Valid: false},
+	Mode:       DefaultDirMode,
+	Size:       0,
+	CreateTime: startTime,
+	ModifyTime: startTime,
+	ChangeTime: startTime,
+	AccessTime: startTime,
+}
+
+func getRootDir(userID int64) *LogicFile {
+	t := rootDir // deep copy
+	t.UserID = userID
+	return &t
+}
+
 func (q *Queries) ListDir(ctx context.Context, userID int64, dirpath []string) (*LogicFile, []*ListLogicFilesByParentIdRow, error) {
 	var parentID sql.NullInt64
-	var lf *LogicFile
+	lf := getRootDir(userID)
 
 	// 逐层查找目录
 	for _, name := range dirpath {

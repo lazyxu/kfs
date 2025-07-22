@@ -195,13 +195,13 @@ type CronTask struct {
 }
 
 func startAllCloudSync() {
-	// sf, err := kfsCore.Q.ListSync(context.TODO())
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// for _, d := range sf {
-	// 	startCloudSync2(d.ID, d.Cron)
-	// }
+	sf, err := kfsCore.Q.ListSync(context.TODO())
+	if err != nil {
+		panic(err)
+	}
+	for _, d := range sf {
+		startCloudSync2(d.ID, d.Cron)
+	}
 }
 
 func startCloudSync2(id int64, cronStr string) {

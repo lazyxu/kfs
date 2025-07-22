@@ -4,24 +4,31 @@ import { noteError } from "@kfs/mui/components/Notification";
 import File from "@kfs/mui/pages/Files/DriverFiles/File";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { Grid, Stack } from "@mui/material";
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import FileAttribute from "./FileAttribute";
 import FileMenu from "./FileMenu";
-import Menu from "./Menu";
+import DirMenu from "./DirMenu";
 
 export default function () {
     const [driverFiles, setDriverFiles] = useState([]);
     const [driverFilesTotal, setDriverFilesTotal] = useState(0);
+    const [dirLogicFile, setDirLogicFile] = useState();
     const [resourceManager, setResourceManager] = useResourceManager();
     const { dirPath } = resourceManager;
-    const controller = new AbortController();
-    const [menu, setMenu] = useState(null);
+    const abortControllerRef = useRef(null);
+    const [dirMenu, setDirMenu] = useState(null);
     const [fileMenu, setFileMenu] = useState(null);
     const [fileAttribute, setFileAttribute] = useState(null);
-    useEffect(() => {
+    const refresh = () => {
+        console.log("===refresh===");
         setDriverFiles([]);
+        setDriverFilesTotal(0);
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
         fetchEventSource(`${getSysConfig().webServer}/api/v1/event/list?${dirPath.map(f => "filePath[]=" + f).join("&")}`, {
-            signal: controller.signal,
+            signal: abortControllerRef.current.signal,
             openWhenHidden: true,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
@@ -47,6 +54,7 @@ export default function () {
                     setDriverFiles(prev => [...prev, ...info.files]);
                 } else {
                     setDriverFilesTotal(info.n);
+                    setDirLogicFile(info.dir);
                 }
             },
             onclose() {
@@ -55,30 +63,29 @@ export default function () {
             },
             onerror(err) {
                 console.error(err);
-                // noteError("event/list.onerror: " + err.message);
-                // if (err instanceof FatalError) {
-                //     throw err; // rethrow to stop the operation
-                // } else {
-                //     // do nothing to automatically retry. You can also
-                //     // return a specific retry interval here.
-                // }
             }
         });
+    }
+    useEffect(() => {
+        refresh();
         return () => {
             console.log("===abort===");
-            controller.abort();
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
         }
     }, [resourceManager.dirPath]);
-    console.log("===render DriverFiles", dirPath, driverFiles, driverFilesTotal);
+    console.log("===render DriverFiles", dirPath, driverFiles, dirLogicFile, driverFilesTotal);
     return (
         <>
             <Grid container padding={1} spacing={1}
                 sx={{ flex: "1", overflowY: 'auto', alignContent: "flex-start" }}
                 onContextMenu={(e) => {
                     e.preventDefault(); e.stopPropagation();
-                    setMenu({
+                    setDirMenu({
                         mouseX: e.clientX, mouseY: e.clientY,
                         dirPath, open: true,
+                        driverFile: dirLogicFile, filePath: dirPath, // for FileAttribute
                     });
                 }}
             >
@@ -95,7 +102,7 @@ export default function () {
             >
                 共{driverFiles.length}/{driverFilesTotal}个项目
             </Stack>
-            <Menu contextMenu={menu} setContextMenu={setMenu} onUploaded={() => setResourceManager(p => ({ ...p, dirPath: p.dirPath}))}/>
+            <DirMenu contextMenu={dirMenu} setContextMenu={setDirMenu} refresh={() => refresh()} setFileAttribute={setFileAttribute}/>
             {fileMenu && <FileMenu contextMenu={fileMenu} setContextMenu={setFileMenu} setFileAttribute={setFileAttribute} />}
             {fileAttribute && <FileAttribute fileAttribute={fileAttribute} onClose={() => setFileAttribute(null)} />}
         </>

@@ -19,6 +19,7 @@ type Response struct {
 	Files  []*sqlc.ListLogicFilesByParentIdRow `json:"files,omitempty"`
 	ErrMsg string                              `json:"errMsg,omitempty"`
 	N      int                                 `json:"n,omitempty"`
+	Dir    *sqlc.LogicFile                     `json:"dir,omitempty"`
 }
 
 func send(c echo.Context, msg Response) {
@@ -47,7 +48,7 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 		filePath = []string{}
 	}
 	var userID int64 = 1
-	_, files, err := kfsCore.Q.ListDir(c.Request().Context(), userID, filePath)
+	dir, files, err := kfsCore.Q.ListDir(c.Request().Context(), userID, filePath)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -55,7 +56,7 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 	}
 
 	n := len(files)
-	send(c, Response{N: n})
+	send(c, Response{Dir: dir, N: n})
 
 	tick := time.NewTicker(time.Second)
 	curFiles := []*sqlc.ListLogicFilesByParentIdRow{}

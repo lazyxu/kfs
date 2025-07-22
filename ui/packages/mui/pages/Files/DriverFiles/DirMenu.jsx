@@ -11,7 +11,7 @@ import CreateFolder from "./CreateFolder";
 
 const CHUNK_SIZE = 100 * 1024 * 1024; // 100MB
 
-export default function ({ contextMenu, setContextMenu, onUploaded }) {
+export default function ({ contextMenu, setContextMenu, refresh, setFileAttribute }) {
     const fileInputRef = useRef();
     const [progress, setProgress] = useState(null);
     const [createFolderDialog, setCreateFolderDialog] = useState(false);
@@ -38,8 +38,6 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
         if (exists) {
             setProgress(null);
             noteSuccess("文件已存在，无需上传");
-            // setContextMenu(null);
-            onUploaded?.();
             return;
         }
 
@@ -60,8 +58,7 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
             });
             setProgress(null);
             noteSuccess("上传成功");
-            setContextMenu(null);
-            onUploaded?.();
+            refresh();
         } catch (err) {
             setProgress(null);
             noteError("上传失败：" + (err?.message || err));
@@ -104,7 +101,10 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
                     <ContentPaste />
                     <ListItemText>粘贴</ListItemText>
                 </MenuItem>
-                <MenuItem disabled>
+                <MenuItem  onClick={() => {
+                    onClose();
+                    setFileAttribute(contextMenu);
+                }}>
                     <Settings />
                     <ListItemText>属性</ListItemText>
                 </MenuItem>
@@ -123,7 +123,10 @@ export default function ({ contextMenu, setContextMenu, onUploaded }) {
             </Menu>
             {createFolderDialog && <CreateFolder onClose={()=> {
                 setCreateFolderDialog(false);
-            }} />}
+            }} onSucc={() => {
+                setCreateFolderDialog(false);
+                refresh();
+            }}/>}
             {progress && (
                 <Box sx={{ width: 300, p: 2, position: "fixed", bottom: 40, left: "50%", transform: "translateX(-50%)", zIndex: 9999, bgcolor: "#fff", borderRadius: 2, boxShadow: 3 }}>
                     <Typography variant="body2">{progress.status}</Typography>

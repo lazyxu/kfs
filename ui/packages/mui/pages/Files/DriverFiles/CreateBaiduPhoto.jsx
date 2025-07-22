@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { createBaiduPhoto } from "../../../api/driver";
 
 // https://pan.baidu.com/union/doc/ol0rsap9s
-export default function ({ onClose }) {
+export default function ({ onSucc }) {
     const [resourceManager, setResourceManager] = useResourceManager();
     const { dirPath } = resourceManager;
     let [name, setName] = useState("来自：一刻相册");
@@ -87,7 +87,7 @@ export default function ({ onClose }) {
             </DialogContent>
             <DialogActions>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={name === ""} onClick={() => {
-                    createBaiduPhoto(dirPath, name, bduss_bfess, stoken, cron, enabled, syncAtStart).then(onClose);
+                    createBaiduPhoto(dirPath, name, bduss_bfess, stoken, cron, enabled, syncAtStart).then(onSucc);
                 }}>确定</Button>
             </DialogActions>
         </>

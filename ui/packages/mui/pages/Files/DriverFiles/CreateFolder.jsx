@@ -4,7 +4,7 @@ import { useState } from 'react';
 import CreateBaiduPhoto from "./CreateBaiduPhoto";
 import CreateNormalFolder from "./CreateNormalFolder";
 
-export default function ({ onClose }) {
+export default function ({ onClose, onSucc }) {
     let [folderType, setFolderType] = useState(0);
     console.log("window.kfsEnv", window.kfsEnv)
     return (
@@ -34,8 +34,8 @@ export default function ({ onClose }) {
                         <Tab key={i} value={i} label={v} id={i} />
                     )}
             </Tabs>
-            {folderType === 0 && <CreateNormalFolder onClose={onClose} />}
-            {folderType === 1 && <CreateBaiduPhoto onClose={onClose} />}
+            {folderType === 0 && <CreateNormalFolder onSucc={onSucc} />}
+            {folderType === 1 && <CreateBaiduPhoto onSucc={onSucc} />}
             {/* {folderType === 2 && <CreateLocalFileFolder onClose={onClose} />} */}
         </Dialog>
     );
