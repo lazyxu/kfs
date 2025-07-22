@@ -11,11 +11,11 @@ export default function () {
     return (
         Object.values(windows).map(w => (
             <div key={w.id}>
-                {w.app === APP_TEXT_VIEWER && <TextViewer id={w.id} props={w.props} />}
-                {w.app === APP_IMAGE_VIEWER && <ImageViewer id={w.id} props={w.props} />}
-                {w.app === APP_VIDEO_VIEWER && <VideoViewer id={w.id} props={w.props} />}
-                {w.app === APP_METADATA_MANAGER && <MetadataManager id={w.id} props={w.props} />}
-                {w.app === APP_LIVP_UNZIP && <LivpUnZip id={w.id} props={w.props} />}
+                {w.app === APP_TEXT_VIEWER && <TextViewer wid={w.id} props={w.props} />}
+                {w.app === APP_IMAGE_VIEWER && <ImageViewer wid={w.id} props={w.props} />}
+                {w.app === APP_VIDEO_VIEWER && <VideoViewer wid={w.id} props={w.props} />}
+                {w.app === APP_METADATA_MANAGER && <MetadataManager wid={w.id} props={w.props} />}
+                {w.app === APP_LIVP_UNZIP && <LivpUnZip wid={w.id} props={w.props} />}
             </div>
         ))
     )

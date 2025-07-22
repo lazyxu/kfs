@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"crypto/tls"
-	"database/sql"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -66,7 +65,7 @@ func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, dirPath []st
 	t := time.Now()
 	var userID int64 = 1
 	id, err := kfsCore.Q.SetLogicFileByPath(ctx, userID, dirPath, name,
-		sql.NullInt64{Valid: false}, sqlc.DefaultDirMode, 0, t, t, t, t, false)
+		sqlc.NInt64Null(), sqlc.DefaultDirMode, 0, t, t, t, t, false)
 	if err != nil {
 		return err
 	}
@@ -254,7 +253,7 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, bdFile BaiduFile, file 
 	shootTime := time.Unix(bdFile.ShootTime, 0)
 	dirPath := []string{shootTime.Format("2006-01")}
 	_, err = d.kfsCore.Q.SetLogicFileByParentIdPath(ctx, userID, sqlc.NInt64(d.id), dirPath, name,
-		sql.NullInt64{Valid: true, Int64: id}, sqlc.DefaultFileMode, bdFile.Size,
+		sqlc.NInt64(id), sqlc.DefaultFileMode, bdFile.Size,
 		createTime, shootTime, shootTime, shootTime, true)
 	// _, err = d.kfsCore.Q.SetLogicFileByPath(ctx, userID, dirPath, name,
 	// 	sql.NullInt64{Valid: true, Int64: id}, sqlc.DefaultFileMode, bdFile.Size,

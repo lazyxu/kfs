@@ -654,7 +654,7 @@ func apiCreateFolder(c echo.Context) error {
 	t := time.Now()
 	var userID int64 = 1
 	_, err := kfsCore.Q.SetLogicFileByPath(c.Request().Context(), userID, req.DirPath, req.Name,
-		sql.NullInt64{Valid: false}, int64(os.ModeDir)|req.Perm, 0, t, t, t, t, false)
+		sqlc.NInt64Null(), int64(os.ModeDir)|req.Perm, 0, t, t, t, t, false)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -797,7 +797,7 @@ func apiMergeFileChunks(c echo.Context) error {
 	createTime := time.Now()
 	t := time.UnixMilli(req.FileMeta.LastModified)
 	_, err = kfsCore.Q.SetLogicFileByPath(ctx, userID, req.DirPath, req.FileMeta.Name,
-		sql.NullInt64{Valid: true, Int64: fileID}, DefaultFileMode, size,
+		sqlc.NInt64(fileID), DefaultFileMode, size,
 		createTime, t, t, t, false)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "upsert driver file failed: "+err.Error())

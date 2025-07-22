@@ -10,12 +10,12 @@ import { useEffect, useState } from "react";
 import Metadata from "./Metadata";
 import SameFiles from "./SameFiles";
 
-export default function ({ id, props }) {
+export default function ({ wid, props }) {
     let {
         filePath, driverFile,
         metadata,
     } = props;
-    console.log("ImageViewer", id, props);
+    console.log("ImageViewer", wid, props);
     const [downloadName, setDownloadName] = useState();
     const [metadataL, setMetadataL] = useState(metadata);
     const [openMetadata, setOpenMetadata] = useState(false);
@@ -25,7 +25,7 @@ export default function ({ id, props }) {
     const sysConfig = getSysConfig();
     useEffect(() => {
         if (!metadata) {
-            getMetadata(id).then(setMetadataL);
+            getMetadata(driverFile.file_id).then(setMetadataL);
         }
         // if (driverFile) {
         //     listDriverFileByHash(driverFile.id).then(setSameFiles);
@@ -39,9 +39,9 @@ export default function ({ id, props }) {
         // }
     }, []);
     return (
-        <Window id={id}>
-            <TitleBar id={id} title={downloadName + " - 图片查看器"} buttons={<ButtonGroup variant="contained">
-                <IconButton title="下载" disabled={!downloadName} onClick={() => { downloadByHash(id, downloadName) }}
+        <Window id={wid}>
+            <TitleBar wid={wid} title={downloadName + " - 图片查看器"} buttons={<ButtonGroup variant="contained">
+                <IconButton title="下载" disabled={!downloadName} onClick={() => { downloadByHash(wid, downloadName) }}
                     sx={{ color: theme => theme.context.secondary }}
                 >
                     <Download fontSize="small" />
@@ -76,8 +76,8 @@ export default function ({ id, props }) {
                     {metadataL && <img style={{ maxWidth: "100%", maxHeight: "100%" }} src={`${sysConfig.webServer}/api/v1/image?id=${metadataL.id}&size=${metadataL.size}&md5=${metadataL.md5}&sha256=${metadataL.sha256}`} />}
                 </Box>
             </WorkingArea>
-            {openSameFiles && <SameFiles id={id} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
-            {openMetadata && <Metadata id={id} metadata={metadataL} onClose={setOpenMetadata}/>}
+            {openSameFiles && <SameFiles id={wid} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
+            {openMetadata && <Metadata id={wid} metadata={metadataL} onClose={setOpenMetadata}/>}
             {driverFile && openAttribute && <FileAttribute fileAttribute={{ filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     );

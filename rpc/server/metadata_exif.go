@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"image"
@@ -112,7 +111,7 @@ func upsertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e *dao.Ex
 	}
 	if t.IsZero() {
 		var err error
-		iter, err := kfsCore.Q.GetEarliestCrated(ctx, sql.NullInt64{Int64: id, Valid: true})
+		iter, err := kfsCore.Q.GetEarliestCrated(ctx, sqlc.NInt64(id))
 		if err != nil {
 			return err
 		}
@@ -139,7 +138,7 @@ func upsertVideoTime(ctx context.Context, kfsCore *core.KFS, id int64, m *dao.Vi
 	}
 	if t.IsZero() {
 		var err error
-		iter, err := kfsCore.Q.GetEarliestCrated(ctx, sql.NullInt64{Int64: id, Valid: true})
+		iter, err := kfsCore.Q.GetEarliestCrated(ctx, sqlc.NInt64(id))
 		if err != nil {
 			return err
 		}
@@ -165,25 +164,21 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 		if err != nil {
 			return err
 		}
+		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sqlc.NInt64(height), Width: sqlc.NInt64(width)})
+		if err != nil {
+			return err
+		}
 		e, err := GetExifData(kfsCore, size, md5, sha256)
 		err1 := upsertImageTime(ctx, kfsCore, id, &e)
 		if err1 != nil {
 			return err1
 		}
 		if err != nil {
-			err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
-			if err != nil {
-				return err
-			}
 			err = kfsCore.Q.UpsertNullExif(ctx, id)
 			if err != nil {
 				return err
 			}
 			return nil
-		}
-		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
-		if err != nil {
-			return err
 		}
 		err = kfsCore.Q.UpsertExif(ctx, sqlc.UpsertExifParams{
 			ID:                  id,
@@ -223,6 +218,10 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 		if err != nil {
 			return err
 		}
+		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sqlc.NInt64(height), Width: sqlc.NInt64(width)})
+		if err != nil {
+			return err
+		}
 		m, err := GetVideoMetadata(kfsCore, size, md5, sha256)
 		err1 := upsertVideoTime(ctx, kfsCore, id, &m)
 		if err1 != nil {
@@ -234,10 +233,6 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 				return err
 			}
 			return nil
-		}
-		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
-		if err != nil {
-			return err
 		}
 		err = kfsCore.Q.UpsertVideoMetadata(ctx, sqlc.UpsertVideoMetadataParams{
 			ID:       id,

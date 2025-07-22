@@ -56,8 +56,8 @@ LEFT JOIN _exif ex
 WHERE ft.id = ?;
 
 -- name: GetDCIM :one
-SELECT 
-    ft.id,
+SELECT
+    f.id,
     f.size,
     f.md5,
     f.sha256,
@@ -97,8 +97,8 @@ LEFT JOIN _video_metadata vm ON dmt.id = vm.id
 LEFT JOIN _exif e ON dmt.id = e.id
 WHERE dmt.id = ?;
 -- name: ListDCIM :many
-SELECT 
-    ft.id,
+SELECT
+    f.id,
     f.size,
     f.md5,
     f.sha256,

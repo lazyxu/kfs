@@ -7,10 +7,12 @@ import (
 	"log"
 	"os"
 	"time"
+
+	"github.com/lazyxu/kfs/dao"
 )
 
 func (q *Queries) GetLogicFileByPath(ctx context.Context, userID int64, dirpath []string) (*LogicFile, *File, error) {
-	var parentID sql.NullInt64
+	var parentID dao.NullInt64
 	var lf *LogicFile
 
 	for _, name := range dirpath {
@@ -48,9 +50,9 @@ const DefaultFileMode int64 = 0o644
 const DefaultDirMode = int64(os.ModeDir | 0755)
 
 // 设置某路径的LogicFile，如果某一层不存在则创建（mkdir控制），只处理_logic_file表
-func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath []string, name string, fileID sql.NullInt64,
+func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath []string, name string, fileID dao.NullInt64,
 	mode, size int64, createTime, modifyTime, changeTime, accessTime time.Time, mkdir bool) (int64, error) {
-	var parentID sql.NullInt64
+	var parentID dao.NullInt64
 
 	for _, name := range dirpath {
 		params := GetLogicFileParams{
@@ -68,7 +70,7 @@ func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath 
 					UserID:     userID,
 					ParentID:   parentID,
 					Name:       name,
-					FileID:     sql.NullInt64{Valid: false},
+					FileID:     NInt64Null(),
 					Mode:       DefaultDirMode,
 					Size:       0,
 					CreateTime: createTime,
@@ -117,7 +119,7 @@ func (q *Queries) SetLogicFileByPath(ctx context.Context, userID int64, dirpath 
 	return r.LastInsertId()
 }
 
-func (q *Queries) SetLogicFileByParentIdPath(ctx context.Context, userID int64, parentID sql.NullInt64, dirpath []string, name string, fileID sql.NullInt64,
+func (q *Queries) SetLogicFileByParentIdPath(ctx context.Context, userID int64, parentID dao.NullInt64, dirpath []string, name string, fileID dao.NullInt64,
 	mode, size int64, createTime, modifyTime, changeTime, accessTime time.Time, mkdir bool) (int64, error) {
 	for _, name := range dirpath {
 		params := GetLogicFileParams{
@@ -135,7 +137,7 @@ func (q *Queries) SetLogicFileByParentIdPath(ctx context.Context, userID int64, 
 					UserID:     userID,
 					ParentID:   parentID,
 					Name:       name,
-					FileID:     sql.NullInt64{Valid: false},
+					FileID:     NInt64Null(),
 					Mode:       DefaultDirMode,
 					Size:       0,
 					CreateTime: createTime,
@@ -188,10 +190,10 @@ var startTime = time.Now()
 var rootDir = LogicFile{
 	ID:         0,
 	UserID:     0,
-	ParentID:   sql.NullInt64{Valid: false},
-	IsRoot:     sql.NullBool{Valid: true, Bool: true},
+	ParentID:   NInt64Null(),
+	IsRoot:     NBoolNull(),
 	Name:       "/",
-	FileID:     sql.NullInt64{Valid: false},
+	FileID:     NInt64Null(),
 	Mode:       DefaultDirMode,
 	Size:       0,
 	CreateTime: startTime,
@@ -207,7 +209,7 @@ func getRootDir(userID int64) *LogicFile {
 }
 
 func (q *Queries) ListDir(ctx context.Context, userID int64, dirpath []string) (*LogicFile, []*ListLogicFilesByParentIdRow, error) {
-	var parentID sql.NullInt64
+	var parentID dao.NullInt64
 	lf := getRootDir(userID)
 
 	// 逐层查找目录

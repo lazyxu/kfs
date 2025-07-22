@@ -28,7 +28,7 @@ export default memo(({ filePath, driverFile, hasBeenInView, inView }) => {
         <Box className="file-icon-box">
             {
                 app === APP_IMAGE_VIEWER || app === APP_VIDEO_VIEWER ?
-                    <ImgCancelable src={`${sysConfig.webServer}/thumbnail?id=${driverFile.file_id.Int64}&size=${driverFile.size}&md5=${driverFile.md5}&sha256=${driverFile.sha256}&hw=64`} inView={inView}
+                    <ImgCancelable src={`${sysConfig.webServer}/thumbnail?id=${driverFile.file_id}&size=${driverFile.size}&md5=${driverFile.md5}&sha256=${driverFile.sha256}&hw=64`} inView={inView}
                         renderImg={(url) => <img title={name} src={url} loading="lazy" onClick={onClick} />}
                         renderSkeleton={() => <Skeleton title={name} variant="rectangular" animation={false} width="100%" height="100%" />}
                     /> :

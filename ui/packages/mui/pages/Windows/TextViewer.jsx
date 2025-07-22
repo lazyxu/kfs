@@ -12,9 +12,9 @@ import moment from 'moment';
 import { useEffect, useState } from 'react';
 import SameFiles from "./SameFiles";
 
-export default ({ id, props }) => {
+export default ({ wid, props }) => {
     const { driver, filePath, driverFile } = props;
-    console.log("TextViewer", id, props);
+    console.log("TextViewer", wid, props);
     const { hash } = driverFile;
     const [loaded, setLoaded] = useState();
     const [openAttribute, setOpenAttribute] = useState(false);
@@ -25,8 +25,8 @@ export default ({ id, props }) => {
         openFile(driver.id, filePath).then(setLoaded);
     }, []);
     return (
-        <Window id={id}>
-            <TitleBar id={id} title={filePath[filePath.length - 1] + " - 文本编辑器"} buttons={<>
+        <Window id={wid}>
+            <TitleBar wid={wid} title={filePath[filePath.length - 1] + " - 文本编辑器"} buttons={<>
                 <IconButton title="保存" disabled
                     sx={{ color: theme => theme.context.secondary }}
                 >

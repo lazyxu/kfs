@@ -23,9 +23,9 @@ export default function ({ metadata }) {
         title = time + "\n"
         + shotEquipment + "\n"
         + metadata.type + "/" + metadata.sub_type + "\n"
-        + (metadata ? (metadata.codec + "\n") : "")
-        + (metadata ? (metadata.created + "\n") : "")
-        + (metadata ? (metadata.duration + "s\n") : "")
+        + (metadata.codec ? (metadata.codec + "\n") : "")
+        + (metadata.created ? (metadata.created + "\n") : "")
+        + (metadata.duration ? (metadata.duration + "s\n") : "")
         + id;
     }
     return (

@@ -93,19 +93,15 @@ export function parseShotTime(metadata) {
     return moment.invalid();
 }
 
-export function parseShotEquipment(exif) {
-    if (exif) {
-        if (exif.Model) {
-            if (exif.Model.includes(exif.Make)) {
-                return exif.Model;
-            } else {
-                return exif.Make + " " + exif.Model;
-            }
+export function parseShotEquipment(m) {
+    if (m.model) {
+        if (m.model.includes(m.make)) {
+            return m.model;
         } else {
-            return exif.HostComputer;
+            return m.make + " " + m.model;
         }
     }
-    return "";
+    return m.hostComputer || '未知设备';
 }
 
 export function toPrecent(n) {

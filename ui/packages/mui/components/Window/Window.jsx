@@ -3,16 +3,16 @@ import Close from '@mui/icons-material/Close';
 import { Box, ButtonGroup, Dialog, DialogContent, Stack } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 
-export function Window({ id, children }) {
+export function Window({ wid, children }) {
     const [windows, setWindows] = useWindows();
     return (
-        <Dialog open={true} fullScreen={true} onClose={() => closeWindow(setWindows, id)}>
+        <Dialog open={true} fullScreen={true} onClose={() => closeWindow(setWindows, wid)}>
             {children}
         </Dialog>
     )
 }
 
-export function TitleBar({ id, title, buttons }) {
+export function TitleBar({ wid, title, buttons }) {
     const [windows, setWindows] = useWindows();
     return (
         <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -23,7 +23,7 @@ export function TitleBar({ id, title, buttons }) {
                 <ButtonGroup variant="contained">
                     {buttons}
                 </ButtonGroup>
-                <IconButton aria-label="close" onClick={() => closeWindow(setWindows, id)}
+                <IconButton aria-label="close" onClick={() => closeWindow(setWindows, wid)}
                     sx={{
                         padding: "4px 12px", borderRadius: '0',
                         color: theme => theme.context.secondary,

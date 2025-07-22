@@ -134,7 +134,7 @@ export default ({ fileAttribute, onClose }) => {
                         <Attr k="类型">{isDir ? "文件夹" : "文件"}</Attr>
                         <Attr k="文件路径">{"/" + filePath.join("/")}</Attr>
                         {!isDir && <>
-                            <Attr k="文件ID">{driverFile.file_id.Int64}</Attr>
+                            <Attr k="文件ID">{driverFile.file_id}</Attr>
                             <Attr k="文件大小">{humanize.filesize(driverFile.size)}</Attr>
                             <Attr k="md5">{driverFile.md5}</Attr>
                             <Attr k="sha256">{driverFile.sha256}</Attr>

@@ -28,7 +28,7 @@ const StatusMsgs = {
     [StatusRunningAnalyze]: "正在解析",
 };
 
-export default function ({ id }) {
+export default function ({ wid }) {
     const [taskInfo, setTaskInfo] = useState();
     const controller = new AbortController();
     useEffect(() => {
@@ -80,8 +80,8 @@ export default function ({ id }) {
         }
     }, []);
     return (
-        <Window id={id}>
-            <TitleBar id={id} title="livp文件解析" />
+        <Window id={wid}>
+            <TitleBar wid={wid} title="livp文件解析" />
             <WorkingArea>
                 <Box sx={{ padding: "0.5em 1em" }}>
                     {(taskInfo?.status === undefined ||
