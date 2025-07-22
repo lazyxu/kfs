@@ -257,17 +257,27 @@ func apiListDriverFileByHash(c echo.Context) error {
 }
 
 func apiImage(c echo.Context) error {
-	hash := c.QueryParam("hash")
-	m, err1 := kfsCore.Db.GetMetadata(c.Request().Context(), hash)
+	idStr := c.QueryParam("id")
+	id, err1 := strconv.ParseInt(idStr, 10, 64)
 	if err1 != nil {
 		return err1
 	}
-	fileType := m.FileType
-	if fileType.Extension == "zip" {
-		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".jpg")
+	sizeStr := c.QueryParam("size")
+	size, err1 := strconv.ParseInt(sizeStr, 10, 64)
+	if err1 != nil {
+		return err1
+	}
+	md5 := c.QueryParam("md5")
+	sha256 := c.QueryParam("sha256")
+	m, err1 := kfsCore.Q.GetMetadata(c.Request().Context(), id)
+	if err1 != nil {
+		return err1
+	}
+	if m.Extension == "zip" {
+		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".jpg")
 		f, err2 := os.Open(thumbnailFilePath)
 		if os.IsNotExist(err2) {
-			_, heicHash, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, hash)
+			_, heicHash, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, "")
 			if err != nil {
 				return err
 			}
@@ -280,7 +290,7 @@ func apiImage(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			img = orientation(img, int64(m.Exif.Orientation))
+			img = orientation(img, m.Orientation.Int64)
 			err = imaging.Save(img, thumbnailFilePath)
 			if err != nil {
 				return err
@@ -294,11 +304,11 @@ func apiImage(c echo.Context) error {
 		c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 		return c.Stream(http.StatusOK, "", f)
 	}
-	if fileType.Extension == matchers.TypeHeif.Extension {
-		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".jpg")
+	if m.Extension == matchers.TypeHeif.Extension {
+		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".jpg")
 		f, err2 := os.Open(thumbnailFilePath)
 		if os.IsNotExist(err2) {
-			rc, err := kfsCore.S.ReadWithSize(hash)
+			rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
 			if err != nil {
 				return err
 			}
@@ -307,7 +317,7 @@ func apiImage(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			img = orientation(img, int64(m.Exif.Orientation))
+			img = orientation(img, m.Orientation.Int64)
 			err = imaging.Save(img, thumbnailFilePath)
 			if err != nil {
 				return err
@@ -320,9 +330,9 @@ func apiImage(c echo.Context) error {
 		defer f.Close()
 		c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 		return c.Stream(http.StatusOK, "", f)
-	} else if fileType.Extension == matchers.TypeMov.Extension {
-		src := kfsCore.S.GetFilePath(hash)
-		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), hash+".mp4")
+	} else if m.Extension == matchers.TypeMov.Extension {
+		src := kfsCore.S2.GetFilePath(size, md5, sha256)
+		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".mp4")
 		f, err := os.Open(thumbnailFilePath)
 		if os.IsNotExist(err) {
 			err = ffmpeg_go.Input(src, ffmpeg_go.KwArgs{"noautorotate": ""}).
@@ -340,7 +350,7 @@ func apiImage(c echo.Context) error {
 		c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
 		return c.Stream(http.StatusOK, "", f)
 	}
-	rc, err := kfsCore.S.ReadWithSize(hash)
+	rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
 	if err != nil {
 		println(err.Error())
 		c.Logger().Error(err)
@@ -582,6 +592,9 @@ func apiStartBaiduPhotoTask(c echo.Context) error {
 	}
 	ctx := c.Request().Context()
 	d, err := baidu_photo.GetOrLoad(ctx, kfsCore, id)
+	if err == sql.ErrNoRows {
+		return c.String(http.StatusOK, "")
+	}
 	if err != nil {
 		return err
 	}

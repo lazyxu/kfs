@@ -1,5 +1,7 @@
 package dao
 
+import "time"
+
 type Exif struct {
 	ExifVersion         string
 	ImageDescription    string
@@ -26,8 +28,8 @@ type Exif struct {
 
 type VideoMetadata struct {
 	Codec    string
-	Created  int64
-	Modified int64
+	Created  time.Time
+	Modified time.Time
 	Duration float64 // 容器中媒体数据的持续时间（秒）
 }
 

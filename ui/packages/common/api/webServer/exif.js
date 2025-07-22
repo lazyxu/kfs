@@ -32,11 +32,11 @@ export async function listExif() {
     }
 }
 
-export async function getMetadata(hash) {
+export async function getMetadata(id) {
     try {
-        console.log('web.getMetadata', hash);
+        console.log('web.getMetadata', id);
         return await httpGet("/api/v1/metadata", {
-            hash,
+            id,
         });
     } catch (e) {
         window.noteError("获取文件元数据失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));

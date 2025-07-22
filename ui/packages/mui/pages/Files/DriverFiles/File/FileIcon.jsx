@@ -7,7 +7,7 @@ import { Box, Skeleton } from "@mui/material";
 import { memo } from "react";
 import SvgIcon from "../../../../components/Icon/SvgIcon";
 
-export default memo(({ driver, filePath, driverFile, hasBeenInView, inView }) => {
+export default memo(({ filePath, driverFile, hasBeenInView, inView }) => {
     const sysConfig = getSysConfig();
     const [resourceManager, setResourceManager] = useResourceManager();
     const [windows, setWindows] = useWindows();
@@ -23,12 +23,12 @@ export default memo(({ driver, filePath, driverFile, hasBeenInView, inView }) =>
         );
     }
     const app = getOpenApp(name);
-    const onClick = () => newWindow(setWindows, app, { driver, filePath, driverFile });
+    const onClick = () => newWindow(setWindows, app, { filePath, driverFile });
     return (
         <Box className="file-icon-box">
             {
                 app === APP_IMAGE_VIEWER || app === APP_VIDEO_VIEWER ?
-                    <ImgCancelable src={`${sysConfig.webServer}/thumbnail?id=${driverFile.file_id.Int64}&hw=64&size=${driverFile.size}&md5=${driverFile.md5}&sha256=${driverFile.sha256}`} inView={inView}
+                    <ImgCancelable src={`${sysConfig.webServer}/thumbnail?id=${driverFile.file_id.Int64}&size=${driverFile.size}&md5=${driverFile.md5}&sha256=${driverFile.sha256}&hw=64`} inView={inView}
                         renderImg={(url) => <img title={name} src={url} loading="lazy" onClick={onClick} />}
                         renderSkeleton={() => <Skeleton title={name} variant="rectangular" animation={false} width="100%" height="100%" />}
                     /> :

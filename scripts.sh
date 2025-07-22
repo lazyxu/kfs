@@ -26,6 +26,17 @@ if ! is_command_exist sqlc; then
   GOOS= GOARCH= go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 fi
 
+if ! is_command_exist ffprobe; then
+  arch=amd64
+  mkdir -p ~/lib/
+  cd ~/lib/
+  lib_dir=$(cd "$(dirname "$0")"; pwd)
+  wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-${arch}-static.tar.xz
+  tar -xvf ffmpeg-release-${arch}-static.tar.xz
+  rm -rf ffmpeg-release-${arch}-static.tar.xz
+  export PATH="$lib_dir/ffmpeg-6.1-${arch}-static:$PATH"
+fi
+
 export GO111MODULE=on
 export PATH="$PATH:$(go env GOPATH)/bin"
 

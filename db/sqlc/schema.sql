@@ -105,9 +105,9 @@ CREATE TABLE IF NOT EXISTS _exif (
 CREATE TABLE IF NOT EXISTS _video_metadata (
     id       BIGINT       NOT NULL PRIMARY KEY,
     Codec    VARCHAR(255) DEFAULT NULL,
-    Created  BIGINT DEFAULT NULL,
-    Modified BIGINT DEFAULT NULL,
-    Duration DOUBLE DEFAULT NULL,
+    Created  DATETIME     DEFAULT NULL,
+    Modified DATETIME     DEFAULT NULL,
+    Duration DOUBLE       DEFAULT NULL,
     FOREIGN KEY (id)  REFERENCES   _file(id)
 );
 

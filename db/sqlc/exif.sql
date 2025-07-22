@@ -46,8 +46,31 @@ ON DUPLICATE KEY UPDATE
     gps_latitude = VALUES(gps_latitude),
     gps_longitude_ref = VALUES(gps_longitude_ref),
     gps_longitude = VALUES(gps_longitude);
--- name: InsertNullExif :exec
-INSERT INTO _exif ( id ) VALUES (?);
+-- name: UpsertNullExif :exec
+INSERT INTO _exif (id) 
+VALUES (?) 
+ON DUPLICATE KEY UPDATE 
+    exif_version = NULL,
+    image_description = NULL,
+    orientation = NULL,
+    date_time = NULL,
+    date_time_original = NULL,
+    date_time_digitized = NULL,
+    offset_time = NULL,
+    offset_time_original = NULL,
+    offset_time_digitized = NULL,
+    subsec_time = NULL,
+    subsec_time_original = NULL,
+    subsec_time_digitized = NULL,
+    host_computer = NULL,
+    make = NULL,
+    model = NULL,
+    exif_image_width = NULL,
+    exif_image_length = NULL,
+    gps_latitude_ref = NULL,
+    gps_latitude = NULL,
+    gps_longitude_ref = NULL,
+    gps_longitude = NULL;
 -- name: GetExif :one
 SELECT * FROM _exif WHERE id = ?;
 -- name: ListExif :many

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
 	"sync/atomic"
+
+	"github.com/labstack/echo/v4"
 )
 
 var exifChan = make(chan bool)
@@ -57,8 +58,12 @@ func apiListMetadataTime(c echo.Context) error {
 }
 
 func apiGetMetadata(c echo.Context) error {
-	hash := c.QueryParam("hash")
-	data, err := kfsCore.Db.GetMetadata(c.Request().Context(), hash)
+	idStr := c.QueryParam("id")
+	id, err := strconv.ParseInt(idStr, 10, 0)
+	if err != nil {
+		return c.String(http.StatusBadRequest, "id should be a number")
+	}
+	data, err := kfsCore.Q.GetMetadata(c.Request().Context(), id)
 	if err != nil {
 		return err
 	}

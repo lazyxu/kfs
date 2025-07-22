@@ -128,9 +128,9 @@ func insertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e dao.Exi
 }
 
 func insertVideoTime(ctx context.Context, kfsCore *core.KFS, id int64, m dao.VideoMetadata) error {
-	t := time.Unix(m.Created, 0)
+	t := m.Created
 	if t.IsZero() {
-		t = time.Unix(m.Modified, 0)
+		t = m.Modified
 	}
 	if t.IsZero() {
 		var err error
@@ -167,7 +167,7 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 			if err != nil {
 				return err
 			}
-			err = kfsCore.Q.InsertNullExif(ctx, id)
+			err = kfsCore.Q.UpsertNullExif(ctx, id)
 			// TODO: what if exist
 			if err != nil {
 				return err
@@ -244,10 +244,10 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 		}
 		err = kfsCore.Q.InsertVideoMetadata(ctx, sqlc.InsertVideoMetadataParams{
 			ID:       id,
-			Codec:    sql.NullString{String: m.Codec, Valid: true},
-			Created:  sql.NullInt64{Int64: m.Created, Valid: true},
-			Modified: sql.NullInt64{Int64: m.Modified, Valid: true},
-			Duration: sql.NullFloat64{Float64: m.Duration, Valid: true},
+			Codec:    sqlc.NString(m.Codec),
+			Created:  sqlc.NTime(m.Created),
+			Modified: sqlc.NTime(m.Modified),
+			Duration: sqlc.NFloat64(m.Duration),
 		})
 		// TODO: what if exist
 		if err != nil {
@@ -379,8 +379,8 @@ func GetVideoMetadata(kfsCore *core.KFS, size int64, md5 string, sha256 string) 
 	}
 	m = dao.VideoMetadata{
 		Codec:    fileInfo.Codec,
-		Created:  fileInfo.Movie.Created.UnixNano(),
-		Modified: fileInfo.Movie.Modified.UnixNano(),
+		Created:  fileInfo.Movie.Created,
+		Modified: fileInfo.Movie.Modified,
 		Duration: fileInfo.Movie.Duration,
 	}
 	return

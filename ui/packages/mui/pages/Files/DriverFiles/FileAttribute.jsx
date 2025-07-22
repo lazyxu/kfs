@@ -62,47 +62,49 @@ export default ({ fileAttribute, onClose }) => {
         // getDriversDirCalculatedInfo(driver.id, filePath).then(setAttributes);
     }, []);
     useEffect(() => {
-        fetchEventSource(`${getSysConfig().webServer}/api/v1/event/baiduPhotoTask/${driverFile.id}`, {
-            signal: controller.signal,
-            async onopen(response) {
-                if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
-                    return; // everything's good
+        if (driverFile.sync_from_id > 0) {
+            fetchEventSource(`${getSysConfig().webServer}/api/v1/event/baiduPhotoTask/${driverFile.id}`, {
+                signal: controller.signal,
+                async onopen(response) {
+                    if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
+                        return; // everything's good
+                    }
+                    console.error(response);
+                    noteError("event/baiduPhotoTask.onopen: " + response.status);
+                },
+                onmessage(msg) {
+                    // if the server emits an error message, throw an exception
+                    // so it gets handled by the onerror callback below:
+                    if (msg.event === 'FatalError') {
+                        console.error(msg);
+                        noteError("event/baiduPhotoTask.onmessage: " + msg);
+                        return;
+                    }
+                    let info = JSON.parse(msg.data);
+                    console.log(info);
+                    if (info.errMsg) {
+                        noteError(info.errMsg);
+                    }
+                    setTaskInfo(info);
+                },
+                onclose() {
+                    // if the server closes the connection unexpectedly, retry:
+                    noteError("event/baiduPhotoTask.onclose");
+                },
+                onerror(err) {
+                    console.error(err);
+                    // noteError("event/baiduPhotoTask.onerror: " + err.message);
+                    // if (err instanceof FatalError) {
+                    //     throw err; // rethrow to stop the operation
+                    // } else {
+                    //     // do nothing to automatically retry. You can also
+                    //     // return a specific retry interval here.
+                    // }
                 }
-                console.error(response);
-                noteError("event/baiduPhotoTask.onopen: " + response.status);
-            },
-            onmessage(msg) {
-                // if the server emits an error message, throw an exception
-                // so it gets handled by the onerror callback below:
-                if (msg.event === 'FatalError') {
-                    console.error(msg);
-                    noteError("event/baiduPhotoTask.onmessage: " + msg);
-                    return;
-                }
-                let info = JSON.parse(msg.data);
-                console.log(info);
-                if (info.errMsg) {
-                    noteError(info.errMsg);
-                }
-                setTaskInfo(info);
-            },
-            onclose() {
-                // if the server closes the connection unexpectedly, retry:
-                noteError("event/baiduPhotoTask.onclose");
-            },
-            onerror(err) {
-                console.error(err);
-                // noteError("event/baiduPhotoTask.onerror: " + err.message);
-                // if (err instanceof FatalError) {
-                //     throw err; // rethrow to stop the operation
-                // } else {
-                //     // do nothing to automatically retry. You can also
-                //     // return a specific retry interval here.
-                // }
-            }
-        });
+            });
+        }
         return () => {
-            controller.abort();
+            controller?.abort();
         }
     }, []);
     const handleConfirm = () => {

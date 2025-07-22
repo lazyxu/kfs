@@ -12,13 +12,9 @@ import SameFiles from "./SameFiles";
 
 export default function ({ id, props }) {
     let {
-        driver, filePath, driverFile,
-        hash,
+        filePath, driverFile,
     } = props;
     console.log("ImageViewer", id, props);
-    if (driverFile) {
-        hash = driverFile.hash;
-    }
     const [downloadName, setDownloadName] = useState();
     const [metadata, setMetadata] = useState();
     const [openMetadata, setOpenMetadata] = useState(false);
@@ -27,17 +23,17 @@ export default function ({ id, props }) {
     const [openAttribute, setOpenAttribute] = useState(false);
     const sysConfig = getSysConfig();
     useEffect(() => {
-        getMetadata(hash).then(setMetadata);
-        if (driverFile) {
-            listDriverFileByHash(hash).then(setSameFiles);
-            setDownloadName(filePath[filePath.length - 1]);
-        } else {
-            listDriverFileByHash(hash).then(sf => {
-                setSameFiles(sf);
-                // TODO: select a best name.
-                setDownloadName(sf[0].name);
-            });
-        }
+        getMetadata(driverFile.file_id.Int64).then(setMetadata);
+        // if (driverFile) {
+        //     listDriverFileByHash(driverFile.id).then(setSameFiles);
+        //     setDownloadName(filePath[filePath.length - 1]);
+        // } else {
+        //     listDriverFileByHash(driverFile.id).then(sf => {
+        //         setSameFiles(sf);
+        //         // TODO: select a best name.
+        //         setDownloadName(sf[0].name);
+        //     });
+        // }
     }, []);
     return (
         <Window id={id}>
@@ -73,15 +69,13 @@ export default function ({ id, props }) {
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    color: theme => theme.context.primary,
-                    backgroundColor: theme => theme.background.primary,
                 }}>
-                    {hash && <img style={{ maxWidth: "100%", maxHeight: "100%" }} src={`${sysConfig.webServer}/api/v1/image?hash=${hash}`} />}
+                    {driverFile.id && <img style={{ maxWidth: "100%", maxHeight: "100%" }} src={`${sysConfig.webServer}/api/v1/image?id=${driverFile.file_id.Int64}&size=${driverFile.size}&md5=${driverFile.md5}&sha256=${driverFile.sha256}`} />}
                 </Box>
             </WorkingArea>
-            {openSameFiles && <SameFiles hash={hash} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
-            {openMetadata && <Metadata hash={hash} metadata={metadata} onClose={setOpenMetadata}/>}
-            {driverFile && openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
+            {openSameFiles && <SameFiles id={id} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
+            {openMetadata && <Metadata id={id} metadata={metadata} onClose={setOpenMetadata}/>}
+            {driverFile && openAttribute && <FileAttribute fileAttribute={{ filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     );
 }

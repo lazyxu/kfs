@@ -2,7 +2,7 @@ import { Close } from '@mui/icons-material';
 import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 
-export default function ({ hash, metadata, onClose }) {
+export default function ({ metadata, onClose }) {
     return (
         <Dialog open={true} fullWidth={true} onClose={onClose}>
             <DialogTitle sx={{

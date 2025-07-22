@@ -1,6 +1,6 @@
 import useResourceManager from "@kfs/common/hox/resourceManager";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { Button, DialogActions, DialogContent, Link, Stack, Switch, TextField } from "@mui/material";
+import { Box, Button, Checkbox, DialogActions, DialogContent, FormControlLabel, Link, Stack, Switch, TextField, Typography } from "@mui/material";
 import { useState } from 'react';
 import { createBaiduPhoto } from "../../../api/driver";
 
@@ -58,18 +58,32 @@ export default function ({ onClose }) {
                     value={cron}
                     onChange={e => setCron(e.target.value)}
                 />
-                <Switch
-                    checked={enabled}
-                    onChange={ (event) => {
-                        setEnabled(event.target.checked);
-                    }}
-                />
-                <Switch
-                    checked={syncAtStart}
-                    onChange={ (event) => {
-                        setSyncAtStart(event.target.checked);
-                    }}
-                />
+                <Box>
+                    <FormControlLabel
+                        control={<Switch
+                            checked={enabled}
+                            onChange={(e) => setEnabled(e.target.checked)}
+                            color="primary"
+                            size="small"
+                        />}
+                        label={<Typography fontWeight={500}>
+                            开启同步
+                        </Typography>}
+                    />
+                </Box>
+                <Box>
+                    <FormControlLabel
+                        control={<Switch
+                            checked={syncAtStart}
+                            onChange={(e) => setSyncAtStart(e.target.checked)}
+                            color="primary"
+                            size="small"
+                        />}
+                        label={<Typography fontWeight={500}>
+                            启动时同步
+                        </Typography>}
+                    />
+                </Box>
             </DialogContent>
             <DialogActions>
                 <Button variant="outlined" sx={{ width: "10em" }} disabled={name === ""} onClick={() => {

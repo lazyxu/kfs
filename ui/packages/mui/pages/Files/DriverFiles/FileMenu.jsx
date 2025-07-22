@@ -10,7 +10,7 @@ import { ListItemText, MenuItem } from "@mui/material";
 export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
     const [resourceManager, setResourceManager] = useResourceManager();
     const [windows, setWindows] = useWindows();
-    const { driver, filePath, driverFile } = contextMenu;
+    const { filePath, driverFile } = contextMenu;
     const { name, mode } = driverFile;
     return (
         <Menu
@@ -24,7 +24,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
                     openDir(setResourceManager, filePath);
                 } else {
                     const app = getOpenApp(name);
-                    newWindow(setWindows, app, { driver, filePath, driverFile });;
+                    newWindow(setWindows, app, { filePath, driverFile });
                 }
             }}>
                 <OpenInNew />
@@ -33,8 +33,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
             {window.kfsEnv.VITE_APP_PLATFORM !== 'web' && <>
                 <MenuItem onClick={() => {
                     setContextMenu(null);
-                    getDriverLocalFile(driver.id).then(driverLocalFile => {
-                        // console.log(driver, driverLocalFile, filePath);
+                    getDriverLocalFile().then(driverLocalFile => {
                         const { shell } = window.require('@electron/remote');
                         shell.openPath(driverLocalFile.srcPath + "\\" + filePath.join("\\"));
                     });
@@ -44,8 +43,7 @@ export default function ({ contextMenu, setContextMenu, setFileAttribute }) {
                 </MenuItem>
                 <MenuItem onClick={() => {
                     setContextMenu(null);
-                    getDriverLocalFile(driver.id).then(driverLocalFile => {
-                        // console.log(driver, driverLocalFile, filePath);
+                    getDriverLocalFile().then(driverLocalFile => {
                         const { shell } = window.require('@electron/remote');
                         shell.showItemInFolder(driverLocalFile.srcPath + "\\" + filePath.join("\\"));
                     });

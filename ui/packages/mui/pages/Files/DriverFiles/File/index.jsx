@@ -15,7 +15,7 @@ const useGetState = (initiateState) => {
 
 export default ({ driverFile, setContextMenu }) => {
     const [resourceManager, setResourceManager] = useResourceManager();
-    const { driver, dirPath } = resourceManager;
+    const { dirPath } = resourceManager;
     const { name } = driverFile
     const filePath = useRef([]);
     const { ref, inView } = useInView({ threshold: 0 });
@@ -40,11 +40,11 @@ export default ({ driverFile, setContextMenu }) => {
                 e.preventDefault(); e.stopPropagation();
                 setContextMenu({
                     mouseX: e.clientX, mouseY: e.clientY,
-                    driver, filePath: filePath.current, driverFile
+                    filePath: filePath.current, driverFile
                 });
             }}
         >
-            {filePath.current.length && <FileIcon driverFile={driverFile} filePath={filePath.current} hasBeenInView={hasBeenInView} driver={driver} inView={inView} />}
+            {filePath.current.length && <FileIcon driverFile={driverFile} filePath={filePath.current} hasBeenInView={hasBeenInView} inView={inView} />}
             <div style={{ width: "100%", textAlign: "center" }}>
                 <p style={{ overflowWrap: "break-word" }}>{name}</p>
             </div>
