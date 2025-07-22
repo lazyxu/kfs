@@ -87,15 +87,26 @@ ON DUPLICATE KEY UPDATE
 SELECT * FROM _height_width WHERE id = ?;
 
 -- VideoMetadata
--- name: InsertVideoMetadata :exec
+-- name: UpsertVideoMetadata :exec
 INSERT INTO _video_metadata (
     id,
     Codec, -- not null
     Created, -- not null
     Modified, -- not null
     Duration -- not null
-) VALUES (?, ?, ?, ?, ?);
--- name: InsertNullVideoMetadata :exec
-INSERT INTO _video_metadata ( id ) VALUES (?);
+) VALUES (?, ?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE
+    Codec = VALUES(Codec),
+    Created = VALUES(Created),
+    Modified = VALUES(Modified),
+    Duration = VALUES(Duration);
+-- name: UpsertNullVideoMetadata :exec
+INSERT INTO _video_metadata (id) 
+VALUES (?)
+ON DUPLICATE KEY UPDATE
+    Codec = NULL,
+    Created = NULL,
+    Modified = NULL,
+    Duration = NULL;
 -- name: GetVideoMetadata :one
 SELECT * FROM _video_metadata WHERE id = ?;

@@ -21,7 +21,7 @@ export default ({ id, props }) => {
     const [sameFiles, setSameFiles] = useState([]);
     const [openSameFiles, setOpenSameFiles] = useState(false);
     useEffect(() => {
-        listDriverFileByHash(hash).then(setSameFiles);
+        // listDriverFileByHash(hash).then(setSameFiles);
         openFile(driver.id, filePath).then(setLoaded);
     }, []);
     return (

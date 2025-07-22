@@ -5,8 +5,7 @@ import Image from "./Image";
 export default function ({ metadataList }) {
     let dateMap = {};
     metadataList.forEach(metadata => {
-        let date = parseShotTime(metadata);
-        date = date ? date.format("YYYY年") : "未知时间";
+        let date = metadata.parsedTime.format("YYYY年");
         if (dateMap.hasOwnProperty(date)) {
             dateMap[date].push(metadata);
         } else {

@@ -90,7 +90,7 @@ func webServer(webPortString string) {
 	e.GET("/thumbnail", apiThumbnail)
 	e.GET("/api/v1/analysisExif", apiExifStatus)
 	e.POST("/api/v1/analysisExif", apiAnalysisExif)
-	e.GET("/api/v1/exif", apiListMetadata)
+	e.GET("/api/v1/listDCIM", apiListDCIM)
 	e.GET("/api/v1/DCIMMetadataTime", apiListMetadataTime)
 	e.GET("/api/v1/listDCIMDriver", apiListDCIMDriver)
 	e.GET("/api/v1/listDCIMMediaType", apiListDCIMMediaType)

@@ -1,13 +1,14 @@
 import { Box, Checkbox, FormControlLabel, IconButton, InputLabel, Radio, RadioGroup, Stack, Typography } from "@mui/material";
 // import FormControlLabel from '@mui/material/FormControlLabel';
-import { parseShotEquipment, parseShotTime, timeSortFn } from "@kfs/common/api/utils";
-import { listExif } from '@kfs/common/api/webServer/exif';
+import { parseShotEquipment } from "@kfs/common/api/utils";
+import { listDCIM } from '@kfs/common/api/webServer/exif';
 import { CalendarMonth, FilterAlt, Refresh } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import All from './All';
 import Date from "./Date";
 import Month from "./Month";
 import Year from "./Year";
+import moment from 'moment';
 
 export default function () {
     const [metadataList, setMetadataList] = useState([]);
@@ -19,26 +20,25 @@ export default function () {
     const [chosenFileType, setChosenFileType] = useState();
     const [fileTypeMap, setFileTypeMap] = useState({});
     const refersh = () => {
-        listExif().then(metadataList => {
+        listDCIM().then(metadataList => {
             let shotEquipmentMap = {};
             let fileTypeMap = {};
             metadataList.forEach(metadata => {
-                let { fileType } = metadata;
                 let shotEquipment = parseShotEquipment(metadata);
-                let shotTime = parseShotTime(metadata);
                 if (shotEquipmentMap.hasOwnProperty(shotEquipment)) {
                     shotEquipmentMap[shotEquipment]++;
                 } else {
                     shotEquipmentMap[shotEquipment] = 1;
                 }
-                if (fileTypeMap.hasOwnProperty(fileType.extension)) {
-                    fileTypeMap[fileType.extension]++;
+                if (fileTypeMap.hasOwnProperty(metadata.extension)) {
+                    fileTypeMap[metadata.extension]++;
                 } else {
-                    fileTypeMap[fileType.extension] = 1;
+                    fileTypeMap[metadata.extension] = 1;
                 }
                 metadata.shotEquipment = shotEquipment;
-                metadata.shotTime = shotTime;
+                metadata.parsedTime = moment.parseZone(metadata.time, "YYYY-MM-DDTHH:mm:ssZZ");
             })
+            console.log("metadataList", metadataList);
             setMetadataList(metadataList);
             setShotEquipmentMap(shotEquipmentMap);
             setFileTypeMap(fileTypeMap);
@@ -50,8 +50,8 @@ export default function () {
     let filteredMetadataList = metadataList
         .filter(metadata =>
             (!chosenShotEquipment || chosenShotEquipment.includes(metadata.shotEquipment)) &&
-            (!chosenFileType || chosenFileType.includes(metadata.fileType.extension)))
-        .sort(timeSortFn);
+            (!chosenFileType || chosenFileType.includes(metadata.extension)))
+        .sort((a, b) => a.parsedTime.isAfter(b.parsedTime));
     return (
         <Stack style={{ flex: "1", overflowY: 'auto' }}>
             <Stack
@@ -91,7 +91,7 @@ export default function () {
                                     } else {
                                         set.delete(shotEquipment);
                                         if (set.size === 0) {
-                                            return undefined;
+                                            return undefined; // undefined means no filter
                                         }
                                         return Array.from(set);
                                     }
@@ -113,7 +113,7 @@ export default function () {
                                     } else {
                                         set.delete(fileType);
                                         if (set.size === 0) {
-                                            return undefined;
+                                            return undefined; // undefined means no filter
                                         }
                                         return Array.from(set);
                                     }
@@ -123,8 +123,8 @@ export default function () {
                     )}
                 </Box>
             </Box>
-            <Typography>共{metadataList.filter(m => m.fileType.type === "image").length}张照片、{metadataList.filter(m => m.fileType.type === "video").length}个视频</Typography>
-            {(chosenShotEquipment || chosenFileType) && <Typography>筛选出{filteredMetadataList.filter(m => m.fileType.type === "image").length}张照片、{filteredMetadataList.filter(m => m.fileType.type === "video").length}个视频</Typography>}
+            <Typography>共{metadataList.filter(m => m.type=== "image").length}张照片、{metadataList.filter(m => m.type=== "video").length}个视频</Typography>
+            {(chosenShotEquipment || chosenFileType) && <Typography>筛选出{filteredMetadataList.filter(m => m.type=== "image").length}张照片、{filteredMetadataList.filter(m => m.type=== "video").length}个视频</Typography>}
             {viewBy === "年" && <Year metadataList={filteredMetadataList} />}
             {viewBy === "月" && <Month metadataList={filteredMetadataList} />}
             {viewBy === "日" && <Date metadataList={filteredMetadataList} />}

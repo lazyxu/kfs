@@ -13,47 +13,46 @@ import SameFiles from "./SameFiles";
 export default function ({ id, props }) {
     let {
         driver, filePath, driverFile,
-        hash,
+        metadata,
     } = props;
     console.log("VideoViewer", id, props);
-    if (driverFile) {
-        hash = driverFile.hash;
-    }
     const [downloadName, setDownloadName] = useState();
-    const [metadata, setMetadata] = useState();
+    const [metadataL, setMetadataL] = useState(metadata);
     const [openMetadata, setOpenMetadata] = useState(false);
     const [sameFiles, setSameFiles] = useState([]);
     const [openSameFiles, setOpenSameFiles] = useState(false);
     const [openAttribute, setOpenAttribute] = useState(false);
     const sysConfig = getSysConfig();
     useEffect(() => {
-        getMetadata(hash).then(setMetadata);
-        if (driverFile) {
-            listDriverFileByHash(hash).then(setSameFiles);
-            setDownloadName(filePath[filePath.length - 1]);
-        } else {
-            listDriverFileByHash(hash).then(sf => {
-                setSameFiles(sf);
-                // TODO: select a best name.
-                setDownloadName(sf[0].name);
-            });
+        if (!metadata) {
+            getMetadata(id).then(setMetadataL);
         }
+        // if (driverFile) {
+        //     listDriverFileByHash(hash).then(setSameFiles);
+        //     setDownloadName(filePath[filePath.length - 1]);
+        // } else {
+        //     listDriverFileByHash(hash).then(sf => {
+        //         setSameFiles(sf);
+        //         // TODO: select a best name.
+        //         setDownloadName(sf[0].name);
+        //     });
+        // }
     }, []);
     return (
         <Window id={id}>
             <TitleBar id={id} title={downloadName + " - 图片查看器"} buttons={<ButtonGroup variant="contained">
-                <IconButton title="下载" disabled={!downloadName} onClick={() => { downloadByHash(hash, downloadName) }}
+                <IconButton title="下载" disabled={!downloadName} onClick={() => { downloadByHash(id, downloadName) }}
                     sx={{ color: theme => theme.context.secondary }}
                 >
                     <Download fontSize="small" />
                 </IconButton>
-                <IconButton title="相同文件" onClick={() => setOpenSameFiles(true)}
+                {/* <IconButton title="相同文件" onClick={() => setOpenSameFiles(true)}
                     sx={{ color: theme => theme.context.secondary }}
                 >
                     <Badge badgeContent={sameFiles.length} color="secondary">
                         <AllInbox fontSize="small" />
                     </Badge>
-                </IconButton>
+                </IconButton> */}
                 {driverFile && <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
                     sx={{ color: theme => theme.context.secondary }}
                 >
@@ -76,14 +75,14 @@ export default function ({ id, props }) {
                     color: theme => theme.context.primary,
                     backgroundColor: theme => theme.background.primary,
                 }}>
-                    {hash && <video controls style={{ maxWidth: "100%", maxHeight: "100%" }} data-setup='{}'>
-                        <source src={`${sysConfig.webServer}/api/v1/image?hash=${hash}`} />
+                    {metadataL && <video controls style={{ maxWidth: "100%", maxHeight: "100%" }} data-setup='{}'>
+                        <source src={`${sysConfig.webServer}/api/v1/image?id=${metadataL.id}&size=${metadataL.size}&md5=${metadataL.md5}&sha256=${metadataL.sha256}`} />
                         您的浏览器不支持 HTML5 video 标签。
                     </video>}
                 </Box>
             </WorkingArea>
             {openSameFiles && <SameFiles hash={hash} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
-            {openMetadata && <Metadata hash={hash} metadata={metadata} onClose={setOpenMetadata}/>}
+            {openMetadata && <Metadata id={id} metadata={metadataL} onClose={setOpenMetadata}/>}
             {driverFile && openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     );

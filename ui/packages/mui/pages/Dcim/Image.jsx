@@ -7,43 +7,42 @@ import { useInView } from "react-intersection-observer";
 
 export default function ({ metadata }) {
     const sysConfig = getSysConfig();
-    let { hash, exif, fileType, shotTime, shotEquipment, videoMetadata } = metadata;
-    let time = shotTime.isValid() ? shotTime.format("YYYY年MM月DD日 HH:mm:ss") : "未知时间";
+    let { id, size, md5, sha256, time, shotEquipment } = metadata;
     const [windows, setWindows] = useWindows();
     const { ref, inView } = useInView({ threshold: 0 });
     let title = "";
-    if (fileType.type === "image") {
+    if (metadata.type === "image") {
         title = time + "\n"
         + shotEquipment + "\n"
-        + fileType.type + "/" + fileType.subType + "\n"
-        + (exif.GPSLatitudeRef ? (exif.GPSLatitudeRef + " " + exif.GPSLatitude + "\n") : "")
-        + (exif.GPSLongitudeRef ? (exif.GPSLongitudeRef + " " + exif.GPSLongitude + "\n") : "")
-        + hash;
+        + metadata.type + "/" + metadata.sub_type + "\n"
+        + (metadata.gps_latitude_ref ? (metadata.gps_latitude_ref + " " + metadata.gps_latitude + "\n") : "")
+        + (metadata.gps_longitude_ref ? (metadata.gps_longitude_ref + " " + metadata.gps_longitude + "\n") : "")
+        + id;
     }
-    if (fileType.type === "video") {
+    if (metadata.type === "video") {
         title = time + "\n"
         + shotEquipment + "\n"
-        + fileType.type + "/" + fileType.subType + "\n"
-        + (videoMetadata ? (videoMetadata.Codec + "\n") : "")
-        + (videoMetadata ? (moment(videoMetadata.Created / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss") + "\n") : "")
-        + (videoMetadata ? (videoMetadata.Duration + "s\n") : "")
-        + hash;
+        + metadata.type + "/" + metadata.sub_type + "\n"
+        + (metadata ? (metadata.codec + "\n") : "")
+        + (metadata ? (metadata.created + "\n") : "")
+        + (metadata ? (metadata.duration + "s\n") : "")
+        + id;
     }
     return (
         <Box ref={ref} sx={{ width: "100%", height: "100%" }}>
-            {fileType.type === "image" && <ImgCancelable inView={inView}
-                src={`${sysConfig.webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`}
+            {metadata.type === "image" && <ImgCancelable inView={inView}
+                src={`${sysConfig.webServer}/thumbnail?id=${id}&size=${size}&md5=${md5}&sha256=${sha256}&hw=256&cutSquare=true`}
                 renderImg={(url) => <img style={{ width: "100%" }} title={title} src={url} loading="lazy" onClick={() =>
-                    newWindow(setWindows, APP_IMAGE_VIEWER, { hash })
+                    newWindow(setWindows, APP_IMAGE_VIEWER, { metadata })
                 } />}
-                renderSkeleton={() => <Skeleton title={title} variant="rectangular" animation={false} width="100%" height="100%" />}
+                renderSkeleton={() => <Skeleton title={title} variant="rectangular" animation={false} width={256} height={256} />}
             />}
-            {fileType.type === "video" && <ImgCancelable inView={inView} style={{ width: "100%" }}
-                src={`${sysConfig.webServer}/thumbnail?size=256&cutSquare=true&hash=${hash}`}
+            {metadata.type === "video" && <ImgCancelable inView={inView} style={{ width: "100%" }}
+                src={`${sysConfig.webServer}/thumbnail?id=${id}&size=${size}&md5=${md5}&sha256=${sha256}&hw=256&cutSquare=true`}
                 renderImg={(url) => <img style={{ width: "100%" }} title={title} src={url} loading="lazy" onClick={() =>
-                    newWindow(setWindows, APP_VIDEO_VIEWER, { hash })
+                    newWindow(setWindows, APP_VIDEO_VIEWER, { metadata })
                 } />}
-                renderSkeleton={() => <Skeleton title={title} variant="rectangular" animation={false} width="100%" height="100%" />}
+                renderSkeleton={() => <Skeleton title={title} variant="rectangular" animation={false} width={256} height={256} />}
             />}
         </Box>
     );

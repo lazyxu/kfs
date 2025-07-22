@@ -93,17 +93,7 @@ export function parseShotTime(metadata) {
     return moment.invalid();
 }
 
-export function timeSortFn(a, b) {
-    if (!a.shotTime.isValid()) {
-        return -1;
-    } else if (!b.shotTime.isValid()) {
-        return 1;
-    }
-    return a.shotTime.isAfter(b.shotTime) ? 1 : -1;
-}
-
-export function parseShotEquipment(metadata) {
-    let { exif } = metadata;
+export function parseShotEquipment(exif) {
     if (exif) {
         if (exif.Model) {
             if (exif.Model.includes(exif.Make)) {

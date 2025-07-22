@@ -27,7 +27,7 @@ export default function ({ metadataList, listDCIMMetadataTime, getTag, elementsP
                 l.push({
                     url: `${sysConfig.webServer}/api/v1/image?hash=${m.hash}`,
                     hash: m.hash,
-                    type: m.fileType.type,
+                    type: m.type,
                     duration: m.duration,
                     height: m.heightWidth.height,
                     width: m.heightWidth.width,

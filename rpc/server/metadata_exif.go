@@ -77,35 +77,37 @@ func getImageHeightWidth(kfsCore *core.KFS, hash string) (hw dao.HeightWidth, er
 
 const defaultOffset = "+08:00"
 
-func insertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e dao.Exif) error {
+func upsertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e *dao.Exif) error {
 	var t time.Time
 	var err error
-	if e.DateTime != "" {
-		offset := e.OffsetTime
-		if offset == "" {
-			offset = defaultOffset
-		}
-		t, err = time.Parse("2006:01:02 15:04:05 -07:00", e.DateTime+" "+offset)
-		if err != nil {
-			return err
-		}
-	} else if e.DateTimeOriginal != "" {
-		offset := e.OffsetTime
-		if offset == "" {
-			offset = defaultOffset
-		}
-		t, err = time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeOriginal+" "+offset)
-		if err != nil {
-			return err
-		}
-	} else if e.DateTimeDigitized != "" {
-		offset := e.OffsetTime
-		if offset == "" {
-			offset = defaultOffset
-		}
-		t, err = time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeDigitized+" "+offset)
-		if err != nil {
-			return err
+	if e != nil {
+		if e.DateTime != "" {
+			offset := e.OffsetTime
+			if offset == "" {
+				offset = defaultOffset
+			}
+			t, err = time.Parse("2006:01:02 15:04:05 -07:00", e.DateTime+" "+offset)
+			if err != nil {
+				return err
+			}
+		} else if e.DateTimeOriginal != "" {
+			offset := e.OffsetTime
+			if offset == "" {
+				offset = defaultOffset
+			}
+			t, err = time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeOriginal+" "+offset)
+			if err != nil {
+				return err
+			}
+		} else if e.DateTimeDigitized != "" {
+			offset := e.OffsetTime
+			if offset == "" {
+				offset = defaultOffset
+			}
+			t, err = time.Parse("2006:01:02 15:04:05 -07:00", e.DateTimeDigitized+" "+offset)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if t.IsZero() {
@@ -116,7 +118,7 @@ func insertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e dao.Exi
 		}
 		t = iter.(time.Time)
 	}
-	fmt.Printf("insertImageTime: %d %s\n", id, t)
+	fmt.Printf("upsertImageTime: %d %s\n", id, t)
 	err = kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{
 		ID:   id,
 		Time: t,
@@ -127,10 +129,13 @@ func insertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e dao.Exi
 	return nil
 }
 
-func insertVideoTime(ctx context.Context, kfsCore *core.KFS, id int64, m dao.VideoMetadata) error {
-	t := m.Created
-	if t.IsZero() {
-		t = m.Modified
+func upsertVideoTime(ctx context.Context, kfsCore *core.KFS, id int64, m *dao.VideoMetadata) error {
+	var t time.Time
+	if m != nil {
+		t = m.Created
+		if t.IsZero() {
+			t = m.Modified
+		}
 	}
 	if t.IsZero() {
 		var err error
@@ -140,7 +145,7 @@ func insertVideoTime(ctx context.Context, kfsCore *core.KFS, id int64, m dao.Vid
 		}
 		t = iter.(time.Time)
 	}
-	fmt.Printf("insertVideoTime: %d %s\n", id, t)
+	fmt.Printf("upsertVideoTime: %d %s\n", id, t)
 	err := kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{
 		ID:   id,
 		Time: t,
@@ -161,26 +166,22 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 			return err
 		}
 		e, err := GetExifData(kfsCore, size, md5, sha256)
+		err1 := upsertImageTime(ctx, kfsCore, id, &e)
+		if err1 != nil {
+			return err1
+		}
 		if err != nil {
 			err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
-			// TODO: what if exist
 			if err != nil {
 				return err
 			}
 			err = kfsCore.Q.UpsertNullExif(ctx, id)
-			// TODO: what if exist
 			if err != nil {
 				return err
 			}
 			return nil
 		}
 		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
-		// TODO: what if exist
-		if err != nil {
-			return err
-		}
-		err = insertImageTime(ctx, kfsCore, id, e)
-		// TODO: what if exist
 		if err != nil {
 			return err
 		}
@@ -208,7 +209,6 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 			GpsLongitudeRef:     sqlc.NString(e.GPSLongitudeRef),
 			GpsLongitude:        sqlc.NFloat64(e.GPSLongitude),
 		})
-		// TODO: what if exist
 		if err != nil {
 			return err
 		}
@@ -224,32 +224,28 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 			return err
 		}
 		m, err := GetVideoMetadata(kfsCore, size, md5, sha256)
+		err1 := upsertVideoTime(ctx, kfsCore, id, &m)
+		if err1 != nil {
+			return err1
+		}
 		if err != nil {
-			err = kfsCore.Q.InsertNullVideoMetadata(ctx, id)
-			// TODO: what if exist
+			err = kfsCore.Q.UpsertNullVideoMetadata(ctx, id)
 			if err != nil {
 				return err
 			}
 			return nil
 		}
 		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sql.NullInt64{Int64: height, Valid: true}, Width: sql.NullInt64{Int64: width, Valid: true}})
-		// TODO: what if exist
 		if err != nil {
 			return err
 		}
-		err = insertVideoTime(ctx, kfsCore, id, m)
-		// TODO: what if exist
-		if err != nil {
-			return err
-		}
-		err = kfsCore.Q.InsertVideoMetadata(ctx, sqlc.InsertVideoMetadataParams{
+		err = kfsCore.Q.UpsertVideoMetadata(ctx, sqlc.UpsertVideoMetadataParams{
 			ID:       id,
 			Codec:    sqlc.NString(m.Codec),
 			Created:  sqlc.NTime(m.Created),
 			Modified: sqlc.NTime(m.Modified),
 			Duration: sqlc.NFloat64(m.Duration),
 		})
-		// TODO: what if exist
 		if err != nil {
 			return err
 		}

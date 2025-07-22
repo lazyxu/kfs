@@ -41,8 +41,8 @@ func apiExifStatus(c echo.Context) error {
 	})
 }
 
-func apiListMetadata(c echo.Context) error {
-	data, err := kfsCore.Db.ListMetadata(c.Request().Context())
+func apiListDCIM(c echo.Context) error {
+	data, err := kfsCore.Q.ListDCIM(c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func apiGetMetadata(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, "id should be a number")
 	}
-	data, err := kfsCore.Q.GetMetadata(c.Request().Context(), id)
+	data, err := kfsCore.Q.GetDCIM(c.Request().Context(), id)
 	if err != nil {
 		return err
 	}

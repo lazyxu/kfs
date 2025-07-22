@@ -22,10 +22,10 @@ export async function exifStatus() {
     }
 }
 
-export async function listExif() {
+export async function listDCIM() {
     try {
         console.log('api.exif');
-        return await httpGet("/api/v1/exif");
+        return await httpGet("/api/v1/listDCIM");
     } catch (e) {
         window.noteError("获取图片信息失败：" + (typeof e.response?.data === 'string' ? e.response?.data : e.message));
         throw e;

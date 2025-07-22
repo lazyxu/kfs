@@ -13,17 +13,20 @@ import SameFiles from "./SameFiles";
 export default function ({ id, props }) {
     let {
         filePath, driverFile,
+        metadata,
     } = props;
     console.log("ImageViewer", id, props);
     const [downloadName, setDownloadName] = useState();
-    const [metadata, setMetadata] = useState();
+    const [metadataL, setMetadataL] = useState(metadata);
     const [openMetadata, setOpenMetadata] = useState(false);
     const [sameFiles, setSameFiles] = useState([]);
     const [openSameFiles, setOpenSameFiles] = useState(false);
     const [openAttribute, setOpenAttribute] = useState(false);
     const sysConfig = getSysConfig();
     useEffect(() => {
-        getMetadata(driverFile.file_id.Int64).then(setMetadata);
+        if (!metadata) {
+            getMetadata(id).then(setMetadataL);
+        }
         // if (driverFile) {
         //     listDriverFileByHash(driverFile.id).then(setSameFiles);
         //     setDownloadName(filePath[filePath.length - 1]);
@@ -38,18 +41,18 @@ export default function ({ id, props }) {
     return (
         <Window id={id}>
             <TitleBar id={id} title={downloadName + " - 图片查看器"} buttons={<ButtonGroup variant="contained">
-                <IconButton title="下载" disabled={!downloadName} onClick={() => { downloadByHash(hash, downloadName) }}
+                <IconButton title="下载" disabled={!downloadName} onClick={() => { downloadByHash(id, downloadName) }}
                     sx={{ color: theme => theme.context.secondary }}
                 >
                     <Download fontSize="small" />
                 </IconButton>
-                <IconButton title="相同文件" onClick={() => setOpenSameFiles(true)}
+                {/* <IconButton title="相同文件" onClick={() => setOpenSameFiles(true)}
                     sx={{ color: theme => theme.context.secondary }}
                 >
                     <Badge badgeContent={sameFiles.length} color="secondary">
                         <AllInbox fontSize="small" />
                     </Badge>
-                </IconButton>
+                </IconButton> */}
                 {driverFile && <IconButton title="文件属性" onClick={() => setOpenAttribute(true)}
                     sx={{ color: theme => theme.context.secondary }}
                 >
@@ -70,11 +73,11 @@ export default function ({ id, props }) {
                     justifyContent: "center",
                     alignItems: "center",
                 }}>
-                    {driverFile.id && <img style={{ maxWidth: "100%", maxHeight: "100%" }} src={`${sysConfig.webServer}/api/v1/image?id=${driverFile.file_id.Int64}&size=${driverFile.size}&md5=${driverFile.md5}&sha256=${driverFile.sha256}`} />}
+                    {metadataL && <img style={{ maxWidth: "100%", maxHeight: "100%" }} src={`${sysConfig.webServer}/api/v1/image?id=${metadataL.id}&size=${metadataL.size}&md5=${metadataL.md5}&sha256=${metadataL.sha256}`} />}
                 </Box>
             </WorkingArea>
             {openSameFiles && <SameFiles id={id} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
-            {openMetadata && <Metadata id={id} metadata={metadata} onClose={setOpenMetadata}/>}
+            {openMetadata && <Metadata id={id} metadata={metadataL} onClose={setOpenMetadata}/>}
             {driverFile && openAttribute && <FileAttribute fileAttribute={{ filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     );
