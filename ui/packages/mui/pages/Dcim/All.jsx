@@ -26,7 +26,7 @@ export default function ({ metadataList }) {
     return (
         <Grid container ref={ref} sx={{ width: "100%" }}>
             {width && metadataList.map(metadata => {
-                return <Grid item style={{ width: width, height: width }} key={metadata.hash}>
+                return <Grid item style={{ width: width, height: width }} key={metadata.id}>
                     <Image metadata={metadata} />
                 </Grid>
             })}

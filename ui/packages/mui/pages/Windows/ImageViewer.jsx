@@ -76,8 +76,8 @@ export default function ({ wid, props }) {
                     {metadataL && <img style={{ maxWidth: "100%", maxHeight: "100%" }} src={`${sysConfig.webServer}/api/v1/image?id=${metadataL.id}&size=${metadataL.size}&md5=${metadataL.md5}&sha256=${metadataL.sha256}`} />}
                 </Box>
             </WorkingArea>
-            {openSameFiles && <SameFiles id={wid} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
-            {openMetadata && <Metadata id={wid} metadata={metadataL} onClose={setOpenMetadata}/>}
+            {openSameFiles && <SameFiles sameFiles={sameFiles} onClose={setOpenSameFiles} />}
+            {openMetadata && <Metadata metadata={metadataL} onClose={setOpenMetadata}/>}
             {driverFile && openAttribute && <FileAttribute fileAttribute={{ filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     );

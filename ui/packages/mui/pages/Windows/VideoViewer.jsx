@@ -81,8 +81,8 @@ export default function ({ wid, props }) {
                     </video>}
                 </Box>
             </WorkingArea>
-            {openSameFiles && <SameFiles hash={hash} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
-            {openMetadata && <Metadata id={wid} metadata={metadataL} onClose={setOpenMetadata}/>}
+            {openSameFiles && <SameFiles sameFiles={sameFiles} onClose={setOpenSameFiles} />}
+            {openMetadata && <Metadata metadata={metadataL} onClose={setOpenMetadata}/>}
             {driverFile && openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     );

@@ -102,7 +102,7 @@ export default ({ wid, props }) => {
                     </Box>
                 </Stack>
             </StatusBar>
-            {openSameFiles && <SameFiles hash={hash} sameFiles={sameFiles} onClose={setOpenSameFiles} />}
+            {openSameFiles && <SameFiles sameFiles={sameFiles} onClose={setOpenSameFiles} />}
             {openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     )

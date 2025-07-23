@@ -18,7 +18,7 @@ export default function ({ metadataList }) {
                 <Box>{date}</Box>
                 <Grid container padding={1} spacing={1}>
                     {dateMap[date].map(metadata => {
-                        return <Grid item style={{ width: "256px", height: "256px" }} key={metadata.hash}>
+                        return <Grid item style={{ width: "256px", height: "256px" }} key={metadata.id}>
                             <Image metadata={metadata} />
                         </Grid>
                     })}
