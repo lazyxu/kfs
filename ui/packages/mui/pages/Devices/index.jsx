@@ -13,7 +13,7 @@ export default function () {
             <Grid container padding={1} spacing={1}
                 style={{ flex: "1", overflowY: 'auto', alignContent: "flex-start" }}>
                 {devices.map((device, i) => (
-                    <Grid item key={i}>
+                    <Grid key={i}>
                         <Device device={device} setDevices={setDevices}/>
                     </Grid>
                 ))}

@@ -1,11 +1,10 @@
-import { listDriverFileByHash } from "@kfs/common/api/webServer/driverfile";
 import { getMetadata } from "@kfs/common/api/webServer/exif";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { downloadByHash } from "@kfs/mui/api/fs";
 import { TitleBar, Window, WorkingArea } from "@kfs/mui/components/Window/Window";
 import FileAttribute from "@kfs/mui/pages/Files/DriverFiles/FileAttribute";
-import { AllInbox, Download, Info, PrivacyTip } from "@mui/icons-material";
-import { Badge, Box, ButtonGroup, IconButton } from "@mui/material";
+import { Download, Info, PrivacyTip } from "@mui/icons-material";
+import { Box, ButtonGroup, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 import Metadata from "./Metadata";
 import SameFiles from "./SameFiles";
@@ -40,7 +39,7 @@ export default function ({ wid, props }) {
     }, []);
     return (
         <Window id={wid}>
-            <TitleBar wid={wid} title={downloadName + " - 图片查看器"} buttons={<ButtonGroup variant="contained">
+            <TitleBar wid={wid} title={downloadName + " - 视频查看器"} buttons={<ButtonGroup variant="contained">
                 <IconButton title="下载" disabled={!downloadName} onClick={() => { downloadByHash(wid, downloadName) }}
                     sx={{ color: theme => theme.context.secondary }}
                 >

@@ -25,7 +25,7 @@ export default function () {
                 }}
             >
                 {drivers.map(driver => (
-                    <Grid item key={driver.name}>
+                    <Grid key={driver.name}>
                         <Driver driver={driver} setDriverAttribute={setDriverAttribute} onDelete={() => listDriver().then(setDrivers)}>{driver.name}</Driver>
                     </Grid>
                 ))}

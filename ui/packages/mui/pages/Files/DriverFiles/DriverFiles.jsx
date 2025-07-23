@@ -5,9 +5,9 @@ import File from "@kfs/mui/pages/Files/DriverFiles/File";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { Grid, Stack } from "@mui/material";
 import { useEffect, useRef, useState } from 'react';
+import DirMenu from "./DirMenu";
 import FileAttribute from "./FileAttribute";
 import FileMenu from "./FileMenu";
-import DirMenu from "./DirMenu";
 
 export default function () {
     const [driverFiles, setDriverFiles] = useState([]);
@@ -90,7 +90,7 @@ export default function () {
                 }}
             >
                 {driverFiles.map((driverFile, i) => (
-                    <Grid item key={driverFile.name}>
+                    <Grid key={driverFile.name}>
                         <File setContextMenu={setFileMenu} driverFile={driverFile} key={driverFile.name} />
                     </Grid>
                 ))}

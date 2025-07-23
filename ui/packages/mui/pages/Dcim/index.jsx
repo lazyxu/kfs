@@ -3,12 +3,10 @@ import { Box, Checkbox, FormControlLabel, IconButton, InputLabel, Radio, RadioGr
 import { parseShotEquipment } from "@kfs/common/api/utils";
 import { listDCIM } from '@kfs/common/api/webServer/exif';
 import { CalendarMonth, FilterAlt, Refresh } from "@mui/icons-material";
+import moment from 'moment';
 import { useEffect, useState } from "react";
 import All from './All';
-import Date from "./Date";
-import Month from "./Month";
-import Year from "./Year";
-import moment from 'moment';
+import GroupedAll from "./GroupedAll";
 
 export default function () {
     const [metadataList, setMetadataList] = useState([]);
@@ -125,9 +123,9 @@ export default function () {
             </Box>
             <Typography>共{metadataList.filter(m => m.type=== "image").length}张照片、{metadataList.filter(m => m.type=== "video").length}个视频</Typography>
             {(chosenShotEquipment || chosenFileType) && <Typography>筛选出{filteredMetadataList.filter(m => m.type=== "image").length}张照片、{filteredMetadataList.filter(m => m.type=== "video").length}个视频</Typography>}
-            {viewBy === "年" && <Year metadataList={filteredMetadataList} />}
-            {viewBy === "月" && <Month metadataList={filteredMetadataList} />}
-            {viewBy === "日" && <Date metadataList={filteredMetadataList} />}
+            {viewBy === "年" && <GroupedAll metadataList={filteredMetadataList} spacing={0} minCol={10} formatFn={date => date.format("YYYY年")} />}
+            {viewBy === "月" && <GroupedAll metadataList={filteredMetadataList} spacing={0.5} minCol={4} formatFn={date => date.format("YYYY年MM月")} />}
+            {viewBy === "日" && <GroupedAll metadataList={filteredMetadataList} spacing={1} minCol={3} formatFn={date => date.format("YYYY年MM月DD日")} />}
             {viewBy === "所有照片" && <All metadataList={filteredMetadataList} />}
         </Stack>
     );
