@@ -5,15 +5,19 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"image"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/livp"
@@ -256,6 +260,40 @@ func apiListDriverFileByHash(c echo.Context) error {
 	return ok(c, list)
 }
 
+var (
+	ffmpegMutex sync.Mutex
+)
+
+func SafeFFmpegRun(ctx context.Context, src, dst string) error {
+	ffmpegMutex.Lock()
+	defer ffmpegMutex.Unlock()
+
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	tmpPath := filepath.Join(os.TempDir(), "ffmpeg.mp4")
+	defer os.Remove(tmpPath)
+
+	cancelCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	numCPU := runtime.NumCPU()
+	fmt.Printf("Running ffmpeg command: ffmpeg -noautorotate -threads %d -i %s -qscale 0 -vcodec libx264 %s\n", numCPU, src, tmpPath)
+	cmd := exec.CommandContext(cancelCtx, "ffmpeg",
+		"-noautorotate", "-threads", strconv.Itoa(numCPU), "-i", src,
+		"-qscale", "0", "-vcodec", "libx264", tmpPath,
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	return os.Rename(tmpPath, dst)
+}
+
 func apiImage(c echo.Context) error {
 	idStr := c.QueryParam("id")
 	id, err1 := strconv.ParseInt(idStr, 10, 64)
@@ -335,9 +373,7 @@ func apiImage(c echo.Context) error {
 		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".mp4")
 		f, err := os.Open(thumbnailFilePath)
 		if os.IsNotExist(err) {
-			err = ffmpeg_go.Input(src, ffmpeg_go.KwArgs{"noautorotate": ""}).
-				Output(thumbnailFilePath, ffmpeg_go.KwArgs{"qscale": "0", "vcodec": "libx264"}).
-				OverWriteOutput().ErrorToStdOut().Run()
+			err = SafeFFmpegRun(c.Request().Context(), src, thumbnailFilePath)
 			if err != nil {
 				return err
 			}
