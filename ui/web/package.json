@@ -44,7 +44,7 @@
     "@microsoft/fetch-event-source": "^2.0.1",
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "hox": "^2.1.1",
     "humanize": "^0.0.9",
     "humanize-duration": "^3.33.0",
