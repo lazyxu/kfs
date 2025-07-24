@@ -170,17 +170,13 @@ export default () => {
             sx={{
                 padding: "0 1em",
                 margin: "0.3em",
-                cursor: editMode ? "text" : "pointer",
-                borderRadius: 2,
-                boxShadow: 1,
-                minHeight: 48,
             }}
             direction="row"
             alignItems="center"
             spacing={0.5}
         >
             {/* Win11风格左侧操作按钮区 */}
-            <Stack direction="row" alignItems="center" spacing={0.5} sx={{ minWidth: 160 }}>
+            <Stack direction="row" alignItems="center" spacing={0.5} >
                 <IconButton size="small" onClick={handleBack} disabled={historyIndex === 0} title="后退">
                     <ArrowBack />
                 </IconButton>
@@ -219,7 +215,7 @@ export default () => {
                         sx={{
                             width: "100%",
                             bgcolor: theme.palette.action.hover,
-                            borderRadius: 2,
+                            borderRadius: 1,
                             flex: 1,
                         }}
                         autoFocus
@@ -231,11 +227,10 @@ export default () => {
                         spacing={0.5}
                         sx={{
                             flex: 1,
-                            minWidth: 0,
-                            borderRadius: 2,
-                            border: `1px solid ${theme.palette.divider}`,
-                            px: 1,
-                            py: 0.5,
+                            height: '38px', // TextField高度
+                            borderRadius: 1,
+                            border: "1px solid var(--mui-palette-Chip-defaultBorder)",
+                            "&:hover": { cursor: "pointer", borderColor: "var(--mui-palette-action-active)" },
                         }}
                     >
                         <PathButton icon="wangpan" dirPath={[]} onMenu={handleMenuAction} />
@@ -264,7 +259,7 @@ export default () => {
                         minWidth: 160,
                         maxWidth: 320,
                         bgcolor: theme.palette.action.hover,
-                        borderRadius: 2,
+                        borderRadius: 1,
                         flex: 1,
                         mr: 1,
                     }}
@@ -278,7 +273,6 @@ export default () => {
                                 sx={{
                                     p: 0.5,
                                     bgcolor: theme.palette.action.hover,
-                                    borderRadius: 1,
                                     "&:hover": { bgcolor: theme.palette.action.selected }
                                 }}
                             >
