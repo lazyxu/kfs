@@ -1,8 +1,8 @@
-import { checkFileExists, createFolder, mergeFileChunks } from "@kfs/mui/api/fs";
+import { checkFileExists, mergeFileChunks } from "@kfs/mui/api/fs";
 import Menu from "@kfs/mui/components/Menu";
 import { noteError, noteSuccess } from "@kfs/mui/components/Notification";
 import { Add, Bookmark, ContentPaste, CreateNewFolder, DriveFolderUpload, History, IosShare, Settings, UploadFile } from "@mui/icons-material";
-import { Box, LinearProgress, ListItemText, MenuItem, Typography } from "@mui/material";
+import { Button, Toolbar, Box, LinearProgress, ListItemText, MenuItem, Typography } from "@mui/material";
 import { useRef, useState } from "react";
 import NewBaiduPhoto from "./CreateBaiduPhoto";
 import Sha256Worker from "./sha256.worker.js?worker";
@@ -11,7 +11,7 @@ import CreateFolder from "./CreateFolder";
 
 const CHUNK_SIZE = 100 * 1024 * 1024; // 100MB
 
-export default function ({ contextMenu, setContextMenu, refresh, setFileAttribute }) {
+export default function ({ contextMenu, setContextMenu, refresh, setFileAttribute, dirPath, driverFile }) {
     const fileInputRef = useRef();
     const [progress, setProgress] = useState(null);
     const [createFolderDialog, setCreateFolderDialog] = useState(false);
@@ -34,7 +34,7 @@ export default function ({ contextMenu, setContextMenu, refresh, setFileAttribut
         setProgress({ percent: 0, status: "检查服务器..." });
 
         // 2. 检查服务器是否已存在
-        const exists = await checkFileExists(contextMenu.dirPath, file.name, sha256, md5);
+        const exists = await checkFileExists(dirPath, file.name, sha256, md5);
         if (exists) {
             setProgress(null);
             noteSuccess("文件已存在，无需上传");
@@ -46,7 +46,7 @@ export default function ({ contextMenu, setContextMenu, refresh, setFileAttribut
         try {
             await uploadLargeFile({
                 file,
-                dirPath: contextMenu.dirPath,
+                dirPath,
                 md5, sha256,
                 setProgress,
                 fileMeta: {
@@ -67,6 +67,80 @@ export default function ({ contextMenu, setContextMenu, refresh, setFileAttribut
     };
     return (
         <>
+            <Toolbar sx={{ 
+                borderBottom: 1, 
+                borderColor: 'divider',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+            }}>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                <Button 
+                    variant="outlined"
+                    startIcon={<UploadFile />}
+                    onClick={handleUploadClick}
+                >
+                    上传文件
+                </Button>
+                <Button 
+                    variant="outlined" 
+                    startIcon={<DriveFolderUpload />}
+                    disabled
+                >
+                    上传文件夹
+                </Button>
+                <Button 
+                    variant="outlined" 
+                    startIcon={<Add />}
+                    disabled
+                >
+                    新建文件
+                </Button>
+                <Button 
+                    variant="outlined"
+                    startIcon={<CreateNewFolder />}
+                    onClick={() => setCreateFolderDialog(true)}
+                >
+                    新建文件夹
+                </Button>
+                <Button 
+                    variant="outlined" 
+                    startIcon={<ContentPaste />}
+                    disabled
+                >
+                    粘贴
+                </Button>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button 
+                    variant="outlined"
+                    startIcon={<Settings />}
+                    onClick={() => setFileAttribute({ filePath: dirPath, driverFile })}
+                >
+                    属性
+                </Button>
+                <Button 
+                    variant="outlined" 
+                    startIcon={<IosShare />}
+                    disabled
+                >
+                    分享
+                </Button>
+                <Button 
+                    variant="outlined" 
+                    startIcon={<History />}
+                    disabled
+                >
+                    历史版本
+                </Button>
+                <Button 
+                    variant="outlined" 
+                    startIcon={<Bookmark />}
+                    disabled
+                >
+                    添加书签
+                </Button>
+                </Box>
+            </Toolbar>
             <input
                 type="file"
                 style={{ display: "none" }}
@@ -103,7 +177,7 @@ export default function ({ contextMenu, setContextMenu, refresh, setFileAttribut
                 </MenuItem>
                 <MenuItem  onClick={() => {
                     onClose();
-                    setFileAttribute(contextMenu);
+                    setFileAttribute({ filePath: dirPath, driverFile });
                 }}>
                     <Settings />
                     <ListItemText>属性</ListItemText>

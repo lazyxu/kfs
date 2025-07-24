@@ -78,13 +78,19 @@ export default function () {
     console.log("===render DriverFiles", dirPath, driverFiles, dirLogicFile, driverFilesTotal);
     return (
         <>
+            <DirMenu contextMenu={dirMenu} setContextMenu={setDirMenu}
+                refresh={() => refresh()}
+                setFileAttribute={setFileAttribute}
+                dirPath={dirPath}
+                driverFile={dirLogicFile}
+            />
             <Grid container padding={1} spacing={1}
                 sx={{ flex: "1", overflowY: 'auto', alignContent: "flex-start" }}
                 onContextMenu={(e) => {
                     e.preventDefault(); e.stopPropagation();
                     setDirMenu({
-                        mouseX: e.clientX, mouseY: e.clientY,
-                        dirPath, open: true,
+                        mouseX: e.clientX, mouseY: e.clientY, open: true,
+                        dirPath,
                         driverFile: dirLogicFile, filePath: dirPath, // for FileAttribute
                     });
                 }}
@@ -102,7 +108,6 @@ export default function () {
             >
                 共{driverFiles.length}/{driverFilesTotal}个项目
             </Stack>
-            <DirMenu contextMenu={dirMenu} setContextMenu={setDirMenu} refresh={() => refresh()} setFileAttribute={setFileAttribute}/>
             {fileMenu && <FileMenu contextMenu={fileMenu} setContextMenu={setFileMenu} setFileAttribute={setFileAttribute} />}
             {fileAttribute && <FileAttribute fileAttribute={fileAttribute} onClose={() => setFileAttribute(null)} />}
         </>
