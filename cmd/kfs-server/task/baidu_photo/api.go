@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	json "github.com/json-iterator/go"
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/metadata"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/db/sqlc"
 )
@@ -57,8 +58,21 @@ var cookieString string = "BDUSS_BFESS=W1pVXZQSE9KZjhsc2tBS1FjWVFiTFpGaUsyY1h2ZE
 var client = resty.New().
 	SetHeader("user-agent", UserAgent).
 	SetRetryCount(3).SetRetryWaitTime(3 * time.Second).
-	// SetHeader("Cookie", cookieString).
-	SetTimeout(100 * time.Second). // (100M) / (1M/s) = 100s
+	AddRetryCondition(func(r *resty.Response, err error) bool {
+		// 条件1: 网络错误时重试
+		if err != nil {
+			return true
+		}
+		// 条件2: 解析响应中的errno，特定错误码重试
+		body := r.Body()
+		if len(body) == 0 {
+			return true
+		}
+		erron := json.ConfigCompatibleWithStandardLibrary.Get(body, "errno").ToInt()
+		// 针对需重试的错误码（如-6表示token过期）
+		return erron == -6 // 添加其他需重试的错误码
+	}).
+	SetTimeout(1000 * time.Second). // (100M) / (1M/s) = 100s
 	SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 
 func InsertDriverBaiduPhoto(ctx context.Context, kfsCore *core.KFS, dirPath []string, name, bdussBfess, stoken, cron string, enabled, syncAtStart bool) error {
@@ -85,29 +99,6 @@ func (d *DriverBaiduPhoto) Get(ctx context.Context, furl string, callback func(r
 
 func (d *DriverBaiduPhoto) WGet(ctx context.Context, furl string, output string) error {
 	return d.Request(ctx, furl, http.MethodGet, nil, nil, output)
-}
-
-func parseCookies(cookieStr string) []*http.Cookie {
-	cookies := []*http.Cookie{}
-	pairs := strings.Split(cookieStr, ";")
-
-	for _, pair := range pairs {
-		pair = strings.TrimSpace(pair)
-		if pair == "" {
-			continue
-		}
-
-		kv := strings.SplitN(pair, "=", 2)
-		if len(kv) != 2 {
-			continue
-		}
-		println("cookie", kv[0], kv[1])
-		cookies = append(cookies, &http.Cookie{
-			Name:  strings.TrimSpace(kv[0]),
-			Value: strings.TrimSpace(kv[1]),
-		})
-	}
-	return cookies
 }
 
 func (d *DriverBaiduPhoto) Request(ctx context.Context, furl string, method string, callback func(req *resty.Request), resp interface{}, output string) (err error) {
@@ -356,6 +347,7 @@ func (d *DriverBaiduPhoto) GetAllFile(ctx context.Context, cb func([]BaiduFile) 
 		}
 
 		continues := cb(resp.List)
+		metadata.StartOrStop(d.kfsCore, true, false)
 		if !continues {
 			break
 		}

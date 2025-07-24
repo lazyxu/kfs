@@ -597,9 +597,9 @@ func apiStartMetadataAnalysisTask(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	forceStr := c.QueryParam("force")
-	force, _ := strconv.ParseBool(forceStr)
-	metadata.StartOrStop(kfsCore, start, force)
+	allStr := c.QueryParam("all")
+	all, _ := strconv.ParseBool(allStr)
+	metadata.StartOrStop(kfsCore, start, all)
 	return c.String(http.StatusOK, "")
 }
 

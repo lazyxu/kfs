@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gofrs/flock"
@@ -46,8 +47,16 @@ func createGlobalLockFile(root string) error {
 }
 
 func (s *Storage2) GetFilePath(size int64, md5Hash string, sha256Hash string) string {
+	modDir := strconv.Itoa(int(size % 1024)) // 新增取模目录层级
 	itoaSize := strconv.Itoa(int(size))
-	return path.Join(s.root, itoaSize, md5Hash+"_"+sha256Hash)
+	return filepath.Join(s.root, modDir, itoaSize+"_"+md5Hash+"_"+sha256Hash)
+}
+
+func ensureDirExists(path string) error {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return os.MkdirAll(path, dirPerm) // 递归创建目录[9,10](@ref)
+	}
+	return nil
 }
 
 func (s *Storage2) Create() error {
@@ -75,25 +84,17 @@ func (s *Storage2) Add(md5Hash string, sha256Hash string, file *os.File) (bool, 
 	if err != nil {
 		return false, err
 	}
-	itoaSize := strconv.Itoa(int(size.Size()))
-
 	lock := flock.New(path.Join(s.root, lockFileName))
 	err = lock.Lock()
 	if err != nil {
 		return false, err
 	}
 	defer lock.Unlock()
-	dirPath := path.Join(s.root, itoaSize)
-	_, err = os.Stat(dirPath)
-	if os.IsNotExist(err) {
-		err = os.Mkdir(dirPath, dirPerm)
-		if err != nil {
-			return false, err
-		}
-	} else if err != nil {
+	p := s.GetFilePath(size.Size(), md5Hash, sha256Hash)
+	dirPath := filepath.Dir(p)
+	if err := ensureDirExists(dirPath); err != nil {
 		return false, err
 	}
-	p := path.Join(dirPath, md5Hash+"_"+sha256Hash)
 	f, err := os.OpenFile(p, os.O_WRONLY|os.O_CREATE, 0o200)
 	if err != nil {
 		if os.IsPermission(err) {
@@ -148,8 +149,7 @@ func (rc sizedReaderCloser) Size() int64 {
 }
 
 func (s *Storage2) ReadWithSize(size int64, md5Hash string, sha256Hash string) (dao.SizedReadCloser, error) {
-	itoaSize := strconv.Itoa(int(size))
-	p := path.Join(s.root, itoaSize, md5Hash+"_"+sha256Hash)
+	p := s.GetFilePath(size, md5Hash, sha256Hash)
 	f, err := os.OpenFile(p, os.O_RDONLY, 0o200)
 	if err != nil {
 		return nil, err

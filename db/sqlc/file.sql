@@ -11,4 +11,9 @@ DELETE FROM _file WHERE id = ?;
 -- name: SumFileSize :one
 SELECT SUM(size) as size FROM _file;
 -- name: ListFileExpectFileType :many
-SELECT id, size, md5, sha256 FROM _file EXCEPT SELECT id, NULL, NULL, NULL FROM _file_type;
+SELECT id, size, md5, sha256
+FROM _file f
+WHERE NOT EXISTS (
+    SELECT 1 FROM _file_type ft 
+    WHERE ft.id = f.id  -- 通过 id 关联排除
+);

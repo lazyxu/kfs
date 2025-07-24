@@ -1,7 +1,7 @@
 .DS_Store
 *.db
 *.db-journal
-tmp
+tmp*
 supervisord.*
 .kfs*
 *.log

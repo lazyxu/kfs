@@ -3,10 +3,10 @@ import { httpPost } from "@kfs/common/api/webServer";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { noteError } from "@kfs/mui/components/Notification";
 
-export async function analyzeMetadata(start, force) {
-    console.log('web.analyzeMetadata', start, force);
+export async function analyzeMetadata(start, all) {
+    console.log('web.analyzeMetadata', start, all);
     return await httpPost("/api/v1/startMetadataAnalysisTask", {
-        start, force,
+        start, all,
     });
 }
 

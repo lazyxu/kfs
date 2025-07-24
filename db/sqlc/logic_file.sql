@@ -50,10 +50,10 @@ ON DUPLICATE KEY UPDATE
     file_id = VALUES(file_id),
     mode = VALUES(mode),
     size = VALUES(size),
-    create_time = VALUES(create_time),
-    modify_time = VALUES(modify_time),
-    change_time = VALUES(change_time),
-    access_time = VALUES(access_time);
+    -- create_time 不需要更新（保留原值，直接跳过）
+    modify_time = IF(VALUES(file_id) <> file_id, VALUES(modify_time), modify_time),  -- file_id 修改时才更新
+    change_time = IF(VALUES(mode) <> mode, VALUES(change_time), change_time),        -- mode 修改时才更新
+    access_time = VALUES(access_time);  -- 始终更新
 
 -- name: DeleteLogicFile :exec
 DELETE FROM _logic_file
