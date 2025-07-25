@@ -128,7 +128,10 @@ func StartOrStop(kfsCore *core.KFS, start bool, all bool) {
 	defer mutex.Unlock()
 	if !start {
 		setTaskStatusWithLock(StatusWaitCanceled)
-		taskInfo.cancel()
+		if taskInfo.cancel != nil {
+			taskInfo.cancel()
+		}
+		taskInfo.cancel = nil
 		return
 	}
 	if taskInfo.Status == StatusWaitRunning ||
@@ -161,9 +164,10 @@ func analyze(ctx context.Context, kfsCore *core.KFS, all bool) (err error) {
 	if all {
 		fileList, err = kfsCore.Q.ListFile(ctx)
 	} else {
-		fileList, err = kfsCore.Q.ListFileExpectFileType(ctx)
+		fileList, err = kfsCore.Q.ListFileNotAnalyzed(ctx)
 	}
 	if err != nil {
+		addTaskError(err)
 		return err
 	}
 	setTaskTotal(len(fileList))
@@ -178,11 +182,13 @@ func analyze(ctx context.Context, kfsCore *core.KFS, all bool) (err error) {
 		}
 		if err != nil {
 			addTaskError(err)
+			err = nil
 			continue
 		}
 		addTaskCnt()
 	}
 	if err != nil {
+		addTaskError(err)
 		return err
 	}
 	return nil

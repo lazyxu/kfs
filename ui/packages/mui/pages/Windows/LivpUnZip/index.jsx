@@ -1,9 +1,9 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { startLivePhotoAnalysisTask } from "@kfs/mui/api/exif";
+import { startLivePhotoAnalysisTask, truncateLivePhoto } from "@kfs/mui/api/exif";
 import { noteError, noteWarning } from "@kfs/mui/components/Notification";
 import { TitleBar, Window, WorkingArea } from "@kfs/mui/components/Window/Window";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
-import { HourglassDisabled, HourglassTop, PlayArrow, Replay, Stop } from "@mui/icons-material";
+import { Close, HourglassDisabled, HourglassTop, PlayArrow, Replay, Stop } from "@mui/icons-material";
 import { Box, IconButton } from "@mui/material";
 import moment from "moment";
 import { useEffect, useState } from "react";
@@ -89,6 +89,15 @@ export default function ({ wid }) {
                         taskInfo?.status === StatusFinished ||
                         taskInfo?.status === StatusCanceled ||
                         taskInfo?.status === StatusError) &&
+                        <IconButton onClick={e => truncateLivePhoto().catch(e => noteError(e.message))}>
+                            <Close />
+                        </IconButton>
+                    }
+                    {(taskInfo?.status === undefined ||
+                        taskInfo?.status === StatusIdle ||
+                        taskInfo?.status === StatusFinished ||
+                        taskInfo?.status === StatusCanceled ||
+                        taskInfo?.status === StatusError) &&
                         <IconButton onClick={e => startLivePhotoAnalysisTask(true, true).catch(e => noteError(e.message))}>
                             <Replay />
                         </IconButton>
@@ -126,11 +135,17 @@ export default function ({ wid }) {
                 <Box sx={{ padding: "0.5em 1em" }}>
                     上次执行结束时间：{taskInfo?.lastDoneTime ? moment(taskInfo?.lastDoneTime / 1000 / 1000).format("YYYY年MM月DD日 HH:mm:ss") : "无记录"}
                 </Box>
-                {(taskInfo?.status === StatusRunningAnalyze) &&
+                {(taskInfo?.status === StatusRunningAnalyze) && <>
                     <Box sx={{ padding: "0.5em 1em" }}>
                         当前进度：{taskInfo?.cnt}/{taskInfo?.total}
                     </Box>
-                }
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            错误：{taskInfo?.errors?.length || 0}
+                        </Box>
+                        <Box sx={{ padding: "0.5em 1em" }}>
+                            剩余：{taskInfo?.total - (taskInfo?.cnt || 0) - (taskInfo?.errors?.length || 0)}
+                        </Box>
+                </>}
                 {(taskInfo?.status === StatusFinished ||
                     taskInfo?.status === StatusCanceled ||
                     taskInfo?.status === StatusError) &&

@@ -111,6 +111,7 @@ func webServer(webPortString string) {
 		return metadata.ApiEvent(c, kfsCore)
 	})
 	e.POST("/api/v1/startLivePhotoAnalysisTask", apiStartLivePhotoAnalysisTask)
+	e.POST("/api/v1/truncateLivePhoto", apiTruncateLivePhoto)
 	e.GET("/api/v1/event/livePhotoAnalysisTask", func(c echo.Context) error {
 		return livp.ApiEvent(c, kfsCore)
 	})
@@ -312,14 +313,23 @@ func apiImage(c echo.Context) error {
 		return err1
 	}
 	if m.Extension == "zip" {
-		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".jpg")
-		f, err2 := os.Open(thumbnailFilePath)
+		transcodeFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".jpg")
+		f, err2 := os.Open(transcodeFilePath)
 		if os.IsNotExist(err2) {
-			_, heicHash, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, "")
+			_, heic, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, sqlc.File{
+				ID:     id,
+				Size:   size,
+				Md5:    md5,
+				Sha256: sha256,
+			})
 			if err != nil {
 				return err
 			}
-			rc, err := kfsCore.S.ReadWithSize(heicHash)
+			heicFile, err := kfsCore.Q.GetFileByID(c.Request().Context(), heic)
+			if err != nil {
+				return err
+			}
+			rc, err := kfsCore.S2.ReadWithSize(heicFile.Size, heicFile.Md5, heicFile.Sha256)
 			if err != nil {
 				return err
 			}
@@ -329,11 +339,11 @@ func apiImage(c echo.Context) error {
 				return err
 			}
 			img = orientation(img, m.Orientation.Int64)
-			err = imaging.Save(img, thumbnailFilePath)
+			err = imaging.Save(img, transcodeFilePath)
 			if err != nil {
 				return err
 			}
-			f, err2 = os.Open(thumbnailFilePath)
+			f, err2 = os.Open(transcodeFilePath)
 		}
 		if err2 != nil {
 			return err2
@@ -343,8 +353,8 @@ func apiImage(c echo.Context) error {
 		return c.Stream(http.StatusOK, "", f)
 	}
 	if m.Extension == matchers.TypeHeif.Extension {
-		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".jpg")
-		f, err2 := os.Open(thumbnailFilePath)
+		transcodeFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".jpg")
+		f, err2 := os.Open(transcodeFilePath)
 		if os.IsNotExist(err2) {
 			rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
 			if err != nil {
@@ -356,11 +366,11 @@ func apiImage(c echo.Context) error {
 				return err
 			}
 			img = orientation(img, m.Orientation.Int64)
-			err = imaging.Save(img, thumbnailFilePath)
+			err = imaging.Save(img, transcodeFilePath)
 			if err != nil {
 				return err
 			}
-			f, err2 = os.Open(thumbnailFilePath)
+			f, err2 = os.Open(transcodeFilePath)
 		}
 		if err2 != nil {
 			return err2
@@ -370,14 +380,14 @@ func apiImage(c echo.Context) error {
 		return c.Stream(http.StatusOK, "", f)
 	} else if m.Extension == matchers.TypeMov.Extension {
 		src := kfsCore.S2.GetFilePath(size, md5, sha256)
-		thumbnailFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".mp4")
-		f, err := os.Open(thumbnailFilePath)
+		transcodeFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".mp4")
+		f, err := os.Open(transcodeFilePath)
 		if os.IsNotExist(err) {
-			err = SafeFFmpegRun(c.Request().Context(), src, thumbnailFilePath)
+			err = SafeFFmpegRun(c.Request().Context(), src, transcodeFilePath)
 			if err != nil {
 				return err
 			}
-			f, err = os.Open(thumbnailFilePath)
+			f, err = os.Open(transcodeFilePath)
 		}
 		if err != nil {
 			return err
@@ -502,11 +512,20 @@ func apiThumbnail(c echo.Context) error {
 		}()
 
 		if m.Extension == "zip" {
-			_, heicHash, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, "")
+			_, heic, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, sqlc.File{
+				ID:     id,
+				Size:   size,
+				Md5:    md5,
+				Sha256: sha256,
+			})
 			if err != nil {
 				return err
 			}
-			rc, err := kfsCore.S.ReadWithSize(heicHash)
+			heicFile, err := kfsCore.Q.GetFileByID(c.Request().Context(), heic)
+			if err != nil {
+				return err
+			}
+			rc, err := kfsCore.S2.ReadWithSize(heicFile.Size, heicFile.Md5, heicFile.Sha256)
 			if err != nil {
 				return err
 			}
@@ -609,9 +628,17 @@ func apiStartLivePhotoAnalysisTask(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	forceStr := c.QueryParam("force")
-	force, _ := strconv.ParseBool(forceStr)
-	livp.StartOrStop(kfsCore, start, force)
+	allStr := c.QueryParam("all")
+	all, _ := strconv.ParseBool(allStr)
+	livp.StartOrStop(kfsCore, start, all)
+	return c.String(http.StatusOK, "")
+}
+
+func apiTruncateLivePhoto(c echo.Context) error {
+	err := kfsCore.Q.TruncateLivePhoto(c.Request().Context())
+	if err != nil {
+		return err
+	}
 	return c.String(http.StatusOK, "")
 }
 

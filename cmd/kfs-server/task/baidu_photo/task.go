@@ -168,7 +168,10 @@ func (d *DriverBaiduPhoto) StartOrStop2(ctx context.Context, start bool) {
 	defer d.mutex.Unlock()
 	if !start {
 		d.setTaskStatusWithLock(StatusWaitCanceled)
-		d.taskInfo.cancel()
+		if d.taskInfo.cancel != nil {
+			d.taskInfo.cancel()
+		}
+		d.taskInfo.cancel = nil
 		return
 	}
 	if d.taskInfo.Status == StatusWaitRunning ||
@@ -220,7 +223,7 @@ func (d *DriverBaiduPhoto) Analyze2(ctx context.Context) (err error) {
 			return false
 		}
 		for i, f := range list {
-			fmt.Printf("[%d/%d] handle %s\n", i+1, len(list), f.Path)
+			fmt.Printf("[%d/%d] handle %+v\n", d.taskInfo.Total-len(list)+i+1, d.taskInfo.Total, f)
 			select {
 			case <-ctx.Done():
 				err1 = context.Canceled

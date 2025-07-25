@@ -10,11 +10,16 @@ export async function analyzeMetadata(start, all) {
     });
 }
 
-export async function startLivePhotoAnalysisTask(start, force) {
-    console.log('web.startLivePhotoAnalysisTask', start, force);
+export async function startLivePhotoAnalysisTask(start, all) {
+    console.log('web.startLivePhotoAnalysisTask', start, all);
     return await httpPost("/api/v1/startLivePhotoAnalysisTask", {
-        start, force,
+        start, all,
     });
+}
+
+export async function truncateLivePhoto() {
+    console.log('web.truncateLivePhoto');
+    return await httpPost("/api/v1/truncateLivePhoto", {});
 }
 
 export async function startBaiduPhotoTask(start, id) {

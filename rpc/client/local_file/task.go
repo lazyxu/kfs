@@ -215,7 +215,10 @@ func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool, serverAdd
 	defer d.mutex.Unlock()
 	if !start {
 		d.setTaskStatusWithLock(StatusWaitCanceled)
-		d.taskInfo.cancel()
+		if d.taskInfo.cancel != nil {
+			d.taskInfo.cancel()
+		}
+		d.taskInfo.cancel = nil
 		return
 	}
 	if d.taskInfo.Status == StatusRunning || d.taskInfo.Status == StatusWaitCanceled {

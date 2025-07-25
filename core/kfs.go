@@ -75,22 +75,14 @@ func (s *Storage2) Create() error {
 	return nil
 }
 
-func (s *Storage2) Add(md5Hash string, sha256Hash string, file *os.File) (bool, error) {
-	_, err := file.Seek(0, io.SeekStart)
-	if err != nil {
-		return false, err
-	}
-	size, err := file.Stat()
-	if err != nil {
-		return false, err
-	}
+func (s *Storage2) AddReader(size int64, md5Hash string, sha256Hash string, reader io.Reader) (bool, error) {
 	lock := flock.New(path.Join(s.root, lockFileName))
-	err = lock.Lock()
+	err := lock.Lock()
 	if err != nil {
 		return false, err
 	}
 	defer lock.Unlock()
-	p := s.GetFilePath(size.Size(), md5Hash, sha256Hash)
+	p := s.GetFilePath(size, md5Hash, sha256Hash)
 	dirPath := filepath.Dir(p)
 	if err := ensureDirExists(dirPath); err != nil {
 		return false, err
@@ -106,16 +98,16 @@ func (s *Storage2) Add(md5Hash string, sha256Hash string, file *os.File) (bool, 
 	sha256Hasher := sha256.New()
 	md5Hasher := md5.New()
 	multiWriter := io.MultiWriter(sha256Hasher, md5Hasher, f)
-	written, err := io.Copy(multiWriter, file) // 一次写入，同时计算两个哈希，并且写入文件
+	written, err := io.Copy(multiWriter, reader) // 一次写入，同时计算两个哈希，并且写入文件
 	if err != nil {
 		f.Close()
 		os.Remove(p)
 		return false, err
 	}
-	if written != size.Size() {
+	if written != size {
 		f.Close()
 		os.Remove(p)
-		return false, fmt.Errorf("written size %d does not match file size %d", written, size.Size())
+		return false, fmt.Errorf("written size %d does not match file size %d", written, size)
 	}
 	sha256Hash2 := hex.EncodeToString(sha256Hasher.Sum(nil))
 	if sha256Hash != sha256Hash2 {
@@ -137,6 +129,18 @@ func (s *Storage2) Add(md5Hash string, sha256Hash string, file *os.File) (bool, 
 		return false, fmt.Errorf("failed to change file mode: %s", p)
 	}
 	return false, nil
+}
+
+func (s *Storage2) Add(md5Hash string, sha256Hash string, file *os.File) (bool, error) {
+	_, err := file.Seek(0, io.SeekStart)
+	if err != nil {
+		return false, err
+	}
+	stat, err := file.Stat()
+	if err != nil {
+		return false, err
+	}
+	return s.AddReader(stat.Size(), md5Hash, sha256Hash, file)
 }
 
 type sizedReaderCloser struct {

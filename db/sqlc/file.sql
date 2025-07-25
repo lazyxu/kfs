@@ -10,7 +10,7 @@ SELECT * FROM _file;
 DELETE FROM _file WHERE id = ?;
 -- name: SumFileSize :one
 SELECT SUM(size) as size FROM _file;
--- name: ListFileExpectFileType :many
+-- name: ListFileNotAnalyzed :many
 SELECT id, size, md5, sha256
 FROM _file f
 WHERE NOT EXISTS (

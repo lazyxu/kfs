@@ -3,11 +3,13 @@ package livp
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/db/sqlc"
 	"github.com/lazyxu/kfs/rpc/server"
 )
 
@@ -114,6 +116,7 @@ func addTaskCnt() {
 }
 
 func addTaskError(err error) {
+	fmt.Printf("addTaskError: %v\n", err)
 	mutex.Lock()
 	taskInfo.Errors = append(taskInfo.Errors, err.Error())
 	mutex.Unlock()
@@ -125,7 +128,10 @@ func StartOrStop(kfsCore *core.KFS, start bool, force bool) {
 	defer mutex.Unlock()
 	if !start {
 		setTaskStatusWithLock(StatusWaitCanceled)
-		taskInfo.cancel()
+		if taskInfo.cancel != nil {
+			taskInfo.cancel()
+		}
+		taskInfo.cancel = nil
 		return
 	}
 	if taskInfo.Status == StatusWaitRunning ||
@@ -151,34 +157,37 @@ func StartOrStop(kfsCore *core.KFS, start bool, force bool) {
 	}()
 }
 
-func analyze(ctx context.Context, kfsCore *core.KFS, force bool) (err error) {
+func analyze(ctx context.Context, kfsCore *core.KFS, all bool) (err error) {
 	setTaskStatus(StatusRunningCollect)
-	var hashList []string
-	if force {
-		hashList, err = kfsCore.Db.ListLivePhotoAll(ctx)
+	var fileList []sqlc.File
+	if all {
+		fileList, err = kfsCore.Q.ListLivePhoto(ctx)
 	} else {
-		hashList, err = kfsCore.Db.ListLivePhotoNew(ctx)
+		fileList, err = kfsCore.Q.ListLivePhotoNotAnalyzed(ctx)
 	}
 	if err != nil {
+		addTaskError(err)
 		return err
 	}
-	setTaskTotal(len(hashList))
-	for _, hash := range hashList {
-		if force {
-			_, _, err = server.UnzipLivp(ctx, kfsCore, hash)
+	setTaskTotal(len(fileList))
+	for _, file := range fileList {
+		if all {
+			_, _, err = server.UnzipLivp(ctx, kfsCore, file)
 		} else {
-			_, _, err = server.UnzipIfLivp(ctx, kfsCore, hash)
+			_, _, err = server.UnzipIfLivp(ctx, kfsCore, file)
 		}
 		if errors.Is(err, context.Canceled) {
 			return err
 		}
 		if err != nil {
 			addTaskError(err)
+			err = nil
 			continue
 		}
 		addTaskCnt()
 	}
 	if err != nil {
+		addTaskError(err)
 		return err
 	}
 	return nil

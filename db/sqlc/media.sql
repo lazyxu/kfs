@@ -21,8 +21,15 @@ ON DUPLICATE KEY UPDATE
 SELECT * FROM _dcim_metadata_time WHERE id = ?;
 
 -- LivePhoto
--- name: InsertLivePhoto :exec
-INSERT INTO _live_photo (mov, heic, jpg, livp) VALUES (?, ?, ?, ?);
+-- name: UpsertLivePhoto :exec
+INSERT INTO _live_photo (mov, heic, jpg, livp)
+VALUES (?, ?, ?, ?)
+ON DUPLICATE KEY UPDATE
+    mov = VALUES(mov),
+    heic = VALUES(heic),
+    jpg = VALUES(jpg),
+    livp = VALUES(livp);
+
 -- name: GetLivePhoto :one
 SELECT * FROM _live_photo WHERE mov = ?;
 
@@ -137,3 +144,53 @@ INNER JOIN _file_type ft ON dmt.id = ft.id
 LEFT JOIN _video_metadata vm ON dmt.id = vm.id
 LEFT JOIN _exif e ON dmt.id = e.id
 ORDER BY dmt.time DESC;
+
+-- name: ListLivePhoto :many
+SELECT
+    f.id,
+    f.size,
+    f.md5,
+    f.sha256
+FROM _file_type ft
+INNER JOIN _file f ON ft.id = f.id 
+INNER JOIN _logic_file lf ON ft.id = lf.file_id
+WHERE 
+    -- _file_type.sub_type = 'zip'
+    -- AND
+    CASE
+        WHEN INSTR(lf.name, '.') > 1  -- 排除隐藏文件（如.livp）
+        THEN LOWER(SUBSTRING_INDEX(lf.name, '.', -1)) 
+        ELSE ''
+    END = 'livp';
+
+-- name: ListLivePhotoNotAnalyzed :many
+SELECT
+    f.id,
+    f.size,
+    f.md5,
+    f.sha256
+FROM _file_type ft
+INNER JOIN _file f ON ft.id = f.id 
+INNER JOIN _logic_file lf ON ft.id = lf.file_id
+WHERE 
+    -- ft.sub_type = 'zip'
+    -- AND
+    CASE
+        WHEN INSTR(lf.name, '.') > 1  -- 排除隐藏文件（如.livp）
+        THEN LOWER(SUBSTRING_INDEX(lf.name, '.', -1)) 
+        ELSE ''
+    END = 'livp'
+    AND NOT EXISTS (
+        SELECT 1 
+        FROM _live_photo lp 
+        WHERE lp.livp = ft.id  -- 确保关联列有索引
+    );
+
+-- name: GetLivePhotoByLivp :one
+SELECT
+    mov,
+    heic
+FROM _live_photo WHERE _live_photo.livp=?;
+
+-- name: TruncateLivePhoto :exec
+TRUNCATE TABLE _live_photo;

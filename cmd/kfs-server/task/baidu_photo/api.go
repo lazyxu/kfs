@@ -205,7 +205,6 @@ func (d *DriverBaiduPhoto) Download(ctx context.Context, bdFile BaiduFile, file 
 		if err != nil {
 			return err
 		}
-		fmt.Printf("GetDownloadPath %s\n", downloadPath)
 		tempFilePath, err := d.DownloadFile(ctx, name, downloadPath)
 		if err != nil {
 			return err
