@@ -12,6 +12,7 @@ import (
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/dao"
+	"github.com/lazyxu/kfs/db/sqlc"
 	"github.com/lazyxu/kfs/pb"
 	"github.com/lazyxu/kfs/rpc/rpcutil"
 )
@@ -174,12 +175,14 @@ func handleUploadV3File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		return err
 	}
 	panic("AnalyzeIfNoFileType is not implemented yet")
-	err = AnalyzeIfNoFileType(context.TODO(), kfsCore, 0, 0, "", "")
+	err = AnalyzeMetadataNotAnalyzed(context.TODO(), kfsCore, sqlc.File{
+		ID: 0, Size: 0, Md5: "", Sha256: "",
+	})
 	if err != nil {
 		println(conn.RemoteAddr().String(), "AnalyzeIfNoFileType", req.Hash, err.Error())
 		return err
 	}
-	err = PluginUnzipIfLivp(context.TODO(), kfsCore, req.Hash, req.Name)
+	err = PluginAnalyzeLivpNotAnalyzed(context.TODO(), kfsCore, req.Hash, req.Name)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "PluginUnzipIfLivp", req.Hash, err.Error())
 		return err

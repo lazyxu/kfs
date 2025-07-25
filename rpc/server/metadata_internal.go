@@ -155,33 +155,33 @@ func upsertVideoTime(ctx context.Context, kfsCore *core.KFS, id int64, m *dao.Vi
 	return nil
 }
 
-func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md5 string, sha256 string, fileType *dao.FileType) error {
+func InsertExif(ctx context.Context, kfsCore *core.KFS, file sqlc.File, fileType *dao.FileType) error {
 	if fileType.Type == "image" {
 		//if fileType.SubType == matchers.TypeJpeg.MIME.Subtype {
 		//	GetJpegExifData(kfsCore, hash)
 		//}
-		width, height, err := getImageHeightWidthByFfmpeg(kfsCore, size, md5, sha256)
+		width, height, err := getImageHeightWidthByFfmpeg(kfsCore, file.Size, file.Md5, file.Sha256)
 		if err != nil {
 			return err
 		}
-		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sqlc.NInt64(height), Width: sqlc.NInt64(width)})
+		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: file.ID, Height: sqlc.NInt64(height), Width: sqlc.NInt64(width)})
 		if err != nil {
 			return err
 		}
-		e, err := GetExifData(kfsCore, size, md5, sha256)
-		err1 := upsertImageTime(ctx, kfsCore, id, &e)
+		e, err := GetExifData(kfsCore, file.Size, file.Md5, file.Sha256)
+		err1 := upsertImageTime(ctx, kfsCore, file.ID, &e)
 		if err1 != nil {
 			return err1
 		}
 		if err != nil {
-			err = kfsCore.Q.UpsertNullExif(ctx, id)
+			err = kfsCore.Q.UpsertNullExif(ctx, file.ID)
 			if err != nil {
 				return err
 			}
 			return nil
 		}
 		err = kfsCore.Q.UpsertExif(ctx, sqlc.UpsertExifParams{
-			ID:                  id,
+			ID:                  file.ID,
 			ExifVersion:         sqlc.NString(e.ExifVersion),
 			ImageDescription:    sqlc.NString(e.ImageDescription),
 			Orientation:         sqlc.NInt64(int64(e.Orientation)),
@@ -209,7 +209,7 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 		}
 		return nil
 	} else if fileType.Type == "video" {
-		width, height, err := GetVideoHeightWidthByFfmpeg(kfsCore, size, md5, sha256)
+		width, height, err := GetVideoHeightWidthByFfmpeg(kfsCore, file.Size, file.Md5, file.Sha256)
 		// https://stackoverflow.com/questions/9412384/m4a-mp4-file-format-whats-the-difference-or-are-they-the-same
 		if fileType.SubType == "mp4" && err == NO_VALUE_FOR_KEY {
 			fileType.Type = "audio"
@@ -218,24 +218,24 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, id int64, size int64, md
 		if err != nil {
 			return err
 		}
-		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: id, Height: sqlc.NInt64(height), Width: sqlc.NInt64(width)})
+		err = kfsCore.Q.UpsertHeightWidth(ctx, sqlc.UpsertHeightWidthParams{ID: file.ID, Height: sqlc.NInt64(height), Width: sqlc.NInt64(width)})
 		if err != nil {
 			return err
 		}
-		m, err := GetVideoMetadata(kfsCore, size, md5, sha256)
-		err1 := upsertVideoTime(ctx, kfsCore, id, &m)
+		m, err := GetVideoMetadata(kfsCore, file.Size, file.Md5, file.Sha256)
+		err1 := upsertVideoTime(ctx, kfsCore, file.ID, &m)
 		if err1 != nil {
 			return err1
 		}
 		if err != nil {
-			err = kfsCore.Q.UpsertNullVideoMetadata(ctx, id)
+			err = kfsCore.Q.UpsertNullVideoMetadata(ctx, file.ID)
 			if err != nil {
 				return err
 			}
 			return nil
 		}
 		err = kfsCore.Q.UpsertVideoMetadata(ctx, sqlc.UpsertVideoMetadataParams{
-			ID:       id,
+			ID:       file.ID,
 			Codec:    sqlc.NString(m.Codec),
 			Created:  sqlc.NTime(m.Created),
 			Modified: sqlc.NTime(m.Modified),

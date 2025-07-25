@@ -102,6 +102,14 @@ CREATE TABLE IF NOT EXISTS _exif (
     FOREIGN KEY (id) REFERENCES _file(id)
 ) COMMENT '存储图像Exif元数据';
 
+-- TODO: heic -> jpg 只有文件头的uuid不一致
+CREATE TABLE IF NOT EXISTS _content_same_file (
+    id       BIGINT       NOT NULL PRIMARY KEY,
+    id2      BIGINT       NOT NULL,
+    FOREIGN KEY (id)   REFERENCES   _file(id),
+    FOREIGN KEY (id2)  REFERENCES   _file(id)
+);
+
 CREATE TABLE IF NOT EXISTS _video_metadata (
     id       BIGINT       NOT NULL PRIMARY KEY,
     Codec    VARCHAR(255) DEFAULT NULL,

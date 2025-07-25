@@ -5,22 +5,19 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"image"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/livp"
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/transcode"
 	"github.com/lazyxu/kfs/db/sqlc"
 	"github.com/lazyxu/kfs/rpc/server"
 
@@ -119,6 +116,10 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/event/baiduPhotoTask/:id", func(c echo.Context) error {
 		return baidu_photo.ApiEvent(c, kfsCore)
 	}) // TODO: handle name
+	e.POST("/api/v1/startTranscodeAnalysisTask", apiStartTranscodeAnalysisTask)
+	e.GET("/api/v1/event/transcodeAnalysisTask", func(c echo.Context) error {
+		return transcode.ApiEvent(c, kfsCore)
+	})
 
 	e.POST("/api/v1/createFolder", apiCreateFolder)
 	e.POST("/api/v1/uploadFileChunk", apiUploadFileChunk)
@@ -261,40 +262,6 @@ func apiListDriverFileByHash(c echo.Context) error {
 	return ok(c, list)
 }
 
-var (
-	ffmpegMutex sync.Mutex
-)
-
-func SafeFFmpegRun(ctx context.Context, src, dst string) error {
-	ffmpegMutex.Lock()
-	defer ffmpegMutex.Unlock()
-
-	if ctx.Err() != nil {
-		return ctx.Err()
-	}
-
-	tmpPath := filepath.Join(os.TempDir(), "ffmpeg.mp4")
-	defer os.Remove(tmpPath)
-
-	cancelCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	numCPU := runtime.NumCPU()
-	fmt.Printf("Running ffmpeg command: ffmpeg -noautorotate -threads %d -i %s -qscale 0 -vcodec libx264 %s\n", numCPU, src, tmpPath)
-	cmd := exec.CommandContext(cancelCtx, "ffmpeg",
-		"-noautorotate", "-threads", strconv.Itoa(numCPU), "-i", src,
-		"-qscale", "0", "-vcodec", "libx264", tmpPath,
-	)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		return err
-	}
-
-	return os.Rename(tmpPath, dst)
-}
-
 func apiImage(c echo.Context) error {
 	idStr := c.QueryParam("id")
 	id, err1 := strconv.ParseInt(idStr, 10, 64)
@@ -308,93 +275,17 @@ func apiImage(c echo.Context) error {
 	}
 	md5 := c.QueryParam("md5")
 	sha256 := c.QueryParam("sha256")
-	m, err1 := kfsCore.Q.GetMetadata(c.Request().Context(), id)
-	if err1 != nil {
-		return err1
-	}
-	if m.Extension == "zip" {
-		transcodeFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".jpg")
-		f, err2 := os.Open(transcodeFilePath)
-		if os.IsNotExist(err2) {
-			_, heic, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, sqlc.File{
-				ID:     id,
-				Size:   size,
-				Md5:    md5,
-				Sha256: sha256,
-			})
-			if err != nil {
-				return err
-			}
-			heicFile, err := kfsCore.Q.GetFileByID(c.Request().Context(), heic)
-			if err != nil {
-				return err
-			}
-			rc, err := kfsCore.S2.ReadWithSize(heicFile.Size, heicFile.Md5, heicFile.Sha256)
-			if err != nil {
-				return err
-			}
-			defer rc.Close()
-			img, err := goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
-			if err != nil {
-				return err
-			}
-			img = orientation(img, m.Orientation.Int64)
-			err = imaging.Save(img, transcodeFilePath)
-			if err != nil {
-				return err
-			}
-			f, err2 = os.Open(transcodeFilePath)
-		}
-		if err2 != nil {
-			return err2
-		}
-		defer f.Close()
-		c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
-		return c.Stream(http.StatusOK, "", f)
-	}
-	if m.Extension == matchers.TypeHeif.Extension {
-		transcodeFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".jpg")
-		f, err2 := os.Open(transcodeFilePath)
-		if os.IsNotExist(err2) {
-			rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
-			if err != nil {
-				return err
-			}
-			defer rc.Close()
-			img, err := goheif.Decode(rc) // CGO_ENABLED=1 https://jmeubank.github.io/tdm-gcc/articles/2021-05/10.3.0-release
-			if err != nil {
-				return err
-			}
-			img = orientation(img, m.Orientation.Int64)
-			err = imaging.Save(img, transcodeFilePath)
-			if err != nil {
-				return err
-			}
-			f, err2 = os.Open(transcodeFilePath)
-		}
-		if err2 != nil {
-			return err2
-		}
-		defer f.Close()
-		c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
-		return c.Stream(http.StatusOK, "", f)
-	} else if m.Extension == matchers.TypeMov.Extension {
-		src := kfsCore.S2.GetFilePath(size, md5, sha256)
-		transcodeFilePath := filepath.Join(kfsCore.TransCodeDir(), sha256+".mp4")
-		f, err := os.Open(transcodeFilePath)
-		if os.IsNotExist(err) {
-			err = SafeFFmpegRun(c.Request().Context(), src, transcodeFilePath)
-			if err != nil {
-				return err
-			}
-			f, err = os.Open(transcodeFilePath)
-		}
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-		c.Response().Header().Set("Cache-Control", `public, max-age=31536000`)
-		return c.Stream(http.StatusOK, "", f)
+	// TODO
+	err := server.PluginAnalyzeTranscodeNotAnalyzed(c.Request().Context(), kfsCore, "", sqlc.File{
+		ID:     id,
+		Size:   size,
+		Md5:    md5,
+		Sha256: sha256,
+	})
+	if err != nil {
+		println(err.Error())
+		c.Logger().Error(err)
+		return err
 	}
 	rc, err := kfsCore.S2.ReadWithSize(size, md5, sha256)
 	if err != nil {
@@ -512,7 +403,7 @@ func apiThumbnail(c echo.Context) error {
 		}()
 
 		if m.Extension == "zip" {
-			_, heic, err := server.UnzipIfLivp(c.Request().Context(), kfsCore, sqlc.File{
+			_, heic, err := server.AnalyzeLivpNotAnalyzed(c.Request().Context(), kfsCore, sqlc.File{
 				ID:     id,
 				Size:   size,
 				Md5:    md5,
@@ -619,6 +510,18 @@ func apiStartMetadataAnalysisTask(c echo.Context) error {
 	allStr := c.QueryParam("all")
 	all, _ := strconv.ParseBool(allStr)
 	metadata.StartOrStop(kfsCore, start, all)
+	return c.String(http.StatusOK, "")
+}
+
+func apiStartTranscodeAnalysisTask(c echo.Context) error {
+	startStr := c.QueryParam("start")
+	start, err := strconv.ParseBool(startStr)
+	if err != nil {
+		return err
+	}
+	allStr := c.QueryParam("all")
+	all, _ := strconv.ParseBool(allStr)
+	transcode.StartOrStop(kfsCore, start, all)
 	return c.String(http.StatusOK, "")
 }
 

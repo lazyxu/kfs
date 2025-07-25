@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/livp"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/metadata"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/db/sqlc"
@@ -186,6 +187,8 @@ func (d *DriverBaiduPhoto) StartOrStop2(ctx context.Context, start bool) {
 		err := d.Analyze2(ctx)
 		metadata.StartOrStop(d.kfsCore, false, false)
 		metadata.StartOrStop(d.kfsCore, true, false)
+		livp.StartOrStop(d.kfsCore, false, false)
+		livp.StartOrStop(d.kfsCore, true, false)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				d.setTaskStatus(StatusCanceled)

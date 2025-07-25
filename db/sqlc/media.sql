@@ -156,7 +156,7 @@ INNER JOIN _file f ON ft.id = f.id
 INNER JOIN _logic_file lf ON ft.id = lf.file_id
 WHERE 
     -- _file_type.sub_type = 'zip'
-    -- AND
+    -- OR
     CASE
         WHEN INSTR(lf.name, '.') > 1  -- 排除隐藏文件（如.livp）
         THEN LOWER(SUBSTRING_INDEX(lf.name, '.', -1)) 
@@ -174,7 +174,7 @@ INNER JOIN _file f ON ft.id = f.id
 INNER JOIN _logic_file lf ON ft.id = lf.file_id
 WHERE 
     -- ft.sub_type = 'zip'
-    -- AND
+    -- OR
     CASE
         WHEN INSTR(lf.name, '.') > 1  -- 排除隐藏文件（如.livp）
         THEN LOWER(SUBSTRING_INDEX(lf.name, '.', -1)) 
@@ -194,3 +194,21 @@ FROM _live_photo WHERE _live_photo.livp=?;
 
 -- name: TruncateLivePhoto :exec
 TRUNCATE TABLE _live_photo;
+
+-- name: ListTranscode :many
+SELECT
+    f.id,
+    f.size,
+    f.md5,
+    f.sha256
+FROM _file_type ft
+INNER JOIN _file f ON ft.id = f.id 
+INNER JOIN _logic_file lf ON ft.id = lf.file_id
+WHERE 
+    ft.sub_type = 'heif'
+    OR ft.sub_type = 'mov'
+    OR CASE
+        WHEN INSTR(lf.name, '.') > 1  -- 排除隐藏文件（如.livp）
+        THEN LOWER(SUBSTRING_INDEX(lf.name, '.', -1)) 
+        ELSE ''
+    END = 'livp';

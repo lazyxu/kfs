@@ -63,7 +63,9 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 	packetSize := 1
 	for _, file := range files {
 		if !os.FileMode(file.Mode).IsDir() {
-			err = server.AnalyzeIfNoFileType(c.Request().Context(), kfsCore, file.FileID.Int64, file.Size, file.Md5, file.Sha256)
+			err = server.AnalyzeMetadataNotAnalyzed(c.Request().Context(), kfsCore, sqlc.File{
+				ID: file.FileID.Int64, Size: file.Size, Md5: file.Md5, Sha256: file.Sha256,
+			})
 			if errors.Is(err, context.Canceled) {
 				fmt.Println("Connection canceled")
 				return nil

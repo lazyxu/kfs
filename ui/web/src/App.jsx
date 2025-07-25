@@ -3,7 +3,7 @@ import useSysConfig from "@kfs/common/hox/sysConfig";
 import { newDevice } from '@kfs/mui/api/device';
 import SvgIcon from '@kfs/mui/components/Icon/SvgIcon';
 import { SnackbarAction } from '@kfs/mui/components/Notification';
-import useWindows, { APP_LIVP_UNZIP, APP_METADATA_MANAGER, newWindow } from "@kfs/mui/hox/windows";
+import useWindows, { APP_LIVP_UNZIP, APP_METADATA_MANAGER, APP_TRANSCODE, newWindow } from "@kfs/mui/hox/windows";
 import BackupTask from "@kfs/mui/pages/BackupTask";
 import Dcim from '@kfs/mui/pages/Dcim';
 import DedicatedSpace from '@kfs/mui/pages/DedicatedSpace/DedicatedSpace';
@@ -126,6 +126,7 @@ function App() {
                                 { icon: 'devices', name: '设备列表' },
                                 { icon: '', name: '元数据' },
                                 { icon: '', name: 'livp解析' },
+                                { icon: 'Transform', name: '视频图片转码' },
                                 { icon: 'peizhi', name: '设置' },
                                 { icon: 'equipment_data-02_fn', name: '存储空间' },
                             ].map((item, index) => (
@@ -134,6 +135,8 @@ function App() {
                                         newWindow(setWindows, APP_METADATA_MANAGER);
                                     } else if (item.name === "livp解析") {
                                         newWindow(setWindows, APP_LIVP_UNZIP);
+                                    } else if (item.name === "视频图片转码") {
+                                        newWindow(setWindows, APP_TRANSCODE);
                                     } else {
                                         setMenu(item.name);
                                     }

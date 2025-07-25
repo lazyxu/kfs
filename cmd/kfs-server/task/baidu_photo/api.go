@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	json "github.com/json-iterator/go"
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/livp"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/metadata"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/db/sqlc"
@@ -347,6 +348,7 @@ func (d *DriverBaiduPhoto) GetAllFile(ctx context.Context, cb func([]BaiduFile) 
 
 		continues := cb(resp.List)
 		metadata.StartOrStop(d.kfsCore, true, false)
+		livp.StartOrStop(d.kfsCore, true, false)
 		if !continues {
 			break
 		}

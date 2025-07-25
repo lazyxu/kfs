@@ -172,9 +172,9 @@ func analyze(ctx context.Context, kfsCore *core.KFS, all bool) (err error) {
 	setTaskTotal(len(fileList))
 	for _, file := range fileList {
 		if all {
-			_, _, err = server.UnzipLivp(ctx, kfsCore, file)
+			_, _, err = server.AnalyzeLivp(ctx, kfsCore, file)
 		} else {
-			_, _, err = server.UnzipIfLivp(ctx, kfsCore, file)
+			_, _, err = server.AnalyzeLivpNotAnalyzed(ctx, kfsCore, file)
 		}
 		if errors.Is(err, context.Canceled) {
 			return err

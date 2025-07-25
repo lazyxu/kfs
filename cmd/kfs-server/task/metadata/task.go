@@ -173,9 +173,9 @@ func analyze(ctx context.Context, kfsCore *core.KFS, all bool) (err error) {
 	setTaskTotal(len(fileList))
 	for _, f := range fileList {
 		if all {
-			err = server.Analyze(ctx, kfsCore, f.ID, f.Size, f.Md5, f.Sha256)
+			err = server.AnalyzeMetadata(ctx, kfsCore, f)
 		} else {
-			err = server.AnalyzeIfNoFileType(ctx, kfsCore, f.ID, f.Size, f.Md5, f.Sha256)
+			err = server.AnalyzeMetadataNotAnalyzed(ctx, kfsCore, f)
 		}
 		if errors.Is(err, context.Canceled) {
 			return err

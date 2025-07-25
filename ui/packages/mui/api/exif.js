@@ -10,6 +10,13 @@ export async function analyzeMetadata(start, all) {
     });
 }
 
+export async function analyzeTranscode(start, all) {
+    console.log('web.analyzeTranscode', start, all);
+    return await httpPost("/api/v1/startTranscodeAnalysisTask", {
+        start, all,
+    });
+}
+
 export async function startLivePhotoAnalysisTask(start, all) {
     console.log('web.startLivePhotoAnalysisTask', start, all);
     return await httpPost("/api/v1/startLivePhotoAnalysisTask", {

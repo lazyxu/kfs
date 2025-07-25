@@ -3,77 +3,29 @@ package server
 import (
 	"archive/zip"
 	"context"
-	"crypto/md5"
-	"crypto/sha256"
 	"database/sql"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/db/sqlc"
 )
 
-func PluginUnzipIfLivp(ctx context.Context, kfsCore *core.KFS, hash string, name string) error {
+func PluginAnalyzeLivpNotAnalyzed(ctx context.Context, kfsCore *core.KFS, hash string, name string) error {
 	ext := strings.ToLower(filepath.Ext(name))
 	if ext != ".livp" {
 		return nil
 	}
-	_, _, err := UnzipIfLivp(ctx, kfsCore, sqlc.File{})
+	_, _, err := AnalyzeLivpNotAnalyzed(ctx, kfsCore, sqlc.File{})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func getHash(f *zip.File) (string, string, error) {
-	rc, err := f.Open()
-	if err != nil {
-		return "", "", err
-	}
-	defer rc.Close()
-
-	// 创建两个哈希计算器
-	hashSHA256 := sha256.New()
-	hashMD5 := md5.New()
-
-	// 创建管道：将数据同时分流到 SHA256 和 MD5
-	pipeReader, pipeWriter := io.Pipe()
-	tee := io.TeeReader(rc, pipeWriter) // 分流到管道写入端
-
-	// 启动协程：从管道读取端计算 MD5
-	var wg sync.WaitGroup
-	wg.Add(1)
-	var md5Sum string
-	var md5Err error
-	go func() {
-		defer wg.Done()
-		_, md5Err = io.Copy(hashMD5, pipeReader)
-		md5Sum = hex.EncodeToString(hashMD5.Sum(nil))
-	}()
-
-	// 主线程：从 tee 读取并计算 SHA256
-	_, err = io.Copy(hashSHA256, tee) // 读取时同步写入管道
-	pipeWriter.Close()                // 确保管道写入结束
-	if err != nil {
-		return "", "", err
-	}
-
-	// 等待 MD5 计算完成
-	wg.Wait()
-	if md5Err != nil {
-		return "", "", md5Err
-	}
-
-	shaSum := hex.EncodeToString(hashSHA256.Sum(nil))
-	return md5Sum, shaSum, nil
-}
-
-func UnzipIfLivp(ctx context.Context, kfsCore *core.KFS, file sqlc.File) (mov int64, heic int64, err error) {
+func AnalyzeLivpNotAnalyzed(ctx context.Context, kfsCore *core.KFS, file sqlc.File) (mov int64, heic int64, err error) {
 	_, err = kfsCore.Q.GetLivePhotoByLivp(ctx, sqlc.NInt64(file.ID))
 	if err == nil {
 		return
@@ -81,10 +33,10 @@ func UnzipIfLivp(ctx context.Context, kfsCore *core.KFS, file sqlc.File) (mov in
 	if !errors.Is(err, sql.ErrNoRows) {
 		return
 	}
-	return UnzipLivp(ctx, kfsCore, file)
+	return AnalyzeLivp(ctx, kfsCore, file)
 }
 
-func UnzipLivp(ctx context.Context, kfsCore *core.KFS, file sqlc.File) (int64, int64, error) {
+func AnalyzeLivp(ctx context.Context, kfsCore *core.KFS, file sqlc.File) (int64, int64, error) {
 	select {
 	case <-ctx.Done():
 		return 0, 0, context.Canceled
