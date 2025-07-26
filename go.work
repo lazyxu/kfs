@@ -1,21 +1,23 @@
-go 1.21
+go 1.23.0
+
+toolchain go1.24.5
 
 use (
-	./cmd/kfs-cli
 	./cmd/kfs-backup
+	./cmd/kfs-cli
 	./cmd/kfs-electron
 	./cmd/kfs-server
 	./cmd/kfs-test
 	./core
-	./pb
-	./rpc/rpcutil
-	./rpc/client
-	./rpc/server
+	./dao
 	./db/cgosqlite
+	./db/dbBase
 	./db/gosqlite
 	./db/mysql
-	./db/dbBase
 	./db/sqlc
-	./dao
+	./pb
+	./rpc/client
+	./rpc/rpcutil
+	./rpc/server
 	./storage/local
 )

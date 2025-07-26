@@ -16,17 +16,10 @@ export function TitleBar({ wid, title, buttons }) {
     const [windows, setWindows] = useWindows();
     return (
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Box sx={{ paddingLeft: "1em" }}>
-                {title}
-            </Box>
-            <Stack direction="row" justifyContent="flex-end" >
-                <ButtonGroup variant="contained">
-                    {buttons}
-                </ButtonGroup>
+            <Stack direction="row" justifyContent="flex-start" >
                 <IconButton aria-label="close" onClick={() => closeWindow(setWindows, wid)}
                     sx={{
                         padding: "4px 12px", borderRadius: '0',
-                        color: theme => theme.context.secondary,
                         ":hover": {
                             backgroundColor: "red",
                         }
@@ -34,7 +27,13 @@ export function TitleBar({ wid, title, buttons }) {
                 >
                     <Close />
                 </IconButton>
+                <ButtonGroup variant="contained">
+                    {buttons}
+                </ButtonGroup>
             </Stack>
+            <Box sx={{ flex: 1, paddingLeft: "1em", }}>
+                {title}
+            </Box>
         </Stack>
     )
 }
@@ -42,7 +41,7 @@ export function TitleBar({ wid, title, buttons }) {
 export function WorkingArea({ children }) {
     return (
         <DialogContent sx={{
-            padding: "0", paddingLeft: "5px",
+            padding: "0", paddingLeft: "5px", backgroundColor: "var(--mui-palette-background-paper)"
         }}>
             {children}
         </DialogContent>

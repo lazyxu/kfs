@@ -32,6 +32,9 @@ import (
 	"github.com/h2non/filetype/matchers"
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 
+	_ "net/http/pprof"
+
+	"github.com/labstack/echo-contrib/pprof"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -39,7 +42,7 @@ import (
 func webServer(webPortString string) {
 	// Echo instance
 	e := echo.New()
-
+	pprof.Register(e)
 	// Middleware
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Skipper:          middleware.DefaultSkipper,
