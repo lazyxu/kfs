@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"image"
@@ -112,10 +113,14 @@ func upsertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e *dao.Ex
 	if t.IsZero() {
 		var err error
 		iter, err := kfsCore.Q.GetEarliestCrated(ctx, sqlc.NInt64(id))
-		if err != nil {
+		if err == nil {
+			t = iter.(time.Time)
+		} else if err != sql.ErrNoRows {
 			return err
 		}
-		t = iter.(time.Time)
+	}
+	if t.IsZero() {
+		t = time.Now()
 	}
 	fmt.Printf("upsertImageTime: %d %s\n", id, t)
 	err = kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{
@@ -139,10 +144,14 @@ func upsertVideoTime(ctx context.Context, kfsCore *core.KFS, id int64, m *dao.Vi
 	if t.IsZero() {
 		var err error
 		iter, err := kfsCore.Q.GetEarliestCrated(ctx, sqlc.NInt64(id))
-		if err != nil {
+		if err == nil {
+			t = iter.(time.Time)
+		} else if err != sql.ErrNoRows {
 			return err
 		}
-		t = iter.(time.Time)
+	}
+	if t.IsZero() {
+		t = time.Now()
 	}
 	fmt.Printf("upsertVideoTime: %d %s\n", id, t)
 	err := kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{

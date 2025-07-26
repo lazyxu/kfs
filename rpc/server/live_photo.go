@@ -55,22 +55,21 @@ func AnalyzeLivp(ctx context.Context, kfsCore *core.KFS, file sqlc.File) (int64,
 	fmt.Printf("UnzipLivp livp: %+v\n", file)
 	heicCnt := 0
 	movCnt := 0
-	otherCnt := 0
 	for _, zf := range r.File {
+		fmt.Printf("\tzf: %+v\n", zf)
 		if strings.HasSuffix(zf.Name, ".heic") {
 			heicCnt++
 		} else if strings.HasSuffix(zf.Name, ".mov") {
 			movCnt++
 		} else {
-			otherCnt++
+			return 0, 0, errors.New("invalid livp format, there are files other than .heic and .mov")
 		}
 	}
-	if otherCnt > 0 || heicCnt != 1 || movCnt != 1 {
+	if heicCnt != 1 || movCnt != 1 {
 		err = errors.New("invalid livp format, there are files other than .heic and .mov")
 		return 0, 0, err
 	}
 	for _, zf := range r.File {
-		fmt.Printf("\tzf: %+v\n", zf)
 		md5, sha256, err := getHash(zf)
 		if err != nil {
 			return 0, 0, err
