@@ -1,77 +1,54 @@
 import useResourceManager, { openDir, openDrivers } from '@kfs/common/hox/resourceManager';
 import SvgIcon from "@kfs/mui/components/Icon/SvgIcon";
 import { ArrowBack, ArrowForward, ArrowForwardIos, ArrowUpward, Refresh, Search } from "@mui/icons-material";
-import { Button, IconButton, Menu, MenuItem, Stack, TextField } from "@mui/material";
+import { Button, IconButton, Stack, TextField } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useRef, useState } from "react";
 
-function PathButton({ name, icon, dirPath, onMenu }) {
+function PathButton({ name, icon, dirPath }) {
     const [resourceManager, setResourceManager] = useResourceManager();
-    const [anchorEl, setAnchorEl] = useState(null);
-
-    const handleContextMenu = (e) => {
-        e.preventDefault(); e.stopPropagation();
-        setAnchorEl(e.currentTarget);
-    };
-
-    const handleMenuClose = () => setAnchorEl(null);
-
     return (
         <>
-            <Button
+            {icon && <Button sx={{minWidth: "28px"}}
+                onClick={e => {
+                    e.preventDefault(); e.stopPropagation();
+                    openDir(setResourceManager, dirPath);
+                }}
+                >
+                <SvgIcon icon={icon} style={{ height: "24px", width: "24px" }} />
+            </Button>}
+            {name && <Button
                 variant="text"
                 size="small"
-                startIcon={icon ? <SvgIcon icon={icon} sx={{ verticalAlign: "middle", px: 1 }} /> : null}
                 sx={{
-                    borderRadius: 1,
+                    height: "32px",
                     minWidth: 0,
-                    px: 1,
                     display: "flex",
                     alignItems: "center",
-                    gap: 0.5,
-                    boxShadow: "none",
-                    ":hover": { bgcolor: theme => theme.palette.action.hover }
                 }}
                 onClick={e => {
                     e.preventDefault(); e.stopPropagation();
                     openDir(setResourceManager, dirPath);
                 }}
-                onContextMenu={handleContextMenu}
             >
                 <span style={{ lineHeight: "normal" }}>{name}</span>
-            </Button>
+            </Button>}
             <IconButton
                 size="small"
                 sx={{
-                    borderRadius: 1,
                     minWidth: 0,
                     boxShadow: "none",
                     borderLeft: "none",
-                    borderRight: theme => `1px solid ${theme.palette.divider}`,
                     m: 0,
-                    width: 32,
-                    height: 32,
+                    width: 24,
+                    height: 24,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    ":hover": { bgcolor: theme => theme.palette.action.hover }
-                }}
-                onClick={e => {
-                    e.preventDefault(); e.stopPropagation();
-                    setAnchorEl(e.currentTarget);
                 }}
             >
                 <ArrowForwardIos fontSize="small" />
             </IconButton>
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-            >
-                <MenuItem onClick={() => { e.preventDefault(); e.stopPropagation(); handleMenuClose(); onMenu?.("newFolder", dirPath); }}>新建文件夹</MenuItem>
-                <MenuItem onClick={() => { e.preventDefault(); e.stopPropagation(); handleMenuClose(); onMenu?.("paste", dirPath); }}>粘贴</MenuItem>
-                {/* 可扩展更多菜单项 */}
-            </Menu>
         </>
     );
 }
@@ -156,10 +133,6 @@ export default () => {
         }
     };
 
-    const handleMenuAction = (action, path) => {
-        // TODO: 实现新建文件夹、粘贴等功能
-    };
-
     // Win11风格分隔符
     const Separator = () => (
         <ArrowForwardIos />
@@ -229,17 +202,17 @@ export default () => {
                             flex: 1,
                             height: '38px', // TextField高度
                             borderRadius: 1,
+                            paddingLeft: "0.5em",
                             border: "1px solid var(--mui-palette-Chip-defaultBorder)",
                             "&:hover": { cursor: "pointer", borderColor: "var(--mui-palette-action-active)" },
                         }}
                     >
-                        <PathButton icon="wangpan" dirPath={[]} onMenu={handleMenuAction} />
+                        <PathButton icon="wangpan" dirPath={[]} />
                         {dirPath.map((name, i) => (
                             <Stack direction="row" alignItems="center" key={i}>
                                 <PathButton
                                     name={name}
                                     dirPath={dirPath.slice(0, i + 1)}
-                                    onMenu={handleMenuAction}
                                 />
                             </Stack>
                         ))}
