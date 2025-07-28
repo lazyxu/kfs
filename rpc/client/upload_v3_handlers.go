@@ -2,8 +2,6 @@ package client
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"io"
 	"net"
 	"os"
@@ -26,7 +24,7 @@ type uploadHandlersV3 struct {
 	socketServerAddr string
 	conns            []net.Conn
 	files            []*os.File
-	driverId         uint64
+	parentID         int64
 	srcPath          string
 	dstPath          string
 	conn             net.Conn
@@ -89,14 +87,12 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	}
 
 	var startResp pb.UploadStartDirResp
-	dirModifyTime := uint64(dirInfo.ModTime().UnixNano())
+	dirModifyTime := int64(dirInfo.ModTime().UnixNano())
 	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadStartDir, &pb.UploadStartDirReq{
-		DriverId:                h.driverId,
 		DirPath:                 dirPath,
 		Name:                    dirInfo.Name(),
-		Hash:                    "",
-		Mode:                    uint64(dirInfo.Mode()),
-		Size:                    uint64(dirInfo.Size()),
+		Mode:                    int64(dirInfo.Mode()),
+		Size:                    dirInfo.Size(),
 		CreateTime:              dirModifyTime,
 		ModifyTime:              dirModifyTime,
 		ChangeTime:              dirModifyTime,
@@ -143,7 +139,7 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	default:
 	}
 	_, err = ReqRespWithConn(h.conn, rpcutil.CommandUploadEndDir, &pb.UploadEndDirReq{
-		DriverId: h.driverId,
+		ParentID: h.parentID,
 		DirPath:  dirPath,
 	}, nil)
 	if err != nil {
@@ -179,15 +175,6 @@ func (h *uploadHandlersV3) copyFile(conn net.Conn, f *os.File, size int64) error
 	return nil
 }
 
-func (h *uploadHandlersV3) getHash(f *os.File) (string, error) {
-	hash := sha256.New()
-	_, err := io.Copy(hash, f)
-	if err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(hash.Sum(nil)), nil
-}
-
 func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info os.FileInfo) (hash string, fileErr error, err error) {
 	f, fileErr := os.Open(filePath)
 	if fileErr != nil {
@@ -196,7 +183,7 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 	defer func() {
 		f.Close()
 	}()
-	hash, fileErr = h.getHash(f)
+	md5, sha256, fileErr := core.GetHashFromFile(f)
 	if fileErr != nil {
 		return
 	}
@@ -212,14 +199,15 @@ func (h *uploadHandlersV3) uploadFile(ctx context.Context, filePath string, info
 		return
 	}
 
-	modifyTime := uint64(info.ModTime().UnixNano())
+	modifyTime := info.ModTime().UnixNano()
 	status, err := ReqRespWithConn(h.conn, rpcutil.CommandUploadV3File, &pb.UploadFileV3{
-		DriverId:       h.driverId,
+		ParentID:       h.parentID,
 		DirPath:        dirPath,
 		Name:           info.Name(),
-		Hash:           hash,
-		Mode:           uint64(info.Mode()),
-		Size:           uint64(info.Size()),
+		MD5:            md5,
+		SHA256:         sha256,
+		Mode:           int64(info.Mode()),
+		Size:           info.Size(),
 		CreateTime:     modifyTime,
 		ModifyTime:     modifyTime,
 		ChangeTime:     modifyTime,

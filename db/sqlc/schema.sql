@@ -186,10 +186,16 @@ CREATE TABLE IF NOT EXISTS _device (
     host_name  VARCHAR(256) NOT NULL
 );
 
+-- DROP TABLE IF EXISTS _local_file_sync_to_logic_file;
+
 CREATE TABLE IF NOT EXISTS _local_file_sync_to_logic_file (
     id        BIGINT        NOT NULL PRIMARY KEY,
-    device_id CHAR(36)      NOT NULL DEFAULT '',
-    srcPath   VARCHAR(1024) NOT NULL DEFAULT '',
+    cron VARCHAR(64) NOT NULL,
+    enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    sync_at_start BOOLEAN NOT NULL DEFAULT FALSE,
+    -- local_file
+    device_id CHAR(36)      NOT NULL,
+    srcPath   VARCHAR(1024) NOT NULL,
     ignores   TEXT          NOT NULL,
     encoder   VARCHAR(64)   NOT NULL DEFAULT '',
     FOREIGN KEY (id)        REFERENCES _logic_file(id),

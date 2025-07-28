@@ -304,7 +304,7 @@ func apiResetDriver(c echo.Context) error {
 
 func apiListLocalFileDriver(c echo.Context) error {
 	deviceId := c.QueryParam("deviceId")
-	list, err := kfsCore.Db.ListLocalFileDriver(c.Request().Context(), deviceId)
+	list, err := kfsCore.Q.ListLocalFileDriver(c.Request().Context(), deviceId)
 	if err != nil {
 		c.Logger().Error(err)
 		return err

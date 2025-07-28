@@ -10,7 +10,7 @@ import (
 )
 
 type DriverLocalFile struct {
-	driverId uint64
+	parentID int64
 	mutex    sync.Locker
 	taskInfo TaskInfo
 }

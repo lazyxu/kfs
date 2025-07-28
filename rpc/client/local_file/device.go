@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	json "github.com/json-iterator/go"
-	"github.com/lazyxu/kfs/dao"
-	"github.com/robfig/cron/v3"
 	"io"
 	"net/http"
 	"os"
 	"runtime"
 	"strconv"
 	"sync"
+
+	"github.com/google/uuid"
+	json "github.com/json-iterator/go"
+	"github.com/lazyxu/kfs/db/sqlc"
+	"github.com/robfig/cron/v3"
 )
 
 func jsonBody(m any) io.Reader {
@@ -24,7 +25,7 @@ func jsonBody(m any) io.Reader {
 	return bytes.NewReader(b)
 }
 
-var deviceId string
+var DeviceId string
 
 func NewDeviceIfNeeded(configPath string) string {
 	data, err := os.ReadFile(configPath)
@@ -43,19 +44,19 @@ func NewDeviceIfNeeded(configPath string) string {
 	}
 	id := json.ConfigCompatibleWithStandardLibrary.Get(data, "deviceId").ToString()
 	if id != "" {
-		deviceId = id
+		DeviceId = id
 	} else {
 		id, err := uuid.NewUUID()
 		if err != nil {
 			panic(err)
 		}
-		deviceId = id.String()
+		DeviceId = id.String()
 		m := map[string]interface{}{}
 		err = json.Unmarshal(data, &m)
 		if err != nil {
 			panic(err)
 		}
-		m["deviceId"] = deviceId
+		m["deviceId"] = DeviceId
 		data, err = json.MarshalIndent(m, "", " ")
 		if err != nil {
 			panic(err)
@@ -72,7 +73,7 @@ func NewDeviceIfNeeded(configPath string) string {
 	os := runtime.GOOS
 	name := hostname + "@" + os
 	buf := jsonBody(map[string]interface{}{
-		"id":       deviceId,
+		"id":       DeviceId,
 		"name":     name,
 		"os":       os,
 		"hostname": hostname,
@@ -81,7 +82,7 @@ func NewDeviceIfNeeded(configPath string) string {
 	if err != nil {
 		panic(err)
 	}
-	resp, err := http.Get(webServer + "/api/v1/listLocalFileDriver?deviceId=" + deviceId)
+	resp, err := http.Get(webServer + "/api/v1/listLocalFileDriver?deviceId=" + DeviceId)
 	if err != nil {
 		panic(err)
 	}
@@ -94,12 +95,14 @@ func NewDeviceIfNeeded(configPath string) string {
 	if code != 0 {
 		panic("error code: " + strconv.Itoa(code))
 	}
-	var drivers []dao.Driver
-	json.ConfigCompatibleWithStandardLibrary.Get(body, "data").ToVal(&drivers)
-	for _, d := range drivers {
-		StartLocalFileSync(d.Id, socketServer, d.H, d.M, d.SrcPath, d.Ignores, d.Encoder)
+	var list []sqlc.LocalFileSyncToLogicFile
+	json.ConfigCompatibleWithStandardLibrary.Get(body, "data").ToVal(&list)
+	for _, d := range list {
+		if d.Enabled && d.DeviceID == DeviceId && d.SyncAtStart {
+			StartLocalFileSync(d.ID, socketServer, d.Cron, d.Srcpath, d.Ignores, d.Encoder)
+		}
 	}
-	return deviceId
+	return DeviceId
 }
 
 var cronTasks sync.Map
@@ -110,8 +113,8 @@ type CronTask struct {
 	cancel context.CancelFunc
 }
 
-func StartLocalFileSync(driverId uint64, serverAddr string, h int64, m int64, srcPath, ignores, encoder string) {
-	actual, loaded := cronTasks.LoadOrStore(driverId, &CronTask{
+func StartLocalFileSync(fileID int64, serverAddr string, cronStr string, srcPath, ignores, encoder string) {
+	actual, loaded := cronTasks.LoadOrStore(fileID, &CronTask{
 		c:      cron.New(),
 		id:     -1,
 		cancel: nil,
@@ -124,14 +127,13 @@ func StartLocalFileSync(driverId uint64, serverAddr string, h int64, m int64, sr
 		}
 		t.c.Remove(t.id)
 	}
-	spec := fmt.Sprintf("%d %d * * ?", m, h)
 	var err error
-	t.id, err = t.c.AddFunc(spec, func() {
+	t.id, err = t.c.AddFunc(cronStr, func() {
 		ctx, cancel := context.WithCancel(context.TODO())
 		t.cancel = cancel
-		d, err := GetOrLoadDriver(driverId)
+		d, err := GetOrLoad(fileID)
 		if err != nil {
-			cronTasks.LoadAndDelete(driverId)
+			cronTasks.LoadAndDelete(fileID)
 			return
 		}
 		d.StartOrStop(ctx, true, serverAddr, srcPath, ignores, encoder)

@@ -56,21 +56,20 @@ message UploadStartResp {
 }
 
 message UploadEndDirReq {
-  uint64 DriverId = 1;
+  int64 ParentID = 1;
   repeated string DirPath = 2;
 }
 
 message UploadStartDirReq {
-  uint64 DriverId = 1;
+  int64 ParentID = 1;
   repeated string DirPath = 2;
   string Name = 3;
-  string Hash = 4;
-  uint64 Mode = 5;
-  uint64 Size = 6;
-  uint64 CreateTime = 7;
-  uint64 ModifyTime = 8;
-  uint64 ChangeTime = 9;
-  uint64 AccessTime = 10;
+  int64 Mode = 5;
+  int64 Size = 6;
+  int64 CreateTime = 7;
+  int64 ModifyTime = 8;
+  int64 ChangeTime = 9;
+  int64 AccessTime = 10;
   string UploadDeviceId = 11;
   uint64 UploadTime = 12;
   repeated UploadReqDirItemCheckV3 uploadReqDirItemCheckV3 = 13;
@@ -84,18 +83,19 @@ message UploadReqDirItemCheckV3 {
 }
 
 message UploadFileV3 {
-  uint64 DriverId = 1;
+  int64 ParentID = 1; // 0 表示 NULL，根目录
   repeated string DirPath = 2;
   string Name = 3;
-  string Hash = 4;
-  uint64 Mode = 5;
-  uint64 Size = 6;
-  uint64 CreateTime = 7;
-  uint64 ModifyTime = 8;
-  uint64 ChangeTime = 9;
-  uint64 AccessTime = 10;
-  string UploadDeviceId = 11;
-  uint64 UploadTime = 12;
+  string MD5 = 4;
+  string SHA256 = 5;
+  int64 Mode = 6;
+  int64 Size = 7;
+  int64 CreateTime = 8;
+  int64 ModifyTime = 9;
+  int64 ChangeTime = 10;
+  int64 AccessTime = 11;
+  string UploadDeviceId = 12;
+  uint64 UploadTime = 13;
 }
 
 message FileOrDir {

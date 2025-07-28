@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/dustin/go-humanize"
 	"github.com/lazyxu/kfs/core"
 	"github.com/lazyxu/kfs/rpc/client"
 	ignore "github.com/sabhiram/go-gitignore"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 type WebUploadDirProcess struct {
@@ -70,7 +71,7 @@ func (h *WebUploadDirProcess) EndDir(filePath string, info os.FileInfo) {
 	h.d.addTaskCnt(info)
 }
 
-func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint64, serverAddr, srcPath, ignores, encoder string) error {
+func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, serverAddr, srcPath, ignores, encoder string) error {
 	if !filepath.IsAbs(srcPath) {
 		return errors.New("请输入绝对路径")
 	}
@@ -81,7 +82,7 @@ func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint6
 	if !info.IsDir() {
 		return errors.New("源目录不存在")
 	}
-	fmt.Println("backup start", driverId, serverAddr, srcPath, ignores, encoder)
+	fmt.Println("backup start", d.parentID, serverAddr, srcPath, ignores, encoder)
 
 	fs := &client.RpcFs{
 		SocketServerAddr: serverAddr,
@@ -95,7 +96,7 @@ func (d *DriverLocalFile) eventSourceBackup3(ctx context.Context, driverId uint6
 		d:         d,
 		gitIgnore: gitIgnore,
 	}
-	err = fs.UploadDir(ctx, deviceId, driverId, "/", srcPath, core.UploadDirConfig{
+	err = fs.UploadDir(ctx, DeviceId, d.parentID, "/", srcPath, core.UploadDirConfig{
 		UploadDirProcess: w,
 		Encoder:          encoder,
 		Concurrent:       1,

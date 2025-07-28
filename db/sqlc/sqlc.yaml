@@ -10,6 +10,7 @@ sql:
       - logic_file.sql
       - livp.sql
       - sync_from.sql
+      - sync_to.sql
     schema: "schema.sql"
     gen:
       go:

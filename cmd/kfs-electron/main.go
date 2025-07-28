@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lazyxu/kfs/rpc/client/local_file"
 	"net"
 	"os"
+
+	"github.com/lazyxu/kfs/rpc/client/local_file"
 
 	"github.com/spf13/cobra"
 )
@@ -30,7 +31,7 @@ func rootCmd() *cobra.Command {
 	}
 	cmd.PersistentFlags().BoolP("verbose", "v", false, "verbose")
 	cmd.PersistentFlags().StringVarP(&portStr, "port", "p", "0", "local web server port")
-	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", "~/.kfs-config.json", "config path")
+	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", ".kfs-config.json", "config path")
 	return cmd
 }
 
@@ -46,22 +47,24 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if err != nil {
 		panic(err)
 	}
+	m := map[string]interface{}{}
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		panic(err)
-	}
-	m := map[string]interface{}{}
-	err = json.Unmarshal(data, &m)
-	if err != nil {
-		panic(err)
+		fmt.Printf("readfile error %v\n", err)
+	} else {
+		err = json.Unmarshal(data, &m)
+		if err != nil {
+			fmt.Printf("unmarshal error %v\n", err)
+		}
 	}
 	m["port"] = lis.Addr().(*net.TCPAddr).Port
-	data, err = json.MarshalIndent(m, "", " ")
+	data, err = json.MarshalIndent(m, "", "    ")
 	if err != nil {
 		panic(err)
 	}
 	err = os.WriteFile(configPath, data, 0o600)
 	if err != nil {
+		fmt.Printf("WriteFile error %v\n", err)
 		panic(err)
 	}
 	local_file.NewDeviceIfNeeded(configPath)

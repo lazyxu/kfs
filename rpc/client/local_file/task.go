@@ -28,14 +28,14 @@ func (c *Client) Message() TaskInfo {
 var s = &core.EventServer[TaskInfo]{
 	Clients: make(map[echo.Context]core.EventClient[TaskInfo]),
 	NewClient: func(c echo.Context, kfsCore *core.KFS) (core.EventClient[TaskInfo], error) {
-		driverIdStr := c.Param("driverId")
-		driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+		parentIDStr := c.Param("parentID")
+		parentID, err := strconv.ParseInt(parentIDStr, 10, 0)
 		if err != nil {
 			return nil, err
 		}
 		//startStr := c.QueryParam("start")
 		//serverAddr := c.QueryParam("serverAddr")
-		d, err := GetOrLoadDriver(driverId)
+		d, err := GetOrLoad(parentID)
 		if err != nil {
 			return nil, err
 		}
@@ -196,9 +196,9 @@ func (d *DriverLocalFile) addTaskCnt(info os.FileInfo) {
 
 var drivers sync.Map
 
-func GetOrLoadDriver(driverId uint64) (*DriverLocalFile, error) {
-	d, _ := drivers.LoadOrStore(driverId, &DriverLocalFile{
-		driverId: driverId,
+func GetOrLoad(parentID int64) (*DriverLocalFile, error) {
+	d, _ := drivers.LoadOrStore(parentID, &DriverLocalFile{
+		parentID: parentID,
 		taskInfo: TaskInfo{
 			cancel:   nil,
 			Status:   StatusIdle,
@@ -228,7 +228,7 @@ func (d *DriverLocalFile) StartOrStop(ctx context.Context, start bool, serverAdd
 	ctx, cancel := context.WithCancel(context.TODO())
 	d.taskInfo.cancel = cancel
 	go func() {
-		err := d.eventSourceBackup3(ctx, d.driverId, serverAddr, srcPath, ignores, encoder)
+		err := d.eventSourceBackup3(ctx, serverAddr, srcPath, ignores, encoder)
 		if err != nil {
 			if errors.Is(err, context.Canceled) {
 				d.setTaskStatus(StatusCanceled)

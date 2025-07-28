@@ -45,6 +45,10 @@ rm -f pb/*.g
 # https://github.com/protocolbuffers/protobuf/releases
 protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. pb/fs.proto
 
+cd db/sqlc
+sqlc generate
+cd ../..
+
 export PATH="$PATH:/c/Users/dell/lib"
 
 #OUTPUT_DIR=./ui/src/pb
@@ -178,6 +182,12 @@ case $1 in
         else
           go build -o kfs-backup
         fi
+        ;;
+
+      electron:binary)
+        cd $root/cmd/kfs-electron
+        echo "GOOS=$GOOS GOARCH=$GOARCH"
+        GOOS=$GOOS GOARCH=$GOARCH go build -o kfs-electron.exe
         ;;
 
       electron)

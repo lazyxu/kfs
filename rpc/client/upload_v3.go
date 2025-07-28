@@ -2,15 +2,16 @@ package client
 
 import (
 	"context"
-	"github.com/lazyxu/kfs/core"
-	"github.com/lazyxu/kfs/pb"
-	"github.com/lazyxu/kfs/rpc/rpcutil"
 	"net"
 	"os"
 	"path/filepath"
+
+	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/pb"
+	"github.com/lazyxu/kfs/rpc/rpcutil"
 )
 
-func (fs *RpcFs) UploadDir(ctx context.Context, deviceId string, driverId uint64, dstPath string, srcPath string, config core.UploadDirConfig) (err error) {
+func (fs *RpcFs) UploadDir(ctx context.Context, deviceId string, parentID int64, dstPath string, srcPath string, config core.UploadDirConfig) (err error) {
 	srcPath, err = filepath.Abs(srcPath)
 	if err != nil {
 		return
@@ -29,7 +30,7 @@ func (fs *RpcFs) UploadDir(ctx context.Context, deviceId string, driverId uint64
 		socketServerAddr: fs.SocketServerAddr,
 		conns:            make([]net.Conn, config.Concurrent),
 		files:            make([]*os.File, config.Concurrent),
-		driverId:         driverId,
+		parentID:         parentID,
 		srcPath:          srcPath,
 		dstPath:          dstPath,
 		conn:             conn,

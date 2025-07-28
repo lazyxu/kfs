@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/lazyxu/kfs/dao"
-	"github.com/lazyxu/kfs/rpc/client/local_file"
 	"net/http"
+
+	"github.com/labstack/echo/v4"
+	"github.com/lazyxu/kfs/db/sqlc"
+	"github.com/lazyxu/kfs/rpc/client/local_file"
 )
 
 type Param struct {
-	ServerAddr string       `json:"serverAddr"`
-	Drivers    []dao.Driver `json:"drivers"`
+	ServerAddr string                          `json:"serverAddr"`
+	List       []sqlc.LocalFileSyncToLogicFile `json:"drivers"`
 }
 
 func startAllLocalFileSync(c echo.Context) error {
@@ -18,8 +19,10 @@ func startAllLocalFileSync(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	for _, d := range p.Drivers {
-		local_file.StartLocalFileSync(d.Id, p.ServerAddr, d.H, d.M, d.SrcPath, d.Ignores, d.Encoder)
+	for _, d := range p.List {
+		if d.Enabled && d.DeviceID == local_file.DeviceId {
+			local_file.StartLocalFileSync(d.ID, p.ServerAddr, d.Cron, d.Srcpath, d.Ignores, d.Encoder)
+		}
 	}
 	return c.String(http.StatusOK, "")
 }

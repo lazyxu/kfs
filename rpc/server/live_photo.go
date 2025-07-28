@@ -70,7 +70,7 @@ func AnalyzeLivp(ctx context.Context, kfsCore *core.KFS, file sqlc.File) (int64,
 		return 0, 0, err
 	}
 	for _, zf := range r.File {
-		md5, sha256, err := getHash(zf)
+		md5, sha256, err := core.GetHashFromZipFile(zf)
 		if err != nil {
 			return 0, 0, err
 		}

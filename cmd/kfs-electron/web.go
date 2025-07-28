@@ -1,13 +1,14 @@
 package main
 
 import (
+	"net"
+	"net/http"
+	"strconv"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/lazyxu/kfs/cmd/kfs-electron/task/local_file_filter"
 	"github.com/lazyxu/kfs/rpc/client/local_file"
-	"net"
-	"net/http"
-	"strconv"
 )
 
 func webServer(lis net.Listener) {
@@ -54,16 +55,16 @@ func apiStarDriverLocalFile(c echo.Context) error {
 		return err
 	}
 	serverAddr := c.QueryParam("serverAddr")
-	driverIdStr := c.QueryParam("driverId")
-	driverId, err := strconv.ParseUint(driverIdStr, 10, 0)
+	parentIDStr := c.QueryParam("parentID")
+	parentID, err := strconv.ParseInt(parentIDStr, 10, 0)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "driverId should be a number")
+		return c.String(http.StatusBadRequest, "parentID should be a number")
 	}
 	srcPath := c.QueryParam("srcPath")
 	ignores := c.QueryParam("ignores")
 	encoder := c.QueryParam("encoder")
 	ctx := c.Request().Context()
-	d, err := local_file.GetOrLoadDriver(driverId)
+	d, err := local_file.GetOrLoad(parentID)
 	if err != nil {
 		return err
 	}

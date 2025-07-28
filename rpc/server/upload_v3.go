@@ -47,23 +47,28 @@ func handleUploadStartDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	if err != nil {
 		return err
 	}
-	println(conn.RemoteAddr().String(), "UploadStartDir", req.DriverId, "/"+strings.Join(req.DirPath, "/"))
+	println(conn.RemoteAddr().String(), "UploadStartDir", req.ParentID, "/"+strings.Join(req.DirPath, "/"))
 
 	if !req.IsRoot {
-		err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
-			DriverId:       req.DriverId,
-			DirPath:        req.DirPath,
-			Name:           req.Name,
-			Hash:           req.Hash,
-			Mode:           req.Mode,
-			Size:           req.Size,
-			CreateTime:     req.CreateTime,
-			ModifyTime:     req.ModifyTime,
-			ChangeTime:     req.ChangeTime,
-			AccessTime:     req.AccessTime,
-			UploadDeviceId: req.UploadDeviceId,
-			UploadTime:     req.UploadTime,
-		}, false)
+		var userID int64 = 1
+		_, err = kfsCore.Q.SetLogicFileByParentIdPath(context.TODO(), userID, sqlc.NInt64(req.ParentID),
+			req.DirPath, req.Name, sqlc.NInt64(req.FileID), req.Mode, req.Size,
+			time.Unix(req.CreateTime, 0), time.Unix(req.ModifyTime, 0),
+			time.Unix(req.ChangeTime, 0), time.Unix(req.AccessTime, 0), false)
+		// err = kfsCore.Q.SetLogicFileByParentIdPath(context.TODO(), dao.DriverFile{
+		// 	DriverId:       req.FileID,
+		// 	DirPath:        req.DirPath,
+		// 	Name:           req.Name,
+		// 	Hash:           req.Hash,
+		// 	Mode:           req.Mode,
+		// 	Size:           req.Size,
+		// 	CreateTime:     req.CreateTime,
+		// 	ModifyTime:     req.ModifyTime,
+		// 	ChangeTime:     req.ChangeTime,
+		// 	AccessTime:     req.AccessTime,
+		// 	UploadDeviceId: req.UploadDeviceId,
+		// 	UploadTime:     req.UploadTime,
+		// }, false)
 		if err != nil {
 			println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
 			return err
@@ -81,7 +86,7 @@ func handleUploadStartDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 			ModifyTime: c.ModifyTime,
 		}
 	}
-	err = kfsCore.Db.CheckExists(context.TODO(), req.DriverId, req.DirPath, dirItemChecks, hashList)
+	err = kfsCore.Db.CheckExists(context.TODO(), uint64(req.FileID), req.DirPath, dirItemChecks, hashList)
 	if err != nil {
 		return err
 	}
@@ -106,8 +111,8 @@ func handleUploadEndDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	if err != nil {
 		return err
 	}
-	println(conn.RemoteAddr().String(), "UploadDir", req.DriverId, "/"+strings.Join(req.DirPath, "/"))
-	err = kfsCore.Db.SetLivpForMovAndHeicOrJpgInDirPath(context.TODO(), req.DriverId, req.DirPath)
+	println(conn.RemoteAddr().String(), "UploadDir", req.ParentID, "/"+strings.Join(req.DirPath, "/"))
+	err = kfsCore.Db.SetLivpForMovAndHeicOrJpgInDirPath(context.TODO(), req.ParentID, req.DirPath)
 	if err != nil {
 		fmt.Println("Upload.SetLivpForMovAndHeicOrJpgInDriver error", err.Error())
 		return err
@@ -122,7 +127,7 @@ func handleUploadV3File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	if err != nil {
 		return err
 	}
-	println(conn.RemoteAddr().String(), "UploadFile", req.Hash, humanize.IBytes(req.Size))
+	println(conn.RemoteAddr().String(), "UploadFile", req.FileID, humanize.IBytes(uint64(req.Size)))
 
 	// 1. What if the hash is the same but the size is different?
 	// 2. What if the hash and size are the same, but the file content is different?
@@ -156,20 +161,24 @@ func handleUploadV3File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		println(conn.RemoteAddr().String(), "InsertFile", err.Error())
 		return err
 	}
-	err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
-		DriverId:       req.DriverId,
-		DirPath:        req.DirPath,
-		Name:           req.Name,
-		Hash:           req.Hash,
-		Mode:           req.Mode,
-		Size:           req.Size,
-		CreateTime:     req.CreateTime,
-		ModifyTime:     req.ModifyTime,
-		ChangeTime:     req.ChangeTime,
-		AccessTime:     req.AccessTime,
-		UploadDeviceId: req.UploadDeviceId,
-		UploadTime:     req.UploadTime,
-	}, false)
+	_, err = kfsCore.Q.SetLogicFileByParentIdPath(context.TODO(), userID, sqlc.NInt64(req.FileID),
+		req.DirPath, req.Name, sqlc.NInt64(req.FileID), req.Mode, req.Size,
+		time.Unix(req.CreateTime, 0), time.Unix(req.ModifyTime, 0),
+		time.Unix(req.ChangeTime, 0), time.Unix(req.AccessTime, 0), false)
+	// err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
+	// 	FileID:         req.FileID,
+	// 	DirPath:        req.DirPath,
+	// 	Name:           req.Name,
+	// 	Hash:           req.Hash,
+	// 	Mode:           req.Mode,
+	// 	Size:           req.Size,
+	// 	CreateTime:     req.CreateTime,
+	// 	ModifyTime:     req.ModifyTime,
+	// 	ChangeTime:     req.ChangeTime,
+	// 	AccessTime:     req.AccessTime,
+	// 	UploadDeviceId: req.UploadDeviceId,
+	// 	UploadTime:     req.UploadTime,
+	// }, false)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
 		return err
