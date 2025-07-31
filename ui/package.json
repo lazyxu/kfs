@@ -1,7 +1,10 @@
 {
   "name": "kfs",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "android": "expo run:android",
+    "ios": "expo run:ios"
+  },
   "workspaces": {
     "packages": [
       "web",
@@ -17,6 +20,10 @@
     "yarn-upgrade-all": "^0.7.5"
   },
   "dependencies": {
-    "js-md5": "^0.8.3"
-  }
+    "js-md5": "^0.8.3",
+    "expo": "~53.0.20",
+    "react": "19.0.0",
+    "react-native": "0.79.5"
+  },
+  "version": "1.0.0"
 }

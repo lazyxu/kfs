@@ -26,16 +26,16 @@ if ! is_command_exist sqlc; then
   GOOS= GOARCH= go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 fi
 
-if ! is_command_exist ffprobe; then
-  arch=amd64
-  mkdir -p ~/lib/
-  cd ~/lib/
-  lib_dir=$(cd "$(dirname "$0")"; pwd)
-  wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-${arch}-static.tar.xz
-  tar -xvf ffmpeg-release-${arch}-static.tar.xz
-  rm -rf ffmpeg-release-${arch}-static.tar.xz
-  export PATH="$lib_dir/ffmpeg-6.1-${arch}-static:$PATH"
-fi
+# if ! is_command_exist ffprobe; then
+#   arch=amd64
+#   mkdir -p ~/lib/
+#   cd ~/lib/
+#   lib_dir=$(cd "$(dirname "$0")"; pwd)
+#   wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-${arch}-static.tar.xz
+#   tar -xvf ffmpeg-release-${arch}-static.tar.xz
+#   rm -rf ffmpeg-release-${arch}-static.tar.xz
+#   export PATH="$lib_dir/ffmpeg-6.1-${arch}-static:$PATH"
+# fi
 
 export GO111MODULE=on
 export PATH="$PATH:$(go env GOPATH)/bin"
@@ -80,6 +80,11 @@ cliTest () {
 # T3: --storage-dir "F://test-0807" --data-source-name "F://test-0807/kfs.db" --thumbnail-dir "F://test-0807/thumbnail" --transcode-dir "F://test-0807/transcode"
 
 case $1 in
+  clean)
+    cd $root/ui
+    npx expo prebuild --clean
+    ;;
+
   start)
     case $2 in
       emu)
@@ -100,7 +105,7 @@ case $1 in
 
       mobile) # REACT_NATIVE_PACKAGER_HOSTNAME=192.168.137.1 ./scripts.sh start mobile
         cd $root/ui
-        # yarn
+        yarn
         cd $root/ui/mobile
         VITE_APP_PLATFORM=mobile yarn start
         ;;
