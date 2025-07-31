@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS _user (
   password    VARCHAR(255) NOT NULL,
   is_verified BOOLEAN      NOT NULL DEFAULT FALSE,
   is_deleted  BOOLEAN      NOT NULL DEFAULT FALSE,
-  created_at  DATETIME     NOT NULL DEFAULT NOW(),
-  updated_at  DATETIME     NOT NULL DEFAULT NOW() ON UPDATE NOW() 
+  created_at  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) 
 );
 
 CREATE TABLE IF NOT EXISTS _file (
@@ -35,10 +35,10 @@ CREATE TABLE IF NOT EXISTS _logic_file (
     file_id       BIGINT          DEFAULT NULL,
     mode          BIGINT          NOT NULL,  -- isDirectory, isFile, isSymlink
     size          BIGINT          NOT NULL,
-    create_time   DATETIME        NOT NULL,  -- 创建时间，跨盘跨设备移动文件时也会更新，linux未强制要求记录创建时间
-    modify_time   DATETIME        NOT NULL,  -- 内容修改时间，ls -l的时间
-    change_time   DATETIME        NOT NULL,  -- 属性修改时间，windows不支持
-    access_time   DATETIME        NOT NULL,  -- 访问时间
+    create_time   DATETIME(3)     NOT NULL,  -- 创建时间，跨盘跨设备移动文件时也会更新，linux未强制要求记录创建时间
+    modify_time   DATETIME(3)     NOT NULL,  -- 内容修改时间，ls -l的时间
+    change_time   DATETIME(3)     NOT NULL,  -- 属性修改时间，windows不支持
+    access_time   DATETIME(3)     NOT NULL,  -- 访问时间
     FOREIGN KEY (parent_id)       REFERENCES _logic_file(id),
     FOREIGN KEY (file_id)         REFERENCES _file(id),
     -- FOREIGN KEY (current_version_id)  REFERENCES _version_file(id)
@@ -110,18 +110,22 @@ CREATE TABLE IF NOT EXISTS _content_same_file (
     FOREIGN KEY (id2)  REFERENCES   _file(id)
 );
 
+DROP TABLE IF EXISTS _video_metadata;
+
 CREATE TABLE IF NOT EXISTS _video_metadata (
     id       BIGINT       NOT NULL PRIMARY KEY,
     Codec    VARCHAR(255) DEFAULT NULL,
-    Created  DATETIME     DEFAULT NULL,
-    Modified DATETIME     DEFAULT NULL,
+    Created  DATETIME(3)  DEFAULT NULL,
+    Modified DATETIME(3)  DEFAULT NULL,
     Duration DOUBLE       DEFAULT NULL,
     FOREIGN KEY (id)  REFERENCES   _file(id)
 );
 
+DROP TABLE IF EXISTS _dcim_metadata_time;
+
 CREATE TABLE IF NOT EXISTS _dcim_metadata_time (
     id       BIGINT     NOT NULL PRIMARY KEY,
-    time     DATETIME   NOT NULL,
+    time     DATETIME(3)NOT NULL,
     FOREIGN KEY (id) REFERENCES _file(id)
 );
 

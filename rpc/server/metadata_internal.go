@@ -125,7 +125,7 @@ func upsertImageTime(ctx context.Context, kfsCore *core.KFS, id int64, e *dao.Ex
 	fmt.Printf("upsertImageTime: %d %s\n", id, t)
 	err = kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{
 		ID:   id,
-		Time: t,
+		Time: t.Truncate(time.Millisecond),
 	})
 	if err != nil {
 		return err
@@ -156,7 +156,7 @@ func upsertVideoTime(ctx context.Context, kfsCore *core.KFS, id int64, m *dao.Vi
 	fmt.Printf("upsertVideoTime: %d %s\n", id, t)
 	err := kfsCore.Q.UpsertDCIMMetadataTime(ctx, sqlc.UpsertDCIMMetadataTimeParams{
 		ID:   id,
-		Time: t,
+		Time: t.Truncate(time.Millisecond),
 	})
 	if err != nil {
 		return err
@@ -246,8 +246,8 @@ func InsertExif(ctx context.Context, kfsCore *core.KFS, file sqlc.File, fileType
 		err = kfsCore.Q.UpsertVideoMetadata(ctx, sqlc.UpsertVideoMetadataParams{
 			ID:       file.ID,
 			Codec:    sqlc.NString(m.Codec),
-			Created:  sqlc.NTime(m.Created),
-			Modified: sqlc.NTime(m.Modified),
+			Created:  sqlc.NTime(m.Created.Truncate(time.Millisecond)),
+			Modified: sqlc.NTime(m.Modified.Truncate(time.Millisecond)),
 			Duration: sqlc.NFloat64(m.Duration),
 		})
 		if err != nil {
