@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 
+	"github.com/lazyxu/kfs/core"
+	"github.com/lazyxu/kfs/rpc/client"
 	"github.com/lazyxu/kfs/rpc/client/local_file"
 
 	"github.com/spf13/cobra"
@@ -48,6 +51,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 	m := map[string]interface{}{}
+	println("configPath", configPath)
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		fmt.Printf("readfile error %v\n", err)
@@ -67,6 +71,22 @@ func runRoot(cmd *cobra.Command, args []string) {
 		fmt.Printf("WriteFile error %v\n", err)
 		panic(err)
 	}
-	local_file.NewDeviceIfNeeded(configPath)
+
+	serverAddr := m["socketServer"].(string)
+	deviceID := local_file.NewDeviceIfNeeded(configPath)
+	fs := &client.RpcFs{
+		SocketServerAddr: serverAddr,
+	}
+	err = fs.UploadDir(context.TODO(), deviceID, 4, "/", "/home/xuliang/kfs/cmd/kfs-electron/task/local_file_filter", core.UploadDirConfig{
+		UploadDirProcess: &core.DefaultUploadDirProcessor{},
+		Encoder:          "",
+		Concurrent:       1,
+		Verbose:          false,
+	})
+	if err != nil {
+		fmt.Printf("WriteFile error %v\n", err)
+		panic(err)
+	}
+
 	webServer(lis)
 }

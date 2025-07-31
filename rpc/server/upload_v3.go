@@ -144,7 +144,9 @@ func handleUploadEndDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		return err
 	}
 	println(conn.RemoteAddr().String(), "UploadDir", req.ParentID, "/"+strings.Join(req.DirPath, "/"))
-	err = kfsCore.Db.SetLivpForMovAndHeicOrJpgInDirPath(context.TODO(), 0, req.DirPath)
+	err = kfsCore.Q.SetLivpForMovAndHeicOrJpgByParentId(context.TODO(), sqlc.SetLivpForMovAndHeicOrJpgByParentIdParams{
+		ParentID: sqlc.NInt64(req.ParentID),
+	})
 	if err != nil {
 		fmt.Println("Upload.SetLivpForMovAndHeicOrJpgInDriver error", err.Error())
 		return err
@@ -209,25 +211,10 @@ func handleUploadV3File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		req.DirPath, req.Name, sqlc.NInt64(fileID), req.Mode, req.Size,
 		time.Unix(0, req.CreateTime), time.Unix(0, req.ModifyTime),
 		time.Unix(0, req.ChangeTime), time.Unix(0, req.AccessTime), false)
-	// err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
-	// 	FileID:         req.FileID,
-	// 	DirPath:        req.DirPath,
-	// 	Name:           req.Name,
-	// 	Hash:           req.Hash,
-	// 	Mode:           req.Mode,
-	// 	Size:           req.Size,
-	// 	CreateTime:     req.CreateTime,
-	// 	ModifyTime:     req.ModifyTime,
-	// 	ChangeTime:     req.ChangeTime,
-	// 	AccessTime:     req.AccessTime,
-	// 	UploadDeviceId: req.UploadDeviceId,
-	// 	UploadTime:     req.UploadTime,
-	// }, false)
 	if err != nil {
 		println(conn.RemoteAddr().String(), "UpsertDriverFile", err.Error())
 		return err
 	}
-	panic("AnalyzeIfNoFileType is not implemented yet")
 	f := sqlc.File{
 		ID: fileID, Size: req.Size, Md5: req.MD5, Sha256: req.SHA256,
 	}

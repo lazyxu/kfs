@@ -104,7 +104,7 @@ func (s *Storage2) AddReader(size int64, md5Hash string, sha256Hash string, getR
 	sha256Hasher := sha256.New()
 	md5Hasher := md5.New()
 	multiWriter := io.MultiWriter(sha256Hasher, md5Hasher, f)
-	written, err := io.Copy(multiWriter, r) // 一次写入，同时计算两个哈希，并且写入文件
+	written, err := io.CopyN(multiWriter, r, size) // 一次写入，同时计算两个哈希，并且写入文件
 	if err != nil {
 		f.Close()
 		os.Remove(p)

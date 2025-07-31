@@ -136,6 +136,8 @@ CREATE TABLE IF NOT EXISTS _live_photo (
     FOREIGN KEY (livp) REFERENCES _file(id)
 );
 
+-- DROP TABLE IF EXISTS _sync_from_baidu_photo;
+
 CREATE TABLE IF NOT EXISTS _sync_from_baidu_photo (
     id   BIGINT NOT NULL PRIMARY KEY,
     -- Cron任务的时间表达式由5个字段组成，分别表示：
@@ -167,8 +169,8 @@ CREATE TABLE IF NOT EXISTS _sync_from_baidu_photo (
     -- 0 9-18 * * 1-5	​工作日9点至18点整点每小时执行
     -- */5 * * * *	​每5分钟执行一次
     -- 0 20 * * 1,3,5	​每周一、三、五晚上8点执行
-    cron VARCHAR(64) NOT NULL,
-    enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    cron          VARCHAR(64) NOT NULL,
+    enabled       BOOLEAN NOT NULL DEFAULT FALSE,
     sync_at_start BOOLEAN NOT NULL DEFAULT FALSE,
     -- baidu_photo
     bduss_bfess   VARCHAR(192) NOT NULL COMMENT 'BDUSS_BFESS',
@@ -189,15 +191,15 @@ CREATE TABLE IF NOT EXISTS _device (
 -- DROP TABLE IF EXISTS _local_file_sync_to_logic_file;
 
 CREATE TABLE IF NOT EXISTS _local_file_sync_to_logic_file (
-    id        BIGINT        NOT NULL PRIMARY KEY,
-    cron VARCHAR(64) NOT NULL,
-    enabled BOOLEAN NOT NULL DEFAULT FALSE,
-    sync_at_start BOOLEAN NOT NULL DEFAULT FALSE,
+    id            BIGINT        NOT NULL PRIMARY KEY,
+    cron          VARCHAR(64)   NOT NULL,
+    enabled       BOOLEAN       NOT NULL DEFAULT FALSE,
+    sync_at_start BOOLEAN       NOT NULL DEFAULT FALSE,
     -- local_file
-    device_id CHAR(36)      NOT NULL,
-    srcPath   VARCHAR(1024) NOT NULL,
-    ignores   TEXT          NOT NULL,
-    encoder   VARCHAR(64)   NOT NULL DEFAULT '',
+    device_id     CHAR(36)      NOT NULL,
+    srcPath       VARCHAR(1024) NOT NULL,
+    ignores       TEXT          NOT NULL,
+    encoder       VARCHAR(64)   NOT NULL DEFAULT '',
     FOREIGN KEY (id)        REFERENCES _logic_file(id),
     FOREIGN KEY (device_id) REFERENCES _device(id)
 );
