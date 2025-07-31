@@ -113,3 +113,26 @@ SELECT LEAST(
 ) AS min_time
 FROM _logic_file
 WHERE file_id = ?;
+
+-- name: ListLogicFiles1ByParentId :many
+SELECT
+  lf.id,
+  lf.user_id,
+  lf.parent_id,
+  lf.is_root,
+  lf.name,
+  lf.file_id,
+  lf.mode,
+  lf.size,
+  lf.create_time,
+  lf.modify_time,
+  lf.change_time,
+  lf.access_time,
+  COALESCE(f.md5, '') AS md5,
+  COALESCE(f.sha256, '') AS sha256
+FROM _logic_file lf
+LEFT JOIN _file f ON lf.file_id = f.id
+WHERE lf.user_id = ? AND (
+  (lf.parent_id = sqlc.arg('parent_id'))
+  OR (lf.parent_id IS NULL AND sqlc.arg('parent_id') IS NULL)
+);

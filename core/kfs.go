@@ -75,7 +75,7 @@ func (s *Storage2) Create() error {
 	return nil
 }
 
-func (s *Storage2) AddReader(size int64, md5Hash string, sha256Hash string, reader io.Reader) (bool, error) {
+func (s *Storage2) AddReader(size int64, md5Hash string, sha256Hash string, getReaderIfNotExsit func() (io.Reader, error)) (bool, error) {
 	lock := flock.New(path.Join(s.root, lockFileName))
 	err := lock.Lock()
 	if err != nil {
@@ -95,10 +95,16 @@ func (s *Storage2) AddReader(size int64, md5Hash string, sha256Hash string, read
 		}
 		return false, err
 	}
+	r, err := getReaderIfNotExsit()
+	if err != nil {
+		f.Close()
+		os.Remove(p)
+		return false, err
+	}
 	sha256Hasher := sha256.New()
 	md5Hasher := md5.New()
 	multiWriter := io.MultiWriter(sha256Hasher, md5Hasher, f)
-	written, err := io.Copy(multiWriter, reader) // 一次写入，同时计算两个哈希，并且写入文件
+	written, err := io.Copy(multiWriter, r) // 一次写入，同时计算两个哈希，并且写入文件
 	if err != nil {
 		f.Close()
 		os.Remove(p)
@@ -140,7 +146,9 @@ func (s *Storage2) Add(md5Hash string, sha256Hash string, file *os.File) (bool, 
 	if err != nil {
 		return false, err
 	}
-	return s.AddReader(stat.Size(), md5Hash, sha256Hash, file)
+	return s.AddReader(stat.Size(), md5Hash, sha256Hash, func() (io.Reader, error) {
+		return file, nil
+	})
 }
 
 type sizedReaderCloser struct {

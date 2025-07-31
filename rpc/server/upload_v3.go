@@ -41,6 +41,7 @@ func handleUploadStart(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 }
 
 func handleUploadStartDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+	ctx := context.TODO()
 	// read
 	var req pb.UploadStartDirReq
 	err := rpcutil.ReadProto(conn, &req)
@@ -49,12 +50,14 @@ func handleUploadStartDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 	}
 	println(conn.RemoteAddr().String(), "UploadStartDir", req.ParentID, "/"+strings.Join(req.DirPath, "/"))
 
+	var userID int64 = 1
+	var parentID dao.NullInt64 = sqlc.NInt64Null()
 	if !req.IsRoot {
-		var userID int64 = 1
-		_, err = kfsCore.Q.SetLogicFileByParentIdPath(context.TODO(), userID, sqlc.NInt64(req.ParentID),
-			req.DirPath, req.Name, sqlc.NInt64(req.FileID), req.Mode, req.Size,
-			time.Unix(req.CreateTime, 0), time.Unix(req.ModifyTime, 0),
-			time.Unix(req.ChangeTime, 0), time.Unix(req.AccessTime, 0), false)
+		parentID = sqlc.NInt64(req.ParentID)
+		_, err = kfsCore.Q.SetLogicFileByParentIdPath(ctx, userID, parentID,
+			req.DirPath, req.Name, sqlc.NInt64Null(), req.Mode, req.Size,
+			time.Unix(0, req.CreateTime), time.Unix(0, req.ModifyTime),
+			time.Unix(0, req.ChangeTime), time.Unix(0, req.AccessTime), false)
 		// err = kfsCore.Q.SetLogicFileByParentIdPath(context.TODO(), dao.DriverFile{
 		// 	DriverId:       req.FileID,
 		// 	DirPath:        req.DirPath,
@@ -75,28 +78,57 @@ func handleUploadStartDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		}
 	}
 
-	l := len(req.UploadReqDirItemCheckV3)
-	hashList := make([]string, l)
-	// TODO: check exists.
-	dirItemChecks := make([]dao.DirItemCheck, l)
-	for i, c := range req.UploadReqDirItemCheckV3 {
-		dirItemChecks[i] = dao.DirItemCheck{
-			Name:       c.Name,
-			Size:       c.Size,
-			ModifyTime: c.ModifyTime,
-		}
-	}
-	err = kfsCore.Db.CheckExists(context.TODO(), uint64(req.FileID), req.DirPath, dirItemChecks, hashList)
+	// l := len(req.UploadReqDirItemCheckV3)
+	// hashList := make([]string, l)
+	// // TODO: check exists.
+	// dirItemChecks := make([]dao.DirItemCheck, l)
+	// for i, c := range req.UploadReqDirItemCheckV3 {
+	// 	dirItemChecks[i] = dao.DirItemCheck{
+	// 		Name:       c.Name,
+	// 		Size:       c.Size,
+	// 		ModifyTime: c.ModifyTime,
+	// 	}
+	// }
+	lfs, err := kfsCore.Q.ListLogicFilesByParentId(ctx, sqlc.ListLogicFilesByParentIdParams{
+		UserID:   userID,
+		ParentID: parentID,
+	})
 	if err != nil {
+		println(conn.RemoteAddr().String(), "ListLogicFilesByParentId", err.Error())
 		return err
 	}
+	notExistInDir := make([]int32, 0, len(req.UploadReqDirItemCheckV3))
+	// TODO: 当前只添加覆盖文件，不会删除文件
+	type LogicFileInfo struct {
+		Size       int64
+		ModifyTime time.Time
+	}
+	lfi := make(map[string]LogicFileInfo, len(lfs))
+	for _, lf := range lfs {
+		lfi[lf.Name] = LogicFileInfo{
+			Size:       lf.Size,
+			ModifyTime: lf.ModifyTime,
+		}
+	}
+	for i, item := range req.UploadReqDirItemCheckV3 {
+		exist := false
+		if info, ok := lfi[item.Name]; ok {
+			if info.Size == item.Size && info.ModifyTime.Equal(time.Unix(0, item.ModifyTime)) {
+				exist = true
+			}
+		}
+		if !exist {
+			notExistInDir = append(notExistInDir, int32(i))
+		}
+	}
+
 	// write
 	err = rpcutil.WriteOK(conn)
 	if err != nil {
 		return err
 	}
 	err = rpcutil.WriteProto(conn, &pb.UploadStartDirResp{
-		Hash: hashList,
+		IndexForNotExistInDir: notExistInDir,
 	})
 	if err != nil {
 		return err
@@ -112,7 +144,7 @@ func handleUploadEndDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		return err
 	}
 	println(conn.RemoteAddr().String(), "UploadDir", req.ParentID, "/"+strings.Join(req.DirPath, "/"))
-	err = kfsCore.Db.SetLivpForMovAndHeicOrJpgInDirPath(context.TODO(), req.ParentID, req.DirPath)
+	err = kfsCore.Db.SetLivpForMovAndHeicOrJpgInDirPath(context.TODO(), 0, req.DirPath)
 	if err != nil {
 		fmt.Println("Upload.SetLivpForMovAndHeicOrJpgInDriver error", err.Error())
 		return err
@@ -121,50 +153,62 @@ func handleUploadEndDir(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 }
 
 func handleUploadV3File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
+	ctx := context.TODO()
 	// read
 	var req pb.UploadFileV3
 	err := rpcutil.ReadProto(conn, &req)
 	if err != nil {
 		return err
 	}
-	println(conn.RemoteAddr().String(), "UploadFile", req.FileID, humanize.IBytes(uint64(req.Size)))
+	println(conn.RemoteAddr().String(), "UploadFile", req.MD5, req.SHA256, humanize.IBytes(uint64(req.Size)))
 
-	// 1. What if the hash is the same but the size is different?
-	// 2. What if the hash and size are the same, but the file content is different?
-	_, err = kfsCore.S.Write(req.Hash, func(f io.Writer, hasher io.Writer) (e error) {
-		_, e = conn.Write([]byte{1}) // not exist
-		if e != nil {
-			return rpcutil.UnexpectedIfError(e)
+	_, err = kfsCore.S2.AddReader(req.Size, req.MD5, req.SHA256, func() (io.Reader, error) {
+		_, err := conn.Write([]byte{1}) // not exist
+		if err != nil {
+			return nil, rpcutil.UnexpectedIfError(err)
 		}
 
-		encoder, e := rpcutil.ReadString(conn)
+		encoder, err := rpcutil.ReadString(conn)
+		if err != nil {
+			return nil, rpcutil.UnexpectedIfError(err)
+		}
 		println(conn.RemoteAddr().String(), "encoder", len(encoder), encoder)
 
-		println(conn.RemoteAddr().String(), "CopyStart", req.Size)
-		w := io.MultiWriter(f, hasher)
-		var n int64
+		var r io.Reader = conn
 		if encoder == "lz4" {
-			r := lz4.NewReader(conn)
-			n, e = io.CopyN(w, r, int64(req.Size))
-		} else {
-			n, e = io.CopyN(w, conn, int64(req.Size))
+			r = lz4.NewReader(conn)
 		}
-		println(conn.RemoteAddr().String(), "CopyEnd", n)
-		return rpcutil.UnexpectedIfError(e)
+		println(conn.RemoteAddr().String(), "CopyStart", req.Size)
+		return r, nil
 	})
+
 	if err != nil {
 		println(conn.RemoteAddr().String(), "Write", err.Error())
 		return err
 	}
-	err = kfsCore.Db.InsertFile(context.TODO(), req.Hash, req.Size)
+	res, err := kfsCore.Q.UpsertFile(ctx, sqlc.UpsertFileParams{
+		Size:   req.Size,
+		Md5:    req.MD5,
+		Sha256: req.SHA256,
+	})
 	if err != nil {
-		println(conn.RemoteAddr().String(), "InsertFile", err.Error())
+		println(conn.RemoteAddr().String(), "UpsertFile", err.Error())
 		return err
 	}
-	_, err = kfsCore.Q.SetLogicFileByParentIdPath(context.TODO(), userID, sqlc.NInt64(req.FileID),
-		req.DirPath, req.Name, sqlc.NInt64(req.FileID), req.Mode, req.Size,
-		time.Unix(req.CreateTime, 0), time.Unix(req.ModifyTime, 0),
-		time.Unix(req.ChangeTime, 0), time.Unix(req.AccessTime, 0), false)
+	fileID, err := res.LastInsertId()
+	if err != nil {
+		println(conn.RemoteAddr().String(), "LastInsertId", err.Error())
+		return err
+	}
+	var userID int64 = 1
+	var parentID dao.NullInt64 = sqlc.NInt64Null()
+	if req.ParentID != 0 {
+		parentID = sqlc.NInt64(req.ParentID)
+	}
+	_, err = kfsCore.Q.SetLogicFileByParentIdPath(ctx, userID, parentID,
+		req.DirPath, req.Name, sqlc.NInt64(fileID), req.Mode, req.Size,
+		time.Unix(0, req.CreateTime), time.Unix(0, req.ModifyTime),
+		time.Unix(0, req.ChangeTime), time.Unix(0, req.AccessTime), false)
 	// err = kfsCore.Db.UpsertDriverFile(context.TODO(), dao.DriverFile{
 	// 	FileID:         req.FileID,
 	// 	DirPath:        req.DirPath,
@@ -184,16 +228,17 @@ func handleUploadV3File(kfsCore *core.KFS, conn AddrReadWriteCloser) error {
 		return err
 	}
 	panic("AnalyzeIfNoFileType is not implemented yet")
-	err = AnalyzeMetadataNotAnalyzed(context.TODO(), kfsCore, sqlc.File{
-		ID: 0, Size: 0, Md5: "", Sha256: "",
-	})
+	f := sqlc.File{
+		ID: fileID, Size: req.Size, Md5: req.MD5, Sha256: req.SHA256,
+	}
+	err = AnalyzeMetadataNotAnalyzed(context.TODO(), kfsCore, f)
 	if err != nil {
-		println(conn.RemoteAddr().String(), "AnalyzeIfNoFileType", req.Hash, err.Error())
+		println(conn.RemoteAddr().String(), "AnalyzeIfNoFileType", fileID, err.Error())
 		return err
 	}
-	err = PluginAnalyzeLivpNotAnalyzed(context.TODO(), kfsCore, req.Hash, req.Name)
+	err = PluginAnalyzeLivpNotAnalyzed(context.TODO(), kfsCore, req.Name, f)
 	if err != nil {
-		println(conn.RemoteAddr().String(), "PluginUnzipIfLivp", req.Hash, err.Error())
+		println(conn.RemoteAddr().String(), "PluginUnzipIfLivp", fileID, err.Error())
 		return err
 	}
 	return nil

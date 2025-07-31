@@ -78,8 +78,8 @@ message UploadStartDirReq {
 
 message UploadReqDirItemCheckV3 {
   string Name = 1;
-  uint64 Size = 2;
-  uint64 ModifyTime = 3;
+  int64 Size = 2;
+  int64 ModifyTime = 3;
 }
 
 message UploadFileV3 {
@@ -107,7 +107,7 @@ message FileOrDir {
 }
 
 message UploadStartDirResp {
-  repeated string hash = 1;
+  repeated int32 indexForNotExistInDir = 1;
 }
 
 message UploadResp {

@@ -72,11 +72,10 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 	uploadReqDirItemCheckV3 := make([]*pb.UploadReqDirItemCheckV3, len(infos))
 	for i, info := range infos {
 		h.uploadProcess.PushFile(info)
-		modifyTime := uint64(info.ModTime().UnixNano())
 		uploadReqDirItemCheckV3[i] = &pb.UploadReqDirItemCheckV3{
 			Name:       info.Name(),
-			Size:       uint64(info.Size()),
-			ModifyTime: modifyTime,
+			Size:       info.Size(),
+			ModifyTime: info.ModTime().UnixNano(),
 		}
 	}
 
@@ -106,28 +105,24 @@ func (h *uploadHandlersV3) DirHandler(ctx context.Context, filePath string, dirI
 		return err
 	}
 
-	for i, hash := range startResp.Hash {
+	for _, index := range startResp.IndexForNotExistInDir {
 		select {
 		case <-ctx.Done():
 			return context.Canceled
 		default:
 		}
-		info := infos[i]
+		info := infos[index]
 		p := filepath.Join(filePath, info.Name())
 		if !info.IsDir() {
 			h.uploadProcess.StartFile(p, info)
-			if hash == "" {
-				var fileErr error
-				hash, fileErr, err = h.uploadFile(ctx, p, info)
-				if fileErr != nil {
-					h.uploadProcess.OnFileError(p, fileErr)
-					continue
-				}
-				if err != nil {
-					return err
-				}
-			} else {
-				h.uploadProcess.SkipFile(p, info, hash)
+			var fileErr error
+			_, fileErr, err = h.uploadFile(ctx, p, info)
+			if fileErr != nil {
+				h.uploadProcess.OnFileError(p, fileErr)
+				continue
+			}
+			if err != nil {
+				return err
 			}
 			h.uploadProcess.EndFile(p, info)
 		}

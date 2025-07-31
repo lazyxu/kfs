@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"path/filepath"
 	"strings"
 
@@ -13,12 +14,12 @@ import (
 	"github.com/lazyxu/kfs/db/sqlc"
 )
 
-func PluginAnalyzeLivpNotAnalyzed(ctx context.Context, kfsCore *core.KFS, hash string, name string) error {
+func PluginAnalyzeLivpNotAnalyzed(ctx context.Context, kfsCore *core.KFS, name string, file sqlc.File) error {
 	ext := strings.ToLower(filepath.Ext(name))
 	if ext != ".livp" {
 		return nil
 	}
-	_, _, err := AnalyzeLivpNotAnalyzed(ctx, kfsCore, sqlc.File{})
+	_, _, err := AnalyzeLivpNotAnalyzed(ctx, kfsCore, file)
 	if err != nil {
 		return err
 	}
@@ -80,7 +81,9 @@ func AnalyzeLivp(ctx context.Context, kfsCore *core.KFS, file sqlc.File) (int64,
 		}
 		defer rc.Close()
 		size := zf.FileInfo().Size()
-		_, err = kfsCore.S2.AddReader(size, md5, sha256, rc)
+		_, err = kfsCore.S2.AddReader(size, md5, sha256, func() (io.Reader, error) {
+			return rc, nil
+		})
 		if err != nil {
 			return 0, 0, err
 		}
