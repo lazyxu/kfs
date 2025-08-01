@@ -1,15 +1,19 @@
 import { Box, Checkbox, FormControlLabel, IconButton, InputLabel, Radio, RadioGroup, Stack, Typography } from "@mui/material";
 // import FormControlLabel from '@mui/material/FormControlLabel';
 import { parseShotEquipment } from "@kfs/common/api/utils";
-import { listDCIM } from '@kfs/common/api/webServer/exif';
+import { getSysConfig } from "@kfs/common/hox/sysConfig";
+import { noteError } from "@kfs/mui/components/Notification";
 import { CalendarMonth, FilterAlt, Refresh } from "@mui/icons-material";
+import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import moment from 'moment';
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import All from './All';
 import GroupedAll from "./GroupedAll";
+import { listDCIM } from "@kfs/common/api/webServer/exif";
 
 export default function () {
     const [metadataList, setMetadataList] = useState([]);
+    const [metadataListTotal, setMetadataListTotal] = useState(0);
     const [viewBy, setViewBy] = useState("所有照片");
     const [calendar, setCalendar] = useState(false);
     const [filter, setFilter] = useState(false);
@@ -17,33 +21,86 @@ export default function () {
     const [shotEquipmentMap, setShotEquipmentMap] = useState({});
     const [chosenFileType, setChosenFileType] = useState();
     const [fileTypeMap, setFileTypeMap] = useState({});
+    const abortControllerRef = useRef(null);
     const refersh = () => {
-        listDCIM().then(metadataList => {
-            let shotEquipmentMap = {};
-            let fileTypeMap = {};
-            metadataList.forEach(metadata => {
-                let shotEquipment = parseShotEquipment(metadata);
-                if (shotEquipmentMap.hasOwnProperty(shotEquipment)) {
-                    shotEquipmentMap[shotEquipment]++;
-                } else {
-                    shotEquipmentMap[shotEquipment] = 1;
+        console.log("===refresh DCIM===");
+        setMetadataList([]);
+        setMetadataListTotal(0);
+        setShotEquipmentMap({});
+        setFileTypeMap({});
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+        fetchEventSource(`${getSysConfig().webServer}/api/v1/event/listDCIM`, {
+            signal: abortControllerRef.current.signal,
+            openWhenHidden: true,
+            async onopen(response) {
+                if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
+                    return; // everything's good
                 }
-                if (fileTypeMap.hasOwnProperty(metadata.extension)) {
-                    fileTypeMap[metadata.extension]++;
-                } else {
-                    fileTypeMap[metadata.extension] = 1;
+                console.error(response);
+                noteError("event/listDCIM.onopen: " + response.status);
+            },
+            onmessage(msg) {
+                // if the server emits an error message, throw an exception
+                // so it gets handled by the onerror callback below:
+                if (msg.event === 'FatalError') {
+                    console.error(msg);
+                    noteError("event/listDCIM.onmessage: " + msg);
+                    return;
                 }
-                metadata.shotEquipment = shotEquipment;
-                metadata.parsedTime = moment.parseZone(metadata.time, "YYYY-MM-DDTHH:mm:ssZZ");
-            })
-            console.log("metadataList", metadataList);
-            setMetadataList(metadataList);
-            setShotEquipmentMap(shotEquipmentMap);
-            setFileTypeMap(fileTypeMap);
+                let info = JSON.parse(msg.data);
+                console.log(info);
+                if (info.errMsg) {
+                    noteError(info.errMsg);
+                }
+                if (info.dcimList) {
+                    setMetadataList(prev => {
+                        const newList = [...prev, ...info.dcimList];
+                        // 更新统计信息
+                        let shotEquipmentMap = {};
+                        let fileTypeMap = {};
+                        newList.forEach(metadata => {
+                            let shotEquipment = parseShotEquipment(metadata);
+                            if (shotEquipmentMap.hasOwnProperty(shotEquipment)) {
+                                shotEquipmentMap[shotEquipment]++;
+                            } else {
+                                shotEquipmentMap[shotEquipment] = 1;
+                            }
+                            if (fileTypeMap.hasOwnProperty(metadata.extension)) {
+                                fileTypeMap[metadata.extension]++;
+                            } else {
+                                fileTypeMap[metadata.extension] = 1;
+                            }
+                            metadata.shotEquipment = shotEquipment;
+                            metadata.parsedTime = moment.parseZone(metadata.time, "YYYY-MM-DDTHH:mm:ssZZ");
+                        });
+                        setShotEquipmentMap(shotEquipmentMap);
+                        setFileTypeMap(fileTypeMap);
+                        return newList;
+                    });
+                } else {
+                    setMetadataListTotal(info.n);
+                }
+            },
+            onclose() {
+                // if the server closes the connection unexpectedly, retry:
+                // noteError("event/listDCIM.onclose");
+            },
+            onerror(err) {
+                console.error(err);
+            }
         });
     }
     useEffect(() => {
         refersh();
+        return () => {
+            console.log("===abort DCIM===");
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        }
     }, []);
     let filteredMetadataList = metadataList
         .filter(metadata =>
@@ -121,7 +178,7 @@ export default function () {
                     )}
                 </Box>
             </Box>
-            <Typography>共{metadataList.filter(m => m.type=== "image").length}张照片、{metadataList.filter(m => m.type=== "video").length}个视频</Typography>
+            <Typography>共{metadataList.filter(m => m.type=== "image").length}张照片、{metadataList.filter(m => m.type=== "video").length}个视频 ({metadataList.length}/{metadataListTotal})</Typography>
             {(chosenShotEquipment || chosenFileType) && <Typography>筛选出{filteredMetadataList.filter(m => m.type=== "image").length}张照片、{filteredMetadataList.filter(m => m.type=== "video").length}个视频</Typography>}
             {viewBy === "年" && <GroupedAll metadataList={filteredMetadataList} spacing={0} minCol={10} formatFn={date => date.format("YYYY年")} />}
             {viewBy === "月" && <GroupedAll metadataList={filteredMetadataList} spacing={0.5} minCol={4} formatFn={date => date.format("YYYY年MM月")} />}

@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS _content_same_file (
     FOREIGN KEY (id2)  REFERENCES   _file(id)
 );
 
-DROP TABLE IF EXISTS _video_metadata;
+-- DROP TABLE IF EXISTS _video_metadata;
 
 CREATE TABLE IF NOT EXISTS _video_metadata (
     id       BIGINT       NOT NULL PRIMARY KEY,
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS _video_metadata (
     FOREIGN KEY (id)  REFERENCES   _file(id)
 );
 
-DROP TABLE IF EXISTS _dcim_metadata_time;
+-- DROP TABLE IF EXISTS _dcim_metadata_time;
 
 CREATE TABLE IF NOT EXISTS _dcim_metadata_time (
     id       BIGINT     NOT NULL PRIMARY KEY,

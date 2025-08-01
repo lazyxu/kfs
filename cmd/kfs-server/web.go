@@ -24,6 +24,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/baidu_photo"
+	"github.com/lazyxu/kfs/cmd/kfs-server/task/dcim"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/list"
 	"github.com/lazyxu/kfs/cmd/kfs-server/task/metadata"
 
@@ -95,6 +96,9 @@ func webServer(webPortString string) {
 	e.GET("/api/v1/analysisExif", apiExifStatus)
 	e.POST("/api/v1/analysisExif", apiAnalysisExif)
 	e.GET("/api/v1/listDCIM", apiListDCIM)
+	e.GET("/api/v1/event/listDCIM", func(c echo.Context) error {
+		return dcim.Handle(c, kfsCore)
+	})
 	e.GET("/api/v1/DCIMMetadataTime", apiListMetadataTime)
 	e.GET("/api/v1/listDCIMDriver", apiListDCIMDriver)
 	e.GET("/api/v1/listDCIMMediaType", apiListDCIMMediaType)
