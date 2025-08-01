@@ -1,4 +1,3 @@
-import { listDCIMMetadataTime } from '@kfs/common/api/webServer/exif';
 import { Appbar, Surface } from "react-native-paper";
 import ThumbnailListAll from './ThumbnailListAll';
 
@@ -10,7 +9,7 @@ export default function () {
                 <Appbar.Action icon="calendar" onPress={() => { }} />
                 <Appbar.Action icon="magnify" onPress={() => { }} />
             </Appbar.Header>
-            <ThumbnailListAll listDCIMMetadataTime={listDCIMMetadataTime} />
+            <ThumbnailListAll />
         </Surface>
     );
 }

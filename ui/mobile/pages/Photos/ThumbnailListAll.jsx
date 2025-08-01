@@ -7,14 +7,14 @@ import ThumbnailListYear from './ThumbnailListYear';
 
 const contentStyle = { justifyContent: 'flex-start' };
 
-export default function ({ metadataList, listDCIMMetadataTime }) {
+export default function ({ metadataList }) {
     const [value, setValue] = useState('年');
     const list = ["年", "月", "日"];
     return (
         <>
-            {value === "年" && <ThumbnailListYear metadataList={metadataList} listDCIMMetadataTime={listDCIMMetadataTime} />}
-            {value === "月" && <ThumbnailListMonth metadataList={metadataList} listDCIMMetadataTime={listDCIMMetadataTime} />}
-            {value === "日" && <ThumbnailListDay metadataList={metadataList} listDCIMMetadataTime={listDCIMMetadataTime} />}
+            {value === "年" && <ThumbnailListYear metadataList={metadataList} />}
+            {value === "月" && <ThumbnailListMonth metadataList={metadataList} />}
+            {value === "日" && <ThumbnailListDay metadataList={metadataList} />}
             <View style={{
                 position: "absolute", bottom: 16, display: "flex", alignItems: "center", width: "100%", flexDirection: "row", justifyContent: "center",
             }} >

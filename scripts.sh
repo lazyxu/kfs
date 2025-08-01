@@ -102,14 +102,14 @@ case $1 in
         cd $root/ui
         # yarn
         cd $root/ui/mobile
-        EXPO_USE_METRO_WORKSPACE_ROOT=1 VITE_APP_PLATFORM=mobile yarn start
+        VITE_APP_PLATFORM=mobile yarn start
         ;;
 
       mobile:web)
         cd $root/ui
         yarn
         cd $root/ui/mobile
-        EXPO_USE_METRO_WORKSPACE_ROOT=1 VITE_APP_PLATFORM=mobile yarn web
+        VITE_APP_PLATFORM=mobile yarn web
         ;;
 
       *)
@@ -242,7 +242,7 @@ case $1 in
         cd $root/ui
         # yarn
         cd $root/ui/mobile
-        EXPO_USE_METRO_WORKSPACE_ROOT=1 VITE_APP_PLATFORM=mobile yarn android
+        VITE_APP_PLATFORM=mobile yarn android
         ;;
 
       *)
