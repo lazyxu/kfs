@@ -1,6 +1,6 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useRef, useState } from "react";
-import { EventStreamContentType, fetchEventSource } from "./FetchEventSource";
+import { fetchEventSource } from "./FetchEventSource";
 import LongListTest from "./LongListTest";
 
 export default function ({ metadataList, getTag, elementsPerLine }) {
@@ -22,9 +22,10 @@ export default function ({ metadataList, getTag, elementsPerLine }) {
         
         fetchEventSource(`${getSysConfig().webServer}/api/v1/event/listDCIM`, {
             signal: abortControllerRef.current.signal,
-            openWhenHidden: true,
+            openWhenHidden: false,
             async onopen(response) {
-                if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
+                window.noteInfo("尝试获取照片...");
+                if (response.ok && response.headers.get('content-type').includes("text/event-stream")) {
                     return; // everything's good
                 }
                 console.error(response);
@@ -37,7 +38,7 @@ export default function ({ metadataList, getTag, elementsPerLine }) {
                     return;
                 }
                 let info = JSON.parse(msg.data);
-                console.log(info);
+                console.log('info:', info);
                 if (info.errMsg) {
                     window.noteError(info.errMsg);
                 }
@@ -46,10 +47,11 @@ export default function ({ metadataList, getTag, elementsPerLine }) {
                 }
             },
             onclose() {
+                console.error('close');
                 // connection closed
             },
             onerror(err) {
-                console.error(err);
+                console.error('err', err);
             }
         });
     };

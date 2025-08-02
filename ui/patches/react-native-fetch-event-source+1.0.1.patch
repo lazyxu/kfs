@@ -1,0 +1,26 @@
+diff --git a/node_modules/react-native-fetch-event-source/lib/cjs/fetch.js b/node_modules/react-native-fetch-event-source/lib/cjs/fetch.js
+index b47040a..2a00d3a 100644
+--- a/node_modules/react-native-fetch-event-source/lib/cjs/fetch.js
++++ b/node_modules/react-native-fetch-event-source/lib/cjs/fetch.js
+@@ -38,7 +38,7 @@ function fetchEventSource(input, _a) {
+         let retryInterval = DefaultRetryInterval;
+         let retryTimer;
+         function dispose() {
+-            subscription.remove();
++            subscription?.remove();
+             clearTimeout(retryTimer);
+             curRequestController.abort();
+         }
+diff --git a/node_modules/react-native-fetch-event-source/lib/cjs/parse.js b/node_modules/react-native-fetch-event-source/lib/cjs/parse.js
+index 38d95e5..22cdeb7 100644
+--- a/node_modules/react-native-fetch-event-source/lib/cjs/parse.js
++++ b/node_modules/react-native-fetch-event-source/lib/cjs/parse.js
+@@ -5,7 +5,7 @@ async function getBytes(stream, onChunk) {
+     const reader = stream.getReader();
+     let result;
+     while (!(result = await reader.read()).done) {
+-        onChunk(result.value);
++        onChunk(typeof result.value ==='array' ? result.value : new Uint8Array([result.value]));
+     }
+ }
+ exports.getBytes = getBytes;
