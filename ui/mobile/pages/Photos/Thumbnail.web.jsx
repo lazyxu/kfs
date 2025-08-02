@@ -22,7 +22,8 @@ export default function ({ width, navigation, list, index, onLoaded }) {
     return (
         <Pressable onPress={() => navigation.navigate("Viewer", { list, index })}>
             <ImgCancelable
-                src={src} onLoaded={onLoaded}
+                src={list[index].thumbnailUrl}
+                onLoaded={onLoaded}
                 renderImg={(url) => <Image style={{
                     width: width,
                     height: width,

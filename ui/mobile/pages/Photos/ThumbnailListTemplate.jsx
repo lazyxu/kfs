@@ -1,6 +1,6 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
-import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import { useEffect, useRef, useState } from "react";
+import { EventStreamContentType, fetchEventSource } from "./FetchEventSource";
 import LongListTest from "./LongListTest";
 
 export default function ({ metadataList, getTag, elementsPerLine }) {
@@ -70,6 +70,7 @@ export default function ({ metadataList, getTag, elementsPerLine }) {
             }
             
             l.push({
+                thumbnailUrl: `${sysConfig.webServer}/thumbnail?id=${m.id}&size=${m.size}&md5=${m.md5}&sha256=${m.sha256}&hw=256&thumbnail=true`,
                 url: `${sysConfig.webServer}/api/v1/image?id=${m.id}&size=${m.size}&md5=${m.md5}&sha256=${m.sha256}`,
                 hash: m.md5 + '_' + m.sha256,
                 type: m.type,
@@ -124,10 +125,14 @@ export default function ({ metadataList, getTag, elementsPerLine }) {
     }, []);
     
     useEffect(() => {
+        console.log('dcimList:', dcimList);
+        console.log('metadataList:', metadataList);
         // 当 dcimList 更新时重新处理数据
         if (dcimList.length > 0) {
+            console.log('dcimList[0]:', dcimList[0]);
             processData(dcimList);
         } else if (metadataList) {
+            console.log('metadataList[0]:', metadataList[0]);
             processData(metadataList);
         }
     }, [dcimList, metadataList]);
