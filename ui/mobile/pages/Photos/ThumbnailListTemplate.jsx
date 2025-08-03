@@ -73,7 +73,7 @@ export default function ({ metadataList, getTag, elementsPerLine }) {
             
             l.push({
                 thumbnailUrl: `${sysConfig.webServer}/thumbnail?id=${m.id}&size=${m.size}&md5=${m.md5}&sha256=${m.sha256}&hw=256&thumbnail=true`,
-                url: `${sysConfig.webServer}/api/v1/image?id=${m.id}&size=${m.size}&md5=${m.md5}&sha256=${m.sha256}`,
+                uri: `${sysConfig.webServer}/api/v1/image?id=${m.id}&size=${m.size}&md5=${m.md5}&sha256=${m.sha256}`,
                 hash: m.md5 + '_' + m.sha256,
                 type: m.type,
                 duration: m.duration,
@@ -85,10 +85,8 @@ export default function ({ metadataList, getTag, elementsPerLine }) {
                 tagObj.end = index - 1;
                 tagObj = { tag, start: index };
                 mtList.push(tagObj);
-                mtList.push({ index, hash: m.md5 + '_' + m.sha256 });
-            } else {
-                mtList.push({ index, hash: m.md5 + '_' + m.sha256 });
             }
+            mtList.push({ index, hash: m.md5 + '_' + m.sha256 });
         }
         tagObj.end = originlist.length - 1;
         setList(l);

@@ -1,17 +1,16 @@
-import { listDriverFileByHash } from "@kfs/common/api/webServer/driverfile";
 import * as MediaLibrary from 'expo-media-library';
 import { useEffect, useState } from "react";
 import { View } from 'react-native';
-import { Badge, IconButton, Surface, Text } from "react-native-paper";
+import { IconButton, Surface, Text } from "react-native-paper";
 
 export default function ({ navigation, hash, uri, index, total }) {
-    const [sameFiles, setSameFiles] = useState([]);
+    // const [sameFiles, setSameFiles] = useState([]);
     const [downloadName, setDownloadName] = useState();
     useEffect(() => {
-        listDriverFileByHash(hash).then(sf => {
-            setSameFiles(sf);
-            setDownloadName(sf[0].name);
-        });
+        // listDriverFileByHash(hash).then(sf => {
+        //     // setSameFiles(sf);
+        //     setDownloadName(sf[0].name);
+        // });
     }, [hash]);
     return (
         <Surface style={{
@@ -35,7 +34,7 @@ export default function ({ navigation, hash, uri, index, total }) {
                 flexDirection: 'row',
                 alignItems: 'center',
             }}>
-                <View>
+                {/* <View>
                     <IconButton
                         style={{ borderRadius: 0, backgroundColor: null, transition: null }}
                         onPress={() => navigation.navigate("SameFile", { hash, sameFiles })}
@@ -44,7 +43,7 @@ export default function ({ navigation, hash, uri, index, total }) {
                     <Badge style={{ position: 'absolute', top: 4, right: 0, }}>
                         {sameFiles.length}
                     </Badge>
-                </View>
+                </View> */}
                 <IconButton
                     style={{ borderRadius: 0, backgroundColor: null, transition: null }}
                     onPress={async () => {

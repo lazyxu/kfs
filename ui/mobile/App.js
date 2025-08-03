@@ -24,7 +24,6 @@ import Type from './pages/Search/Type';
 import SystemConfig from './pages/Setting/SystemConfig';
 import ImageVideoViewer from './pages/Windows/ImageVideoViewer';
 import Info from './pages/Windows/ImageVideoViewer/Info';
-import SameFile from './pages/Windows/ImageVideoViewer/SameFile';
 
 function App1({ navigation }) {
   window.kfsNavigation = navigation;
@@ -81,7 +80,7 @@ function ThemeApp() {
           <Stack.Screen name="App1" component={App1} />
           <Stack.Screen name="Viewer" component={ImageVideoViewer} />
           <Stack.Screen name="Info" component={Info} />
-          <Stack.Screen name="SameFile" component={SameFile} />
+          {/* <Stack.Screen name="SameFile" component={SameFile} /> */}
           <Stack.Screen name="AlbumsDriver" component={Driver} />
           <Stack.Screen name="AlbumsVideo" component={Video} />
           <Stack.Screen name="AlbumsSelfie" component={Selfie} />

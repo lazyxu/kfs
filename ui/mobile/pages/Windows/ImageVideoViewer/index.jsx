@@ -1,4 +1,3 @@
-import { getSysConfig } from '@kfs/common/hox/sysConfig';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, PanResponder, View } from 'react-native';
 import {
@@ -51,7 +50,7 @@ export default function ({ navigation, route }) {
     const [image, setImage, getImage] = useGetState();
     const [curIndex, setCurIndex, getCurIndex] = useGetState(index);
     const screenLayout = useRef();
-    // console.log("ImageVideoViewer", curIndex, list);
+    // console.log("ImageVideoViewer", curIndex, list[curIndex]);
 
     useEffect(() => {
         (async () => {
@@ -61,7 +60,7 @@ export default function ({ navigation, route }) {
             const type = list[curIndex].type;
             origin.height = list[curIndex].height;
             origin.width = list[curIndex].width;
-            let uri = `${getSysConfig().webServer}/api/v1/image?hash=${hash}`;
+            let uri =  list[curIndex].uri;
             origin.uri = uri;
             console.log("origin", origin);
             // if (Platform.OS !== 'web') {
