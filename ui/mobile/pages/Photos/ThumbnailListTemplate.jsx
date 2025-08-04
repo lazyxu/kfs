@@ -1,13 +1,16 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useRef, useState } from "react";
-import { fetchEventSource } from "./FetchEventSource";
+import { fetchEventSource } from "@kfs/common/api/webServer/fetchEventSource";
 import ThumbnailList from "@kfs/common/components/ThumbnailList/ThumbnailListRN";
+import { listDCIM } from "@kfs/common/api/webServer/eventsource";
+import { Text } from "react-native-paper";
 
 export default function ({ metadataList, getTag, elementsPerLine }) {
-    const [metadataTagList, setMetadataTagList] = useState([]);
     const sysConfig = getSysConfig();
+    const [metadataTagList, setMetadataTagList] = useState([]);
     const [list, setList] = useState([]);
     const [dcimList, setDcimList] = useState([]);
+    const [metadataListTotal, setMetadataListTotal] = useState(0);
     const abortControllerRef = useRef(null);
     
     // useEffect(() => {
@@ -19,40 +22,20 @@ export default function ({ metadataList, getTag, elementsPerLine }) {
             abortControllerRef.current.abort();
         }
         abortControllerRef.current = new AbortController();
-        
-        fetchEventSource(`${getSysConfig().webServer}/api/v1/event/listDCIM`, {
-            signal: abortControllerRef.current.signal,
-            openWhenHidden: false,
-            async onopen(response) {
-                window.noteInfo("尝试获取照片...");
-                if (response.ok && response.headers.get('content-type').includes("text/event-stream")) {
-                    return; // everything's good
-                }
-                console.error(response);
-                window.noteError("event/listDCIM.onopen: " + response.status);
-            },
-            onmessage(msg) {
-                if (msg.event === 'FatalError') {
-                    console.error(msg);
-                    window.noteError("event/listDCIM.onmessage: " + msg);
-                    return;
-                }
-                let info = JSON.parse(msg.data);
-                console.log('info:', info);
-                if (info.errMsg) {
-                    window.noteError(info.errMsg);
-                }
-                if (info.dcimList) {
-                    setDcimList(prev => [...prev, ...info.dcimList]);
-                }
-            },
-            onclose() {
-                console.error('close');
-                // connection closed
-            },
-            onerror(err) {
-                console.error('err', err);
+
+        listDCIM(abortControllerRef.current.signal, () => {
+            setDcimList([]);
+            setMetadataListTotal(0);
+            setList([]);
+            setMetadataTagList([]);
+        }, json => {
+            if (json.dcimList) {
+                setDcimList(prev => [...prev, ...json.dcimList]);
+            } else {
+                setMetadataListTotal(json.n);
             }
+        }, (tag, err) => {
+            window.noteError(tag+": " + err);
         });
     };
     
@@ -138,7 +121,9 @@ export default function ({ metadataList, getTag, elementsPerLine }) {
     }, [dcimList, metadataList]);
     
     return (
-        // <ThumbnailList metadataTagList={metadataTagList} list={list} refresh={refresh} elementsPerLine={elementsPerLine} />
-        <ThumbnailList metadataTagList={metadataTagList} list={list} refresh={refresh} elementsPerLine={elementsPerLine} />
+        <>
+            <Text>({list.length}/{metadataListTotal})</Text>
+            <ThumbnailList metadataTagList={metadataTagList} list={list} refresh={refresh} elementsPerLine={elementsPerLine} />
+        </>
     );
 }

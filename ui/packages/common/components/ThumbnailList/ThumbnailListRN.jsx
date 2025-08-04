@@ -43,9 +43,7 @@ export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }
     }
 
     console.log("LongListTest.1", Date.now() - t0);
-    return <View
-        style={{ flex: 1 }}
-        >
+    return <View style={{ flex: 1 }}>
         {metadataTagList.length === 0 && <View style={{
             height: "100%", width: "100%",
             display: "flex",

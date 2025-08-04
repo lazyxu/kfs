@@ -9,7 +9,7 @@ import moment from 'moment';
 import { useEffect, useRef, useState } from "react";
 import ThumbnailList from '@kfs/common/components/ThumbnailList/ThumbnailList';
 import ThumbnailGroupedList from "@kfs/common/components/ThumbnailList/ThumbnailGroupedList";
-import { listDCIM } from "@kfs/common/api/webServer/exif";
+import { listDCIM } from "@kfs/common/api/webServer/eventsource";
 
 export default function () {
     const [metadataList, setMetadataList] = useState([]);
@@ -24,74 +24,46 @@ export default function () {
     const abortControllerRef = useRef(null);
     const refersh = () => {
         console.log("===refresh DCIM===");
-        setMetadataList([]);
-        setMetadataListTotal(0);
-        setShotEquipmentMap({});
-        setFileTypeMap({});
         if (abortControllerRef.current) {
             abortControllerRef.current.abort();
         }
         abortControllerRef.current = new AbortController();
-        fetchEventSource(`${getSysConfig().webServer}/api/v1/event/listDCIM`, {
-            signal: abortControllerRef.current.signal,
-            openWhenHidden: false,
-            async onopen(response) {
-                if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
-                    return; // everything's good
-                }
-                console.error(response);
-                noteError("event/listDCIM.onopen: " + response.status);
-            },
-            onmessage(msg) {
-                // if the server emits an error message, throw an exception
-                // so it gets handled by the onerror callback below:
-                if (msg.event === 'FatalError') {
-                    console.error(msg);
-                    noteError("event/listDCIM.onmessage: " + msg);
-                    return;
-                }
-                let info = JSON.parse(msg.data);
-                console.log(info);
-                if (info.errMsg) {
-                    noteError(info.errMsg);
-                }
-                if (info.dcimList) {
-                    setMetadataList(prev => {
-                        const newList = [...prev, ...info.dcimList];
-                        // 更新统计信息
-                        let shotEquipmentMap = {};
-                        let fileTypeMap = {};
-                        newList.forEach(metadata => {
-                            let shotEquipment = parseShotEquipment(metadata);
-                            if (shotEquipmentMap.hasOwnProperty(shotEquipment)) {
-                                shotEquipmentMap[shotEquipment]++;
-                            } else {
-                                shotEquipmentMap[shotEquipment] = 1;
-                            }
-                            if (fileTypeMap.hasOwnProperty(metadata.extension)) {
-                                fileTypeMap[metadata.extension]++;
-                            } else {
-                                fileTypeMap[metadata.extension] = 1;
-                            }
-                            metadata.shotEquipment = shotEquipment;
-                            metadata.parsedTime = moment.parseZone(metadata.time, "YYYY-MM-DDTHH:mm:ssZZ");
-                        });
-                        setShotEquipmentMap(shotEquipmentMap);
-                        setFileTypeMap(fileTypeMap);
-                        return newList;
+        listDCIM(abortControllerRef.current.signal, () => {
+            setDcimList([]);
+            setMetadataList([]);
+            setMetadataListTotal(0);
+            setShotEquipmentMap({});
+            setFileTypeMap({});
+        }, json => {
+            if (json.dcimList) {
+                setMetadataList(prev => {
+                    const newList = [...prev, ...json.dcimList];
+                    let shotEquipmentMap = {};
+                    let fileTypeMap = {};
+                    newList.forEach(metadata => {
+                        let shotEquipment = parseShotEquipment(metadata);
+                        if (shotEquipmentMap.hasOwnProperty(shotEquipment)) {
+                            shotEquipmentMap[shotEquipment]++;
+                        } else {
+                            shotEquipmentMap[shotEquipment] = 1;
+                        }
+                        if (fileTypeMap.hasOwnProperty(metadata.extension)) {
+                            fileTypeMap[metadata.extension]++;
+                        } else {
+                            fileTypeMap[metadata.extension] = 1;
+                        }
+                        metadata.shotEquipment = shotEquipment;
+                        metadata.parsedTime = moment.parseZone(metadata.time, "YYYY-MM-DDTHH:mm:ssZZ");
                     });
-                } else {
-                    setMetadataListTotal(info.n);
-                }
-            },
-            onclose() {
-                console.error('close');
-                // if the server closes the connection unexpectedly, retry:
-                // noteError("event/listDCIM.onclose");
-            },
-            onerror(err) {
-                console.error('err', err);
+                    setShotEquipmentMap(shotEquipmentMap);
+                    setFileTypeMap(fileTypeMap);
+                    return newList;
+                });
+            } else {
+                setMetadataListTotal(json.n);
             }
+        }, (tag, err) => {
+            noteError(tag+": " + err);
         });
     }
     useEffect(() => {
