@@ -1,6 +1,6 @@
 import { Grid } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import Image from "./Image";
+import Thumbnail from "@kfs/common/components/Thumbnail/Thumbnail";
 
 export function getScrollbarWidth() {
     const scrollDiv = document.createElement('div');
@@ -39,7 +39,7 @@ export default function ({ metadataList }) {
                 const imgWidth = calImageWidth(minCol, gridWidth, sbWidth, spacing);
                 console.log("Scrollbar width:", sbWidth);
                 console.log("Grid width:", gridWidth);
-                console.log("Calculated image width:", imgWidth);
+                console.log("Calculated Thumbnail width:", imgWidth);
                 setWidth(imgWidth);
             }
         };
@@ -53,7 +53,7 @@ export default function ({ metadataList }) {
         <Grid container ref={ref} spacing={spacing} sx={{ width: "100%", overflowX: "hidden" }}>
             {width > 0 && metadataList.map(metadata => (
                 <Grid item style={{ width: width, height: width }} key={metadata.id}>
-                    <Image metadata={metadata} width={width} />
+                    <Thumbnail metadata={metadata} width={width} />
                 </Grid>
             ))}
         </Grid>

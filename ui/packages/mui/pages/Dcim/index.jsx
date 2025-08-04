@@ -34,7 +34,7 @@ export default function () {
         abortControllerRef.current = new AbortController();
         fetchEventSource(`${getSysConfig().webServer}/api/v1/event/listDCIM`, {
             signal: abortControllerRef.current.signal,
-            openWhenHidden: true,
+            openWhenHidden: false,
             async onopen(response) {
                 if (response.ok && response.headers.get('content-type').includes(EventStreamContentType)) {
                     return; // everything's good
@@ -85,11 +85,12 @@ export default function () {
                 }
             },
             onclose() {
+                console.error('close');
                 // if the server closes the connection unexpectedly, retry:
                 // noteError("event/listDCIM.onclose");
             },
             onerror(err) {
-                console.error(err);
+                console.error('err', err);
             }
         });
     }

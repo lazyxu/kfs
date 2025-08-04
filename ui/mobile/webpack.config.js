@@ -29,6 +29,11 @@ module.exports = async function (env, argv) {
     }
     return rule;
   });
+  config.module.rules.push({
+    test: /\.(js|jsx)$/,
+    include: /(@kfs\/common)/, // 显式包含 workspace 包
+    use: ['babel-loader']
+  });
 
   return config;
 };

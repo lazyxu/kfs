@@ -1,7 +1,7 @@
 import { Box, Grid } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { calImageWidth, getScrollbarWidth } from "./All";
-import Image from "./Image";
+import Thumbnail from "@kfs/common/components/Thumbnail/Thumbnail";
 
 const spacing = 1; // 1 for 8px spacing
 const minCol = 3;
@@ -29,7 +29,7 @@ export default function ({ metadataList, formatFn, spacing, minCol }) {
                 const imgWidth = calImageWidth(minCol, gridWidth, sbWidth, spacing);
                 console.log("Scrollbar width:", sbWidth);
                 console.log("Grid width:", gridWidth);
-                console.log("Calculated image width:", imgWidth);
+                console.log("Calculated Thumbnail width:", imgWidth);
                 setWidth(imgWidth);
             }
         };
@@ -46,7 +46,7 @@ export default function ({ metadataList, formatFn, spacing, minCol }) {
                 <Grid container spacing={spacing} sx={{ width: "100%"}}>
                     {groupedMap[date].map(metadata => {
                         return <Grid item style={{ width: width, height: width }} key={metadata.id}>
-                            <Image metadata={metadata} width={width} />
+                            <Thumbnail metadata={metadata} width={width} />
                         </Grid>
                     })}
                 </Grid>

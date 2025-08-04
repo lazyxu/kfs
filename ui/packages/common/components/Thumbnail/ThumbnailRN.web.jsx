@@ -1,5 +1,4 @@
 import ImgCancelable from '@kfs/common/components/ImgCancelable';
-import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { Image, Pressable, View } from 'react-native';
 import { Text } from 'react-native-paper';
 
@@ -18,7 +17,6 @@ function formatDuration(seconds) {
 }
 
 export default function ({ width, navigation, list, index, onLoaded }) {
-    const src = `${getSysConfig().webServer}/thumbnail?size=256&cutSquare=true&hash=${list[index].hash}`;
     return (
         <Pressable onPress={() => navigation.navigate("Viewer", { list, index })}>
             <ImgCancelable

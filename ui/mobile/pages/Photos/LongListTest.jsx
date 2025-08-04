@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import LongList from "./LongList";
-import Thumbnail from "./Thumbnail";
+import Thumbnail from "@kfs/common/components/Thumbnail/ThumbnailRN";
 
 export default function ({ metadataTagList, elementsPerLine = 5, list, refresh }) {
     const { colors } = useTheme();
