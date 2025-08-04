@@ -1,11 +1,7 @@
 import { Box, Grid } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import { calImageWidth, getScrollbarWidth } from "./All";
+import { calImageWidth, getScrollbarWidth } from "./ThumbnailList";
 import Thumbnail from "@kfs/common/components/Thumbnail/Thumbnail";
-
-const spacing = 1; // 1 for 8px spacing
-const minCol = 3;
-const formatFn = (date) => date.format("YYYY年MM月DD日");
 
 export default function ({ metadataList, formatFn, spacing, minCol }) {
     let groupedMap = {};

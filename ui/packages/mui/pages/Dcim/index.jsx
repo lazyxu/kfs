@@ -7,8 +7,8 @@ import { CalendarMonth, FilterAlt, Refresh } from "@mui/icons-material";
 import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event-source";
 import moment from 'moment';
 import { useEffect, useRef, useState } from "react";
-import All from './All';
-import GroupedAll from "./GroupedAll";
+import ThumbnailList from '@kfs/common/components/ThumbnailList/ThumbnailList';
+import ThumbnailGroupedList from "@kfs/common/components/ThumbnailList/ThumbnailGroupedList";
 import { listDCIM } from "@kfs/common/api/webServer/exif";
 
 export default function () {
@@ -181,10 +181,10 @@ export default function () {
             </Box>
             <Typography>共{metadataList.filter(m => m.type=== "image").length}张照片、{metadataList.filter(m => m.type=== "video").length}个视频 ({metadataList.length}/{metadataListTotal})</Typography>
             {(chosenShotEquipment || chosenFileType) && <Typography>筛选出{filteredMetadataList.filter(m => m.type=== "image").length}张照片、{filteredMetadataList.filter(m => m.type=== "video").length}个视频</Typography>}
-            {viewBy === "年" && <GroupedAll metadataList={filteredMetadataList} spacing={0} minCol={10} formatFn={date => date.format("YYYY年")} />}
-            {viewBy === "月" && <GroupedAll metadataList={filteredMetadataList} spacing={0.5} minCol={4} formatFn={date => date.format("YYYY年MM月")} />}
-            {viewBy === "日" && <GroupedAll metadataList={filteredMetadataList} spacing={1} minCol={3} formatFn={date => date.format("YYYY年MM月DD日")} />}
-            {viewBy === "所有照片" && <All metadataList={filteredMetadataList} />}
+            {viewBy === "年" && <ThumbnailGroupedList metadataList={filteredMetadataList} spacing={0} minCol={10} formatFn={date => date.format("YYYY年")} />}
+            {viewBy === "月" && <ThumbnailGroupedList metadataList={filteredMetadataList} spacing={0.5} minCol={4} formatFn={date => date.format("YYYY年MM月")} />}
+            {viewBy === "日" && <ThumbnailGroupedList metadataList={filteredMetadataList} spacing={1} minCol={3} formatFn={date => date.format("YYYY年MM月DD日")} />}
+            {viewBy === "所有照片" && <ThumbnailList metadataList={filteredMetadataList} />}
         </Stack>
     );
 }

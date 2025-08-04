@@ -1,7 +1,7 @@
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { useEffect, useRef, useState } from "react";
 import { fetchEventSource } from "./FetchEventSource";
-import LongListTest from "./LongListTest";
+import ThumbnailList from "@kfs/common/components/ThumbnailList/ThumbnailListRN";
 
 export default function ({ metadataList, getTag, elementsPerLine }) {
     const [metadataTagList, setMetadataTagList] = useState([]);
@@ -139,6 +139,6 @@ export default function ({ metadataList, getTag, elementsPerLine }) {
     
     return (
         // <ThumbnailList metadataTagList={metadataTagList} list={list} refresh={refresh} elementsPerLine={elementsPerLine} />
-        <LongListTest metadataTagList={metadataTagList} list={list} refresh={refresh} elementsPerLine={elementsPerLine} />
+        <ThumbnailList metadataTagList={metadataTagList} list={list} refresh={refresh} elementsPerLine={elementsPerLine} />
     );
 }
