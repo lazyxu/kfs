@@ -1,4 +1,5 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+const path = require('path');
 
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
@@ -34,6 +35,14 @@ module.exports = async function (env, argv) {
     include: /(@kfs\/common)/, // 显式包含 workspace 包
     use: ['babel-loader']
   });
-
+  config.module.rules.push({
+      test: /\.(js|jsx)$/,
+      // 包含node_modules中需要编译的特定库
+      include: [
+        // 添加下面这行，包含react-native-image-viewing的路径
+        path.resolve(__dirname, '../node_modules/@staltz/react-native-image-viewing'),
+      ],
+      use: ['babel-loader']
+    });
   return config;
 };

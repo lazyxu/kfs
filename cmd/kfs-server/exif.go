@@ -1,11 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 	"sync/atomic"
 
 	"github.com/labstack/echo/v4"
+	"github.com/lazyxu/kfs/rpc/server"
 )
 
 var exifChan = make(chan bool)
@@ -64,6 +66,13 @@ func apiGetMetadata(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "id should be a number")
 	}
 	data, err := kfsCore.Q.GetDCIM(c.Request().Context(), id)
+	if err == sql.ErrNoRows {
+		err = server.AnalyzeMetadataByFileId(c.Request().Context(), kfsCore, id)
+		if err != nil {
+			return err
+		}
+		data, err = kfsCore.Q.GetDCIM(c.Request().Context(), id)
+	}
 	if err != nil {
 		return err
 	}

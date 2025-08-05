@@ -1,14 +1,13 @@
-import { listDriverFileByHash } from "@kfs/common/api/webServer/driverfile";
 import { getMetadata } from "@kfs/common/api/webServer/exif";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { downloadByHash } from "@kfs/mui/api/fs";
 import { TitleBar, Window, WorkingArea } from "@kfs/mui/components/Window/Window";
-import FileAttribute from "@kfs/mui/pages/Files/DriverFiles/FileAttribute";
 import { AllInbox, Download, Info, PrivacyTip } from "@mui/icons-material";
 import { Badge, Box, ButtonGroup, IconButton } from "@mui/material";
 import { useEffect, useState } from "react";
 import Metadata from "./Metadata";
 import SameFiles from "./SameFiles";
+import FileAttributeWithPath from "../Files/DriverFiles/FileAttributeWithPath";
 
 export default function ({ wid, props }) {
     let {
@@ -78,7 +77,7 @@ export default function ({ wid, props }) {
             </WorkingArea>
             {openSameFiles && <SameFiles sameFiles={sameFiles} onClose={setOpenSameFiles} />}
             {openMetadata && <Metadata metadata={metadataL} onClose={setOpenMetadata}/>}
-            {driverFile && openAttribute && <FileAttribute fileAttribute={{ filePath, driverFile }} onClose={setOpenAttribute} />}
+            {driverFile && openAttribute && <FileAttributeWithPath fileAttribute={{ filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     );
 }

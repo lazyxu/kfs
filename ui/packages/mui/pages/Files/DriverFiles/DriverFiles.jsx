@@ -6,8 +6,8 @@ import { EventStreamContentType, fetchEventSource } from "@microsoft/fetch-event
 import { Grid, Stack } from "@mui/material";
 import { useEffect, useRef, useState } from 'react';
 import DirMenu from "./DirMenu";
-import FileAttribute from "./FileAttribute";
 import FileMenu from "./FileMenu";
+import FileAttributeWithPath from "./FileAttributeWithPath";
 
 export default function () {
     const [driverFiles, setDriverFiles] = useState([]);
@@ -109,7 +109,7 @@ export default function () {
                 共{driverFiles.length}/{driverFilesTotal}个项目
             </Stack>
             {fileMenu && <FileMenu contextMenu={fileMenu} setContextMenu={setFileMenu} setFileAttribute={setFileAttribute} />}
-            {fileAttribute && <FileAttribute fileAttribute={fileAttribute} onClose={() => setFileAttribute(null)} />}
+            {fileAttribute && <FileAttributeWithPath fileAttribute={fileAttribute} onClose={() => setFileAttribute(null)} />}
         </>
     );
 }

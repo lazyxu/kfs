@@ -2,7 +2,6 @@ import { listDriverFileByHash } from "@kfs/common/api/webServer/driverfile";
 import { getSysConfig } from "@kfs/common/hox/sysConfig";
 import { download, openFile } from "@kfs/mui/api/fs";
 import { StatusBar, TitleBar, Window, WorkingArea } from '@kfs/mui/components/Window/Window';
-import FileAttribute from '@kfs/mui/pages/Files/DriverFiles/FileAttribute';
 import { AllInbox, ContentCopy, Info, Save } from '@mui/icons-material';
 import { default as FileDownload } from '@mui/icons-material/FileDownload';
 import { Badge, Box, Link, Stack } from "@mui/material";
@@ -11,6 +10,7 @@ import humanize from 'humanize';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import SameFiles from "./SameFiles";
+import FileAttributeWithPath from "../Files/DriverFiles/FileAttributeWithPath";
 
 export default ({ wid, props }) => {
     const { driver, filePath, driverFile } = props;
@@ -103,7 +103,7 @@ export default ({ wid, props }) => {
                 </Stack>
             </StatusBar>
             {openSameFiles && <SameFiles sameFiles={sameFiles} onClose={setOpenSameFiles} />}
-            {openAttribute && <FileAttribute fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
+            {openAttribute && <FileAttributeWithPath fileAttribute={{ driver, filePath, driverFile }} onClose={setOpenAttribute} />}
         </Window>
     )
 };

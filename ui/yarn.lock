@@ -2552,6 +2552,11 @@
   dependencies:
     "@sinonjs/commons" "^3.0.0"
 
+"@staltz/react-native-image-viewing@0.2.1-2":
+  version "0.2.1-2"
+  resolved "https://registry.npmmirror.com/@staltz/react-native-image-viewing/-/react-native-image-viewing-0.2.1-2.tgz#39e411f07786eac9c7bf6d0480f70265b321dc53"
+  integrity sha512-cY61Ircb5+iBESILZMiJBvwRvI1SL8FG4We+6xXLYXEbmchUWktIcNnTAo7bloJ9uAhkYO/7EXHKAe/DEWgL/g==
+
 "@szmarczak/http-timer@^4.0.5":
   version "4.0.6"
   resolved "https://registry.npmmirror.com/@szmarczak/http-timer/-/http-timer-4.0.6.tgz#b4a914bb62e7c272d4e5989fe4440f812ab1d807"

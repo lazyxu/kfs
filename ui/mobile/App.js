@@ -22,8 +22,8 @@ import Search from './pages/Search';
 import Suffix from './pages/Search/Suffix';
 import Type from './pages/Search/Type';
 import SystemConfig from './pages/Setting/SystemConfig';
-import ImageVideoViewer from './pages/Windows/ImageVideoViewer';
-import Info from './pages/Windows/ImageVideoViewer/Info';
+import ImageVideoViewer from './pages/Windows/ImageVideoViewer/New';
+import DCIMAttribute from '@kfs/common/components/File/DCIMAttributeRN';
 
 function App1({ navigation }) {
   window.kfsNavigation = navigation;
@@ -79,7 +79,7 @@ function ThemeApp() {
         <Stack.Navigator initialRouteName="App1" screenOptions={{ headerShown: false, animation: 'slide_from_bottom' }}>
           <Stack.Screen name="App1" component={App1} />
           <Stack.Screen name="Viewer" component={ImageVideoViewer} />
-          <Stack.Screen name="Info" component={Info} />
+          <Stack.Screen name="DCIMAttribute" component={DCIMAttribute} />
           {/* <Stack.Screen name="SameFile" component={SameFile} /> */}
           <Stack.Screen name="AlbumsDriver" component={Driver} />
           <Stack.Screen name="AlbumsVideo" component={Video} />
