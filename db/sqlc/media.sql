@@ -136,13 +136,27 @@ SELECT
     e.gps_latitude_ref,
     e.gps_latitude,
     e.gps_longitude_ref,
-    e.gps_longitude
+    e.gps_longitude,
+    CASE 
+        WHEN lp.livp IS NOT NULL THEN true
+        ELSE false
+    END AS is_livp,
+    lp.mov AS livp_mov_file_id,
+    lp.heic AS livp_heic_file_id,
+    lp.jpg AS livp_jpg_file_id,
+    lp.livp AS livp_file_id
 FROM _dcim_metadata_time dmt
-INNER JOIN _file f ON dmt.id = f.id 
-INNER JOIN _height_width hw ON dmt.id = hw.id  
+INNER JOIN _file f ON dmt.id = f.id
+INNER JOIN _height_width hw ON dmt.id = hw.id
 INNER JOIN _file_type ft ON dmt.id = ft.id
 LEFT JOIN _video_metadata vm ON dmt.id = vm.id
 LEFT JOIN _exif e ON dmt.id = e.id
+LEFT JOIN _live_photo lp ON (
+    dmt.id = lp.mov 
+    OR dmt.id = lp.heic 
+    OR dmt.id = lp.jpg 
+    OR dmt.id = lp.livp
+)
 ORDER BY dmt.time DESC;
 
 -- name: ListLivePhoto :many

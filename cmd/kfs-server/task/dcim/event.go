@@ -18,6 +18,7 @@ type Response struct {
 }
 
 func send(c echo.Context, msg Response) {
+	println("Sending DCIM event:", len(msg.DCIMList), "items, N:", msg.N)
 	data, err := json.Marshal(msg)
 	if err != nil {
 		log.Panicf("invalid msg: %+v\n", msg)
@@ -31,6 +32,7 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 	c.Response().Header().Set("Content-Type", "text/event-stream;charset=UTF-8")
 	c.Response().Header().Set("Cache-Control", "no-cache")
 	c.Response().Header().Set("Connection", "keep-alive")
+	c.Response().Header().Set("Transfer-Encoding", "chunked")
 
 	fmt.Println("New DCIM event connection established")
 
@@ -89,6 +91,7 @@ func Handle(c echo.Context, kfsCore *core.KFS) error {
 
 	if len(curDCIMList) != 0 {
 		send(c, Response{DCIMList: curDCIMList, N: n})
+		// send(c, Response{DCIMList: curDCIMList[0:10], N: n})
 	}
 
 	return nil

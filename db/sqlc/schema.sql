@@ -129,6 +129,8 @@ CREATE TABLE IF NOT EXISTS _dcim_metadata_time (
     FOREIGN KEY (id) REFERENCES _file(id)
 );
 
+-- DROP TABLE IF EXISTS _live_photo;
+
 CREATE TABLE IF NOT EXISTS _live_photo (
     mov  BIGINT NOT NULL PRIMARY KEY,
     heic BIGINT DEFAULT NULL,
@@ -137,8 +139,15 @@ CREATE TABLE IF NOT EXISTS _live_photo (
     FOREIGN KEY (mov)  REFERENCES _file(id),
     FOREIGN KEY (heic) REFERENCES _file(id),
     FOREIGN KEY (jpg)  REFERENCES _file(id),
-    FOREIGN KEY (livp) REFERENCES _file(id)
+    FOREIGN KEY (livp) REFERENCES _file(id),
+    INDEX idx_live_photo_heic (heic),
+    INDEX idx_live_photo_jpg (jpg),
+    INDEX idx_live_photo_livp (livp)
 );
+
+-- CREATE INDEX idx_lp_heic ON _live_photo(heic);
+-- CREATE INDEX idx_lp_jpg ON _live_photo(jpg);
+-- CREATE INDEX idx_lp_livp ON _live_photo(livp);
 
 -- DROP TABLE IF EXISTS _sync_from_baidu_photo;
 

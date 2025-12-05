@@ -63,7 +63,7 @@ func AnalyzeLivp(ctx context.Context, kfsCore *core.KFS, file sqlc.File) (int64,
 		} else if strings.HasSuffix(zf.Name, ".mov") {
 			movCnt++
 		} else {
-			return 0, 0, errors.New("invalid livp format, there are files other than .heic and .mov")
+			return 0, 0, errors.New("invalid livp format, there are files other than .heic and .mov: " + zf.Name)
 		}
 	}
 	if heicCnt != 1 || movCnt != 1 {
